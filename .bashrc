@@ -75,8 +75,6 @@ export PS1="\[\e[0;36m\]\u@\h\[\e[m\] \[\e[0;34m\]\w\[\e[m\] \[\e[0;33m\]\[\e[m\
 #
 # Local, user-defined stuff
 #
-if [ -d ~/.local/.bash ]; then
-    for f in ~/.local/.bash/* ; do
-        source "$f"
-    done
+if [ -f ~/.local/.bashrc ]; then
+    source ~/.local/.bashrc
 fi
