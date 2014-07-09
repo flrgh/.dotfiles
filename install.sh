@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DOTFILES_DIRECTORY="$(dirname "$(readlink -f ${BASH_SOURCE[0]})")"
+DOTFILES_DIRECTORY="$PWD"
 
 mkdir -p "$HOME/.dotfiles.old"
 
