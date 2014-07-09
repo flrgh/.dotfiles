@@ -12,3 +12,7 @@ for item in .vim .vimrc .tmux.conf .bash_profile .bashrc; do
     fi
     ln -s "$DOTFILES_DIRECTORY/$item" "$HOME/$item"
 done
+
+# Set up Vundle for vim
+git submodule update --init
+vim +BundleInstall +qall
