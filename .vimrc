@@ -9,6 +9,7 @@ call vundle#begin()
 Bundle 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
 Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-surround'
+Plugin 'scrooloose/syntastic'
 call vundle#end()            " required
 filetype plugin indent on    " required
 
