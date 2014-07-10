@@ -68,3 +68,6 @@ autocmd! bufwritepost .vimrc source %
 
 " Rebind <leader> key
 let mapleader = ","
+
+" Silence Syntastic's style checking
+let g:syntastic_quiet_messages = { "type": "style" }
