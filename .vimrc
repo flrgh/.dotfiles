@@ -60,6 +60,9 @@ nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
 
+" Spacebar to toggle folds
+nnoremap <Space> za
+
 " New splits should open on the right and on the bottom
 set splitbelow
 set splitright
@@ -72,3 +75,20 @@ let mapleader = ","
 
 " Silence Syntastic's style checking
 let g:syntastic_quiet_messages = { "type": "style" }
+
+" Function for running a command and then returning your cursor to its
+" original position
+function! Preserve(command)
+    " Preparation: save last search, and cursor position.
+    let _s=@/
+    let l = line(".")
+    let c = col(".")
+    " Do the business:
+    execute a:command
+    " Clean up: restore previous search history, and cursor position
+    let @/=_s
+    call cursor(l, c)
+endfunction
+
+" Remove unwanted whitespace at the end of lines when saving
+autocmd BufWritePre *.py,*.js,*.php :call Preserve("%s/\\s\\+$//e")<CR>
