@@ -91,5 +91,5 @@ function! Preserve(command)
     call cursor(l, c)
 endfunction
 
-" Remove unwanted whitespace at the end of lines when saving
-autocmd BufWritePre *.py,*.js,*.php :call Preserve("%s/\\s\\+$//e")<CR>
+" Remove unwanted whitespace at the end of lines
+nmap _$ :call Preserve("%s/\\s\\+$//e")<CR>
