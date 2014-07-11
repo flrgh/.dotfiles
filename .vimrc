@@ -21,7 +21,7 @@ filetype plugin indent on    " required
 :syntax on
 
 " Numba lines
-set nu
+set number
 
 " The colors!
 :colorscheme Tomorrow-Night
@@ -69,7 +69,7 @@ set splitbelow
 set splitright
 
 " Autoreload ~/.vimrc on save
-autocmd! bufwritepost .vimrc source %
+autocmd! bufwritepost .vimrc nested source %
 
 " Rebind <leader> key
 let mapleader = ","
