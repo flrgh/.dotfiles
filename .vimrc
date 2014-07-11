@@ -11,6 +11,7 @@ Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-surround'
 Plugin 'scrooloose/syntastic'
 Plugin 'klen/python-mode'
+Plugin 'flazz/vim-colorschemes'
 call vundle#end()            " required
 filetype plugin indent on    " required
 
@@ -23,7 +24,7 @@ filetype plugin indent on    " required
 set nu
 
 " The colors!
-:colorscheme slate
+:colorscheme Tomorrow-Night
 
 " Highlight search results
 :set hlsearch
