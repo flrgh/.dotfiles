@@ -11,6 +11,7 @@ Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-surround'
 Plugin 'scrooloose/syntastic'
 Plugin 'klen/python-mode'
+Plugin 'vim-perl/vim-perl'
 Plugin 'flazz/vim-colorschemes'
 call vundle#end()            " required
 filetype plugin indent on    " required
@@ -63,6 +64,9 @@ nnoremap <C-H> <C-W><C-H>
 
 " Spacebar to toggle folds
 nnoremap <Space> za
+
+" Perl folding
+let perl_fold = 1
 
 " New splits should open on the right and on the bottom
 set splitbelow
