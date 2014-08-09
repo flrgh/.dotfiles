@@ -46,6 +46,9 @@ fi
 # General shell options
 #
 
+# Use vim!
+export EDITOR=vim
+
 # globbing should get files/directories that star with .
 shopt -s dotglob
 
