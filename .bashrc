@@ -25,16 +25,13 @@ fi
 # Tab completion
 #
 
-# System
-if [ -f /etc/bash_completion ]; then
-    source /etc/bash_completion
-fi
 
 # Git
 if [ -f ~/.git-completion.bash ]; then
   . ~/.git-completion.bash
 fi
 
+# homebrew
 if [ -d /usr/local/etc/bash_completion.d ]; then
     for f in /usr/local/etc/bash_completion.d/*; do
         source $f
