@@ -24,6 +24,9 @@ filetype plugin indent on    " required
 " Numba lines
 set number
 
+" High-light current line
+set cul
+
 " The colors!
 :colorscheme Tomorrow-Night
 
