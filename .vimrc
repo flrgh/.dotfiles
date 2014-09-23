@@ -47,6 +47,13 @@ set mouse=a
 map <ScrollWheelUp> <C-Y>
 map <ScrollWheelDown> <C-E>
 
+" Sane cursor placement
+set scrolloff=10
+nnoremap n nzz
+nnoremap N Nzz
+nnoremap * *zz
+nnoremap # #zz
+
 " Powwa line
 let g:Powerline_symbols = 'fancy'
 set nocompatible   " Disable vi-compatibility
