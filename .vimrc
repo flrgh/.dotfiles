@@ -30,11 +30,6 @@ set cul
 " The colors!
 :colorscheme Tomorrow-Night
 
-" Highlight search results
-:set hlsearch
-:hi Search guibg=peru guifg=wheat cterm=none ctermfg=yellow ctermbg=black
-nnoremap <CR> :noh<CR><CR>
-
 " Tab is 4 spaces
 set tabstop=4
 set shiftwidth=4
