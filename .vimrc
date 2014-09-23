@@ -10,7 +10,6 @@ Bundle 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
 Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-surround'
 Plugin 'scrooloose/syntastic'
-Plugin 'klen/python-mode'
 Plugin 'vim-perl/vim-perl'
 Plugin 'flazz/vim-colorschemes'
 call vundle#end()            " required
