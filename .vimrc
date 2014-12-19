@@ -9,6 +9,7 @@ call vundle#begin()
 Bundle 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
 Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-surround'
+Plugin 'tpope/vim-markdown'
 Plugin 'scrooloose/syntastic'
 Plugin 'vim-perl/vim-perl'
 Plugin 'flazz/vim-colorschemes'
