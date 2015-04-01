@@ -13,22 +13,27 @@ Plugin 'tpope/vim-markdown'
 Plugin 'scrooloose/syntastic'
 Plugin 'vim-perl/vim-perl'
 Plugin 'flazz/vim-colorschemes'
+Plugin 'guns/xterm-color-table.vim'
 call vundle#end()            " required
 filetype plugin indent on    " required
 
 
+" The colors!
+:colorscheme Tomorrow-Night
+
 
 " Syntax hilighting
 :syntax on
+
+" Highlight the 80th column
+highlight ColorColumn ctermbg=88
+call matchadd('ColorColumn', '\%80v', 100)
 
 " Numba lines
 set number
 
 " High-light current line
 set cul
-
-" The colors!
-:colorscheme Tomorrow-Night
 
 " Tab is 4 spaces
 set tabstop=4
