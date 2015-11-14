@@ -6,7 +6,9 @@ call vundle#begin()
 " 
 " Plugins here
 " 
-Bundle 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
+"Bundle 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
+Plugin 'gregsexton/MatchTag'
+Plugin 'bling/vim-airline'
 Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-surround'
 Plugin 'tpope/vim-markdown'
@@ -14,9 +16,14 @@ Plugin 'scrooloose/syntastic'
 Plugin 'vim-perl/vim-perl'
 Plugin 'flazz/vim-colorschemes'
 Plugin 'guns/xterm-color-table.vim'
+Plugin 'burnettk/vim-angular'
+Plugin 'kien/ctrlp.vim'
+Plugin 'rstacruz/sparkup'
 call vundle#end()            " required
 filetype plugin indent on    " required
 
+" Airline font config
+let g:airline_powerline_fonts = 1
 
 " The colors!
 :colorscheme Tomorrow-Night
