@@ -32,10 +32,6 @@ let g:airline_powerline_fonts = 1
 " Syntax hilighting
 :syntax on
 
-" Highlight the 80th column
-highlight ColorColumn ctermbg=88
-call matchadd('ColorColumn', '\%80v', 100)
-
 " Numba lines
 set number
 
