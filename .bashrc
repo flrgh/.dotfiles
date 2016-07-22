@@ -84,3 +84,9 @@ export PS1="\[\e[0;36m\]\u@\h\[\e[m\] \[\e[0;34m\]\w\[\e[m\] \[\e[0;33m\]\[\e[m\
 if [ -f ~/.local/.bashrc ]; then
     source ~/.local/.bashrc
 fi
+
+# Make ssh agent forwarding work with persistent tmux/screen sessions
+if [[ -S "$SSH_AUTH_SOCK" && ! -h "$SSH_AUTH_SOCK" ]]; then
+    ln -sf "$SSH_AUTH_SOCK" ~/.ssh/ssh_auth_sock;
+fi
+export SSH_AUTH_SOCK=~/.ssh/ssh_auth_sock;
