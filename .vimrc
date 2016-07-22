@@ -51,8 +51,9 @@ set expandtab
 " Always use decimal for editing numbers
 set nrformats=
 
+" Don't enter visual mode when trying to select text
+set mouse-=a
 " Mouse wheel scrolling
-set mouse=a
 map <ScrollWheelUp> <C-Y>
 map <ScrollWheelDown> <C-E>
 
