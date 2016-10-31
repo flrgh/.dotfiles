@@ -111,3 +111,6 @@ endfunction
 
 " Remove unwanted whitespace at the end of lines
 nmap _$ :call Preserve("%s/\\s\\+$//e")<CR>
+
+" Backspace can still delete indentation
+set backspace=indent,eol,start
