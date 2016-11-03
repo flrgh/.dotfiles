@@ -19,6 +19,7 @@ Plugin 'guns/xterm-color-table.vim'
 Plugin 'burnettk/vim-angular'
 Plugin 'kien/ctrlp.vim'
 Plugin 'rstacruz/sparkup'
+Plugin 'romainl/Apprentice'
 call vundle#end()            " required
 filetype plugin indent on    " required
 
