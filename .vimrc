@@ -13,7 +13,6 @@ Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-surround'
 Plugin 'tpope/vim-markdown'
 Plugin 'scrooloose/syntastic'
-Plugin 'vim-perl/vim-perl'
 Plugin 'flazz/vim-colorschemes'
 Plugin 'guns/xterm-color-table.vim'
 Plugin 'burnettk/vim-angular'
@@ -79,9 +78,6 @@ nnoremap <C-H> <C-W><C-H>
 
 " Spacebar to toggle folds
 nnoremap <Space> za
-
-" Perl folding
-let perl_fold = 1
 
 " New splits should open on the right and on the bottom
 set splitbelow
