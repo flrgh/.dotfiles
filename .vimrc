@@ -9,15 +9,12 @@ call vundle#begin()
 "Bundle 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
 Plugin 'gregsexton/MatchTag'
 Plugin 'bling/vim-airline'
-Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-surround'
 Plugin 'tpope/vim-markdown'
 Plugin 'scrooloose/syntastic'
 Plugin 'flazz/vim-colorschemes'
 Plugin 'guns/xterm-color-table.vim'
-Plugin 'burnettk/vim-angular'
-Plugin 'kien/ctrlp.vim'
-Plugin 'rstacruz/sparkup'
+Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'romainl/Apprentice'
 call vundle#end()            " required
 filetype plugin indent on    " required
