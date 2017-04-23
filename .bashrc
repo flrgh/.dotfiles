@@ -31,13 +31,11 @@ if [ -f ~/.git-completion.bash ]; then
   . ~/.git-completion.bash
 fi
 
-# homebrew
-if [ -d /usr/local/etc/bash_completion.d ]; then
-    for f in /usr/local/etc/bash_completion.d/*; do
-        source $f
-    done
+# homebrew bash completion
+brew_prefix=$(brew --prefix)
+if [ -f $brew_prefix/etc/bash_completion ]; then
+        . "${brew_prefix}/etc/bash_completion"
 fi
-
 
 #
 # General shell options
