@@ -29,6 +29,9 @@ let g:airline_powerline_fonts = 1
 " Syntax hilighting
 :syntax on
 
+" Enable syntax hilighting in markdown code blocks
+let g:markdown_fenced_languages = ['html', 'python', 'bash=sh']
+
 " Numba lines
 set number
 
