@@ -32,9 +32,11 @@ if [ -f ~/.git-completion.bash ]; then
 fi
 
 # homebrew bash completion
-brew_prefix=$(brew --prefix)
-if [ -f $brew_prefix/etc/bash_completion ]; then
-        . "${brew_prefix}/etc/bash_completion"
+if [[ $macOS ]]; then
+    brew_prefix=$(brew --prefix)
+    if [ -f $brew_prefix/etc/bash_completion ]; then
+            . "${brew_prefix}/etc/bash_completion"
+    fi
 fi
 
 #
