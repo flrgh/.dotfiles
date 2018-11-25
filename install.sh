@@ -13,6 +13,9 @@ for item in .vim .vimrc .tmux.conf .bash_profile .bashrc; do
     ln -s "$DOTFILES_DIRECTORY/$item" "$HOME/$item"
 done
 
+mkdir -vp $HOME/.config/nvim
+cp -v init.vim $HOME/.config/nvim/
+
 # Set up Vundle for vim
 git submodule update --init
-vim +BundleInstall +qall
+vim --not-a-term +BundleInstall +qall
