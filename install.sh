@@ -19,3 +19,5 @@ cp -v init.vim $HOME/.config/nvim/
 # Set up Vundle for vim
 git submodule update --init
 vim --not-a-term +BundleInstall +qall
+
+nvim --headless +PlugUpdate +qall
