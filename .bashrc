@@ -25,6 +25,9 @@ fi
 # Tab completion
 #
 
+if [ -f /etc/profile.d/bash_completion.sh ]; then
+    . /etc/profile.d/bash_completion.sh
+fi
 
 # Git
 if [ -f ~/.git-completion.bash ]; then
