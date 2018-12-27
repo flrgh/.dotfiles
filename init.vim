@@ -47,6 +47,8 @@ Plug 'scrooloose/syntastic'
 Plug 'Yggdroot/indentLine'
 Plug 'avelino/vim-bootstrap-updater'
 Plug 'sheerun/vim-polyglot'
+Plug 'tpope/vim-surround'
+
 if isdirectory('/usr/local/opt/fzf')
   Plug '/usr/local/opt/fzf' | Plug 'junegunn/fzf.vim'
 else
@@ -91,7 +93,8 @@ Plug 'fatih/vim-go', {'do': ':GoInstallBinaries'}
 "" Lua Bundle
 Plug 'xolox/vim-lua-ftplugin'
 Plug 'xolox/vim-lua-inspect'
-
+" don't automatically run lua inspect
+let g:lua_inspect_events = ''
 
 " php
 "" PHP Bundle
@@ -138,6 +141,9 @@ set softtabstop=0
 set shiftwidth=4
 set expandtab
 
+" listchars
+set listchars=eol:$
+
 "" Map leader to ,
 let mapleader=','
 
@@ -154,7 +160,7 @@ set smartcase
 set nobackup
 set noswapfile
 
-set fileformats=unix,dos,mac
+set fileformats=unix,mac
 
 if exists('$SHELL')
     set shell=$SHELL
@@ -433,10 +439,11 @@ if has('autocmd')
   autocmd GUIEnter * set visualbell t_vb=
 endif
 
-"" Copy/Paste/Cut
-if has('unnamedplus')
-  set clipboard=unnamed,unnamedplus
-endif
+
+""" Copy/Paste/Cut
+"if has('unnamedplus')
+"  set clipboard=unnamed,unnamedplus
+"endif
 
 noremap YY "+y<CR>
 noremap <leader>p "+gP<CR>
