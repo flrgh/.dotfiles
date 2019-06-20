@@ -49,7 +49,8 @@ Plug 'avelino/vim-bootstrap-updater'
 Plug 'sheerun/vim-polyglot'
 Plug 'tpope/vim-surround'
 Plug 'vito-c/jq.vim'
-Plug 'hashivim/vim-terraform'
+Plug 'hashivim/vim-terraform', { 'for': 'tf' }
+Plug 'z0mbix/vim-shfmt', { 'for': 'sh' }
 
 if isdirectory('/usr/local/opt/fzf')
   Plug '/usr/local/opt/fzf' | Plug 'junegunn/fzf.vim'
@@ -592,6 +593,17 @@ let g:airline#extensions#virtualenv#enabled = 1
 " Default highlight is better than polyglot
 let g:polyglot_disabled = ['python']
 let python_highlight_all = 1
+
+
+"
+" bash
+"
+
+" syntastic
+let g:syntastic_sh_shellcheck_args = "-e SC2059,SC2155,SC1091"
+
+" shfmt
+let g:shfmt_extra_args = '-i 4 -ci -bn -sr -kp'
 
 
 "*****************************************************************************
