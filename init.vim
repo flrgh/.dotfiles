@@ -43,7 +43,7 @@ Plug 'vim-scripts/CSApprox'
 Plug 'bronson/vim-trailing-whitespace'
 Plug 'Raimondi/delimitMate'
 Plug 'majutsushi/tagbar'
-Plug 'scrooloose/syntastic'
+Plug 'w0rp/ale'
 Plug 'Yggdroot/indentLine'
 Plug 'avelino/vim-bootstrap-updater'
 Plug 'sheerun/vim-polyglot'
@@ -51,6 +51,7 @@ Plug 'tpope/vim-surround'
 Plug 'vito-c/jq.vim'
 Plug 'hashivim/vim-terraform', { 'for': 'tf' }
 Plug 'z0mbix/vim-shfmt', { 'for': 'sh' }
+Plug 'aliou/bats.vim', { 'for': 'bats' }
 
 if isdirectory('/usr/local/opt/fzf')
   Plug '/usr/local/opt/fzf' | Plug 'junegunn/fzf.vim'
@@ -243,7 +244,6 @@ endif
 
 " vim-airline
 let g:airline_theme = 'powerlineish'
-let g:airline#extensions#syntastic#enabled = 1
 let g:airline#extensions#branch#enabled = 1
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
@@ -423,15 +423,6 @@ let g:UltiSnipsJumpForwardTrigger="<tab>"
 let g:UltiSnipsJumpBackwardTrigger="<c-b>"
 let g:UltiSnipsEditSplit="vertical"
 
-" syntastic
-let g:syntastic_always_populate_loc_list=1
-let g:syntastic_error_symbol='✗'
-let g:syntastic_warning_symbol='⚠'
-let g:syntastic_style_error_symbol = '✗'
-let g:syntastic_style_warning_symbol = '⚠'
-let g:syntastic_auto_loc_list=1
-let g:syntastic_aggregate_errors = 1
-
 " Tagbar
 nmap <silent> <F4> :TagbarToggle<CR>
 let g:tagbar_autofocus = 1
@@ -506,8 +497,6 @@ endfunction
 let g:go_list_type = "quickfix"
 let g:go_fmt_command = "goimports"
 let g:go_fmt_fail_silently = 1
-let g:syntastic_go_checkers = ['golint', 'govet']
-let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
 
 let g:go_highlight_types = 1
 let g:go_highlight_fields = 1
@@ -583,9 +572,6 @@ let g:jedi#show_call_signatures = "0"
 let g:jedi#completions_command = "<C-Space>"
 let g:jedi#smart_auto_mappings = 0
 
-" syntastic
-let g:syntastic_python_checkers=['python', 'flake8']
-
 " vim-airline
 let g:airline#extensions#virtualenv#enabled = 1
 
@@ -595,16 +581,45 @@ let g:polyglot_disabled = ['python']
 let python_highlight_all = 1
 
 
-"
+"*****************************************************************************
 " bash
-"
+"*****************************************************************************
 
-" syntastic
-let g:syntastic_sh_shellcheck_args = "-e SC2059,SC2155,SC1091"
+" make $ a keyword
+augroup vimrc-bash
+  autocmd!
+  autocmd FileType sh
+    \ setlocal iskeyword+=$ |
+    \ :TagbarOpen
+augroup END
+
+
+" ale shellcheck exclusions
+"
+" SC2059 - using printf with a variable in the template
+" https://github.com/koalaman/shellcheck/wiki/SC2059
+"
+" SC2155 - assign/execute in same expression ie `local stamp=$(date)`
+" https://github.com/koalaman/shellcheck/wiki/SC2155
+"
+" SC1091 - don't complain when shellcheck can't find a sourced file
+" https://github.com/koalaman/shellcheck/wiki/SC1091
+"
+" SC2181 - checking the last command's return code with `$?`
+" https://github.com/koalaman/shellcheck/wiki/SC2181
+"
+let g:ale_sh_shellcheck_exclusions = "SC2059,SC2155,SC1091,SC2181"
+
 
 " shfmt
-let g:shfmt_extra_args = '-i 4 -ci -bn -sr -kp'
-
+"
+"  -i uint   indent: 0 for tabs (default), >0 for number of spaces
+"  -bn       binary ops like && and | may start a line
+"  -ci       switch cases will be indented
+"  -sr       redirect operators will be followed by a space
+"  -kp       keep column alignment paddings
+"
+let g:ale_sh_shfmt_options = '-i 4 -ci -bn -sr -kp'
 
 "*****************************************************************************
 "*****************************************************************************
