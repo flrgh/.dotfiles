@@ -4,7 +4,7 @@ DOTFILES_DIRECTORY="$PWD"
 
 mkdir -p "$HOME/.dotfiles.old"
 
-for item in .vim .vimrc .tmux.conf .bash_profile .bashrc; do
+for item in .vim .vimrc .tmux.conf .bash .bash_profile .bashrc; do
     if [[ -L "$HOME/$item" ]]; then
         rm "$HOME/$item"
     elif [[ -f "$HOME/$item" || -d "$HOME/$item" ]]; then
