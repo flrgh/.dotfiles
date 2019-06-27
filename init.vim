@@ -9,7 +9,7 @@ endif
 
 let vimplug_exists=expand('~/.config/nvim/autoload/plug.vim')
 
-let g:vim_bootstrap_langs = "go,lua,php,python"
+"let g:vim_bootstrap_langs = "go,lua,php,python"
 let g:vim_bootstrap_editor = "nvim"				" nvim or vim
 
 if !filereadable(vimplug_exists)
@@ -31,47 +31,47 @@ call plug#begin(expand('~/.config/nvim/plugged'))
 "*****************************************************************************
 "" Plug install packages
 "*****************************************************************************
-Plug 'scrooloose/nerdtree'
-Plug 'jistr/vim-nerdtree-tabs'
-Plug 'tpope/vim-commentary'
-Plug 'tpope/vim-fugitive'
+
+" airline
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'airblade/vim-gitgutter'
-Plug 'vim-scripts/grep.vim'
-Plug 'vim-scripts/CSApprox'
-Plug 'bronson/vim-trailing-whitespace'
-Plug 'Raimondi/delimitMate'
-Plug 'majutsushi/tagbar'
-Plug 'w0rp/ale'
-Plug 'Yggdroot/indentLine'
-Plug 'avelino/vim-bootstrap-updater'
-Plug 'sheerun/vim-polyglot'
-Plug 'tpope/vim-surround'
-Plug 'vito-c/jq.vim'
-Plug 'hashivim/vim-terraform', { 'for': 'tf' }
-Plug 'z0mbix/vim-shfmt', { 'for': 'sh' }
-Plug 'aliou/bats.vim', { 'for': 'bats' }
 
-if isdirectory('/usr/local/opt/fzf')
-  Plug '/usr/local/opt/fzf' | Plug 'junegunn/fzf.vim'
-else
-  Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --bin' }
-  Plug 'junegunn/fzf.vim'
-endif
-let g:make = 'gmake'
-if exists('make')
-        let g:make = 'make'
-endif
-Plug 'Shougo/vimproc.vim', {'do': g:make}
+" put git diff indicators in the gutter
+Plug 'airblade/vim-gitgutter'
+
+" hilight trailing whitespace
+Plug 'bronson/vim-trailing-whitespace'
+
+" load tags in side pane
+Plug 'majutsushi/tagbar'
+
+" replacement for syntastic for linting and such
+Plug 'w0rp/ale'
+
+" highlight indentation levels
+Plug 'Yggdroot/indentLine'
+
+" multi language syntax/indent/ftplugin support
+Plug 'sheerun/vim-polyglot'
+
+" useful for targetting surrounding quotes/parens/etc
+Plug 'tpope/vim-surround'
+
+" syntax hilight for .jq files
+Plug 'vito-c/jq.vim'
+
+" syntax for .tf files
+Plug 'hashivim/vim-terraform', { 'for': 'tf' }
+
+" running shfmt commands on the buffer
+Plug 'z0mbix/vim-shfmt', { 'for': 'sh' }
+
+" syntax for .bats files
+Plug 'aliou/bats.vim', { 'for': 'bats' }
 
 "" Vim-Session
 Plug 'xolox/vim-misc'
 Plug 'xolox/vim-session'
-
-if v:version >= 703
-  Plug 'Shougo/vimshell.vim'
-endif
 
 if v:version >= 704
   "" Snippets
@@ -83,6 +83,13 @@ Plug 'honza/vim-snippets'
 "" Color
 Plug 'tomasr/molokai'
 Plug 'morhetz/gruvbox'
+Plug 'challenger-deep-theme/vim', { 'as': 'challenger-deep' }
+Plug 'mhinz/vim-janah'
+Plug 'mhartington/oceanic-next'
+Plug 'joshdick/onedark.vim'
+
+" tag management
+Plug 'jsfaint/gen_tags.vim'
 
 "*****************************************************************************
 "" Custom bundles
@@ -102,7 +109,8 @@ let g:lua_inspect_events = ''
 
 " php
 "" PHP Bundle
-Plug 'arnaud-lb/vim-php-namespace'
+" auto-insert `use` statements in PHP files
+"Plug 'arnaud-lb/vim-php-namespace'
 
 
 " python
@@ -169,7 +177,7 @@ set fileformats=unix,mac
 if exists('$SHELL')
     set shell=$SHELL
 else
-    set shell=/bin/sh
+    set shell=/bin/bash
 endif
 
 " session management
@@ -238,10 +246,6 @@ set statusline=%F%m%r%h%w%=(%{&ff}/%Y)\ (line\ %l\/%L,\ col\ %c)\
 nnoremap n nzzzv
 nnoremap N Nzzzv
 
-if exists("*fugitive#statusline")
-  set statusline+=%{fugitive#statusline()}
-endif
-
 " vim-airline
 let g:airline_theme = 'powerlineish'
 let g:airline#extensions#branch#enabled = 1
@@ -275,12 +279,6 @@ let g:NERDTreeWinSize = 50
 set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*.pyc,*.db,*.sqlite
 nnoremap <silent> <F2> :NERDTreeFind<CR>
 nnoremap <silent> <F3> :NERDTreeToggle<CR>
-
-" grep.vim
-nnoremap <silent> <leader>f :Rgrep<CR>
-let Grep_Default_Options = '-IR'
-let Grep_Skip_Files = '*.log *.db'
-let Grep_Skip_Dirs = '.git node_modules'
 
 " vimshell.vim
 let g:vimshell_user_prompt = 'fnamemodify(getcwd(), ":~")'
@@ -394,11 +392,6 @@ noremap <Leader>e :e <C-R>=expand("%:p:h") . "/" <CR>
 
 "" Opens a tab edit command with the path of the currently edited file filled
 noremap <Leader>te :tabe <C-R>=expand("%:p:h") . "/" <CR>
-
-"" fzf.vim
-set wildmode=list:longest,list:full
-set wildignore+=*.o,*.obj,.git,*.rbc,*.pyc,__pycache__
-let $FZF_DEFAULT_COMMAND =  "find * -path '*/\.*' -prune -o -path 'node_modules/**' -prune -o -path 'target/**' -prune -o -path 'dist/**' -prune -o  -type f -print -o -type l -print 2> /dev/null"
 
 " The Silver Searcher
 if executable('ag')
