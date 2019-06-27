@@ -3,6 +3,7 @@
 DOTFILES_DIRECTORY="$PWD"
 
 mkdir -p "$HOME/.dotfiles.old"
+mkdir -p "$HOME/.local"
 
 for item in .vim .vimrc .tmux.conf .bash .bash_profile .bashrc; do
     if [[ -L "$HOME/$item" ]]; then
@@ -15,6 +16,8 @@ done
 
 mkdir -vp "$HOME/.config/nvim"
 cp -v init.vim "$HOME/.config/nvim/"
+
+ln -s "$DOTFILES_DIRECTORY/.startup.py" "$HOME/.local/.startup.py"
 
 # Set up Vundle for vim
 git submodule update --init
