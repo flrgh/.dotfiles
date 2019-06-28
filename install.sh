@@ -1,29 +1,58 @@
 #!/bin/bash
 
-DOTFILES_DIRECTORY="$PWD"
+set -eu
+shopt -s nullglob dotglob
 
-mkdir -p "$HOME/.dotfiles.old"
-mkdir -p "$HOME/.local"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}")"  && pwd)"
+DIR=${DIR%/}
 
-for item in .vim .vimrc .tmux.conf .bash .bash_profile .bashrc; do
-    if [[ -L "$HOME/$item" ]]; then
-        rm "$HOME/$item"
-    elif [[ -f "$HOME/$item" || -d "$HOME/$item" ]]; then
-        mv "$HOME/$item" "$HOME/.dotfiles.old/"
+INSTALL_PATH=${1:-$HOME}
+INSTALL_PATH=${INSTALL_PATH%/}
+
+link() {
+    local target=$1
+    local linkName=$2
+
+    linkDir=$(dirname "$linkName")
+    if [[ ! -e $linkDir ]]; then
+	    mkdir -p "$linkDir"
     fi
-    ln -s "$DOTFILES_DIRECTORY/$item" "$HOME/$item"
+
+    if $DIR/linked.py "$target" "$linkName"; then
+        return 0
+    fi
+    ln -T -f -v -s "$target" "$linkName"
+}
+
+run_hooks() {
+    local path=$1
+    local name=$2
+
+    echo "Running $name hooks:"
+    for f in "$path"/*; do
+        printf "  - %s\n" "$(basename "$f")"
+        "$f"
+    done
+}
+
+
+echo Installing to $INSTALL_PATH
+
+run_hooks "$DIR/hooks.pre" pre-install
+
+LINK_FILES_DIR=$DIR/files.d
+
+find "$LINK_FILES_DIR" -mindepth 1 -type f -print0 \
+| while read -r -d '' target; do
+    linkName=${target/$LINK_FILES_DIR/$INSTALL_PATH}
+    link "$target" "$linkName"
 done
 
-mkdir -vp "$HOME/.config/nvim"
-cp -v init.vim "$HOME/.config/nvim/"
+LINK_DIRS_DIR=$DIR/dirs.d
+find "$LINK_DIRS_DIR" -maxdepth 1 -mindepth 1 -type d -print0 \
+| while read -r -d '' target; do
+    linkName=${target/$LINK_DIRS_DIR/$INSTALL_PATH}
+    link "$target" "$linkName"
+done
 
-ln -s "$DOTFILES_DIRECTORY/.startup.py" "$HOME/.local/.startup.py"
-
-# Set up Vundle for vim
-git submodule update --init
-
-echo "Installing vim plugins"
-\vim --not-a-term +BundleInstall +qall
-
-echo "Installing neovim plugins"
-nvim --headless +PlugUpdate +qall
+run_hooks "$DIR/hooks.post" post-install
