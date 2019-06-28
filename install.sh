@@ -30,8 +30,15 @@ run_hooks() {
 
     echo "Running $name hooks:"
     for f in "$path"/*; do
-        printf "  - %s\n" "$(basename "$f")"
-        "$f"
+        local t
+        t=$(mktemp)
+        local name; name=$(basename "$f")
+        printf "  - %s\n" "$name"
+        if ! "$f" < /dev/null &> "$t"; then
+            echo "$name exited nonzero: $?"
+            cat "$t"
+        fi
+        rm "$t"
     done
 }
 
