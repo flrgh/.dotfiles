@@ -10,6 +10,19 @@ key_bindings:
     mods: Alt
     action: Copy
 
+  - key: N
+    mods: Control|Shift
+    action: SpawnNewInstance
+
+  - key: W
+    mods: Control|Shift
+    action: Quit
+
+  # open a new window in tmux
+  - key: T
+    mods: Control|Shift
+    chars: "\x06\x63"
+
 window:
   # Window dimensions (changes require restart)
   dimensions:
