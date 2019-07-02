@@ -22,8 +22,4 @@ if [[ $OSTYPE =~ darwin ]]; then
 fi
 
 # local bash completion
-if [[ -d $HOME/.local/.bash_completion.d ]]; then
-    for f in "$HOME"/.local/.bash_completion.d/*; do
-        . "$f"
-    done
-fi
+_source_dir "$HOME/.local/.bash_completion.d"

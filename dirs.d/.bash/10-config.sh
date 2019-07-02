@@ -6,9 +6,6 @@ export EDITOR=vim
 # globbing should get files/directories that star with .
 shopt -s dotglob
 
-# a glob that matches zero paths expands to null
-shopt -s nullglob
-
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
