@@ -592,16 +592,13 @@ augroup END
 " SC2059 - using printf with a variable in the template
 " https://github.com/koalaman/shellcheck/wiki/SC2059
 "
-" SC2155 - assign/execute in same expression ie `local stamp=$(date)`
-" https://github.com/koalaman/shellcheck/wiki/SC2155
-"
 " SC1091 - don't complain when shellcheck can't find a sourced file
 " https://github.com/koalaman/shellcheck/wiki/SC1091
 "
 " SC2181 - checking the last command's return code with `$?`
 " https://github.com/koalaman/shellcheck/wiki/SC2181
 "
-let g:ale_sh_shellcheck_exclusions = "SC2059,SC2155,SC1091,SC2181"
+let g:ale_sh_shellcheck_exclusions = "SC2059,SC1091,SC2181"
 
 
 " shfmt
