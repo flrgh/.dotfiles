@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -eu
+
+readonly file=$1
+
+ihave() {
+    local cmd=$1
+    command -v "$cmd" &>/dev/null
+}
+
+if ihave rpm; then
+    rpm -q --whatprovides "$file"
+elif ihave dpkg; then
+    dpkg -S "$file"
+else
+    echo "no rpm or dpkg present--what do I do?"
+    exit 1
+fi
