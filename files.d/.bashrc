@@ -10,6 +10,8 @@ _source_dir() {
     for p in "$dir"/*; do
         if [[ -f $p && -r $p ]]; then
             . "$p"
+        elif [[ -d $p && -r $p ]]; then
+            _source_dir "$p"
         fi
     done
     eval "$opts"
