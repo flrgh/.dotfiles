@@ -1,2 +1,1 @@
-# https://github.com/golang/go/wiki/GOPATH
-export GOPATH=$HOME/.local/go
+export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
