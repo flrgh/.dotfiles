@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+
+import argparse
+import configparser
+import enum
+import json
+import sys
+
+class BasicFormatter(object):
+
+    def __call__(self, item):
+        if isinstance(item, (list, tuple)):
+            self.print_list(item)
+        elif isinstance(item, (dict,)):
+            self.print_mapping(item)
+        else:
+            self.print_item(item)
+
+    def print_item(self, item):
+        print(item)
+
+    def print_list(self, list_):
+        for item in list_:
+            self.print_item(item)
+
+    def print_mapping(self, map_):
+        for k, v in map_.items():
+            print('{0} = {1}'.format(k, v))
+
+class JsonFormatter(object):
+
+    def __call__(self, item):
+        print(json.dumps(item, indent=True))
+
+class Formatters(enum.Enum):
+    basic = BasicFormatter
+    json = JsonFormatter
+
+    @classmethod
+    def choices(cls):
+        return [i.name for  i in cls]
+
+    @classmethod
+    def get(cls, item):
+        return cls[item].value()
+
+class IniTool(object):
+
+    def __init__(self, f, formatter=None):
+        self._cp = configparser.ConfigParser()
+        self._cp.read_file(f)
+        self._formatter = formatter
+        f.close()
+
+    def dispatch(self, cmd, args):
+        method = getattr(self, cmd.replace('-', '_'))
+        if method is None:
+            raise Exception('Unknown command {command}'.format(command=cmd))
+        self._formatter(method(args))
+
+    def sections(self, args):
+        return self._cp.sections()
+
+    def items(self, args):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('section')
+        section = parser.parse_args(args).section
+        return dict(self._cp.items(section))
+
+    def get(self, args):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('section')
+        parser.add_argument('key')
+        ns = parser.parse_args(args)
+        return self._cp.get(
+            ns.section,
+            ns.key
+        )
+
+def main():
+    parser = argparse.ArgumentParser(description='Parse INI files')
+    parser.add_argument('filename', type=argparse.FileType('r'))
+    parser.add_argument('command')
+    parser.add_argument('--format', '-f',
+        choices=Formatters.choices(),
+        default='basic'
+    )
+    args, extra = parser.parse_known_args()
+
+    fd = args.filename
+    cmd = args.command
+
+    formatter = Formatters.get(args.format)
+
+    it = IniTool(fd, formatter=formatter)
+    it.dispatch(cmd, extra)
+
+
+if __name__ == '__main__':
+    main()
