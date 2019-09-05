@@ -6,8 +6,12 @@ shopt -s nullglob dotglob
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}")"  && pwd)"
 DIR=${DIR%/}
 
+
 INSTALL_PATH=${1:-$HOME}
 INSTALL_PATH=${INSTALL_PATH%/}
+
+export INSTALL_PATH
+export REPO_ROOT=$DIR
 
 link() {
     local target=$1
