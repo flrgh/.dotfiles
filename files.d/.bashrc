@@ -4,17 +4,17 @@ _source_dir() {
 
     local opts
     opts=$(shopt -p nullglob dotglob)
-    shopt -s nullglob dotglob
+    shopt -s nullglob dotglob globstar
 
     local p
-    for p in "$dir"/*; do
+    local files=("$dir"/**)
+    eval "$opts"
+
+    for p in "${files[@]}"; do
         if [[ -f $p && -r $p ]]; then
             . "$p"
-        elif [[ -d $p && -r $p ]]; then
-            _source_dir "$p"
         fi
     done
-    eval "$opts"
 }
 
 _source_dir "$HOME/.bash"
