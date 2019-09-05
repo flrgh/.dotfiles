@@ -6,6 +6,7 @@ COMPLETE=(
     "pip completion --bash"
     "pip3 completion --bash"
     "hugo gen autocomplete --completionfile=%%FILE%%"
+    "openstack complete --shell bash"
 )
 
 DIR="$HOME/.local/.bash_completion.d"
