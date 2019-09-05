@@ -53,7 +53,7 @@ run_hooks "$DIR/hooks.pre" pre-install
 
 LINK_FILES_DIR=$DIR/files.d
 
-find "$LINK_FILES_DIR" -mindepth 1 -type f -print0 \
+find "$LINK_FILES_DIR" -mindepth 1 \( -type f -o -type l \) -print0 \
 | while read -r -d '' target; do
     linkName=${target/$LINK_FILES_DIR/$INSTALL_PATH}
     link "$target" "$linkName"
