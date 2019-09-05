@@ -1,0 +1,6 @@
+[alias]
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+    tg = tag --sort=-creatordate --format='* %() %(objectname:short) %(align:width=13,position=left)%(refname:lstrip=2)%(end) %(align:width=28)%(creatordate:iso8601)%(end) %(align:width=20,position=left)(%(authorname))%(end) %(subject)'
+    cat = "!git show \"$1:$2\" #"
+[init]
+	templatedir = ~/.config/git/template
