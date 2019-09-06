@@ -30,7 +30,7 @@ _source_dir() {
     eval "$opts"
 
     for p in "${files[@]}"; do
-        if [[ -f $p && -r $p ]]; then
+        if [[ -f $p || -h $p ]] && [[ -r $p ]]; then
             _debug_rc "sourcing file: $p"
             . "$p"
         fi
