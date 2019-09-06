@@ -2,12 +2,14 @@
 # Tab completion
 #
 
-if [ -f /etc/profile.d/bash_completion.sh ]; then
+if [[ -f /etc/profile.d/bash_completion.sh ]]; then
+    _debug_rc "sourcing system bash completion"
     . /etc/profile.d/bash_completion.sh
 fi
 
 # Git
 if [[ -f $HOME/.git-completion.bash ]]; then
+    _debug_rc "sourcing git bash completion"
   . "$HOME/.git-completion.bash"
 fi
 
