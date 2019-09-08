@@ -2,8 +2,8 @@ _log_rc() {
     local -r ctx=$1
     shift
     local stamp
-    stamp=$(date +"%Y-%m-%d %H:%M:%S")
     for msg in "$@"; do
+        printf -v stamp '%(%F %T)T'
         printf "[%s] - (%s) - %s\n" "$stamp" "$ctx" "$msg"
     done
 }
