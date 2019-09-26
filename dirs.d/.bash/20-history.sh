@@ -13,6 +13,7 @@ export HISTTIMEFORMAT='%F %T '
 # save+reload history after every command
 # this could get expensive and slow when the history file gets big
 _HISTORY_CMD="history -a; history -c; history -r;"
+_debug_rc "Prompt command: $PROMPT_COMMAND"
 if ! [[ $PROMPT_COMMAND == *${_HISTORY_CMD}* ]]; then
     _debug_rc "Prepending history command ($_HISTORY_CMD) to \$PROMPT_COMMAND"
     export PROMPT_COMMAND="$_HISTORY_CMD $PROMPT_COMMAND"
