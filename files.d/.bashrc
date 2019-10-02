@@ -3,7 +3,7 @@ _log_rc() {
     shift
     local stamp
     for msg in "$@"; do
-        printf -v stamp '%(%F %T)T'
+        printf -v stamp '%s' '%(%F %T)T'
         printf "[%s] - (%s) - %s\n" "$stamp" "$ctx" "$msg"
     done
 }
