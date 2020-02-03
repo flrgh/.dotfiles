@@ -73,6 +73,10 @@ Plug 'aliou/bats.vim', { 'for': 'bats' }
 Plug 'xolox/vim-misc'
 Plug 'xolox/vim-session'
 
+" fantastic git integration
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-rhubarb'
+
 if v:version >= 704
   "" Snippets
   Plug 'SirVer/ultisnips'
@@ -89,7 +93,8 @@ Plug 'mhartington/oceanic-next'
 Plug 'joshdick/onedark.vim'
 
 " tag management
-Plug 'jsfaint/gen_tags.vim'
+"Plug 'jsfaint/gen_tags.vim'
+"Plug 'ludovicchabant/vim-gutentags'
 
 "*****************************************************************************
 "" Custom bundles
@@ -186,6 +191,19 @@ let g:session_autoload = "no"
 let g:session_autosave = "no"
 let g:session_command_aliases = 1
 
+" tags
+" let g:gutentags_exclude_filetypes = ['js', 'javascript', '.js']
+" let g:gutentags_cache_dir = "~/.cache/gutentags"
+" let g:gutentags_project_info = [
+" \    {'type': 'python', 'file': 'requirements.txt'},
+" \    {'type': 'lua',    'file': 'spec'},
+" \    {'type': 'php',    'file': 'composer.json'}
+" \]
+" let g:gutentags_ctags_exclude = ['*.js', '*.css']
+" let g:gutentags_modules = ['ctags', 'gtags_cscope']
+" let g:gutentags_add_default_project_roots = 1
+" let g:gutentags_add_ctrlp_root_markers = 1
+
 "*****************************************************************************
 "" Visual Settings
 "*****************************************************************************
@@ -222,6 +240,8 @@ else
 
 endif
 
+" default to vertical splits for diff
+set diffopt+=vertical
 
 
 "" Disable the blinking cursor.
@@ -276,7 +296,7 @@ let g:NERDTreeShowBookmarks=1
 let g:nerdtree_tabs_focus_on_files=1
 let g:NERDTreeMapOpenInTabSilent = '<RightMouse>'
 let g:NERDTreeWinSize = 50
-set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*.pyc,*.db,*.sqlite
+set wildignore+=*/tmp/*,*.so,*.swp,*.zip,*.pyc,*.db,*.sqlite,*.min.js,*.min.css
 nnoremap <silent> <F2> :NERDTreeFind<CR>
 nnoremap <silent> <F3> :NERDTreeToggle<CR>
 
@@ -583,7 +603,6 @@ augroup vimrc-bash
   autocmd!
   autocmd FileType sh
     \ setlocal iskeyword+=$ |
-    \ :TagbarOpen
 augroup END
 
 
@@ -658,3 +677,5 @@ else
   let g:airline_symbols.readonly = ''
   let g:airline_symbols.linenr = ''
 endif
+
+set tags^=./.git/tags;
