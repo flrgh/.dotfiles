@@ -1,3 +1,7 @@
+_stamp() {
+    date "+%s.%3N"
+}
+
 _log_rc() {
     local -r ctx=$1
     shift
@@ -37,4 +41,13 @@ _source_dir() {
     done
 }
 
+_RC_START=$(_stamp)
+
 _source_dir "$HOME/.bash"
+
+_RC_END=$(_stamp)
+
+_time=$(bc <<< "$_RC_END - $_RC_START")
+printf -v  _time '%.3f' "$_time"
+
+_debug_rc ".bashrc sourced in $_time seconds"
