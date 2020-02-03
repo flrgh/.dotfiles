@@ -18,7 +18,6 @@ addPath() {
         _debug_rc "Setting \$${var} to $p"
         export "$var"="$p"
     elif ! [[ $current =~ "${sep}"?"$p""${sep}"? ]]; then
-        _debug_rc "$current =~ $patt"
         _debug_rc "Prepending $p to \$${var}"
         local new=${p}${sep}${current}
         export "$var"="$new"
