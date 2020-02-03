@@ -26,3 +26,11 @@ addPath() {
         _debug_rc "\$${var} already contains $p"
     fi
 }
+
+iHave() {
+    local -r cmd=$1
+    if command -v "$cmd" &> /dev/null; then
+        return 0
+    fi
+    return 1
+}
