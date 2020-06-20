@@ -26,6 +26,8 @@ addPath() {
     fi
 }
 
+_cleanup_func addPath
+
 iHave() {
     local -r cmd=$1
     if command -v "$cmd" &> /dev/null; then
@@ -33,3 +35,5 @@ iHave() {
     fi
     return 1
 }
+
+_cleanup_func iHave

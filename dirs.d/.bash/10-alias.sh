@@ -7,7 +7,7 @@ fi
 alias grep='grep --color=auto'
 
 
-if command -v nvim &>/dev/null; then
+if iHave nvim &>/dev/null; then
     _debug_rc "neovim is installed; aliasing vim=nvim"
     alias vim=nvim
 fi

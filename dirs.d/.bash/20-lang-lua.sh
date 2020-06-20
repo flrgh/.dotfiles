@@ -6,23 +6,31 @@ if [[ -f $CONFIG_HOME/lua/repl.lua ]]; then
     export LUA_INIT="@$CONFIG_HOME/lua/repl.lua"
 fi
 
-if iHave luarocks; then
-    printf -v _now '%(%s)T'
+set_luarocks_path() {
+    local now file mtime
 
-    file="$CACHE_DIR/luarocks-paths"
-    if [[ -f $file ]]; then
-        _debug_rc "luarocks path cache exists"
-        mtime=$(stat --format='%Y' "$file")
-        if (( mtime + (24*60*60) < _now )); then
-            _debug_rc "luarocks path cache is stale--rebuilding"
-            rm "$file"
+    if iHave luarocks; then
+        printf -v now '%(%s)T'
+
+        file="$CACHE_DIR/luarocks-paths"
+        if [[ -f $file ]]; then
+            _debug_rc "luarocks path cache exists"
+            mtime=$(stat --format='%Y' "$file")
+            if (( mtime + (24*60*60) < now )); then
+                _debug_rc "luarocks path cache is stale--rebuilding"
+                rm "$file"
+                luarocks path --no-bin > "$file"
+            fi
+
+        else
+            _debug_rc "Creating luarocks path cache"
             luarocks path --no-bin > "$file"
         fi
 
-    else
-        _debug_rc "Creating luarocks path cache"
-        luarocks path --no-bin > "$file"
+        . "$file"
     fi
 
-    . "$file"
-fi
+    unset -f set_luarocks_path
+}
+
+set_luarocks_path

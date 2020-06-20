@@ -15,11 +15,12 @@ fi
 
 # homebrew bash completion
 if [[ $OSTYPE =~ darwin ]]; then
-    if command -v brew &>/dev/null; then
+    if iHave brew; then
         brew_prefix=$(brew --prefix)
         if [[ -f $brew_prefix/etc/bash_completion ]]; then
             . "${brew_prefix}/etc/bash_completion"
         fi
+        unset brew_prefix
     fi
 fi
 

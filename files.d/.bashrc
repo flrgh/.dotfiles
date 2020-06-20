@@ -1,6 +1,30 @@
+_CLEANUP=()
+
+_add_cleanup() {
+    for exp in "$@"; do
+        _CLEANUP+=("$exp")
+    done
+}
+
+_cleanup_var() {
+    for var in "$@"; do
+        _add_cleanup "unset $var"
+    done
+}
+
+_cleanup_func() {
+    for f in "$@"; do
+        _add_cleanup "unset -f $f"
+    done
+}
+
+_cleanup_func _cleanup_func _add_cleanup _cleanup_var
+
 _stamp() {
     date "+%s.%3N"
 }
+
+_cleanup_func _stamp
 
 _log_rc() {
     local -r ctx=$1
@@ -41,6 +65,8 @@ _source_dir() {
     done
 }
 
+_cleanup_func _source_dir
+
 _RC_START=$(_stamp)
 
 _source_dir "$HOME/.bash"
@@ -50,4 +76,11 @@ _RC_END=$(_stamp)
 _time=$(bc <<< "$_RC_END - $_RC_START")
 printf -v  _time '%.3f' "$_time"
 
+for stmt in "${_CLEANUP[@]}"; do
+    _debug_rc "CLEANUP: $stmt"
+    eval "$stmt"
+done
+
 _debug_rc ".bashrc sourced in $_time seconds"
+unset -f _debug_rc _log_rc
+unset _RC_START _RC_END _time

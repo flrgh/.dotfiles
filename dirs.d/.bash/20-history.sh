@@ -19,5 +19,7 @@ if ! [[ $PROMPT_COMMAND == *${_HISTORY_CMD}* ]]; then
     export PROMPT_COMMAND="$_HISTORY_CMD $PROMPT_COMMAND"
 fi
 
+_cleanup_var _HISTORY_CMD
+
 # append to the history file, don't overwrite it
 shopt -s histappend
