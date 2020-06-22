@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+docker run \
+    --rm \
+    --volume "$HOME/.composer:$HOME/.composer" \
+    --volume "$PWD:$PWD" \
+    --workdir "$PWD" \
+    --user "$UID:$(id -g)" \
+    --env COMPOSER_HOME="$HOME/.composer" \
+    composer "$@"
