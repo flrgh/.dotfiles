@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+tmp=$(mktemp -d)
+cd "$tmp" || { echo "failed to cd to temp dir ($tmp), exiting"; exit 1; }
+
+cleanup() {
+    rm -rv "$tmp"
+}
+
+trap cleanup ERR EXIT
+
+curl \
+    -o awscliv2.zip \
+    --url https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+
+unzip awscliv2.zip
+
+./aws/install \
+    --update \
+    --install-dir "$HOME/.local/aws-cli" \
+    --bin-dir "$HOME/.local/bin"
