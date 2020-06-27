@@ -1,0 +1,9 @@
+[global]
+
+strict_env = true
+
+[whitelist]
+
+prefix = [
+    "/home/michaelm/pagely-git"
+]
