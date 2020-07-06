@@ -28,7 +28,6 @@ def already_linked(target, link):
 
     return link.resolve() == target.resolve()
 
-
 def symlink(target, link, isdir=False):
     if already_linked(target, link):
         print(f"Already linked {link}")
@@ -39,6 +38,7 @@ def symlink(target, link, isdir=False):
     if link.exists() and link.is_symlink():
         link.unlink()
 
+    link.parent.mkdir(parents=True, exist_ok=True)
     link.symlink_to(target, target_is_directory=isdir)
 
 
@@ -106,7 +106,9 @@ def run_hooks(hooks):
 
 def main():
     if len(sys.argv) > 1:
+        global INSTALL_PATH
         INSTALL_PATH = Path(sys.argv[1])
+        print(f"Using custom install path: {INSTALL_PATH}")
 
     run_hooks("hooks.pre")
 
