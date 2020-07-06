@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+
+from pathlib import Path
+from os import path, walk
+
+import subprocess as sp
+import sys
+
+INSTALL_PATH = Path(path.expanduser("~"))
+REPO_ROOT = Path(path.dirname(path.dirname(path.realpath(__file__))))
+
+
+def list_tree(tree):
+    for root, dirs, files in walk(tree):
+        for f in files:
+            yield Path(path.join(root, f))
+
+
+def already_linked(target, link):
+    if not target.exists():
+        raise IOError(f"Target {target} does not exist!")
+
+    if not link.exists():
+        return False
+
+    if not link.is_symlink():
+        raise IOError(f"Link path ({link}) already exists but is not a symlink")
+
+    return link.resolve() == target.resolve()
+
+
+def symlink(target, link, isdir=False):
+    if already_linked(target, link):
+        print(f"Already linked {link}")
+        return
+
+    print(f"Symlink {link} -> {target}")
+
+    if link.exists() and link.is_symlink():
+        link.unlink()
+
+    link.symlink_to(target, target_is_directory=isdir)
+
+
+def files_d():
+    dirname = Path(REPO_ROOT / 'files.d')
+    for filename in list_tree(dirname):
+        link = INSTALL_PATH  / filename.relative_to(dirname)
+        symlink(filename, link)
+
+
+def dirs_d():
+    dirs = Path(REPO_ROOT / 'dirs.d')
+    for directory in dirs.iterdir():
+        link = INSTALL_PATH  / directory.relative_to(dirs)
+        symlink(directory, link, isdir=True)
+
+
+def print_lines(label, lines):
+    for line in lines:
+        line = line.strip("\n").strip()
+        if line == "":
+            continue
+        print(f"{label} => {line}")
+
+
+def runit(hook):
+    print(f"running hook => {hook.name} ", end="", flush=True)
+    proc = sp.Popen(
+        [hook, REPO_ROOT, INSTALL_PATH],
+        cwd    = REPO_ROOT,
+        stdin  = sp.DEVNULL,
+        stdout = sp.PIPE,
+        stderr = sp.PIPE
+    )
+
+    stdout = []
+    stderr = []
+
+    while True:
+        print(".", end="", flush=True)
+
+        try:
+            out, err = proc.communicate(timeout=0.1)
+            stdout.append(out.decode("utf-8"))
+            stderr.append(err.decode("utf-8"))
+            proc.wait(0.1)
+            break
+
+        except sp.TimeoutExpired as e:
+            continue
+
+    if proc.returncode == 0:
+        print(" OK", flush=True)
+    else:
+        print(" FAIL", flush=True)
+        print_lines("stdout", stdout)
+        print_lines("stderr", stderr)
+
+
+def run_hooks(hooks):
+    hookdir = REPO_ROOT / hooks
+    for hook in hookdir.iterdir():
+        runit(hook)
+
+
+def main():
+    if len(sys.argv) > 1:
+        INSTALL_PATH = Path(sys.argv[1])
+
+    run_hooks("hooks.pre")
+
+    files_d()
+    dirs_d()
+
+    run_hooks("hooks.post")
+
+if __name__ == "__main__":
+    main()

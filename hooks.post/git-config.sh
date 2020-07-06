@@ -2,8 +2,10 @@
 
 set -eu
 
-CONF="$REPO_ROOT/assets/git-config"
+REPO_ROOT=$1
+INSTALL_PATH=$2
 
+CONF="$REPO_ROOT/assets/git-config"
 INSTALL_DIR=$INSTALL_PATH/.config/git
 
 ls_items() {

@@ -4,4 +4,4 @@
 
 1. `git clone https://github.com/michaeljmartin/.dotfiles.git`
 2. `cd .dotfiles`
-3. `./install.sh`
+3. `./bin/install`
