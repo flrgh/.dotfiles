@@ -97,7 +97,9 @@ Plug 'joshdick/onedark.vim'
 
 " tag management
 "Plug 'jsfaint/gen_tags.vim'
-"Plug 'ludovicchabant/vim-gutentags'
+
+" Buffer management
+Plug 'moll/vim-bbye'
 
 "*****************************************************************************
 "" Custom bundles
@@ -466,13 +468,11 @@ if has('macunix')
 endif
 
 "" Buffer nav
-noremap <leader>z :bp<CR>
-noremap <leader>q :bp<CR>
-noremap <leader>x :bn<CR>
-noremap <leader>w :bn<CR>
+nnoremap <C-PageUp> :bprev<CR>
+nnoremap <C-PageDown> :bnext<CR>
 
 "" Close buffer
-noremap <leader>c :bd<CR>
+nnoremap <leader>w :Bwipeout<CR>
 
 "" Clean search (highlight)
 nnoremap <silent> <leader><space> :noh<cr>
