@@ -127,6 +127,8 @@ let g:lua_inspect_events = ''
 " auto-insert `use` statements in PHP files
 "Plug 'arnaud-lb/vim-php-namespace'
 
+Plug 'StanAngeloff/php.vim'
+
 
 " python
 "" Python Bundle
