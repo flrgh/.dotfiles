@@ -73,7 +73,10 @@ _source_dir "$HOME/.bash"
 
 _RC_END=$(_stamp)
 
-_time=$(bc <<< "$_RC_END - $_RC_START")
+_time=$(( _RC_END - _RC_START))
+if iHave bc; then
+    _time=$(bc <<< "$_RC_END - $_RC_START")
+fi
 printf -v  _time '%.3f' "$_time"
 
 for stmt in "${_CLEANUP[@]}"; do
