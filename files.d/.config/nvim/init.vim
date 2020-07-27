@@ -80,6 +80,10 @@ Plug 'tpope/vim-rhubarb'
 " CtrlP
 Plug 'ctrlpvim/ctrlp.vim'
 let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
+
+" golang
+Plug 'fatih/vim-go', {'do': ':GoInstallBinaries'}
+
 if v:version >= 704
   "" Snippets
   Plug 'SirVer/ultisnips'
