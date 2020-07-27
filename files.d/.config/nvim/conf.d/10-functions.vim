@@ -1,14 +1,6 @@
 "*****************************************************************************
 "" Functions
 "*****************************************************************************
-if !exists('*s:setupWrapping')
-  function s:setupWrapping()
-    set wrap
-    set wm=2
-    set textwidth=79
-  endfunction
-endif
-
 " Function for running a command and then returning your cursor to its
 " original position
 function! Preserve(command)

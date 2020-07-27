@@ -89,3 +89,5 @@ endfor
 
 
 call plug#end()
+
+filetype plugin indent on
