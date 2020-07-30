@@ -73,17 +73,25 @@ _source_dir "$HOME/.bash"
 
 _RC_END=$(_stamp)
 
-_time=$(( _RC_END - _RC_START))
+_time=0
+
 if iHave bc; then
     _time=$(bc <<< "$_RC_END - $_RC_START")
+
+elif iHave python; then
+    _time=$(python \
+        -c 'import sys; sys.stdout.write(str(round(float(sys.argv[1]) - float(sys.argv[2]), 3)))'
+        "$_RC_END" "$_RC_START"
+    )
 fi
+
 printf -v  _time '%.3f' "$_time"
+_debug_rc ".bashrc sourced in $_time seconds"
 
 for stmt in "${_CLEANUP[@]}"; do
     _debug_rc "CLEANUP: $stmt"
     eval "$stmt"
 done
 
-_debug_rc ".bashrc sourced in $_time seconds"
 unset -f _debug_rc _log_rc
 unset _RC_START _RC_END _time
