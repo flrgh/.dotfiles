@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# git only allows us to override the ssh binary via env var, so this is a hack
+# that allows setting an alernate ssh private key.
+
+cmd=(ssh)
+
+if [[ -n ${GIT_SSH_KEY:-} ]]; then
+    cmd+=("-i" "$GIT_SSH_KEY")
+fi
+
+cmd+=("$@")
+
+echo Executing "${cmd[@]}" >&2
+
+exec "${cmd[@]}"
