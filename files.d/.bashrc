@@ -80,7 +80,7 @@ if iHave bc; then
 
 elif iHave python; then
     _time=$(python \
-        -c 'import sys; sys.stdout.write(str(round(float(sys.argv[1]) - float(sys.argv[2]), 3)))'
+        -c 'import sys; sys.stdout.write(str(round(float(sys.argv[1]) - float(sys.argv[2]), 3)))' \
         "$_RC_END" "$_RC_START"
     )
 fi
