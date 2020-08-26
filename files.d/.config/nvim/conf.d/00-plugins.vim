@@ -65,9 +65,6 @@ Plug 'xolox/vim-session'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-rhubarb'
 
-" snippets
-Plug 'honza/vim-snippets'
-
 "" Color
 Plug 'tomasr/molokai'
 Plug 'morhetz/gruvbox'
