@@ -1,5 +1,5 @@
 " python
-Plug 'davidhalter/jedi-vim'
+Plug 'davidhalter/jedi-vim', {'for': 'python'}
 Plug 'raimon49/requirements.txt.vim', {'for': 'requirements'}
 
 " python
