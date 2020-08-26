@@ -1,5 +1,5 @@
 " golang
-Plug 'fatih/vim-go', {'do': ':GoUpdateBinaries'}
+Plug 'fatih/vim-go', {'do': ':GoUpdateBinaries', 'for': 'go'}
 
 " run :GoBuild or :GoTestCompile based on the go file
 function! s:build_go_files()
@@ -27,3 +27,9 @@ let g:go_highlight_space_tab_error = 0
 let g:go_highlight_array_whitespace_error = 0
 let g:go_highlight_trailing_whitespace_error = 0
 let g:go_highlight_extra_types = 1
+
+let g:go_metalinter_autosave = 0
+
+
+" Automatically show type info when cursor is on an identifier
+let g:go_auto_type_info = 1

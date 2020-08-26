@@ -30,4 +30,9 @@ augroup go
   au FileType go imap <leader>dr <esc>:<C-u>GoDeclsDir<cr>
   au FileType go nmap <leader>rb :<C-u>call <SID>build_go_files()<CR>
 
+  au FileType go set formatoptions+=rc
+
+  au FileType go nmap <Leader>tf <Plug>(go-test-func)
+  au FileType go nmap <leader>gc <Plug>(go-coverage-toggle)
+
 augroup END
