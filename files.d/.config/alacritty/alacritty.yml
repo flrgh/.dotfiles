@@ -24,6 +24,8 @@ key_bindings:
     chars: "\x06\x63"
 
 window:
+  dynamic_title: true
+
   # Window dimensions (changes require restart)
   dimensions:
     columns: 0
@@ -126,7 +128,7 @@ colors:
 #     cyan:    '0x427b58'
 #     white:   '0x3c3836'
 
-visual_bell:
+bell:
   animation: EaseOutExpo
   duration: 0             # duration set to 0 to disable
   color: '0xffffff'
@@ -165,7 +167,6 @@ selection:
   semantic_escape_chars: ",│`|:\"' ()[]{}<>"
   save_to_clipboard: false
 
-dynamic_title: true
 
 cursor:
   style: Block
