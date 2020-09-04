@@ -99,7 +99,7 @@ def runit(hook):
 
 
 def run_hooks(hooks):
-    hookdir = REPO_ROOT / hooks
+    hookdir = REPO_ROOT / "hooks"/ hooks
     for hook in hookdir.iterdir():
         runit(hook)
 
@@ -110,12 +110,12 @@ def main():
         INSTALL_PATH = Path(sys.argv[1])
         print(f"Using custom install path: {INSTALL_PATH}")
 
-    run_hooks("hooks.pre")
+    run_hooks("pre")
 
     files_d()
     dirs_d()
 
-    run_hooks("hooks.post")
+    run_hooks("post")
 
 if __name__ == "__main__":
     main()
