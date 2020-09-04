@@ -9,28 +9,35 @@ import sys
 INSTALL_PATH = Path(path.expanduser("~"))
 REPO_ROOT = Path(path.dirname(path.dirname(path.realpath(__file__))))
 
+DELETE_MARKER = '.DELETE'
 
 def list_tree(tree):
     for root, dirs, files in walk(tree):
         for f in files:
             yield Path(path.join(root, f))
 
+def is_deleted(fname):
+    return fname.resolve().name == DELETE_MARKER
 
 def already_linked(target, link):
-    if not target.exists():
+    if not target.exists() and not is_deleted(target):
         raise IOError(f"Target {target} does not exist!")
 
-    if not link.exists():
-        return False
-
-    if not link.is_symlink():
+    if link.exists() and not link.is_symlink():
         raise IOError(f"Link path ({link}) already exists but is not a symlink")
 
     return link.resolve() == target.resolve()
 
 def symlink(target, link, isdir=False):
     if already_linked(target, link):
-        print(f"Already linked {link}")
+        if is_deleted(target):
+            print(f"Unlinking deleted: {link}")
+            link.unlink(missing_ok=True)
+        else:
+            print(f"Already linked {link}")
+
+        return
+    elif is_deleted(target):
         return
 
     print(f"Symlink {link} -> {target}")
