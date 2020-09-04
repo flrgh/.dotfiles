@@ -11,7 +11,7 @@
   tool = nvim
 
 [mergetool]
-  prompt = true
+  prompt = false
 
 [mergetool "nvim"]
   cmd = nvim -f -c \"Gdiffsplit!\" \"$MERGED\"
