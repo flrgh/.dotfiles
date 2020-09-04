@@ -42,12 +42,6 @@ noremap <Leader>e :e <C-R>=expand("%:p:h") . "/" <CR>
 "" Opens a tab edit command with the path of the currently edited file filled
 noremap <Leader>te :tabe <C-R>=expand("%:p:h") . "/" <CR>
 
-" The Silver Searcher
-if executable('ag')
-  let $FZF_DEFAULT_COMMAND = 'ag --hidden --ignore .git -g ""'
-  set grepprg=ag\ --nogroup\ --nocolor
-endif
-
 " ripgrep
 if executable('rg')
   let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
@@ -57,13 +51,6 @@ endif
 
 cnoremap <C-P> <C-R>=expand("%:p:h") . "/" <CR>
 nnoremap <silent> <leader>b :Buffers<CR>
-nnoremap <silent> <leader>e :FZF -m<CR>
-
-" snippets
-let g:UltiSnipsExpandTrigger="<tab>"
-let g:UltiSnipsJumpForwardTrigger="<tab>"
-let g:UltiSnipsJumpBackwardTrigger="<c-b>"
-let g:UltiSnipsEditSplit="vertical"
 
 " Tagbar
 nmap <silent> <F4> :TagbarToggle<CR>
@@ -87,8 +74,8 @@ if has('macunix')
 endif
 
 "" Buffer nav
-nnoremap <C-PageUp> :bprev<CR>
-nnoremap <C-PageDown> :bnext<CR>
+nnoremap <silent> <C-PageUp> :bprev<CR>
+nnoremap <silent> <C-PageDown> :bnext<CR>
 
 "" Close buffer
 nnoremap <leader>w :Bwipeout<CR>
@@ -118,7 +105,13 @@ nnoremap <Leader>o :.Gbrowse<CR>
 nnoremap n nzzzv
 nnoremap N Nzzzv
 
-nnoremap <silent> <F2> :NERDTreeFind<CR>
-nnoremap <silent> <F3> :NERDTreeToggle<CR>
+" Quickfix nav
+map <leader>p :cprevious<CR>
+map <leader>n :cnext<CR>
+nnoremap <leader>a :cclose<CR>
 
-nnoremap <silent> <leader>sh :VimShellCreate<CR>
+" Change directory to that of the current file
+nnoremap <leader>cd :cd %:p:h<CR>
+
+" Reload configuration
+nnoremap <leader>r :source ~/.config/nvim/init.vim<CR> | echo "Reloaded!"
