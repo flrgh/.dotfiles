@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+EMAIL=${1:?Email required}
+shift
+
+SCRIPT="return b'''$EMAIL'''"
+
+printf "Running script: %q\n" "$SCRIPT"
+
+git filter-repo \
+    --email-callback "$SCRIPT" \
+    "$@"
