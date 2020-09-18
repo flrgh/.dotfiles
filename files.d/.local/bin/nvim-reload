@@ -10,11 +10,14 @@ def nvim_reload(sock):
     except FileNotFoundError as e:
         return
 
-    print(f'Reloading nvim at {sock}')
     try:
+        out = nvim.command_output('echo resolve("/proc/self")')
+        pid = out.strip('\n').split('/')[-1]
+        print(f'Reloading nvim pid={pid} sock={sock}')
+
         nvim.command('source $MYVIMRC')
     except neovim.NvimError as e:
-        print(f'Reload failed: {e}')
+        print(f'Reload failed sock={sock}: {e}')
 
 
 def main():
