@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+
+import neovim
+from glob import glob
+
+
+def nvim_reload(sock):
+    try:
+        nvim = neovim.attach('socket', path=sock)
+    except FileNotFoundError as e:
+        return
+
+    print(f'Reloading nvim at {sock}')
+    try:
+        nvim.command('source $MYVIMRC')
+    except neovim.NvimError as e:
+        print(f'Reload failed: {e}')
+
+
+def main():
+    for sock in glob('/tmp/nvim*/0'):
+        nvim_reload(sock)
+
+
+if __name__ == '__main__':
+    main()
