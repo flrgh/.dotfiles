@@ -114,4 +114,5 @@ nnoremap <leader>a :cclose<CR>
 nnoremap <leader>cd :cd %:p:h<CR>
 
 " Reload configuration
-nnoremap <leader>r :source ~/.config/nvim/init.vim<CR> | echo "Reloaded!"
+nnoremap <leader>ve :edit $MYVIMRC<CR>
+nnoremap <leader>vr :source $MYVIMRC<CR>
