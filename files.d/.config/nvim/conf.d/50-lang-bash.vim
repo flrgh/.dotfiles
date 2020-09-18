@@ -2,7 +2,7 @@
 augroup vimrc-bash
   autocmd!
   autocmd FileType sh
-    \ setlocal iskeyword+=$ |
+    \ setlocal iskeyword+=$ fileencoding=utf-8 |
 augroup END
 
 
