@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import neovim
+
 from glob import glob
+from os.path import basename
 
 
 def nvim_reload(sock):
@@ -11,8 +13,8 @@ def nvim_reload(sock):
         return
 
     try:
-        out = nvim.command_output('echo resolve("/proc/self")')
-        pid = out.strip('\n').split('/')[-1]
+        out = nvim.eval('resolve("/proc/self")')
+        pid = basename(out)
         print(f'Reloading nvim pid={pid} sock={sock}')
 
         nvim.command('source $MYVIMRC')
