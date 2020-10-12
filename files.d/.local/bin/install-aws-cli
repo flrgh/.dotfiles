@@ -11,6 +11,9 @@ cleanup() {
 
 trap cleanup ERR EXIT
 
+
+echo "Installing primary AWS CLI"
+
 curl \
     -o awscliv2.zip \
     --url https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
@@ -21,3 +24,10 @@ unzip awscliv2.zip
     --update \
     --install-dir "$HOME/.local/aws-cli" \
     --bin-dir "$HOME/.local/bin"
+
+
+echo "Installing ECS CLI"
+curl \
+    -o "$HOME/.local/bin/ecs-cli" \
+    --url https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest
+chmod -v +x "$HOME/.local/bin/ecs-cli"
