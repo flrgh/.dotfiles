@@ -21,7 +21,6 @@ augroup go
 
   au FileType go nmap <leader>r  <Plug>(go-run)
   au FileType go nmap <leader>t  <Plug>(go-test)
-  au FileType go nmap <Leader>gt <Plug>(go-coverage-toggle)
   au FileType go nmap <Leader>i <Plug>(go-info)
   au FileType go nmap <silent> <Leader>l <Plug>(go-metalinter)
   au FileType go nmap <C-g> :GoDecls<cr>
@@ -34,5 +33,9 @@ augroup go
 
   au FileType go nmap <Leader>tf <Plug>(go-test-func)
   au FileType go nmap <leader>gc <Plug>(go-coverage-toggle)
+
+
+  " only include .go files in ctrlp's most-recently-used list
+  au FileType go let g:ctrlp_mruf_include = '\.go$'
 
 augroup END
