@@ -4,12 +4,17 @@ import neovim
 
 from glob import glob
 from os.path import basename
+from os import getenv
 
 
 def nvim_reload(sock):
+    if getenv('NVIM_LISTEN_ADDRESS') == sock:
+        print(f'Skipping self {sock}')
+        return
+
     try:
         nvim = neovim.attach('socket', path=sock)
-    except FileNotFoundError as e:
+    except Exception as e:
         return
 
     try:
@@ -18,8 +23,9 @@ def nvim_reload(sock):
         print(f'Reloading nvim pid={pid} sock={sock}')
 
         nvim.command('source $MYVIMRC')
-    except neovim.NvimError as e:
-        print(f'Reload failed sock={sock}: {e}')
+
+    except Exception as e:
+        print(f'Reload command failed sock={sock}: {e}')
 
 
 def main():
