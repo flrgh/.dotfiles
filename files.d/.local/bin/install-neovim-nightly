@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly URL=https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz
+
+tmp=$(mktemp -d)
+cd "$tmp" || { echo "failed to cd to temp dir ($tmp), exiting"; exit 1; }
+
+cleanup() {
+    rm -r "$tmp"
+}
+
+trap cleanup ERR EXIT
+
+curl \
+   -L \
+   -o nvim-linux64.tar.gz \
+   --url "$URL"
+
+tar xzf nvim-linux64.tar.gz
+
+cp -a -v nvim-linux64/bin/* "$HOME/.local/bin/"
+cp -a -v nvim-linux64/lib/* "$HOME/.local/lib/"
+cp -a -v nvim-linux64/share/* "$HOME/.local/share/"
