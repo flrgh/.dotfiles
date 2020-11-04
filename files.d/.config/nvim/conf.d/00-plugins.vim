@@ -33,9 +33,6 @@ Plug 'bronson/vim-trailing-whitespace'
 " load tags in side pane
 Plug 'majutsushi/tagbar'
 
-" replacement for syntastic for linting and such
-Plug 'w0rp/ale'
-
 " highlight indentation levels
 Plug 'Yggdroot/indentLine'
 
