@@ -28,29 +28,8 @@ nnoremap <leader>ss :SaveSession<Space>
 nnoremap <leader>sd :DeleteSession<CR>
 nnoremap <leader>sc :CloseSession<CR>
 
-"" Tabs
-nnoremap <Tab> gt
-nnoremap <S-Tab> gT
-nnoremap <silent> <S-t> :tabnew<CR>
-
 "" Set working directory
 nnoremap <leader>. :lcd %:p:h<CR>
-
-"" Opens an edit command with the path of the currently edited file filled in
-noremap <Leader>e :e <C-R>=expand("%:p:h") . "/" <CR>
-
-"" Opens a tab edit command with the path of the currently edited file filled
-noremap <Leader>te :tabe <C-R>=expand("%:p:h") . "/" <CR>
-
-" ripgrep
-if executable('rg')
-  let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
-  set grepprg=rg\ --vimgrep
-  command! -bang -nargs=* Find call fzf#vim#grep('rg --column --line-number --no-heading --fixed-strings --ignore-case --hidden --follow --glob "!.git/*" --color "always" '.shellescape(<q-args>).'| tr -d "\017"', 1, <bang>0)
-endif
-
-cnoremap <C-P> <C-R>=expand("%:p:h") . "/" <CR>
-nnoremap <silent> <leader>b :Buffers<CR>
 
 " Tagbar
 nmap <silent> <F4> :TagbarToggle<CR>
@@ -62,10 +41,10 @@ if has('autocmd')
   autocmd GUIEnter * set visualbell t_vb=
 endif
 
-
+" yank/paste
 noremap YY "+y<CR>
 noremap <leader>p "+gP<CR>
-noremap XX "+x<CR>
+"noremap XX "+x<CR>
 
 if has('macunix')
   " pbcopy for OSX copy/paste
