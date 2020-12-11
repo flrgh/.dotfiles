@@ -11,9 +11,10 @@ set_luarocks_path() {
 
     if iHave luarocks; then
         printf -v now '%(%s)T'
+        unset LUA_PATH
 
         file="$CACHE_DIR/luarocks-paths"
-        if [[ -f $file ]]; then
+        if [[ -f $file && -s $file ]]; then
             _debug_rc "luarocks path cache exists"
             mtime=$(stat --format='%Y' "$file")
             if (( mtime + (24*60*60) < now )); then
