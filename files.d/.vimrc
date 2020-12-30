@@ -1,36 +1,5 @@
-" Vundle stuff
-filetype off
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-" 
-" Plugins here
-" 
-"Bundle 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
-Plugin 'gregsexton/MatchTag'
-Plugin 'bling/vim-airline'
-Plugin 'tpope/vim-surround'
-Plugin 'tpope/vim-markdown'
-Plugin 'scrooloose/syntastic'
-Plugin 'flazz/vim-colorschemes'
-Plugin 'guns/xterm-color-table.vim'
-Plugin 'ctrlpvim/ctrlp.vim'
-Plugin 'romainl/Apprentice'
-call vundle#end()            " required
-filetype plugin indent on    " required
-
-" Airline font config
-let g:airline_powerline_fonts = 1
-
-" The colors!
-:colorscheme Tomorrow-Night
-
-
 " Syntax hilighting
 :syntax on
-
-" Enable syntax hilighting in markdown code blocks
-let g:markdown_fenced_languages = ['html', 'python', 'bash=sh']
 
 " Numba lines
 set number
@@ -43,10 +12,6 @@ set tabstop=4
 set shiftwidth=4
 set softtabstop=4
 set expandtab
-
-" Path management via pathogen
-"execute pathogen#infect()
-"call pathogen#helptags()
 
 " Always use decimal for editing numbers
 set nrformats=
@@ -63,12 +28,6 @@ nnoremap n nzz
 nnoremap N Nzz
 nnoremap * *zz
 nnoremap # #zz
-
-" Powwa line
-let g:Powerline_symbols = 'fancy'
-set nocompatible   " Disable vi-compatibility
-set laststatus=2   " Always show the statusline
-set encoding=utf-8 " Necessary to show Unicode glyphs
 
 " Better navigation of panes/splits
 nnoremap <C-J> <C-W><C-J>
@@ -88,9 +47,6 @@ autocmd! bufwritepost .vimrc nested source %
 
 " Rebind <leader> key
 let mapleader = ","
-
-" Silence Syntastic's style checking
-let g:syntastic_quiet_messages = { "type": "style" }
 
 " Function for running a command and then returning your cursor to its
 " original position
