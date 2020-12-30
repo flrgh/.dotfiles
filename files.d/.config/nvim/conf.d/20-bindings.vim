@@ -85,9 +85,9 @@ nnoremap n nzzzv
 nnoremap N Nzzzv
 
 " Quickfix nav
-map <leader>p :cprevious<CR>
-map <leader>n :cnext<CR>
-nnoremap <leader>a :cclose<CR>
+map <leader>qp :cprevious<CR>
+map <leader>qn :cnext<CR>
+nnoremap <leader>qq :cclose<CR>
 
 " Change directory to that of the current file
 nnoremap <leader>cd :cd %:p:h<CR>
