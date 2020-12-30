@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly VERSION=0.8.0
+
+URL=https://releases.hashicorp.com/terraform-ls/${VERSION}/terraform-ls_${VERSION}_linux_amd64.zip
+
+tmp=$(mktemp -d)
+cd "$tmp" || { echo "failed to cd to temp dir ($tmp), exiting"; exit 1; }
+
+cleanup() {
+    rm -r "$tmp"
+}
+
+trap cleanup ERR EXIT
+
+curl \
+   -s \
+   -L \
+   -o terraform-ls.zip \
+   --url "$URL"
+
+unzip terraform-ls.zip
+ls -la terraform-ls
+cp -a -v terraform-ls "$HOME/.local/bin/"

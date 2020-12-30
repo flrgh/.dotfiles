@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+readonly INSTALL_PATH=$HOME/.config/nvim/tools/lua-language-server
+
+# clone project
+if ! [[ -d $INSTALL_PATH ]]; then
+    git clone \
+        https://github.com/sumneko/lua-language-server \
+        "$INSTALL_PATH"
+fi
+
+cd "$INSTALL_PATH"
+
+git fetch
+git pull
+git submodule update --init --recursive
+
+cd 3rd/luamake
+ninja -f ninja/linux.ninja
+
+cd "$INSTALL_PATH"
+./3rd/luamake/luamake rebuild
+
+# ./bin/Linux/lua-language-server -E ./main.lua

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+readonly INSTALL_PATH=$HOME/.config/nvim/tools/lua-language-server
+
+cd "$INSTALL_PATH"
+
+exec ./bin/Linux/lua-language-server -E ./main.lua
