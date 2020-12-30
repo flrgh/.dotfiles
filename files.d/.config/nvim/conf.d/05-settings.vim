@@ -55,9 +55,11 @@ syntax on
 set ruler
 set number
 
+lua require('colorbuddy').colorscheme('gruvbuddy')
 let no_buffers_menu=1
 if !exists('g:not_finish_vimplug')
-  colorscheme gruvbox
+  "colorscheme gruvbox
+  "colorscheme OceanicNext
 endif
 
 set background=dark
