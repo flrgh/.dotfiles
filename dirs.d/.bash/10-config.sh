@@ -3,7 +3,7 @@
 # Use vim!
 export EDITOR=vim
 
-# globbing should get files/directories that star with .
+# globbing should get files/directories that start with .
 shopt -s dotglob
 
 # check the window size after each command and, if necessary,
@@ -17,4 +17,10 @@ shopt -s checkwinsize
 if iHave bat; then
     export MANPAGER="sh -c 'col -bx | bat -l man -p'"
     export MANROFFOPT="-c"
+fi
+
+# I hate this thing
+if iHave command_not_found_handle; then
+    _debug_rc "unsetting command_not_found_handle func"
+    unset -f command_not_found_handle
 fi
