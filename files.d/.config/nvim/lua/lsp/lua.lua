@@ -47,7 +47,11 @@ local function lua_libs(opts)
     end
 
     for _, item in ipairs(opts.extra) do
-        libs[expand(item)] = true
+        local path = expand(item)
+
+        if fs.dir_exists(path) or fs.file_exists(path) then
+            libs[path] = true
+        end
     end
 
     return libs

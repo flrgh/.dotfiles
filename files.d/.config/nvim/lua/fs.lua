@@ -2,6 +2,8 @@ local _M = {
     _VERSION = '0.1'
 }
 
+local lfs = require 'lfs'
+
 --- Check if a file exists.
 -- @tparam fname string
 -- @treturn exists boolean
@@ -9,6 +11,13 @@ function _M.file_exists(fname)
     local f = io.open(fname, 'rb')
     if f then f:close() end
     return f ~= nil
+end
+
+--- Check if a directory exists.
+-- @tparam fname string
+-- @treturn exists boolean
+function _M.dir_exists(fname)
+    return lfs.attributes(fname, 'mode') == 'directory'
 end
 
 --- Read a file's contents to a string.
