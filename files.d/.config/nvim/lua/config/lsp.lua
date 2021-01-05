@@ -1,6 +1,8 @@
 local lsp = require 'lspconfig'
 local lsp_status = require 'lsp-status'
 
+local executable = vim.fn.executable
+
 local function set_key_maps(_)
     local options = {
         noremap = true,
@@ -11,7 +13,6 @@ local function set_key_maps(_)
         n = {
             ['<c-]>'] = 'definition',
             ['gD']    = 'implementation',
-            ['<c-k>'] = 'signature_help',
             ['gd']    = 'declaration',
         }
     }
@@ -44,72 +45,11 @@ local on_attach = attach_all {
     set_key_maps,
 }
 
+local caps = lsp_status.capabilities
 
-local function find_lua_libraries()
-    local libs = {
-        -- Make the server aware of Neovim runtime files
-        [vim.fn.expand('$VIMRUNTIME/lua')] = true,
-        [vim.fn.expand('$VIMRUNTIME/lua/vim/lsp')] = true,
-    }
-
-    local git_dirs = vim.fn.globpath('~/git', '**/.git', false, true)
-
-    for _, g in ipairs(git_dirs) do
-        g = g:gsub('/%.git$', '')
-        if vim.fn.globpath(g, '**/*.lua') ~= '' then
-            libs[g] = true
-        end
-    end
-
-    return libs
-end
-
-lsp.sumneko_lua.setup {
-    on_attach = on_attach,
-    cmd = {
-        vim.fn.expand('~/.config/nvim/bin/lua-lsp'),
-    },
-    settings = {
-        Lua = {
-            runtime = {
-                -- Tell the language server which version of Lua you're using (LuaJIT in the case of Neovim)
-                version = 'LuaJIT',
-                -- Setup your lua path
-                path = vim.split(package.path, ';'),
-            },
-            diagnostics = {
-                -- Get the language server to recognize the `vim` global
-                globals = {
-                    'vim',
-                    'ngx',
-                },
-            },
-            workspace = {
-                library = find_lua_libraries(),
-            },
-            telemetry = {
-                -- don't phone home
-                enable = false,
-            },
-        },
-    },
-}
-
-if vim.fn.executable("gopls") then
-    lsp.gopls.setup {
-        on_attach = on_attach,
-        capabilities = lsp_status.capabilities
-    }
-end
-
-if vim.fn.executable("terraform-ls") then
-    lsp.terraformls.setup({})
-end
-
-if vim.fn.executable("bash-language-server") then
-    lsp.bashls.setup {
-        on_attach = on_attach
-    }
-end
+require('lsp.lua')(on_attach, lsp, caps)
+require('lsp.go')(on_attach, lsp, caps)
+require('lsp.terraform')(on_attach, lsp, caps)
+require('lsp.bash')(on_attach, lsp, caps)
 
 lsp_status.register_progress()
