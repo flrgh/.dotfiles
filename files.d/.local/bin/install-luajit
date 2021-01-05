@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly PREFIX=$HOME/.local
+readonly TAG_URL=https://api.github.com/repos/LuaJIT/LuaJIT/tags
+
+VERSION=${1:-latest}
+
+if [[ $VERSION == latest ]]; then
+    VERSION=$(
+        curl -f --silent \
+            --header "Accept: application/vnd.github.v3+json" \
+            --url "$TAG_URL" \
+        | jq -r '.[].name | select(test("^v[0-9.]+$"))' \
+        | sort -r -n \
+        | head -1
+    )
+
+	# strip leading `v`
+	VERSION=${VERSION#v}
+fi
+
+echo "installing luajit $VERSION"
+
+readonly SRC=$HOME/.cache/luajit-${VERSION}.tar.gz
+readonly URL=https://luajit.org/download/LuaJIT-${VERSION}.tar.gz
+
+if [[ ! -e $SRC ]]; then
+	curl -f --silent \
+		--url "$URL" \
+		-o "$SRC"
+fi
+
+cd $(mktemp -d)
+
+tar xzf "$SRC"
+
+cd "LuaJIT-${VERSION}"
+
+make PREFIX="$PREFIX"
+make install PREFIX="$PREFIX"

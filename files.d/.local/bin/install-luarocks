@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly PREFIX=$HOME/.local
+
+VERSION=${1:-latest}
+
+
+if [[ $VERSION == latest ]]; then
+    VERSION=$(
+        curl \
+            -s \
+            -o- \
+            --url https://luarocks.github.io/luarocks/releases/ \
+        | sed -n -r \
+            -e 's/.*href="luarocks-([0-9.]+).tar.gz.*/\1/gp' \
+        | sort -n -r \
+        | head -1
+    )
+
+fi
+
+readonly SRC=$HOME/.cache/luarocks-${VERSION}.tar.gz
+
+if [[ ! -e $SRC ]]; then
+    echo "Downloading luarocks $VERSION to $SRC"
+
+    curl \
+        --silent \
+        -f \
+        --url "https://luarocks.github.io/luarocks/releases/luarocks-${VERSION}.tar.gz" \
+        -o "$SRC"
+fi
+
+cd $(mktemp -d)
+
+tar xzf "$SRC"
+
+cd "luarocks-${VERSION}"
+
+./configure \
+    --prefix="$PREFIX" \
+    --with-lua-bin="$PREFIX/bin" \
+    --with-lua-include="$PREFIX/include" \
+    --with-lua-lib="$PREFIX/lib" \
+    --versioned-rocks-dir
+
+make
+
+make install
