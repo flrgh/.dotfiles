@@ -21,7 +21,6 @@ endif
 call plug#begin(expand('~/.config/nvim/plugged'))
 
 
-
 " Basic plugins with no config
 
 " put git diff indicators in the gutter
@@ -43,7 +42,7 @@ Plug 'sheerun/vim-polyglot'
 Plug 'tpope/vim-surround'
 
 " syntax hilight for .jq files
-Plug 'vito-c/jq.vim'
+Plug 'vito-c/jq.vim', {'for': 'jq'}
 
 " syntax for .tf files
 Plug 'hashivim/vim-terraform', { 'for': 'tf' }
@@ -69,6 +68,9 @@ Plug 'challenger-deep-theme/vim', { 'as': 'challenger-deep' }
 Plug 'mhinz/vim-janah'
 Plug 'mhartington/oceanic-next'
 Plug 'joshdick/onedark.vim'
+Plug 'tjdevries/colorbuddy.vim'
+Plug 'tjdevries/gruvbuddy.nvim'
+Plug 'sainnhe/sonokai'
 
 " Buffer management
 Plug 'moll/vim-bbye'
@@ -76,6 +78,8 @@ Plug 'moll/vim-bbye'
 " PHP lang
 Plug 'StanAngeloff/php.vim'
 
+" align!
+Plug 'junegunn/vim-easy-align'
 
 for f in split(glob('~/.config/nvim/plugins.d/*.vim'), '\n')
     exe 'source' f
