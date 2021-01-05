@@ -9,15 +9,14 @@ ihave() {
 }
 
 if ihave rpm; then
-    rpm -qa \
-    | sed -r \
-        -e 's/\.noarch$//' \
-        -e 's/\.x86_64//' \
-        -e 's/\.i686//' \
-        -e 's/\.fc[0-9]{2}//' \
-        -e 's/-[0-9.-]+$//'
-elif ihave dpkg; then
-    dpkg -l
+    rpm \
+        -qa \
+        --queryformat '%-40{NAME} %{VERSION}\n'
+elif ihave dpkg-query; then
+    dpkg-query \
+        --no-pager \
+        --show \
+        --showformat '${Package;-40} ${Version}\n'
 else
     echo "no rpm or dpkg present--what do I do?"
     exit 1
