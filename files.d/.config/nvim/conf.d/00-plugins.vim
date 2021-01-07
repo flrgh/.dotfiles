@@ -81,6 +81,9 @@ Plug 'StanAngeloff/php.vim'
 " align!
 Plug 'junegunn/vim-easy-align'
 
+" support .editorconfig files
+Plug 'editorconfig/editorconfig-vim'
+
 for f in split(glob('~/.config/nvim/plugins.d/*.vim'), '\n')
     exe 'source' f
 endfor
