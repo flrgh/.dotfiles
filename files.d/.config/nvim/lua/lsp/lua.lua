@@ -79,6 +79,16 @@ return function(on_attach, lsp, caps)
                     globals = {
                         'vim',
                         'ngx',
+
+                        -- busted globals
+                        'describe',
+                        'it',
+                        'setup',
+                        'teardown',
+                        'before_each',
+                        'after_each',
+                        'lazy_setup',
+                        'lazy_teardown',
                     },
                 },
                 workspace = {
