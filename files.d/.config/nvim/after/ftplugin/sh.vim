@@ -1,10 +1,19 @@
-" make $ a keyword
-augroup vimrc-bash
-  autocmd!
-  autocmd FileType sh
-    \ setlocal iskeyword+=$ fileencoding=utf-8 |
-augroup END
+if exists("b:did_ftplugin")
+	finish
+endif
+let b:did_ftplugin = 1
 
+" make $ a keyword
+setlocal iskeyword+=$
+
+" force utf-8
+setlocal fileencoding=utf-8
+
+" indentation is 4 spaces
+setlocal expandtab
+setlocal tabstop=4
+setlocal shiftwidth=4
+setlocal softtabstop=4
 
 " ale shellcheck exclusions
 "

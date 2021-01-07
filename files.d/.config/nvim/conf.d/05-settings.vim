@@ -12,12 +12,6 @@ set binary
 "" Fix backspace indent
 set backspace=indent,eol,start
 
-"" Tabs. May be overriten by autocmd rules
-set tabstop=4
-set softtabstop=0
-set shiftwidth=4
-set expandtab
-
 " listchars
 set listchars=eol:$
 
