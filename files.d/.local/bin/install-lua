@@ -40,3 +40,6 @@ tar xzf "$SRC"
 cd "lua-${VERSION}"
 
 make linux install INSTALL_TOP=$PREFIX
+
+mv "$PREFIX/bin/lua" "$PREFIX/bin/lua-${VERSION}"
+ln -sfv "$PREFIX/bin/lua-${VERSION}" "$PREFIX/bin/lua"

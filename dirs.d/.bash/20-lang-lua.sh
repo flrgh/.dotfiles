@@ -11,7 +11,7 @@ set_luarocks_path() {
 
     if iHave luarocks; then
         printf -v now '%(%s)T'
-        unset LUA_PATH
+        unset LUA_PATH LUA_CPATH
 
         file="$CACHE_DIR/luarocks-paths"
         if [[ -f $file && -s $file ]]; then

@@ -3,18 +3,14 @@
 rocks_trees = {
     {
         name = "user",
-        root = home .. "/.local"
+        root = home .. "/.local",
     },
-    {
-        name = "system",
-        root = "/usr"
-    }
 }
 
 lua_interpreter = "lua"
 
 variables = {
-   LUA_DIR = "/usr",
-   LUA_BINDIR = "/usr/bin",
-   LUA_LIBDIR = "/usr/lib64"
+   LUA_DIR = home .. "/.local",
+   LUA_BINDIR = home .. "/.local/bin",
+   LUA_LIBDIR = home .. "/.local/lib",
 }
