@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly CACHE=$HOME/.cache
+readonly INSTALL_PATH=$HOME/.local/share/fonts
+readonly REPO=ryanoasis/nerd-fonts
+readonly FONTS=(
+   SourceCodePro
+)
+
+TAG=$(
+   curl -s -f \
+   --header "Accept: application/vnd.github.v3+json" \
+   --url "https://api.github.com/repos/${REPO}/releases/latest" \
+   | jq -r .tag_name
+)
+
+echo "Latest tag: $TAG"
+
+get_font() {
+   local name=$1
+
+   cache-get \
+      "https://github.com/${REPO}/releases/download/${TAG}/${name}.zip" \
+      "font-${TAG}-${name}.zip"
+}
+
+install_font() {
+   local path=$1
+
+   printf "Installing %s..." "${path##*/}"
+
+   unzip -u -d "$INSTALL_PATH" "$path" > /dev/null
+   printf " ...done.\n"
+}
+
+for f in "${FONTS[@]}"; do
+   dest=$(get_font "$f")
+   install_font "$dest"
+done
+
+echo "Clearing font cache"
+fc-cache -vf "$INSTALL_PATH"
