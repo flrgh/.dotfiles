@@ -3,6 +3,7 @@
 from pathlib import Path
 from os import path, walk
 
+import argparse
 import subprocess as sp
 import sys
 
@@ -49,17 +50,17 @@ def symlink(target, link, isdir=False):
     link.symlink_to(target, target_is_directory=isdir)
 
 
-def files_d():
+def files_d(path):
     dirname = Path(REPO_ROOT / 'files.d')
     for filename in list_tree(dirname):
-        link = INSTALL_PATH  / filename.relative_to(dirname)
+        link = path  / filename.relative_to(dirname)
         symlink(filename, link)
 
 
-def dirs_d():
+def dirs_d(path):
     dirs = Path(REPO_ROOT / 'dirs.d')
     for directory in dirs.iterdir():
-        link = INSTALL_PATH  / directory.relative_to(dirs)
+        link = path  / directory.relative_to(dirs)
         symlink(directory, link, isdir=True)
 
 
@@ -71,10 +72,10 @@ def print_lines(label, lines):
         print(f"{label} => {line}")
 
 
-def runit(hook):
+def runit(hook, path):
     print(f"running hook => {hook.name} ", end="", flush=True)
     proc = sp.Popen(
-        [hook, REPO_ROOT, INSTALL_PATH],
+        [hook, REPO_ROOT, path],
         cwd    = REPO_ROOT,
         stdin  = sp.DEVNULL,
         stdout = sp.PIPE,
@@ -105,24 +106,44 @@ def runit(hook):
         print_lines("stderr", stderr)
 
 
-def run_hooks(hooks):
+def run_hooks(hooks, path):
     hookdir = REPO_ROOT / "hooks"/ hooks
     for hook in hookdir.iterdir():
-        runit(hook)
+        runit(hook, path)
 
 
 def main():
-    if len(sys.argv) > 1:
-        global INSTALL_PATH
-        INSTALL_PATH = Path(sys.argv[1])
-        print(f"Using custom install path: {INSTALL_PATH}")
+    parser = argparse.ArgumentParser(
+        usage='%(prog)s [OPTIONS]'
+    )
 
-    run_hooks("pre")
+    parser.add_argument(
+        '-l', '--link-only',
+        dest='link_only',
+        action='store_true',
+        default=False,
+        help='Only setup symlinks (after running pre-hooks)',
+    )
 
-    files_d()
-    dirs_d()
+    parser.add_argument(
+        'install_path',
+        nargs='?',
+        type=Path,
+        default=path.expanduser("~"),
+        help='Where to install things',
+    )
 
-    run_hooks("post")
+    args = parser.parse_args()
+
+    install_path = args.install_path
+
+    run_hooks("pre", install_path)
+
+    files_d(install_path)
+    dirs_d(install_path)
+
+    if not args.link_only:
+        run_hooks("post")
 
 if __name__ == "__main__":
     main()
