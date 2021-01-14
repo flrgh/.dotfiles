@@ -8,12 +8,18 @@ echo "Installing python deps for neovim"
 pip3 install --user --upgrade pynvim
 
 echo "Installing/updating vim-plug"
-curl -f \
-    -s \
-    -L \
-    -o "$HOME/.config/nvim/autoload/plug.vim" \
-    --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+readonly REPO=$1
+DEST=$("$REPO"/files.d/.local/bin/cache-get \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim \
+    "vim-plug.vim"
+)
+cp -v "$DEST" "$HOME/.config/nvim/autoload/plug.vim"
 
 echo "Installing neovim plugins"
 nvim --headless +PlugUpdate +qall
+
+echo "Updating TreeSitter parsers"
+nvim --headless +TSUpdate +qall || true
+
+echo
+echo "Finished"
