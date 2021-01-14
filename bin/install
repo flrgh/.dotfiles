@@ -222,7 +222,7 @@ def main():
     dirs_d(install_path)
 
     if not args.link_only:
-        run_hooks("post")
+        run_hooks("post", install_path)
 
 if __name__ == "__main__":
     main()
