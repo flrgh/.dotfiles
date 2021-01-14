@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
-from os import path, walk
+from os import path, walk, getlogin
 
 import argparse
 import subprocess as sp
@@ -34,9 +34,6 @@ def symlink(target, link, isdir=False):
         if is_deleted(target):
             print(f"Unlinking deleted: {link}")
             link.unlink(missing_ok=True)
-        else:
-            print(f"Already linked {link}")
-
         return
     elif is_deleted(target):
         return
@@ -63,6 +60,87 @@ def dirs_d(path):
         link = path  / directory.relative_to(dirs)
         symlink(directory, link, isdir=True)
 
+
+def delete_link(path):
+    if not path.is_symlink():
+        return None
+
+    print(f'deleting symlink orphan: {path}')
+    path.unlink()
+
+SKIP = object()
+
+def walk_path(path, cb):
+    if not path.is_dir():
+        return cb(path)
+
+    if cb(path) == SKIP:
+        return SKIP
+
+    for child in path.iterdir():
+        walk_path(child, cb)
+
+def mine(path):
+    return path.owner() == getlogin()
+
+def ignore_dir(path):
+    if not path.is_dir():
+        return False
+
+    strpath = str(path).lower().rstrip('/')
+
+    suffixes = [
+        '/node_modules',
+        '/go/pkg/mod',
+        '/cache',
+        '/site-packages',
+        '/flatpak/repo',
+        '/flatpak/runtime',
+        '/flatpak/app',
+        '/webkitgtk',
+        '/dist',
+    ]
+
+    for s in suffixes:
+        if strpath.endswith(s):
+            return True
+
+    if (path / '.git').exists():
+        return True
+
+    return False
+
+def non_repo_target(path):
+    return not str(path.resolve()).startswith(str(REPO_ROOT))
+
+def target_exists(path):
+    return path.resolve().exists()
+
+def cleanup(path):
+    if path.is_dir():
+        if not mine(path):
+            return SKIP
+
+        if ignore_dir(path):
+            return SKIP
+
+        return None
+
+    if not path.is_symlink():
+        return SKIP
+
+    if non_repo_target(path):
+        return SKIP
+
+    if target_exists(path):
+        return SKIP
+
+    delete_link(path)
+    return None
+
+def cleanup_links(path):
+    walk_path(path / '.local', cleanup)
+    walk_path(path / '.config', cleanup)
 
 def print_lines(label, lines):
     for line in lines:
@@ -139,6 +217,7 @@ def main():
 
     run_hooks("pre", install_path)
 
+    cleanup_links(install_path)
     files_d(install_path)
     dirs_d(install_path)
 
