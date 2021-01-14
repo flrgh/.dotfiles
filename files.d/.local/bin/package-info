@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -eu
+
+readonly package=$1
+
+ihave() {
+    local cmd=$1
+    command -v "$cmd" &>/dev/null
+}
+
+if ihave rpm; then
+		rpm --query --info "$package"
+
+elif ihave dpkg-query; then
+		dpkg-query \
+			--show \
+			--showformat='Package: ${Package}\nVersion: ${Version}\nDepends: ${Depends}\nMaintainer: ${Maintainer}\nStatus: ${db:Status-Status}\n' \
+			"$package"
+
+else
+    echo "no rpm or dpkg present--what do I do?"
+    exit 1
+fi
