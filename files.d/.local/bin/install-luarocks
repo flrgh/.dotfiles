@@ -21,17 +21,10 @@ if [[ $VERSION == latest ]]; then
 
 fi
 
-readonly SRC=$HOME/.cache/luarocks-${VERSION}.tar.gz
-
-if [[ ! -e $SRC ]]; then
-    echo "Downloading luarocks $VERSION to $SRC"
-
-    curl \
-        --silent \
-        -f \
-        --url "https://luarocks.github.io/luarocks/releases/luarocks-${VERSION}.tar.gz" \
-        -o "$SRC"
-fi
+SRC=$(cache-get \
+    "https://luarocks.github.io/luarocks/releases/luarocks-${VERSION}.tar.gz" \
+    "luarocks-${VERSION}.tar.gz"
+)
 
 cd $(mktemp -d)
 

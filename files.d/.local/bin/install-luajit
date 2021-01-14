@@ -23,14 +23,10 @@ fi
 
 echo "installing luajit $VERSION"
 
-readonly SRC=$HOME/.cache/luajit-${VERSION}.tar.gz
-readonly URL=https://luajit.org/download/LuaJIT-${VERSION}.tar.gz
-
-if [[ ! -e $SRC ]]; then
-	curl -f --silent \
-		--url "$URL" \
-		-o "$SRC"
-fi
+SRC=$(cache-get \
+    "https://luajit.org/download/LuaJIT-${VERSION}.tar.gz" \
+    "luajit-${VERSION}.tar.gz"
+)
 
 cd $(mktemp -d)
 

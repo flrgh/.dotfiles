@@ -25,12 +25,13 @@ cleanup() {
 
 trap cleanup ERR EXIT
 
-curl \
-   -s \
-   -L \
-   -o bat.tar.gz \
-   --url "$DOWNLOAD_URL"
+FNAME=${DOWNLOAD_URL##*/}
 
-tar xzf bat.tar.gz
+F=$(cache-get \
+    "$DOWNLOAD_URL" \
+    "$FNAME"
+)
+
+tar xzf "$F"
 
 cp -a -v ./bat*/bat "$HOME/.local/bin/"

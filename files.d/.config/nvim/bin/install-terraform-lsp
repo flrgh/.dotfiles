@@ -2,9 +2,24 @@
 
 set -euo pipefail
 
-readonly VERSION=0.8.0
+VERSION=${1:-latest}
 
-URL=https://releases.hashicorp.com/terraform-ls/${VERSION}/terraform-ls_${VERSION}_linux_amd64.zip
+if [[ $VERSION == latest ]]; then
+   VERSION=$(curl \
+      -s \
+      --fail \
+      --url https://releases.hashicorp.com/terraform-ls/ \
+   | sed -n -r \
+      -e 's|.*href="/terraform-ls/([^/]+)/".*|\1|gp' \
+   | sort -Vr \
+   | head -1
+   )
+fi
+
+SRC=$(cache-get \
+   "https://releases.hashicorp.com/terraform-ls/${VERSION}/terraform-ls_${VERSION}_linux_amd64.zip" \
+   "terraform-ls-${VERSION}.zip"
+)
 
 tmp=$(mktemp -d)
 cd "$tmp" || { echo "failed to cd to temp dir ($tmp), exiting"; exit 1; }
@@ -15,12 +30,7 @@ cleanup() {
 
 trap cleanup ERR EXIT
 
-curl \
-   -s \
-   -L \
-   -o terraform-ls.zip \
-   --url "$URL"
-
-unzip terraform-ls.zip
-ls -la terraform-ls
+unzip -d . "$SRC"
 cp -a -v terraform-ls "$HOME/.local/bin/"
+
+terraform-ls --version

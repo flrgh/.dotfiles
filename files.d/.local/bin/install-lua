@@ -21,17 +21,10 @@ if [[ $VERSION == latest ]]; then
 
 fi
 
-readonly SRC=$HOME/.cache/lua-${VERSION}.tar.gz
-
-if [[ ! -e $SRC ]]; then
-    echo "Downloading lua $VERSION to $SRC"
-
-    curl \
-        --silent \
-        -f \
-        --url "https://www.lua.org/ftp/lua-${VERSION}.tar.gz" \
-        -o "$SRC"
-fi
+SRC=$(cache-get \
+    "https://www.lua.org/ftp/lua-${VERSION}.tar.gz" \
+    "lua-${VERSION}.tar.gz"
+)
 
 cd $(mktemp -d)
 
