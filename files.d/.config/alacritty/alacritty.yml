@@ -49,7 +49,7 @@ window:
   #   - Windowed
   #   - Maximized
   #   - Fullscreen
-  startup_mode: Windowed
+  startup_mode: Maximized
 
   title: Alacritty
   class: Alacritty
