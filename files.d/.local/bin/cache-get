@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly URL=${1?URL required}
+readonly FNAME=${2?Filename required}
+
+readonly DEST="$HOME/.cache/$FNAME"
+
+log() {
+	printf "$@" > /dev/stderr
+}
+
+log "URL: $URL\n"
+log "Destination: $DEST\n"
+
+log "Fetching ... "
+
+if [[ -e $DEST ]]; then
+	log "already cached.\n"
+	printf "%s\n" "$DEST"
+	exit 0
+fi
+
+curl \
+	--silent \
+	-f \
+	-L \
+	-o "$DEST" \
+	--url "$URL"
+
+log "done.\n"
+
+printf "%s\n" "$DEST"
