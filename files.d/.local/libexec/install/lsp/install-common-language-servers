@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if ! command -v npm &>/dev/null; then
+    install-node
+fi
+
+npm install -g \
+    bash-language-server \
+    pyright \
+    sql-language-server
+    vscode-json-languageserver \
+    yaml-language-server \

@@ -2,7 +2,7 @@ local fs = require 'fs'
 
 local expand = vim.fn.expand
 
-local SERVER = expand('~/.config/nvim/bin/lua-lsp')
+local SERVER = 'lua-language-server'
 local USER_SETTINGS = expand('~/.config/lua/sumneko.json')
 
 
