@@ -2,8 +2,11 @@
 
 readonly INSTALL_PATH=$HOME/.config/nvim/tools/lua-language-server
 
-# clone project
-if ! [[ -d $INSTALL_PATH ]]; then
+NEW=0
+
+if [[ ! -d $INSTALL_PATH ]]; then
+    # clone project
+    NEW=1
     git clone \
         https://github.com/sumneko/lua-language-server \
         "$INSTALL_PATH"
@@ -11,8 +14,26 @@ fi
 
 cd "$INSTALL_PATH"
 
-git fetch
-git pull
+BUILD=1
+
+if [[ $NEW -ne 1 ]]; then
+    HEAD=$(git rev-parse HEAD)
+
+    git fetch
+    git pull --ff-only
+
+    if [[ $HEAD == $(git rev-parse HEAD) ]]; then
+        BUILD=0
+    fi
+fi
+
+if [[ $BUILD -eq 0 ]]; then
+    echo no build needed
+    exit 0
+fi
+
+exit 1
+
 git submodule update --init --recursive
 
 cd 3rd/luamake
