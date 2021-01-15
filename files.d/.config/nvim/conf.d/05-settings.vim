@@ -47,7 +47,7 @@ set mousemodel=popup
 set mouse=nv
 
 " clipboard register
-set clipboard=unamedplus
+set clipboard=unnamedplus
 
 "*****************************************************************************
 "" Visual Settings
