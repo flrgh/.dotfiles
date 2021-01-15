@@ -5,7 +5,6 @@ local expand = vim.fn.expand
 local SERVER = 'lua-language-server'
 local USER_SETTINGS = expand('~/.config/lua/sumneko.json')
 
-
 local DEFAULT_SETTINGS = {
     lib = {
         include_vim = true, -- Make the server aware of Neovim runtime files
@@ -44,6 +43,7 @@ local function lua_libs(opts)
     if opts.include_vim then
         libs[expand('$VIMRUNTIME/lua')] = true
         libs[expand('$VIMRUNTIME/lua/vim/lsp')] = true
+        libs[expand('$HOME/.config/nvim/lua')] = true
     end
 
     for _, item in ipairs(opts.extra) do
@@ -75,10 +75,26 @@ return function(on_attach, lsp, caps)
                     version = 'LuaJIT', -- neovim implies luajit
                     path = vim.split(package.path, ';'),
                 },
+                completion = {
+                    enable = true,
+                },
+                signatureHelp = {
+                    enable = true,
+                },
+                hover = {
+                    enable = true,
+                },
                 diagnostics = {
+                    enable = true,
+                    disable = {
+                        'lowercase-global',
+                    },
                     globals = {
                         'vim',
+
+                        -- openresty/kong globals
                         'ngx',
+                        'kong',
 
                         -- busted globals
                         'after_each',

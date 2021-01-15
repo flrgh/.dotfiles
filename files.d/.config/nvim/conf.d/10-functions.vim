@@ -16,4 +16,15 @@ function! Preserve(command)
 endfunction
 
 " Remove unwanted whitespace at the end of lines
-nmap _$ :call Preserve("%s/\\s\\+$//e")<CR>
+nnoremap _$ :call Preserve("%s/\\s\\+$//e")<CR>
+
+" Stops current LSP clients and reloads vim
+if !exists('*ReloadVim')
+    function! ReloadVim()
+        lua vim.lsp.stop_client(vim.lsp.get_active_clients())
+        source $MYVIMRC
+				echo "reloaded"
+    endfunction
+end
+
+nnoremap <leader>vr :call  ReloadVim()<CR>

@@ -94,4 +94,3 @@ nnoremap <leader>cd :cd %:p:h<CR>
 
 " Reload configuration
 nnoremap <leader>ve :edit $MYVIMRC<CR>
-nnoremap <leader>vr :source $MYVIMRC<CR>
