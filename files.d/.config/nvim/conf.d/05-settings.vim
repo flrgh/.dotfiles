@@ -42,6 +42,13 @@ let g:session_autoload = "no"
 let g:session_autosave = "no"
 let g:session_command_aliases = 1
 
+" mouse settings
+set mousemodel=popup
+set mouse=nv
+
+" clipboard register
+set clipboard=unamedplus
+
 "*****************************************************************************
 "" Visual Settings
 "*****************************************************************************
@@ -60,7 +67,6 @@ endif
 
 set background=dark
 set termguicolors
-set mousemodel=popup
 set t_Co=256
 set guioptions=egmrti
 set gfn=Monospace\ 10
