@@ -5,7 +5,6 @@ from os import path, walk, getlogin
 
 import argparse
 import subprocess as sp
-import sys
 
 INSTALL_PATH = Path(path.expanduser("~"))
 REPO_ROOT = Path(path.dirname(path.dirname(path.realpath(__file__))))
@@ -13,7 +12,7 @@ REPO_ROOT = Path(path.dirname(path.dirname(path.realpath(__file__))))
 DELETE_MARKER = '.DELETE'
 
 def list_tree(tree):
-    for root, dirs, files in walk(tree):
+    for root, _, files in walk(tree):
         for f in files:
             yield Path(path.join(root, f))
 
@@ -173,7 +172,7 @@ def runit(hook, path):
             proc.wait(0.1)
             break
 
-        except sp.TimeoutExpired as e:
+        except sp.TimeoutExpired:
             continue
 
     if proc.returncode == 0:
