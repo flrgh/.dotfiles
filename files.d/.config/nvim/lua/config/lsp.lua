@@ -14,6 +14,7 @@ local function set_key_maps(_)
             ['<c-]>'] = 'definition',
             ['gD']    = 'implementation',
             ['gd']    = 'declaration',
+            ['K']     = 'hover',
         }
     }
 
