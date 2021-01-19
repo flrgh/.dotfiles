@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+log() {
+    echo "$@" > /dev/stderr
+}
+
+INPUT=${1:-}
+
+if [[ -z $INPUT || $INPUT == - ]]; then
+    log "Using stdin"
+    INPUT=/dev/stdin
+fi
+
+if [[ ! -e $INPUT ]]; then
+    log "Archive $INPUT not found"
+    exit 1
+fi
+
+LINES=($(zipinfo -1 "$INPUT"))
+
+if [[ ${#LINES[@]} -gt 1 ]]; then
+    log "Archive contains more than one file"
+    exit 2
+fi
+
+MEMBER=${LINES[0]}
+
+exec unzip -p "$INPUT" "$MEMBER"
