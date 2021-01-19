@@ -27,12 +27,10 @@ if [[ $NEW -ne 1 ]]; then
     fi
 fi
 
-if [[ $BUILD -eq 0 ]]; then
+if [[ $BUILD -eq 0 && ${FORCE:-0} -eq 0 ]]; then
     echo no build needed
     exit 0
 fi
-
-exit 1
 
 git submodule update --init --recursive
 
