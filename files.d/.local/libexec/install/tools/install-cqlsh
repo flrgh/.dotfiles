@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly RELEASES=https://api.github.com/repos/apache/cassandra/tags
+
+VERSION=${1:-latest}
+
+if [[ $VERSION == latest ]]; then
+    VERSION=$(
+        curl -f --silent \
+            --header "Accept: application/vnd.github.v3+json" \
+            --url "$RELEASES" \
+        | jq -r '.[].name | select(test("^cassandra-[0-9.-]+$"))' \
+        | sort -r -n \
+        | head -1
+    )
+
+    VERSION=${VERSION#cassandra-}
+    echo "Detected latest version $VERSION"
+fi
+
+
+SRC=$(cache-get \
+    "https://api.github.com/repos/apache/cassandra/tarball/cassandra-${VERSION}" \
+    "cassandra-${VERSION}.tar.gz"
+)
+
+cd $(mktemp -d)
+
+# dependencies
+pip install --user \
+    cql \
+    cassandra-driver
+
+tar xzf "$SRC"
+
+cd apache-cassandra-*
+
+cp -v bin/cqlsh bin/cqlsh.py "$HOME/.local/bin/"
+
+cd pylib
+python setup.py install --user --no-compile
