@@ -7,6 +7,9 @@ set -eu
 echo "Installing python deps for neovim"
 pip3 install --user --upgrade pynvim
 
+echo "Updating neovim nightly"
+"$HOME"/.local/libexec/install/install-neovim-nightly
+
 echo "Installing/updating vim-plug"
 readonly REPO=$1
 DEST=$("$REPO"/files.d/.local/bin/cache-get \
