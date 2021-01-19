@@ -92,5 +92,5 @@ nnoremap <leader>qq :cclose<CR>
 " Change directory to that of the current file
 nnoremap <leader>cd :cd %:p:h<CR>
 
-" Reload configuration
+" edit vimrc
 nnoremap <leader>ve :edit $MYVIMRC<CR>
