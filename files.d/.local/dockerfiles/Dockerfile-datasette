@@ -1,0 +1,7 @@
+FROM datasetteproject/datasette:latest
+
+RUN pip install datasette-cluster-map \
+  && pip install datasette-vega \
+  && pip install datasette-rure \
+  && pip install datasette-leaflet-geojson \
+  && pip install datasette-pretty-json
