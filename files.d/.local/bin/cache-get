@@ -3,7 +3,12 @@
 set -euo pipefail
 
 readonly URL=${1?URL required}
-readonly FNAME=${2?Filename required}
+
+FNAME=${2:-}
+if [[ -z $FNAME ]]; then
+    FNAME=$(basename "$URL")
+    FNAME=${FNAME%\?*}
+fi
 
 readonly DEST="$HOME/.cache/$FNAME"
 

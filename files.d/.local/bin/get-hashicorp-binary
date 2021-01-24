@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+BIN_DIR=$HOME/.local/bin
+REPO=$HOME/git/.dotfiles
+
+CACHE=$HOME/.cache
+
+# https://developer.github.com/v3/repos/releases/#get-the-latest-release
+RELEASE_URL=https://api.github.com/repos/@OWNER@/@REPO@/releases/latest
+
+#DOWNLOAD_URL=https://releases.hashicorp.com/@REPO@/@VERSION@/@REPO@_@VERSION@_linux_amd64.zip
+DOWNLOAD_URL=https://releases.hashicorp.com/@REPO@/@VERSION@/@REPO@_@VERSION@
+
+usage() {
+    echo USAGE:
+    echo
+    echo "$0 <repo> <version>"
+    echo
+    echo PARAMS:
+    echo
+    echo 'name      description            default'
+    echo '----      -----------            -------'
+    echo 'repo      binary to download     <none>'
+    echo 'version   version to download    "latest"'
+    echo
+    echo EXAMPLES:
+    echo
+    echo '# Download the latest version of terraform'
+    echo
+    echo "\$ $0 terraform"
+    echo
+    echo '# Download packer 1.5.6'
+    echo
+    echo "\$ $0 packer 1.5.6"
+}
+
+newest_release() {
+    local -r owner=$1
+    local -r repo=$2
+    local url
+    url=${RELEASE_URL//@OWNER@/$owner}
+    url=${url//@REPO@/$repo}
+
+    curl -s "$url" \
+    | jq -r '.tag_name | sub("^v"; "")'
+}
+
+download_release() {
+    local -r repo=$1
+    local -r version=$2
+
+    local -r slug=${repo}_${version}
+
+    local base_url
+
+    base_url=${DOWNLOAD_URL//@REPO@/$repo}
+    base_url=${base_url//@VERSION@/$version}
+
+    echo "Downloading $repo $version from ${base_url}_linux_amd64.zip"
+    local binzip sums sig
+    binzip=$(cache-get "${base_url}_linux_amd64.zip")
+    sums=$(cache-get "${base_url}_SHA256SUMS")
+    sig=$(cache-get "${base_url}_SHA256SUMS.sig")
+
+    echo "Validating binary"
+    pushd "$CACHE"
+    # https://www.hashicorp.com/security
+    gpg --import "$REPO/assets/hashicorp-pub-key"
+    gpg --verify "$sig" "$sums"
+    sha256sum \
+        --ignore-missing \
+        --check \
+        "$sums"
+    popd
+
+    local t
+    t=$(mktemp -d)
+    pushd "$t"
+
+    unzip -d . "$binzip"
+    mv -v "$repo" "$BIN_DIR"
+    popd
+
+    rm -rfv "$t"
+}
+
+main() {
+    local -r repo=${1:-}
+    local -r version=${2:-latest}
+
+    if [[ -z $repo ]]; then
+        usage
+        exit 1
+    fi
+
+    local release
+    if [[ $version == latest ]]; then
+        echo "Checking latest release of $repo"
+        release=$(newest_release hashicorp "$repo")
+    else
+        release=$version
+    fi
+    echo "Using release $release"
+
+    download_release "$repo" "$release"
+
+    "$repo" -v
+}
+
+main "$@"
