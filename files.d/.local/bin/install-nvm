@@ -42,12 +42,6 @@ else
         fetch origin tag "$TAG" \
         --depth=1
 
-    git \
-        -c advice.detachedHead=false \
-        clone "$NVM_SOURCE" \
-        -b "$TAG" \
-        --depth=1 \
-        "${INSTALL_DIR}"
 fi
 
 GIT_ARGS+=(

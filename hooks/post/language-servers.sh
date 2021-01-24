@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-
 for f in "$HOME/.local/libexec/install/lsp/"*; do
-    "$f"
+    "$f" || {
+        echo "failure: $(basename $f)"
+        exit 1
+    }
 done
