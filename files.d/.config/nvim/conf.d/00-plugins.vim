@@ -84,6 +84,8 @@ Plug 'junegunn/vim-easy-align'
 " support .editorconfig files
 Plug 'editorconfig/editorconfig-vim'
 
+" auto hlsearch stuff
+Plug 'romainl/vim-cool'
 for f in split(glob('~/.config/nvim/plugins.d/*.vim'), '\n')
     exe 'source' f
 endfor
