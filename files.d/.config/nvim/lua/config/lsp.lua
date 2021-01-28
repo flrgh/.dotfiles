@@ -1,7 +1,10 @@
 local lsp = require 'lspconfig'
 local lsp_status = require 'lsp-status'
+local saga = require 'lspsaga'
 
 local executable = vim.fn.executable
+
+saga.init_lsp_saga({})
 
 local function set_key_maps(_)
     local options = {
