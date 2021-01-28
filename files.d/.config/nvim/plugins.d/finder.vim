@@ -3,6 +3,7 @@ Plug 'junegunn/fzf.vim'
 
 nnoremap <silent> <C-p> :GFiles<CR>
 nnoremap <silent> <leader>b :Buffers<CR>
+nnoremap <silent> <leader>rg :Rg<CR>
 
 " ripgrep
 if executable('rg')
