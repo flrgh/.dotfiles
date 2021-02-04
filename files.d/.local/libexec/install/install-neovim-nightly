@@ -4,6 +4,11 @@ set -euo pipefail
 
 readonly URL=https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz
 
+if pidof nvim &>/dev/null; then
+    echo "oops, neovim can't be updated while it's already running."
+    exit 1
+fi
+
 tmp=$(mktemp -d)
 cd "$tmp" || { echo "failed to cd to temp dir ($tmp), exiting"; exit 1; }
 
