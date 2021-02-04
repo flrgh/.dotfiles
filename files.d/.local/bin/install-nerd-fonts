@@ -7,6 +7,7 @@ readonly INSTALL_PATH=$HOME/.local/share/fonts
 readonly REPO=ryanoasis/nerd-fonts
 readonly FONTS=(
    SourceCodePro
+   FiraCode
 )
 
 TAG=$(
