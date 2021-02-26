@@ -5,4 +5,8 @@ if iHave fzf; then
         export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
         export FZF_ALT_C_COMMAND='fd --type d . --color=never'
     fi
+
+    if [[ -f /usr/share/fzf/shell/key-bindings.bash ]]; then
+        . /usr/share/fzf/shell/key-bindings.bash
+    fi
 fi
