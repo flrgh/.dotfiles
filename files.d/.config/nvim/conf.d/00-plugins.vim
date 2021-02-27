@@ -35,9 +35,6 @@ Plug 'majutsushi/tagbar'
 " highlight indentation levels
 Plug 'Yggdroot/indentLine'
 
-" multi language syntax/indent/ftplugin support
-Plug 'sheerun/vim-polyglot'
-
 " useful for targetting surrounding quotes/parens/etc
 Plug 'tpope/vim-surround'
 
