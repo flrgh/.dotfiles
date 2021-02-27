@@ -77,6 +77,10 @@ Plug 'StanAngeloff/php.vim'
 
 " align!
 Plug 'junegunn/vim-easy-align'
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
 
 " support .editorconfig files
 Plug 'editorconfig/editorconfig-vim'
