@@ -21,6 +21,9 @@ cp -v "$DEST" "$HOME/.config/nvim/autoload/plug.vim"
 echo "Installing neovim plugins"
 nvim --headless +PlugUpdate +qall
 
+echo "Installing tree-sitter CLI"
+"$HOME/.local/libexec/install/tools/install-tree-sitter"
+
 echo "Updating TreeSitter parsers"
 nvim --headless +TSUpdate +qall || true
 

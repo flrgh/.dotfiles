@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly LATEST=https://api.github.com/repos/tree-sitter/tree-sitter/releases/latest
+VERSION=${1:-latest}
+
+if [[ $VERSION == latest ]]; then
+    VERSION=$(
+        curl -f --silent \
+            --header "Accept: application/vnd.github.v3+json" \
+            --url "$LATEST" \
+        | jq -r '.name'
+    )
+
+    echo "Detected latest version $VERSION"
+fi
+
+
+SRC=$(cache-get \
+    "https://github.com/tree-sitter/tree-sitter/releases/download/${VERSION}/tree-sitter-linux-x64.gz" \
+    "tree-sitter-${VERSION}.gz"
+)
+
+cd "$(mktemp -d)"
+
+gunzip -d < "$SRC" > "$HOME/.local/bin/tree-sitter"
+chmod +x "$HOME/.local/bin/tree-sitter"
+
+tree-sitter --version
