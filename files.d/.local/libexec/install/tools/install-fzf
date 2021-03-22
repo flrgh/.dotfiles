@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly LATEST=https://api.github.com/repos/junegunn/fzf/releases/latest
+VERSION=${1:-latest}
+
+if [[ $VERSION == latest ]]; then
+    VERSION=$(
+        curl -f --silent \
+            --header "Accept: application/vnd.github.v3+json" \
+            --url "$LATEST" \
+        | jq -r '.name'
+    )
+
+    echo "Detected latest version $VERSION"
+fi
+
+
+SRC=$(cache-get \
+    https://github.com/junegunn/fzf/releases/download/${VERSION}/fzf-${VERSION}-linux_amd64.tar.gz \
+    "fzf-${VERSION}.tar.gz"
+)
+
+cd "$(mktemp -d)"
+tar xzf "$SRC"
+mv fzf "$HOME/.local/bin/"
+
+fzf --version
