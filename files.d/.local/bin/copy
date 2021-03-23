@@ -2,7 +2,7 @@
 
 case "$XDG_SESSION_TYPE" in
     x11)
-        xclip -i
+        xclip -in -selection clipboard
         ;;
     wayland)
         wl-copy
