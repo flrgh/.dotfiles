@@ -169,8 +169,12 @@ selection:
 
 
 cursor:
-  style: Block
-  unfocused_hollow: true
+  style:
+    #shape: Beam
+    blinking: always
+
+  blink_interval: 500
+  unfocused_hollow: false
 
 live_config_reload: true
 
