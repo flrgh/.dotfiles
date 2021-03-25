@@ -34,6 +34,7 @@ Plug 'majutsushi/tagbar'
 
 " highlight indentation levels
 Plug 'Yggdroot/indentLine'
+Plug 'lukas-reineke/indent-blankline.nvim'
 
 " useful for targetting surrounding quotes/parens/etc
 Plug 'tpope/vim-surround'
