@@ -1,10 +1,56 @@
-local lsp = require 'lspconfig'
+local lsp        = require 'lspconfig'
 local lsp_status = require 'lsp-status'
-local saga = require 'lspsaga'
-
-local executable = vim.fn.executable
+local saga       = require 'lspsaga'
+local compe      = require 'compe'
 
 saga.init_lsp_saga({})
+
+compe.setup({
+  enabled          = true,
+  autocomplete     = true,
+  debug            = false,
+  min_length       = 1,
+  preselect        = 'enable',
+  throttle_time    = 80,
+  source_timeout   = 200,
+  incomplete_delay = 400,
+  max_abbr_width   = 100,
+  max_kind_width   = 100,
+  max_menu_width   = 100,
+  documentation    = true,
+
+  source = {
+    -- common
+    buffer = true,
+    calc   = false,
+    omni   = false,
+    path   = true,
+    spell  = true,
+    tags   = false,
+    vsnip  = true,
+
+    -- Neovim-specific
+    nvim_lsp = true,
+    nvim_lua = true,
+
+    -- External-plugin
+    ["nvim-treesitter"] = false,
+    ["snippets.nvim"]   = false,
+    ["vim-vsnip"]       = false,
+    ultisnips           = false,
+    vim_lsc             = false,
+    vim_lsp             = false,
+
+    -- External sources
+    ["latex-symbols"] = false,
+    conjure           = false,
+    dadbod            = false,
+    tabnine           = false,
+    zsh               = false,
+
+  },
+})
+
 
 local function set_key_maps(_)
     local options = {
@@ -44,9 +90,8 @@ local function attach_all(funcs)
 end
 
 local on_attach = attach_all {
-    require('completion').on_attach,
-    lsp_status.on_attach,
-    set_key_maps,
+  lsp_status.on_attach,
+  set_key_maps,
 }
 
 local caps = lsp_status.capabilities

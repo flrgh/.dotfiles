@@ -5,9 +5,7 @@ Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-lua/lsp-status.nvim'
 
-Plug 'nvim-lua/completion-nvim'
-Plug 'nvim-treesitter/completion-treesitter'
-Plug 'steelsojka/completion-buffers'
+Plug 'hrsh7th/nvim-compe'
 
 Plug 'glepnir/lspsaga.nvim'
 
@@ -19,7 +17,7 @@ let g:completion_matching_smart_case = 1
 let g:completion_trigger_keyword_length = 2
 
 " Set completeopt to have a better completion experience
-set completeopt=menuone,noinsert,noselect
+set completeopt=menuone,noselect
 
 " Avoid showing message extra message when using completion
 set shortmess+=c
