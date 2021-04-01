@@ -1,7 +1,13 @@
+-- don't configure or start lsp if vim is running in headless mode
+if #vim.api.nvim_list_uis() == 0 then
+  return
+end
+
 local lsp        = require 'lspconfig'
 local lsp_status = require 'lsp-status'
 local saga       = require 'lspsaga'
 local compe      = require 'compe'
+
 
 saga.init_lsp_saga({})
 
