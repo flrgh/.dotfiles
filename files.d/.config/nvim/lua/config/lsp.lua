@@ -110,5 +110,6 @@ require('lsp.python')(on_attach, lsp, caps)
 require('lsp.yaml')(on_attach, lsp, caps)
 require('lsp.json')(on_attach, lsp, caps)
 require('lsp.sql')(on_attach, lsp, caps)
+require('lsp.teal')(on_attach, lsp, caps)
 
 lsp_status.register_progress()
