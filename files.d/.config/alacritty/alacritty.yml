@@ -99,6 +99,18 @@ colors:
     cyan:    '0x93a1a1' # base1
     white:   '0xfdf6e3' # base3
 
+font:
+  normal:
+    #family: DejaVuSansMono Nerd Font
+    #family: Sauce Code Pro Nerd Font
+    #family: Droid Sans Mono Nerd Font
+    #family: FiraCode Nerd Font
+    #family: UbuntoMono Nerd Font
+    family: LiterationMono Nerd Font
+
+  offset:
+    x: 0
+    y: 0
 # LIGHT Colors (Gruvbox light)
 # colors:
 #   # Default colors
