@@ -1,4 +1,3 @@
 {
-    "psFormat": "table {{.Names}}\t{{.Image}}\t{{.Networks}}\t{{.Status}}\t{{.Command}}",
-    "credsStore": "ecr-login"
+    "psFormat": "table {{.Names}}\t{{.Image}}\t{{.Networks}}\t{{.Status}}\t{{.Command}}"
 }
