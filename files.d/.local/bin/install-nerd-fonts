@@ -8,6 +8,11 @@ readonly REPO=ryanoasis/nerd-fonts
 readonly FONTS=(
    SourceCodePro
    FiraCode
+   DejaVuSansMono
+   DroidSansMono
+   JetBrainsMono
+   UbuntuMono
+   LiberationMono
 )
 
 TAG=$(
