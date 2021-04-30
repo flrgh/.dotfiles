@@ -35,9 +35,7 @@ fi
 git submodule update --init --recursive
 
 cd 3rd/luamake
-ninja -f ninja/linux.ninja
+compile/install.sh
 
 cd "$INSTALL_PATH"
 ./3rd/luamake/luamake rebuild
-
-# ./bin/Linux/lua-language-server -E ./main.lua
