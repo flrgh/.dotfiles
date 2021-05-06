@@ -13,7 +13,7 @@ fi
 readonly DEST="$HOME/.cache/$FNAME"
 
 log() {
-	printf "$@" > /dev/stderr
+	printf "$@" >&2
 }
 
 log "URL: $URL\n"
