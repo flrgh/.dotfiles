@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly INSTALL="$HOME/.local/bin/kind"
+
+readonly BASE_URL=https://api.github.com/repos/kubernetes-sigs/kind
+
+VERSION=${1:-latest}
+
+if [[ $VERSION == latest ]]; then
+    VERSION=$(
+        curl -f --silent \
+            --header "Accept: application/vnd.github.v3+json" \
+            --url "$BASE_URL/releases/latest" \
+        | jq -r '.name'
+    )
+fi
+
+echo "installing kind $VERSION"
+
+DOWNLOAD_URL=$(
+    curl \
+        --silent \
+        --header "Accept: application/vnd.github.v3+json" \
+        --url "$BASE_URL/releases/tags/$VERSION" \
+    | jq -r \
+        '.assets[]
+        | select(.name == "kind-linux-amd64")
+        | .browser_download_url
+        '
+)
+
+tmp=$(mktemp -d)
+cd "$tmp" || { echo "failed to cd to temp dir ($tmp), exiting"; exit 1; }
+
+cleanup() {
+    rm -r "$tmp"
+}
+
+trap cleanup ERR EXIT
+
+FNAME=${DOWNLOAD_URL##*/}.${VERSION}
+
+F=$(cache-get \
+    "$DOWNLOAD_URL" \
+    "$FNAME"
+)
+
+cp -v "$F" "$INSTALL"
+chmod +x "$INSTALL"
