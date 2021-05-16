@@ -31,15 +31,6 @@ DOWNLOAD_URL=$(
         '
 )
 
-tmp=$(mktemp -d)
-cd "$tmp" || { echo "failed to cd to temp dir ($tmp), exiting"; exit 1; }
-
-cleanup() {
-    rm -r "$tmp"
-}
-
-trap cleanup ERR EXIT
-
 FNAME=${DOWNLOAD_URL##*/}.${VERSION}
 
 F=$(cache-get \

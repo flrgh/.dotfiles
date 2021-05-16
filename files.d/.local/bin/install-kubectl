@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly INSTALL="$HOME/.local/bin/kubectl"
+
+readonly BASE_URL=https://api.github.com/repos/kubernetes-sigs/kind
+
+VERSION=${1:-latest}
+
+
+if [[ $VERSION == latest ]]; then
+    VERSION=$(curl -f --silent -L https://dl.k8s.io/release/stable.txt)
+fi
+
+echo "installing kubectl $VERSION"
+
+DOWNLOAD_URL="https://dl.k8s.io/release/$VERSION/bin/linux/amd64/kubectl"
+FNAME="kubectl.${VERSION}"
+
+F=$(cache-get \
+    "$DOWNLOAD_URL" \
+    "$FNAME"
+)
+
+cp -v "$F" "$INSTALL"
+chmod -v +x "$INSTALL"
