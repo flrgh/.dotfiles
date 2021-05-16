@@ -23,5 +23,13 @@ F=$(cache-get \
     "$FNAME"
 )
 
+SUM=$(cache-get \
+    "https://dl.k8s.io/$VERSION/bin/linux/amd64/kubectl.sha256" \
+    "${FNAME}.sha256"
+)
+
+echo "$(< "$SUM")" "$F" | sha256sum --check
+
+
 cp -v "$F" "$INSTALL"
 chmod -v +x "$INSTALL"
