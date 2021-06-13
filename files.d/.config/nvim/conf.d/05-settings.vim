@@ -57,13 +57,8 @@ set ruler
 set number
 
 let no_buffers_menu=1
-if !exists('g:not_finish_vimplug')
-  "lua require('colorbuddy').colorscheme('gruvbuddy')
-  "colorscheme gruvbox
-  "colorscheme OceanicNext
-  let g:sonokai_style = 'maia'
-  colorscheme sonokai
-endif
+let g:sonokai_style = 'maia'
+colorscheme sonokai
 
 set background=dark
 set termguicolors
