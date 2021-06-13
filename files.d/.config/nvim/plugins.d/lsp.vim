@@ -1,6 +1,7 @@
 Plug 'neovim/nvim-lsp'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'nvim-treesitter/playground'
 Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-lua/lsp-status.nvim'
@@ -8,6 +9,8 @@ Plug 'nvim-lua/lsp-status.nvim'
 Plug 'hrsh7th/nvim-compe'
 
 Plug 'glepnir/lspsaga.nvim'
+
+Plug 'onsails/lspkind-nvim'
 
 " Use <Tab> and <S-Tab> to navigate through popup menu
 inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"

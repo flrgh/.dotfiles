@@ -69,6 +69,7 @@ Plug 'joshdick/onedark.vim'
 Plug 'tjdevries/colorbuddy.vim'
 Plug 'tjdevries/gruvbuddy.nvim'
 Plug 'sainnhe/sonokai'
+Plug 'folke/tokyonight.nvim'
 
 " Buffer management
 Plug 'moll/vim-bbye'

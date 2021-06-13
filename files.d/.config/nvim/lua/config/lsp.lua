@@ -27,25 +27,32 @@ compe.setup({
 
   source = {
     -- common
-    buffer = true,
-    calc   = false,
+    --buffer = true,
+    buffer = {kind = "  "},
+    --calc   = false,
+    calc = {kind = "  "},
     omni   = false,
-    path   = true,
+    --path   = true,
+    path = {kind = "  "},
     spell  = true,
     tags   = false,
-    vsnip  = true,
+    --vsnip  = true,
+    vsnip = {kind = "  "},
 
     -- Neovim-specific
-    nvim_lsp = true,
+    -- nvim_lsp = true,
+    nvim_lsp = {kind = "  "},
     nvim_lua = true,
 
     -- External-plugin
     ["nvim-treesitter"] = false,
     ["snippets.nvim"]   = false,
+    snippets_nvim       = false,
     ["vim-vsnip"]       = false,
     ultisnips           = false,
     vim_lsc             = false,
     vim_lsp             = false,
+    emoji = {kind = " ﲃ ", filetypes={"markdown", "text"}},
 
     -- External sources
     ["latex-symbols"] = false,
