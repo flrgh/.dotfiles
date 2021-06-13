@@ -17,6 +17,7 @@ return require('packer').startup(function(use)
     config = function()
       vim.cmd [[
         nnoremap <leader>ff :NERDTreeToggle<CR>
+        let NERDTreeShowHidden=1
       ]]
     end,
   }
@@ -234,7 +235,6 @@ return require('packer').startup(function(use)
   use {
     'junegunn/fzf.vim',
     config = function()
-
       vim.cmd [[
         nnoremap <silent> <C-p> :GFiles<CR>
         nnoremap <silent> <leader>b :Buffers<CR>
@@ -250,16 +250,22 @@ return require('packer').startup(function(use)
     end,
   }
 
+  use {
+    'nvim-lua/popup.nvim',
+    requires = {
+      'nvim-lua/plenary.nvim',
+    },
+  }
+
   -- LSP stuff
-  use 'nvim-lua/plenary.nvim'
   use 'neovim/nvim-lsp'
   use 'neovim/nvim-lspconfig'
   use {
     'nvim-treesitter/nvim-treesitter',
     run = ':TSUpdate',
   }
+  use 'nvim-treesitter/nvim-treesitter-textobjects'
   use 'nvim-treesitter/playground'
-  use 'nvim-lua/popup.nvim'
   use 'nvim-lua/lsp-status.nvim'
   use {
     'hrsh7th/nvim-compe',
