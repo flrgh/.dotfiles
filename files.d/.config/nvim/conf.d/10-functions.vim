@@ -23,7 +23,7 @@ if !exists('*ReloadVim')
     function! ReloadVim()
         lua vim.lsp.stop_client(vim.lsp.get_active_clients())
         source $MYVIMRC
-				echo "reloaded"
+        echo "reloaded"
     endfunction
 end
 

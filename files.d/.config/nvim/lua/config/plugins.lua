@@ -15,10 +15,8 @@ return require('packer').startup(function(use)
   use {
     'preservim/nerdtree',
     config = function()
-      vim.cmd [[
-        nnoremap <leader>ff :NERDTreeToggle<CR>
-        let NERDTreeShowHidden=1
-      ]]
+      vim.cmd [[nnoremap <leader>ff :NERDTreeToggle<CR>]]
+      vim.cmd [[let NERDTreeShowHidden=1]]
     end,
   }
 
@@ -28,7 +26,13 @@ return require('packer').startup(function(use)
   use 'bronson/vim-trailing-whitespace'
 
   -- load tags in side pane
-  use 'majutsushi/tagbar'
+  use {
+    'majutsushi/tagbar',
+    config = function()
+      vim.cmd [[nmap <silent> <F4> :TagbarToggle<CR>]]
+      vim.cmd [[let g:tagbar_autofocus = 1]]
+    end,
+  }
 
   -- highlight indentation levels
   use 'Yggdroot/indentLine'
@@ -126,9 +130,7 @@ return require('packer').startup(function(use)
   use {
     'euclidianAce/BetterLua.vim',
     config = function()
-      vim.cmd [[
-        let g:lua_inspect_events = ''
-      ]]
+      vim.cmd [[let g:lua_inspect_events = '']]
     end
   }
   use 'rafcamlet/nvim-luapad'

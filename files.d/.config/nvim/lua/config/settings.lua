@@ -19,6 +19,9 @@ opt.incsearch  = true
 opt.ignorecase = true
 opt.smartcase  = true
 
+opt.splitbelow = true
+opt.splitright = true
+
 opt.diffopt = opt.diffopt + 'vertical'
 
 opt.wildignore = opt.wildignore + {
