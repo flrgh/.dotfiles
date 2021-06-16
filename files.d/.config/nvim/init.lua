@@ -8,8 +8,15 @@ vim.cmd [[
   endfor
 ]]
 
-require 'config.settings'
+local function reload(mod)
+  package.loaded[mod] = nil
+  return require(mod)
+end
+
+-- these only have first party dependencies, so they can be hot-reloaded
+reload 'config.settings'
+reload 'config.mappings'
+
 require 'eviline'
 require 'config.lsp'
 require 'config.treesitter'
-require 'config.mappings'

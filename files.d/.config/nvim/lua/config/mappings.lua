@@ -25,6 +25,9 @@ require('keymap').setup(function(map, nmap, vmap, noremap, nnoremap, vnoremap)
   -- set working directory from current file
   nnoremap.leader['.'] = ':lcd %:p:h'
 
+  -- copy the current file path to the clipboard (unnamedplus register)
+  nnoremap.leader.cf = ':let @+=expand("%:p")'
+
   noremap.YY       = '"+y<CR>'
   noremap.leader.p = '+gP<CR>'
 
