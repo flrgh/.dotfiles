@@ -53,10 +53,6 @@ return require('packer').startup(function(use)
     ft = { 'bats' },
   }
 
-  --" Vim-Session
-  use 'xolox/vim-misc'
-  use 'xolox/vim-session'
-
   -- fantastic git integration
   use 'tpope/vim-fugitive'
   use 'tpope/vim-rhubarb'

@@ -41,13 +41,8 @@ opt.shell = '/bin/bash'
 -- session management
 opt.backup   = false
 opt.swapfile = false
-vim.cmd [[
-  let g:session_directory = "~/.config/nvim/session"
-  let g:session_autoload = "no"
-  let g:session_autosave = "no"
-  let g:session_command_aliases = 1
-]]
 
+-- mouse
 opt.mousemodel = 'popup'
 opt.mouse      = 'nv'
 
