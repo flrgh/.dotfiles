@@ -229,9 +229,9 @@ return require('packer').startup(function(use)
   }
 
   -- FZF
-  use 'junegunn/fzf'
   use {
     'junegunn/fzf.vim',
+    requires = 'junegunn/fzf',
     config = function()
       vim.cmd [[
         nnoremap <silent> <C-p> :GFiles<CR>
