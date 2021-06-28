@@ -34,7 +34,7 @@ compe.setup({
     omni   = false,
     --path   = true,
     path = {kind = "  "},
-    spell  = false,
+    spell  = {kind = " 🔤 ", filetypes={"markdown", "text"}},
     tags   = false,
     --vsnip  = true,
     vsnip = {kind = "  "},
