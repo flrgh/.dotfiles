@@ -34,7 +34,7 @@ compe.setup({
     omni   = false,
     --path   = true,
     path = {kind = "  "},
-    spell  = true,
+    spell  = false,
     tags   = false,
     --vsnip  = true,
     vsnip = {kind = "  "},
