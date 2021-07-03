@@ -7,8 +7,8 @@ set -eu
 echo "Installing python deps for neovim"
 pip3 install --user --upgrade pynvim
 
-echo "Updating neovim nightly"
-"$HOME"/.local/libexec/install/install-neovim-nightly
+echo "Updating neovim"
+"$HOME"/.local/libexec/install/install-neovim latest
 
 echo "Installing neovim plugins"
 nvim --headless +PackerCompile +qall
