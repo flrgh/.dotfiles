@@ -95,3 +95,8 @@ done
 
 unset -f _debug_rc _log_rc
 unset _RC_START _RC_END _time
+
+# luamake is annoying and tries to add a bash alias for itself every time it runs,
+# so I need to leave this here so that it thinks the alias already exists *grumble*
+#
+# alias luamake=/home/michaelm/.config/nvim/tools/lua-language-server/3rd/luamake/luamake
