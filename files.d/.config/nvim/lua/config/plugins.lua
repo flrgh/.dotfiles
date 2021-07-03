@@ -113,7 +113,7 @@ return require('packer').startup(function(use)
   -- lang: terraform
   use {
     'hashivim/vim-terraform',
-    ft = { 'tf' },
+    ft = { 'tf', 'terraform' },
   }
 
   -- lang: PHP
