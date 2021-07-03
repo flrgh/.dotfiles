@@ -35,7 +35,6 @@ return require('packer').startup(function(use)
   }
 
   -- highlight indentation levels
-  use 'Yggdroot/indentLine'
   use 'lukas-reineke/indent-blankline.nvim'
 
   -- useful for targetting surrounding quotes/parens/etc
