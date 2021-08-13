@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+readonly REPO=LuaJIT/LuaJIT
 readonly PREFIX=$HOME/.local
 readonly TAG_URL=https://api.github.com/repos/LuaJIT/LuaJIT/tags
 
@@ -9,10 +10,8 @@ VERSION=${1:-latest}
 
 if [[ $VERSION == latest ]]; then
     VERSION=$(
-        curl -f --silent \
-            --header "Accept: application/vnd.github.v3+json" \
-            --url "$TAG_URL" \
-        | jq -r '.[].name | select(test("^v[0-9.]+$"))' \
+        gh-helper get-tags "$REPO" \
+        | jq -r '.[].name' \
         | sort -r -n \
         | head -1
     )

@@ -2,16 +2,10 @@
 
 set -euo pipefail
 
-readonly LATEST=https://api.github.com/repos/tree-sitter/tree-sitter/releases/latest
 VERSION=${1:-latest}
 
 if [[ $VERSION == latest ]]; then
-    VERSION=$(
-        curl -f --silent \
-            --header "Accept: application/vnd.github.v3+json" \
-            --url "$LATEST" \
-        | jq -r '.name'
-    )
+    VERSION=$(gh-helper get-latest-release-name tree-sitter/tree-sitter)
 
     echo "Detected latest version $VERSION"
 fi

@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source "$HOME/.config/github/helper-access-token"
+
+readonly BASE_URL=https://api.github.com/
+
+if command -v http &>/dev/null; then
+    http() {
+        command http \
+            --auth "${GITHUB_USER}:${GITHUB_TOKEN}" \
+            --follow \
+            --check-status \
+            "${BASE_URL}$1"
+    }
+else
+    http() {
+        curl \
+            --silent \
+            --fail \
+            --user "${GITHUB_USER}:${GITHUB_TOKEN}" \
+            --header "Accept: application/vnd.github.v3+json" \
+            --url "${BASE_URL}$1"
+    }
+fi
+
+get-latest-release() {
+    local -r repo=$1
+
+    http "repos/$repo/releases/latest"
+}
+
+
+get-releases() {
+    local -r repo=$1
+
+    http "repos/$repo/releases"
+}
+
+get-latest-release-name() {
+    local -r repo=$1
+    get-latest-release "$repo" | jq -r '.name'
+}
+
+get-latest-release-tag() {
+    local -r repo=$1
+    get-latest-release "$repo" | jq -r '.tag_name'
+}
+
+
+get-tag() {
+    local -r repo=$1
+    local -r tag=$2
+    http "repos/$repo/releases/tags/$tag"
+}
+
+get-tags() {
+    local -r repo=$1
+    http "repos/$repo/tags"
+}
+
+get-latest-tag() {
+    local -r repo=$1
+    get-tags "$repo" | jq -r '.[0].name'
+}
+
+
+"$@"

@@ -4,8 +4,6 @@ set -euo pipefail
 
 readonly INSTALL="$HOME/.local/bin/kubectl"
 
-readonly BASE_URL=https://api.github.com/repos/kubernetes-sigs/kind
-
 VERSION=${1:-latest}
 
 

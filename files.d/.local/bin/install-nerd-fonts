@@ -15,12 +15,7 @@ readonly FONTS=(
    LiberationMono
 )
 
-TAG=$(
-   curl -s -f \
-   --header "Accept: application/vnd.github.v3+json" \
-   --url "https://api.github.com/repos/${REPO}/releases/latest" \
-   | jq -r .tag_name
-)
+TAG=$(gh-helper get-latest-release-tag "$REPO")
 
 echo "Latest tag: $TAG"
 

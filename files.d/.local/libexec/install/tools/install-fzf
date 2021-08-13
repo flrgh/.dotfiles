@@ -2,17 +2,12 @@
 
 set -euo pipefail
 
-readonly LATEST=https://api.github.com/repos/junegunn/fzf/releases/latest
+readonly REPO=junegunn/fzf
+
 VERSION=${1:-latest}
 
 if [[ $VERSION == latest ]]; then
-    VERSION=$(
-        curl -f --silent \
-            --header "Accept: application/vnd.github.v3+json" \
-            --url "$LATEST" \
-        | jq -r '.name'
-    )
-
+    VERSION=$(gh-helper get-latest-release-name "$REPO")
     echo "Detected latest version $VERSION"
 fi
 

@@ -2,13 +2,8 @@
 
 set -euo pipefail
 
-readonly URL=https://api.github.com/repos/sharkdp/bat/releases/latest
-
 DOWNLOAD_URL=$(
-    curl \
-        --silent \
-        --header "Accept: application/vnd.github.v3+json" \
-        "$URL" \
+    gh-helper get-latest-release sharkdp/bat \
     | jq -r \
         '.assets[]
         | select(.name | test("x86_64-unknown-linux-gnu.tar.gz"))

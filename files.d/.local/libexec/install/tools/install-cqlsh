@@ -2,15 +2,11 @@
 
 set -euo pipefail
 
-readonly RELEASES=https://api.github.com/repos/apache/cassandra/tags
-
 VERSION=${1:-latest}
 
 if [[ $VERSION == latest ]]; then
     VERSION=$(
-        curl -f --silent \
-            --header "Accept: application/vnd.github.v3+json" \
-            --url "$RELEASES" \
+        gh-helper get-tags apache/cassandra \
         | jq -r '.[].name | select(test("^cassandra-[0-9.-]+$"))' \
         | sort -r -n \
         | head -1

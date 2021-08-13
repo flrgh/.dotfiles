@@ -3,13 +3,7 @@
 VERSION=${1:-latest}
 
 if [[ $VERSION == latest ]]; then
-    VERSION=$(
-        curl \
-            --silent \
-            --fail \
-            --url https://api.github.com/repos/sumneko/lua-language-server/tags \
-        | jq -r '.[0].name'
-    )
+    VERSION=$(gh-helper get-latest-tag sumneko/lua-language-server)
     echo "Latest version is $VERSION"
 fi
 

@@ -11,14 +11,7 @@ GIT_ARGS=(
     --git-dir "$INSTALL_DIR"/.git
 )
 
-TAG=$(
-    curl \
-        -f \
-        --silent \
-        --header "Accept: application/vnd.github.v3+json" \
-        --url "$URL" \
-    | jq -r .tag_name
-)
+TAG=$(gh-helper get-latest-release-tag nvm-sh/nvm)
 
 if [[ -d $INSTALL_DIR/.git ]]; then
     echo "Updating nvm to $TAG"
