@@ -1,7 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-readonly INSTALL_PATH=$HOME/.config/nvim/tools/lua-language-server
+set -euo pipefail
 
-cd "$INSTALL_PATH"
+if ! docker image inspect lsp/lua:latest &>/dev/null; then
+    "$HOME/.local/libexec/install/lsp/install-lua-language-server" &>/dev/null
+fi
 
-exec ./bin/Linux/lua-language-server -E ./main.lua
+exec docker run --init --rm -i lsp/lua:latest

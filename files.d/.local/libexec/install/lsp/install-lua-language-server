@@ -1,41 +1,56 @@
 #!/usr/bin/env bash
 
-readonly INSTALL_PATH=$HOME/.config/nvim/tools/lua-language-server
+VERSION=${1:-latest}
 
-NEW=0
+if [[ $VERSION == latest ]]; then
+    VERSION=$(
+        curl \
+            --silent \
+            --fail \
+            --url https://api.github.com/repos/sumneko/lua-language-server/tags \
+        | jq -r '.[0].name'
+    )
+    echo "Latest version is $VERSION"
+fi
 
-if [[ ! -d $INSTALL_PATH ]]; then
-    # clone project
-    NEW=1
+docker build \
+    --build-arg TAG="$VERSION" \
+    --build-arg J=$(nproc) \
+    -t "lsp/lua:$VERSION" \
+    -t "lsp/lua:latest" \
+    - \
+<< 'EOF'
+FROM alpine:latest
+
+ARG TAG=master
+ARG J=1
+
+WORKDIR /opt
+
+RUN apk add --virtual deps \
+        bash \
+        ninja \
+        gcc \
+        g++ \
+        git \
+        && \
     git clone \
-        https://github.com/sumneko/lua-language-server \
-        "$INSTALL_PATH"
-fi
+        --branch "$TAG" \
+        --depth 1 \
+        --recurse-submodules \
+        --shallow-submodules \
+        --jobs "$J" \
+        https://github.com/sumneko/lua-language-server && \
+    cd /opt/lua-language-server/3rd/luamake && \
+    ./compile/install.sh && \
+    cd /opt/lua-language-server && \
+    ./3rd/luamake/luamake rebuild && \
+    apk del deps && \
+    rm -rf \
+        /opt/lua-language-server/3rd/luamake \
+        /opt/lua-language-server/.git
 
-cd "$INSTALL_PATH"
+WORKDIR /opt/lua-language-server
 
-BUILD=1
-
-if [[ $NEW -ne 1 ]]; then
-    HEAD=$(git rev-parse HEAD)
-
-    git fetch
-    git pull --ff-only
-
-    if [[ $HEAD == $(git rev-parse HEAD) ]]; then
-        BUILD=0
-    fi
-fi
-
-if [[ $BUILD -eq 0 && ${FORCE:-0} -eq 0 ]]; then
-    echo no build needed
-    exit 0
-fi
-
-git submodule update --init --recursive
-
-cd 3rd/luamake
-compile/install.sh
-
-cd "$INSTALL_PATH"
-./3rd/luamake/luamake rebuild
+ENTRYPOINT ["./bin/Linux/lua-language-server", "./main.lua"]
+EOF
