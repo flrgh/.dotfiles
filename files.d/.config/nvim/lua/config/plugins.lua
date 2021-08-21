@@ -287,4 +287,24 @@ return require('packer').startup(function(use)
   use 'onsails/lspkind-nvim'
 
   use 'mhartington/formatter.nvim'
+
+  use {
+    'nvim-telescope/telescope.nvim',
+    requires = { 'nvim-lua/plenary.nvim' }
+  }
+
+  use {
+    'nvim-telescope/telescope-fzf-native.nvim',
+    run = 'make',
+    requires = {
+      'nvim-telescope/telescope.nvim',
+    },
+  }
+
+  use {
+    'nvim-telescope/telescope-symbols.nvim',
+    requires = {
+      'nvim-telescope/telescope.nvim',
+    },
+  }
 end)
