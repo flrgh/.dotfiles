@@ -46,5 +46,5 @@ RUN apk add --virtual deps \
 
 WORKDIR /opt/lua-language-server
 
-ENTRYPOINT ["./bin/Linux/lua-language-server", "./main.lua"]
+ENTRYPOINT ["/opt/lua-language-server/bin/Linux/lua-language-server", "/opt/lua-language-server/main.lua"]
 EOF

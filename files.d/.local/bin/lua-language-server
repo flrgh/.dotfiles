@@ -6,4 +6,18 @@ if ! docker image inspect lsp/lua:latest &>/dev/null; then
     "$HOME/.local/libexec/install/lsp/install-lua-language-server" &>/dev/null
 fi
 
-exec docker run --init --rm -i lsp/lua:latest
+
+readonly DATA=$HOME/.cache/nvim/lua-lsp
+mkdir -p "$DATA"/{log,meta}
+
+exec docker run \
+    --rm \
+    --interactive \
+    --network none \
+    --volume "$HOME:$HOME" \
+    --workdir "$PWD" \
+    --user "$UID:$(id -g)" \
+    lsp/lua:latest \
+        --logpath="$DATA/log" \
+        --metapath="$DATA/meta" \
+        "$@"
