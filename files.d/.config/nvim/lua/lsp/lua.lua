@@ -47,11 +47,7 @@ local function lua_libs(opts)
     end
 
     for _, item in ipairs(opts.extra) do
-        local path = expand(item)
-
-        if fs.dir_exists(path) or fs.file_exists(path) then
-            libs[path] = true
-        end
+        libs[expand(item)] = true
     end
 
     return libs
@@ -64,6 +60,15 @@ return function(on_attach, lsp, caps)
 
     local settings = load_user_settings()
 
+    local library = lua_libs(settings.lib)
+
+    local path = vim.split(package.path, ';')
+
+    for lib in pairs(library) do
+      table.insert(path, lib .. '/?.lua')
+      table.insert(path, lib .. '/?/init.lua')
+    end
+
     lsp.sumneko_lua.setup {
         on_attach = on_attach,
         capabilities = caps,
@@ -73,7 +78,7 @@ return function(on_attach, lsp, caps)
             Lua = {
                 runtime = {
                     version = 'LuaJIT', -- neovim implies luajit
-                    path = vim.split(package.path, ';'),
+                    path = path,
                 },
                 completion = {
                     enable = true,
@@ -122,7 +127,7 @@ return function(on_attach, lsp, caps)
                     },
                 },
                 workspace = {
-                    library = lua_libs(settings.lib),
+                    library = library,
                     ignoreSubmodules = false,
                 },
                 telemetry = {
