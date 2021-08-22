@@ -1,15 +1,46 @@
 require('nvim-treesitter.configs').setup {
-    ensure_installed = "maintained",
-    highlight = {
-        enable = true,
+  ensure_installed = {
+    "bash",
+    "c",
+    "c_sharp",
+    "cmake",
+    "comment",
+    "cpp",
+    "css",
+    "go",
+    "gomod",
+    "hcl",
+    "java",
+    "javascript",
+    "json",
+    "jsonc",
+    "lua",
+    "php",
+    "python",
+    "regex",
+    "rust",
+    "rst",
+    "teal",
+    "toml",
+    "typescript",
+    "yaml",
+  },
+  highlight = {
+    enable = true,
+  },
+  incremental_selection = {
+    enable = true,
+    keymaps = {
+      init_selection = "gnn",
+      node_incremental = "grn",
+      scope_incremental = "grc",
+      node_decremental = "grm",
     },
-    incremental_selection = {
-        enable = true,
-    },
-    indent = {
-        enable = false,
-        disable = {
-            "lua", -- 2021-01-02: treesitter overindents tables
-        }
+  },
+  indent = {
+    enable = false,
+    disable = {
+      "lua", -- 2021-01-02: treesitter overindents tables
     }
+  }
 }
