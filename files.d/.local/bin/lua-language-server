@@ -16,8 +16,8 @@ exec docker run \
     --network none \
     --volume "$HOME:$HOME" \
     --workdir "$PWD" \
+    --volume "$DATA/meta:/opt/lua-language-server/meta" \
     --user "$UID:$(id -g)" \
     lsp/lua:latest \
         --logpath="$DATA/log" \
-        --metapath="$DATA/meta" \
         "$@"
