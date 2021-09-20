@@ -22,6 +22,6 @@ augroup END
 
 
 " run packer whenver plugins file is changed
-autocmd BufWritePost plugins.lua PackerCompile
+autocmd BufWritePost plugins.lua source <afile> | PackerCompile
 
 set autoread
