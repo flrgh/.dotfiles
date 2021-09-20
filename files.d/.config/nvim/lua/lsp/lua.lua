@@ -50,6 +50,10 @@ local function lua_libs(opts)
         libs[expand(item)] = true
     end
 
+    libs[expand("$PWD")] = true
+    libs[expand("$PWD/lua")] = true
+    libs[expand("$PWD/src")] = true
+
     return libs
 end
 
