@@ -65,7 +65,10 @@ return require('packer').startup(function(use)
   }
   use 'mhinz/vim-janah'
   use 'mhartington/oceanic-next'
-  use 'joshdick/onedark.vim'
+  use {
+    'joshdick/onedark.vim',
+    branch = 'main',
+  }
   use 'tjdevries/colorbuddy.vim'
   use 'tjdevries/gruvbuddy.nvim'
   use 'sainnhe/sonokai'
