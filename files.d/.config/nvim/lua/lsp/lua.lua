@@ -133,6 +133,10 @@ return function(on_attach, lsp, caps)
                 workspace = {
                     library = library,
                     ignoreSubmodules = false,
+                    checkThirdParty = false,
+                    userThirdParty = {
+                      "OpenResty",
+                    },
                 },
                 telemetry = {
                     -- don't phone home
