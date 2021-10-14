@@ -45,7 +45,8 @@ RUN apk add \
     apk del deps && \
     rm -rf \
         /opt/lua-language-server/3rd/luamake \
-        /opt/lua-language-server/.git
+        /opt/lua-language-server/.git \
+        /opt/lua-language-server/locale/zh-cn
 
 WORKDIR /opt/lua-language-server
 
