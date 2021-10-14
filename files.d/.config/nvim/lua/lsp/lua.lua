@@ -73,6 +73,7 @@ return function(on_attach, lsp, caps)
       table.insert(path, lib .. '/?/init.lua')
     end
 
+    -- https://github.com/sumneko/vscode-lua/blob/master/setting/schema.json
     lsp.sumneko_lua.setup {
         on_attach = on_attach,
         capabilities = caps,
