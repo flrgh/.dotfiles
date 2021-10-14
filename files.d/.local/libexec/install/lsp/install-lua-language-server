@@ -21,12 +21,15 @@ ARG J=1
 
 WORKDIR /opt
 
-RUN apk add --virtual deps \
+RUN apk add \
+        libgcc \
+        libstdc++ && \
+    apk add --virtual deps \
         bash \
         ninja \
-        gcc \
         g++ \
         git \
+        gcc \
         && \
     git clone \
         --branch "$TAG" \
