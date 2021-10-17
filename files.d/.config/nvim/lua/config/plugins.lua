@@ -275,22 +275,59 @@ return require('packer').startup(function(use)
   use 'nvim-treesitter/playground'
   use 'nvim-lua/lsp-status.nvim'
   use {
-    'hrsh7th/nvim-compe',
+    'hrsh7th/nvim-cmp',
+    requires = {
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-path',
+      'hrsh7th/cmp-nvim-lua',
+      'hrsh7th/cmp-calc',
+      'hrsh7th/cmp-emoji',
+    },
     config = function()
+
       vim.cmd [[
-        " Use <Tab> and <S-Tab> to navigate through popup menu
-        inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
-        inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-        let g:completion_auto_change_source = 1
-        let g:completion_matching_smart_case = 1
-        let g:completion_trigger_keyword_length = 2
-
         " Set completeopt to have a better completion experience
-        set completeopt=menuone,noselect
-
-        " Avoid showing message extra message when using completion
-        set shortmess+=c
+        set completeopt=menu,menuone,noselect
       ]]
+
+      ---@module 'cmp.init'
+      local cmp = require 'cmp'
+      cmp.setup({
+        mapping = {
+          ['<C-d>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-f>'] = cmp.mapping.scroll_docs(4),
+          ['<C-Space>'] = cmp.mapping.complete(),
+          ['<C-e>'] = cmp.mapping.close(),
+          ['<CR>'] = cmp.mapping.confirm {
+            behavior = cmp.ConfirmBehavior.Replace,
+            select = true,
+          },
+          ['<Tab>'] = function(fallback)
+            if cmp.visible() then
+              cmp.select_next_item()
+            else
+              fallback()
+            end
+          end,
+          ['<S-Tab>'] = function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            else
+              fallback()
+            end
+          end,
+        },
+        sources = {
+          { name = 'nvim_lsp' },
+          { name = 'nvim_lua' },
+          { name = 'buffer' },
+          { name = 'path' },
+          { name = 'calc' },
+          { name = 'emoji' },
+        }
+      })
+
     end,
   }
   use 'glepnir/lspsaga.nvim'

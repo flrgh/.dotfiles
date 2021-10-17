@@ -6,11 +6,11 @@ end
 local lsp        = require 'lspconfig'
 local lsp_status = require 'lsp-status'
 local saga       = require 'lspsaga'
-local compe      = require 'compe'
 
 
 saga.init_lsp_saga({})
 
+--[[
 compe.setup({
   enabled          = true,
   autocomplete     = true,
@@ -63,9 +63,12 @@ compe.setup({
 
   },
 })
+]]--
 
+---@alias local.lsp.on_attach fun(client: table)
 
-local function set_key_maps(_)
+---@type local.lsp.on_attach
+local function set_key_maps()
     local options = {
         noremap = true,
         silent = true
@@ -94,6 +97,9 @@ local function set_key_maps(_)
     vim.cmd('setlocal omnifunc=v:lua.vim.lsp.omnifunc')
 end
 
+
+---@param funcs local.lsp.on_attach[]
+---@return local.lsp.on_attach
 local function attach_all(funcs)
     return function(client)
         for _, attach in ipairs(funcs) do
@@ -102,12 +108,15 @@ local function attach_all(funcs)
     end
 end
 
-local on_attach = attach_all {
+local on_attach = attach_all({
   lsp_status.on_attach,
   set_key_maps,
-}
+})
 
-local caps = lsp_status.capabilities
+--local caps = lsp_status.capabilities
+
+local caps = vim.lsp.protocol.make_client_capabilities()
+caps = require('cmp_nvim_lsp').update_capabilities(caps)
 
 require('lsp.lua')(on_attach, lsp, caps)
 require('lsp.go')(on_attach, lsp, caps)
