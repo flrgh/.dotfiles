@@ -381,4 +381,6 @@ return require('packer').startup(function(use)
       require("which-key").setup {}
     end,
   }
+
+  use 'aserowy/tmux.nvim'
 end)
