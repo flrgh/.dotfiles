@@ -69,19 +69,3 @@ opt.titlestring = '%F'
 opt.modeline = true
 opt.modelines = 10
 opt.statusline= [[%F%m%r%h%w%=(%{&ff}/%Y)\ (line\ %l\/%L,\ col\ %c)\]]
-
-vim.cmd [[
-  let no_buffers_menu=1
-  let g:sonokai_style = 'maia'
-  colorscheme sonokai
-]]
-
-vim.cmd [[
-  let g:CSApprox_loaded = 1
-
-  " IndentLine
-  let g:indentLine_enabled = 1
-  let g:indentLine_concealcursor = 0
-  let g:indentLine_char = '┆'
-  let g:indentLine_faster = 1
-]]

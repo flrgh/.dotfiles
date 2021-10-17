@@ -68,7 +68,16 @@ return require('packer').startup(function(use)
   }
   use 'tjdevries/colorbuddy.vim'
   use 'tjdevries/gruvbuddy.nvim'
-  use 'sainnhe/sonokai'
+  use {
+    'sainnhe/sonokai',
+    config = function()
+      vim.cmd [[
+        let no_buffers_menu=1
+        let g:sonokai_style = 'maia'
+        colorscheme sonokai
+      ]]
+    end,
+  }
   use 'folke/tokyonight.nvim'
 
   -- Buffer management
@@ -287,7 +296,24 @@ return require('packer').startup(function(use)
   use 'glepnir/lspsaga.nvim'
   use 'onsails/lspkind-nvim'
 
-  use 'mhartington/formatter.nvim'
+  use {
+    'mhartington/formatter.nvim',
+    config = function()
+      require('formatter').setup({
+        filetype = {
+          json = {
+            function()
+              return {
+                exe = "jq",
+                args = {"."},
+                stdin = true,
+              }
+            end,
+          },
+        },
+      })
+    end,
+  }
 
   use {
     'nvim-telescope/telescope.nvim',
