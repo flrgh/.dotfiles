@@ -155,6 +155,7 @@ return require('packer').startup(function(use)
   use {
     'fatih/vim-go',
     ft = { 'go' },
+    tag = 'v1.25',
     run = ':GoUpdateBinaries',
     config = function()
       vim.cmd [[
