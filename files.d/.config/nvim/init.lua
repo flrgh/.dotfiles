@@ -1,17 +1,17 @@
+local function reload(mod)
+  _G.package.loaded[mod] = nil
+  return require(mod)
+end
+
 vim.g.mapleader = ','
 
-require 'config.plugins'
+reload 'config.plugins'
 
 vim.cmd [[
   for f in split(glob('~/.config/nvim/conf.d/*'), '\n')
       exec 'source' f
   endfor
 ]]
-
-local function reload(mod)
-  package.loaded[mod] = nil
-  return require(mod)
-end
 
 -- these only have first party dependencies, so they can be hot-reloaded
 reload 'config.settings'
