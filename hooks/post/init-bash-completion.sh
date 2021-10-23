@@ -8,6 +8,7 @@ COMPLETE=(
     "hugo gen autocomplete --completionfile=%%FILE%%"
     "openstack complete --shell bash"
     "kubectl completion bash"
+    "luarocks completion bash"
 )
 
 DIR="$HOME/.local/.bash_completion.d"
