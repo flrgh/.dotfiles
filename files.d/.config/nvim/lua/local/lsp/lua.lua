@@ -1,4 +1,4 @@
-local fs = require 'fs'
+local fs = require 'local.fs'
 
 local expand = vim.fn.expand
 local split = vim.fn.split

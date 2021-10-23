@@ -1,4 +1,4 @@
----@module 'fs'
+---@module 'local.fs'
 local _M = {
   _VERSION = '0.1'
 }

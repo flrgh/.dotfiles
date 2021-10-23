@@ -5,18 +5,11 @@ end
 
 vim.g.mapleader = ','
 
-reload 'config.plugins'
-
-vim.cmd [[
-  for f in split(glob('~/.config/nvim/conf.d/*'), '\n')
-      exec 'source' f
-  endfor
-]]
+reload 'local.config.plugins'
 
 -- these only have first party dependencies, so they can be hot-reloaded
-reload 'config.settings'
-reload 'config.mappings'
+reload 'local.config.settings'
+reload 'local.config.mappings'
 
 require 'eviline'
-require 'config.lsp'
-require 'config.treesitter'
+require 'local.config.lsp'

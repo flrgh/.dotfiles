@@ -1,4 +1,4 @@
-require('keymap').setup(function(map, nmap, vmap, noremap, nnoremap, vnoremap)
+require('local.keymap').setup(function(map, nmap, vmap, noremap, nnoremap, vnoremap)
 
   -- split nav
   nnoremap.ctrl.J = '<C-W><C-J>'
