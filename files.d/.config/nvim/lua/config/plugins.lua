@@ -277,21 +277,28 @@ return require('packer').startup(function(use)
   use {
     'hrsh7th/nvim-cmp',
     requires = {
-      'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-buffer',
-      'hrsh7th/cmp-path',
-      'hrsh7th/cmp-nvim-lua',
       'hrsh7th/cmp-calc',
       'hrsh7th/cmp-emoji',
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-nvim-lua',
+      'hrsh7th/cmp-path',
+
+      'onsails/lspkind-nvim',
+
+      'L3MON4D3/LuaSnip',
+      'saadparwaiz1/cmp_luasnip',
     },
     config = function()
+      -- Set completeopt to have a better completion experience
+      vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
-      vim.cmd [[
-        " Set completeopt to have a better completion experience
-        set completeopt=menu,menuone,noselect
-      ]]
+      -- Don't show the dumb matching stuff.
+      vim.opt.shortmess:append "c"
 
-      ---@module 'cmp.init'
+      local lspkind = require "lspkind"
+      lspkind.init()
+
       local cmp = require 'cmp'
       cmp.setup({
         mapping = {
@@ -318,20 +325,51 @@ return require('packer').startup(function(use)
             end
           end,
         },
+
+        ---@type cmp.SourceConfig
         sources = {
-          { name = 'nvim_lsp' },
           { name = 'nvim_lua' },
+          { name = 'nvim_lsp' },
+          { name = 'luasnip' },
           { name = 'buffer' },
           { name = 'path' },
           { name = 'calc' },
           { name = 'emoji' },
-        }
+        },
+
+        ---@type cmp.ExperimentalConfig
+        experimental = {
+          native_menu = false,
+          ghost_text = true,
+        },
+
+        ---@type cmp.SnippetConfig
+        snippet = {
+          expand = function(opts)
+            require('luasnip').lsp_expand(opts.body)
+          end,
+        },
+
+        ---@type cmp.FormattingConfig
+        formatting = {
+          format = lspkind.cmp_format({
+            with_text = true,
+            menu = {
+              buffer = "[buf]",
+              nvim_lsp = "[lsp]",
+              nvim_lua = "[nvim]",
+              path = "[path]",
+              luasnip = "[snip]",
+            },
+          }),
+        },
+
       })
 
     end,
   }
+
   use 'glepnir/lspsaga.nvim'
-  use 'onsails/lspkind-nvim'
 
   use {
     'mhartington/formatter.nvim',
