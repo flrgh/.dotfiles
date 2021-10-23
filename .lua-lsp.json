@@ -1,0 +1,10 @@
+{
+  "lib": {
+    "include_vim": true
+  },
+  "path": {
+    "extra": [
+      "~/.local/share/nvim/site/pack/packer/start/*/lua"
+    ]
+  }
+}

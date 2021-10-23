@@ -1,6 +1,10 @@
+---@module 'fs'
 local _M = {
   _VERSION = '0.1'
 }
+
+local expand = vim.fn.expand
+local getcwd = vim.fn.getcwd
 
 local lfs = require 'lfs'
 
@@ -47,6 +51,33 @@ function _M.read_json_file(fname)
   end
 
   return vim.fn.json_decode(raw)
+end
+
+---@return string
+function _M.buffer_filename()
+  return expand("%:p", true)
+end
+
+---@return string
+function _M.buffer_directory()
+  return expand("%:p:h", true)
+end
+
+---@return string?
+function _M.workspace_root()
+  local dir = _M.buffer_directory() or getcwd()
+  if not dir then
+    return
+  end
+
+  while not _M.dir_exists(dir .. "/.git") do
+    dir = dir:gsub("/[^/]+$", "")
+    if dir == nil or dir == "/" or dir == "" then
+      return
+    end
+  end
+
+  return dir
 end
 
 return _M
