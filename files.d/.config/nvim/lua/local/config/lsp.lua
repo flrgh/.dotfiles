@@ -3,73 +3,71 @@ if #vim.api.nvim_list_uis() == 0 then
   return
 end
 
-local lsp        = require 'lspconfig'
-local lsp_status = require 'lsp-status'
-local saga       = require 'lspsaga'
+local mod = require 'local.module'
 
-saga.init_lsp_saga({})
+local lsp = require 'lspconfig'
 
----@alias local.lsp.on_attach fun(client: table)
+---@param client table
+---@param buf    number
+local function on_attach(client, buf)
+  -- set up key bindings
+  do
+    local km = require('local.keymap')
 
----@type local.lsp.on_attach
-local function set_key_maps()
-    local options = {
-        noremap = true,
-        silent = true
-    }
+    km.nnoremap.ctrl['-]'] = km.lsp.definition
+    km.nnoremap.gD = km.lsp.declaration
+    km.nnoremap.gd = km.lsp.definition
+    km.nnoremap.K  = km.lsp.hover
+  end
 
-    local mappings = {
-        n = {
-            ['<c-]>'] = 'definition',
-            ['gD']    = 'implementation',
-            ['gd']    = 'declaration',
-            ['K']     = 'hover',
-        }
-    }
+  vim.api.nvim_buf_set_option(buf, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
-    for mode, maps in pairs(mappings) do
-        for key, fn in pairs(maps) do
-            vim.api.nvim_set_keymap(
-                mode,
-                key,
-                string.format('<cmd>lua vim.lsp.buf.%s()<CR>', fn),
-                options
-            )
-        end
-    end
-
-    vim.cmd('setlocal omnifunc=v:lua.vim.lsp.omnifunc')
+  mod.if_exists('lsp-status', function(status)
+    status.on_attach(client, buf)
+  end)
 end
-
-
----@param funcs local.lsp.on_attach[]
----@return local.lsp.on_attach
-local function attach_all(funcs)
-    return function(client)
-        for _, attach in ipairs(funcs) do
-            attach(client)
-        end
-    end
-end
-
-local on_attach = attach_all({
-  lsp_status.on_attach,
-  set_key_maps,
-})
-
---local caps = lsp_status.capabilities
 
 local caps = vim.lsp.protocol.make_client_capabilities()
-caps = require('cmp_nvim_lsp').update_capabilities(caps)
 
-require('local.lsp.lua')(on_attach, lsp, caps)
-require('local.lsp.go')(on_attach, lsp, caps)
-require('local.lsp.terraform')(on_attach, lsp, caps)
-require('local.lsp.bash')(on_attach, lsp, caps)
-require('local.lsp.python')(on_attach, lsp, caps)
-require('local.lsp.yaml')(on_attach, lsp, caps)
-require('local.lsp.json')(on_attach, lsp, caps)
-require('local.lsp.sql')(on_attach, lsp, caps)
-require('local.lsp.teal')(on_attach, lsp, caps)
+mod.if_exists('cmp_nvim_lsp', function(cmp_nvim_lsp)
+  caps = cmp_nvim_lsp.update_capabilities(caps)
+end)
 
-lsp_status.register_progress()
+local servers = {
+  bash      = "bashls",
+  go        = "gopls",
+  json      = "jsonls",
+  lua       = "sumneko_lua",
+  python    = "pyright",
+  sql       = "sqlls",
+  teal      = "tealls",
+  terraform = "terraformls",
+  yaml      = "yamlls",
+}
+
+for lang, server in pairs(servers) do
+  local conf = {
+    log_level = 2,
+    on_attach = on_attach,
+  }
+
+  local mod_name = "local.lsp." .. lang
+  mod.if_exists(mod_name, function(m)
+    conf.settings = m.settings
+    conf.cmd = m.cmd
+  end)
+
+	conf.cmd = conf.cmd
+    or lsp[server]
+    and lsp[server].document_config
+    and lsp[server].document_config.default_config
+    and lsp[server].document_config.default_config.cmd
+
+  if conf.cmd and vim.fn.executable(conf.cmd[1]) == 1 then
+    lsp[server].setup(conf)
+  end
+end
+
+mod.if_exists('lsp-status', function(status)
+  status.register_progress()
+end)

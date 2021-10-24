@@ -12,7 +12,8 @@ return require('packer').startup(function(use)
   use {
     'preservim/nerdtree',
     config = function()
-      vim.cmd [[nnoremap <leader>ff :NERDTreeToggle<CR>]]
+      local km = require('local.keymap')
+			km.nnoremap.leader.ff = { ':NERDTreeToggle', silent = true }
       vim.cmd [[let NERDTreeShowHidden=1]]
     end,
   }
@@ -26,7 +27,8 @@ return require('packer').startup(function(use)
   use {
     'majutsushi/tagbar',
     config = function()
-      vim.cmd [[nmap <silent> <F4> :TagbarToggle<CR>]]
+      local km = require('local.keymap')
+      km.nmap.fn.F4 = { ':TagbarToggle', silent = true }
       vim.cmd [[let g:tagbar_autofocus = 1]]
     end,
   }
@@ -105,10 +107,11 @@ return require('packer').startup(function(use)
   use {
     'junegunn/vim-easy-align',
     config = function()
+      local km = require('local.keymap')
       -- Start interactive EasyAlign in visual mode (e.g. vipga)
-      vim.cmd [[xmap ga <Plug>(EasyAlign)]]
+			km.xmap.ga = '<Plug>(EasyAlign)'
       -- Start interactive EasyAlign for a motion/text object (e.g. gaip)
-      vim.cmd [[nmap ga <Plug>(EasyAlign)]]
+			km.nmap.ga = '<Plug>(EasyAlign)'
     end,
   }
 
@@ -242,11 +245,15 @@ return require('packer').startup(function(use)
     'junegunn/fzf.vim',
     requires = 'junegunn/fzf',
     config = function()
-      vim.cmd [[
-        nnoremap <silent> <C-p> :GFiles<CR>
-        nnoremap <silent> <leader>b :Buffers<CR>
-        nnoremap <silent> <leader>rg :Rg<CR>
+      local km = require('local.keymap')
+      -- fuzzy-find git-files
+      km.nnoremap.ctrl.p    = {':GFiles',  silent = true }
+      -- fuzzy-find buffers
+      km.nnoremap.leader.b  = {':Buffers', silent = true }
+      -- fuzzy-find with ripgrep
+      km.nnoremap.leader.rg = {':Rg',      silent = true }
 
+      vim.cmd [[
         " ripgrep
         if executable('rg')
           let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
@@ -290,6 +297,7 @@ return require('packer').startup(function(use)
       'saadparwaiz1/cmp_luasnip',
     },
     config = function()
+      local km = require('local.keymap')
       -- Set completeopt to have a better completion experience
       vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
@@ -302,22 +310,22 @@ return require('packer').startup(function(use)
       local cmp = require 'cmp'
       cmp.setup({
         mapping = {
-          ['<C-d>'] = cmp.mapping.scroll_docs(-4),
-          ['<C-f>'] = cmp.mapping.scroll_docs(4),
-          ['<C-Space>'] = cmp.mapping.complete(),
-          ['<C-e>'] = cmp.mapping.close(),
-          ['<CR>'] = cmp.mapping.confirm {
+          [km.Ctrl.d] = cmp.mapping.scroll_docs(-4),
+          [km.Ctrl.f] = cmp.mapping.scroll_docs(4),
+          [km.Ctrl.Space] = cmp.mapping.complete(),
+          [km.Ctrl.e] = cmp.mapping.close(),
+          [km.Enter] = cmp.mapping.confirm {
             behavior = cmp.ConfirmBehavior.Replace,
             select = true,
           },
-          ['<Tab>'] = function(fallback)
+          [km.Tab] = function(fallback)
             if cmp.visible() then
               cmp.select_next_item()
             else
               fallback()
             end
           end,
-          ['<S-Tab>'] = function(fallback)
+          [km.S_Tab] = function(fallback)
             if cmp.visible() then
               cmp.select_prev_item()
             else
@@ -355,11 +363,11 @@ return require('packer').startup(function(use)
           format = lspkind.cmp_format({
             with_text = true,
             menu = {
-              buffer = "[buf]",
+              buffer   = "[buf]",
               nvim_lsp = "[lsp]",
               nvim_lua = "[nvim]",
-              path = "[path]",
-              luasnip = "[snip]",
+              path     = "[path]",
+              luasnip  = "[snip]",
             },
           }),
         },
@@ -394,13 +402,14 @@ return require('packer').startup(function(use)
     'nvim-telescope/telescope.nvim',
     requires = { 'nvim-lua/plenary.nvim' },
     config = function()
+      local km = require('local.keymap')
       local actions = require "telescope.actions"
       require('telescope').setup({
         defaults = {
           mappings = {
             i = {
-              ["<C-j>"] = actions.move_selection_next,
-              ["<C-k>"] = actions.move_selection_previous,
+              [km.Ctrl.j] = actions.move_selection_next,
+              [km.Ctrl.k] = actions.move_selection_previous,
             },
           },
           layout_strategy = "vertical",

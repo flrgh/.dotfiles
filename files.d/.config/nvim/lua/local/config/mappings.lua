@@ -1,56 +1,60 @@
-require('local.keymap').setup(function(map, nmap, vmap, noremap, nnoremap, vnoremap)
+local km = require 'local.keymap'
 
-  -- split nav
-  nnoremap.ctrl.J = '<C-W><C-J>'
-  nnoremap.ctrl.K = '<C-W><C-K>'
-  nnoremap.ctrl.L = '<C-W><C-L>'
-  nnoremap.ctrl.H = '<C-W><C-H>'
+local nnoremap = km.nnoremap
+local map      = km.map
+local noremap  = km.noremap
+local vmap     = km.vmap
 
-  -- window nav
-  noremap.ctrl.j = '<C-w>j'
-  noremap.ctrl.k = '<C-w>k'
-  noremap.ctrl.l = '<C-w>l'
-  noremap.ctrl.h = '<C-w>h'
+-- split nav
+nnoremap.ctrl.J = '<C-W><C-J>'
+nnoremap.ctrl.K = '<C-W><C-K>'
+nnoremap.ctrl.L = '<C-W><C-L>'
+nnoremap.ctrl.H = '<C-W><C-H>'
 
-  -- buffer nav
-  nnoremap.ctrl.PageUp   = {':bprev', silent = true }
-  nnoremap.ctrl.PageDown = {':bnext', silent = true }
+-- window nav
+noremap.ctrl.j = '<C-w>j'
+noremap.ctrl.k = '<C-w>k'
+noremap.ctrl.l = '<C-w>l'
+noremap.ctrl.h = '<C-w>h'
 
-  -- close buffer
-  nnoremap.leader.w = ':Bwipeout'
+-- buffer nav
+nnoremap.ctrl.PageUp   = {':bprev', silent = true }
+nnoremap.ctrl.PageDown = {':bnext', silent = true }
 
-  -- open current line in github browser
-  nnoremap.leader.o = ':.GBrowse'
+-- close buffer
+nnoremap.leader.w = ':Bwipeout'
 
-  -- set working directory from current file
-  nnoremap.leader['.'] = ':lcd %:p:h'
+-- open current line in github browser
+nnoremap.leader.o = ':.GBrowse'
 
-  -- copy the current file path to the clipboard (unnamedplus register)
-  nnoremap.leader.cf = ':let @+=expand("%:p")'
+-- set working directory from current file
+nnoremap.leader['.'] = ':lcd %:p:h'
 
-  noremap.YY       = '"+y<CR>'
-  noremap.leader.p = '+gP<CR>'
+-- copy the current file path to the clipboard (unnamedplus register)
+nnoremap.leader.cf = ':let @+=expand("%:p")'
 
-  -- maintain Visual Mode after shifting > and <
-  vmap['<'] = '<gv'
-  vmap['>'] = '>gv'
+noremap.YY       = '"+y<CR>'
+noremap.leader.p = '+gP<CR>'
 
-  -- quickfix nav
-  map.leader.qp      = ':cprevious'
-  map.leader.qn      = ':cnext'
-  nnoremap.leader.qq = ':cclose'
+-- maintain Visual Mode after shifting > and <
+vmap['<'] = '<gv'
+vmap['>'] = '>gv'
 
-  -- Change directory to that of the current file
-  nnoremap.leader.cd = ':cd %:p:h'
+-- quickfix nav
+map.leader.qp      = ':cprevious'
+map.leader.qn      = ':cnext'
+nnoremap.leader.qq = ':cclose'
 
-  -- edit vimrc
-  nnoremap.leader.ve = ':edit $MYVIMRC'
+-- Change directory to that of the current file
+nnoremap.leader.cd = ':cd %:p:h'
 
-  -- Clean search (highlight)
-  nnoremap.leader['<space>'] = {':noh', silent = true }
+-- edit vimrc
+nnoremap.leader.ve = ':edit $MYVIMRC'
 
-  -- Search mappings: These will make it so that going to the next one in a
-  -- search will center on the line it's found in.
-  nnoremap.n = 'nzzzv'
-  nnoremap.N = 'Nzzzv'
-end)
+-- Clean search (highlight)
+nnoremap.leader['<space>'] = {':noh', silent = true }
+
+-- Search mappings: These will make it so that going to the next one in a
+-- search will center on the line it's found in.
+nnoremap.n = 'nzzzv'
+nnoremap.N = 'Nzzzv'

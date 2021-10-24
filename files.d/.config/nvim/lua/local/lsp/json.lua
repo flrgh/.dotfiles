@@ -1,9 +1,5 @@
-return function(on_attach, lsp, _)
-    if vim.fn.executable("vscode-json-languageserver") then
-        lsp.jsonls.setup {
-            cmd = {"vscode-json-languageserver"},
-            filetypes = {"json"},
-            on_attach = on_attach
-        }
-    end
-end
+return {
+  -- for some reason lspconfig has this as
+  -- `vscode-json-language-server` instead of `vscode-json-languageserver`
+  cmd = { "vscode-json-languageserver", "--stdio" },
+}

@@ -1,4 +1,7 @@
+local g = vim.g
 local opt = vim.opt
+
+g.mapleader = ','
 
 opt.encoding      = 'utf-8'
 opt.fileencoding  = 'utf-8'
@@ -14,7 +17,7 @@ opt.backspace = {'indent', 'eol', 'start'}
 opt.hidden = true
 
 -- search settings
-opt.hlsearch  = true
+opt.hlsearch   = true
 opt.incsearch  = true
 opt.ignorecase = true
 opt.smartcase  = true
@@ -24,7 +27,7 @@ opt.splitright = true
 
 opt.diffopt = opt.diffopt + 'vertical'
 
-opt.wildignore = opt.wildignore + {
+opt.wildignore:append {
   '*/tmp/*',
   '*.so',
   '*.swp',
@@ -50,22 +53,22 @@ opt.mouse      = 'nv'
 opt.clipboard  = 'unnamedplus'
 
 -- visual settings
-opt.listchars = 'eol:$'
 vim.cmd [[syntax on]]
-opt.ruler = true
-opt.number = true
-opt.background = 'dark'
+opt.listchars     = { eol = '$' }
+opt.ruler         = true
+opt.number        = true
+opt.background    = 'dark'
 opt.termguicolors = true
-opt.gfn = 'Monospace 10'
+opt.gfn           = 'Monospace 10'
 
 -- no cursor blinking
 opt.gcr = 'a:blinkon0'
 
-opt.scrolloff = 3
-opt.laststatus = 2
-opt.title = true
+opt.scrolloff   = 3
+opt.laststatus  = 2
+opt.title       = true
 opt.titlestring = '%F'
 
-opt.modeline = true
-opt.modelines = 10
-opt.statusline= [[%F%m%r%h%w%=(%{&ff}/%Y)\ (line\ %l\/%L,\ col\ %c)\]]
+opt.modeline   = true
+opt.modelines  = 10
+opt.statusline = [[%F%m%r%h%w%=(%{&ff}/%Y)\ (line\ %l\/%L,\ col\ %c)\]]

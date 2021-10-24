@@ -3,21 +3,34 @@ local fs = require 'local.fs'
 local expand = vim.fn.expand
 local split = vim.fn.split
 local insert = table.insert
+
 local EMPTY = {}
 
-local SERVER = 'lua-language-server'
 local USER_SETTINGS = expand('~/.config/lua/lua-lsp.json')
 
----@class local.lsp.lua.settings
+---@alias local.lsp.filenames string[]
+
+---@class local.lsp.settings
+---@field log_level number
+---@field third_party? local.lsp.filenames
 local DEFAULT_SETTINGS = {
+
+  ---@class local.lsp.settings.lib : table
+  ---@field include_vim boolean
+  ---@field extra?      local.lsp.filenames
   lib = {
     include_vim = false, -- Make the server aware of Neovim runtime files
     extra = {},
   },
+
+  ---@class local.lsp.settings.path : table
+  ---@field extra? local.lsp.filenames
   path = {
     extra = {},
   },
+
   log_level = 2,
+
   third_party = nil,
 }
 
@@ -43,7 +56,7 @@ local function merge(t, extra)
   return extra
 end
 
----@return local.lsp.lua.settings
+---@return local.lsp.settings
 local function load_user_settings()
   local settings = DEFAULT_SETTINGS
 
@@ -59,14 +72,13 @@ local function load_user_settings()
   return settings
 end
 
----@param settings local.lsp.lua.settings
+---@param settings local.lsp.settings
 local function lua_libs(settings)
   local opts = settings.lib
   local libs = {}
   if opts.include_vim then
     libs[expand('$VIMRUNTIME/lua')] = true
     libs[expand('$VIMRUNTIME/lua/vim/lsp')] = true
-    libs[expand('$HOME/.config/nvim/lua')] = true
   end
 
   for _, item in ipairs(opts.extra) do
@@ -82,7 +94,7 @@ local function lua_libs(settings)
   return libs
 end
 
----@param settings local.lsp.lua.settings
+---@param settings local.lsp.settings
 ---@param libs table<string, boolean>
 ---@return string[]
 local function lua_path(settings, libs)
@@ -103,84 +115,76 @@ local function lua_path(settings, libs)
   return path
 end
 
-return function(on_attach, lsp, caps)
-  if not vim.fn.executable(SERVER) then
-    return
-  end
+local settings = load_user_settings()
+local library = lua_libs(settings)
+local path = lua_path(settings, library)
 
-  local settings = load_user_settings()
-  local library = lua_libs(settings)
-  local path = lua_path(settings, library)
+-- https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json
+return {
+  cmd = { 'lua-language-server' },
+  settings = {
+    Lua = {
+      runtime = {
+        version = 'LuaJIT', -- neovim implies luajit
+        path = path,
+      },
+      completion = {
+        enable = true,
+        autoRequire = true,
+      },
+      signatureHelp = {
+        enable = true,
+      },
+      hover = {
+        enable = true,
+      },
+      diagnostics = {
+        enable = true,
+        disable = {
+          'lowercase-global',
+        },
+        globals = {
+          'vim',
 
-  -- https://github.com/sumneko/vscode-lua/blob/master/setting/schema.json
-  lsp.sumneko_lua.setup {
-    on_attach = on_attach,
-    capabilities = caps,
-    cmd = { SERVER },
-    log_level = settings.log_level,
-    settings = {
-      Lua = {
-        runtime = {
-          version = 'LuaJIT', -- neovim implies luajit
-          path = path,
-        },
-        completion = {
-          enable = true,
-        },
-        signatureHelp = {
-          enable = true,
-        },
-        hover = {
-          enable = true,
-        },
-        diagnostics = {
-          enable = true,
-          disable = {
-            'lowercase-global',
-          },
-          globals = {
-            'vim',
+          -- openresty/kong globals
+          'ngx',
+          'kong',
 
-            -- openresty/kong globals
-            'ngx',
-            'kong',
+          -- busted globals
+          'after_each',
+          'before_each',
+          'describe',
+          'expose',
+          'finally',
+          'insulate',
+          'it',
+          'lazy_setup',
+          'lazy_teardown',
+          'mock',
+          'pending',
+          'pending',
+          'randomize',
+          'setup',
+          'spec',
+          'spy',
+          'strict_setup',
+          'strict_teardown',
+          'stub',
+          'teardown',
+          'test',
 
-            -- busted globals
-            'after_each',
-            'before_each',
-            'describe',
-            'expose',
-            'finally',
-            'insulate',
-            'it',
-            'lazy_setup',
-            'lazy_teardown',
-            'mock',
-            'pending',
-            'pending',
-            'randomize',
-            'setup',
-            'spec',
-            'spy',
-            'strict_setup',
-            'strict_teardown',
-            'stub',
-            'teardown',
-            'test',
-
-          },
         },
-        workspace = {
-          library = library,
-          ignoreSubmodules = false,
-          checkThirdParty = false,
-          userThirdParty = settings.third_party,
-        },
-        telemetry = {
-          -- don't phone home
-          enable = false,
-        },
+      },
+      workspace = {
+        library = library,
+        ignoreSubmodules = false,
+        checkThirdParty = false,
+        userThirdParty = settings.third_party,
+      },
+      telemetry = {
+        -- don't phone home
+        enable = false,
       },
     },
   }
-end
+}
