@@ -1,4 +1,8 @@
-local gl = require('galaxyline')
+if not require('local.module').exists('galaxyline') then
+  return
+end
+
+local gl = require 'galaxyline'
 
 local vim = vim
 local fn = vim.fn

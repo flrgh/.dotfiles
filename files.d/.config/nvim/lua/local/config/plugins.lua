@@ -12,7 +12,8 @@ return require('packer').startup(function(use)
   use {
     'preservim/nerdtree',
     config = function()
-      vim.cmd [[nnoremap <leader>ff :NERDTreeToggle<CR>]]
+      local km = require('local.keymap')
+			km.nnoremap.leader.ff = { ':NERDTreeToggle', silent = true }
       vim.cmd [[let NERDTreeShowHidden=1]]
     end,
   }
@@ -26,7 +27,8 @@ return require('packer').startup(function(use)
   use {
     'majutsushi/tagbar',
     config = function()
-      vim.cmd [[nmap <silent> <F4> :TagbarToggle<CR>]]
+      local km = require('local.keymap')
+      km.nmap.fn.F4 = { ':TagbarToggle', silent = true }
       vim.cmd [[let g:tagbar_autofocus = 1]]
     end,
   }
@@ -105,10 +107,11 @@ return require('packer').startup(function(use)
   use {
     'junegunn/vim-easy-align',
     config = function()
+      local km = require('local.keymap')
       -- Start interactive EasyAlign in visual mode (e.g. vipga)
-      vim.cmd [[xmap ga <Plug>(EasyAlign)]]
+			km.xmap.ga = '<Plug>(EasyAlign)'
       -- Start interactive EasyAlign for a motion/text object (e.g. gaip)
-      vim.cmd [[nmap ga <Plug>(EasyAlign)]]
+			km.nmap.ga = '<Plug>(EasyAlign)'
     end,
   }
 
@@ -242,11 +245,15 @@ return require('packer').startup(function(use)
     'junegunn/fzf.vim',
     requires = 'junegunn/fzf',
     config = function()
-      vim.cmd [[
-        nnoremap <silent> <C-p> :GFiles<CR>
-        nnoremap <silent> <leader>b :Buffers<CR>
-        nnoremap <silent> <leader>rg :Rg<CR>
+      local km = require('local.keymap')
+      -- fuzzy-find git-files
+      km.nnoremap.ctrl.p    = {':GFiles',  silent = true }
+      -- fuzzy-find buffers
+      km.nnoremap.leader.b  = {':Buffers', silent = true }
+      -- fuzzy-find with ripgrep
+      km.nnoremap.leader.rg = {':Rg',      silent = true }
 
+      vim.cmd [[
         " ripgrep
         if executable('rg')
           let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
@@ -275,26 +282,102 @@ return require('packer').startup(function(use)
   use 'nvim-treesitter/playground'
   use 'nvim-lua/lsp-status.nvim'
   use {
-    'hrsh7th/nvim-compe',
+    'hrsh7th/nvim-cmp',
+    requires = {
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-calc',
+      'hrsh7th/cmp-emoji',
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-nvim-lua',
+      'hrsh7th/cmp-path',
+
+      'onsails/lspkind-nvim',
+
+      'L3MON4D3/LuaSnip',
+      'saadparwaiz1/cmp_luasnip',
+    },
     config = function()
-      vim.cmd [[
-        " Use <Tab> and <S-Tab> to navigate through popup menu
-        inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
-        inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-        let g:completion_auto_change_source = 1
-        let g:completion_matching_smart_case = 1
-        let g:completion_trigger_keyword_length = 2
+      local km = require('local.keymap')
+      -- Set completeopt to have a better completion experience
+      vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
-        " Set completeopt to have a better completion experience
-        set completeopt=menuone,noselect
+      -- Don't show the dumb matching stuff.
+      vim.opt.shortmess:append "c"
 
-        " Avoid showing message extra message when using completion
-        set shortmess+=c
-      ]]
+      local lspkind = require "lspkind"
+      lspkind.init()
+
+      local cmp = require 'cmp'
+      cmp.setup({
+        mapping = {
+          [km.Ctrl.d] = cmp.mapping.scroll_docs(-4),
+          [km.Ctrl.f] = cmp.mapping.scroll_docs(4),
+          [km.Ctrl.Space] = cmp.mapping.complete(),
+          [km.Ctrl.e] = cmp.mapping.close(),
+          [km.Enter] = cmp.mapping.confirm {
+            behavior = cmp.ConfirmBehavior.Replace,
+            select = true,
+          },
+          [km.Tab] = function(fallback)
+            if cmp.visible() then
+              cmp.select_next_item()
+            else
+              fallback()
+            end
+          end,
+          [km.S_Tab] = function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            else
+              fallback()
+            end
+          end,
+        },
+
+        ---@type cmp.SourceConfig
+        sources = {
+          { name = 'nvim_lua' },
+          { name = 'nvim_lsp' },
+          { name = 'luasnip' },
+          { name = 'buffer' },
+          { name = 'path' },
+          { name = 'calc' },
+          { name = 'emoji' },
+        },
+
+        ---@type cmp.ExperimentalConfig
+        experimental = {
+          native_menu = false,
+          ghost_text = true,
+        },
+
+        ---@type cmp.SnippetConfig
+        snippet = {
+          expand = function(opts)
+            require('luasnip').lsp_expand(opts.body)
+          end,
+        },
+
+        ---@type cmp.FormattingConfig
+        formatting = {
+          format = lspkind.cmp_format({
+            with_text = true,
+            menu = {
+              buffer   = "[buf]",
+              nvim_lsp = "[lsp]",
+              nvim_lua = "[nvim]",
+              path     = "[path]",
+              luasnip  = "[snip]",
+            },
+          }),
+        },
+
+      })
+
     end,
   }
+
   use 'glepnir/lspsaga.nvim'
-  use 'onsails/lspkind-nvim'
 
   use {
     'mhartington/formatter.nvim',
@@ -319,13 +402,14 @@ return require('packer').startup(function(use)
     'nvim-telescope/telescope.nvim',
     requires = { 'nvim-lua/plenary.nvim' },
     config = function()
+      local km = require('local.keymap')
       local actions = require "telescope.actions"
       require('telescope').setup({
         defaults = {
           mappings = {
             i = {
-              ["<C-j>"] = actions.move_selection_next,
-              ["<C-k>"] = actions.move_selection_previous,
+              [km.Ctrl.j] = actions.move_selection_next,
+              [km.Ctrl.k] = actions.move_selection_previous,
             },
           },
           layout_strategy = "vertical",

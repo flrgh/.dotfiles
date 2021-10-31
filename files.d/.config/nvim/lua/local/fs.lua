@@ -1,4 +1,4 @@
----@module 'fs'
+---@module 'local.fs'
 local _M = {
   _VERSION = '0.1'
 }
@@ -6,7 +6,7 @@ local _M = {
 local expand = vim.fn.expand
 local getcwd = vim.fn.getcwd
 
-local lfs = require 'lfs'
+local attributes = require('lfs').attributes
 
 --- Check if a file exists.
 ---@param  fname   string
@@ -21,7 +21,7 @@ end
 ---@param  fname   string
 ---@return boolean exists
 function _M.dir_exists(fname)
-  return lfs.attributes(fname, 'mode') == 'directory'
+  return attributes(fname, 'mode') == 'directory'
 end
 
 --- Read a file's contents to a string.

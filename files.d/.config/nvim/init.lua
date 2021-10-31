@@ -1,22 +1,9 @@
-local function reload(mod)
-  _G.package.loaded[mod] = nil
-  return require(mod)
-end
-
-vim.g.mapleader = ','
-
-reload 'config.plugins'
-
-vim.cmd [[
-  for f in split(glob('~/.config/nvim/conf.d/*'), '\n')
-      exec 'source' f
-  endfor
-]]
+local reload = require('local.module').reload
 
 -- these only have first party dependencies, so they can be hot-reloaded
-reload 'config.settings'
-reload 'config.mappings'
+reload 'local.config.globals'
+reload 'local.config.plugins'
+reload 'local.config.settings'
+reload 'local.config.mappings'
 
-require 'eviline'
-require 'config.lsp'
-require 'config.treesitter'
+require 'local.config.lsp'
