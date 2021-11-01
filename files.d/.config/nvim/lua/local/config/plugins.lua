@@ -427,10 +427,12 @@ return require('packer').startup(function(use)
               [km.Ctrl.k] = actions.move_selection_previous,
             },
           },
-          layout_strategy = "vertical",
+
+          layout_strategy = "flex",
+
           layout_config = {
             horizontal = {
-              width = 0.99,
+              width = 0.95,
               height = 0.9,
               prompt_position = "bottom",
               preview_cutoff = 120,
