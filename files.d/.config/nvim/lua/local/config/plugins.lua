@@ -407,6 +407,12 @@ return require('packer').startup(function(use)
     config = function()
       local km = require('local.keymap')
       local actions = require "telescope.actions"
+
+      -- turn on line numbers for previewers
+      --
+      -- this is kind of buggy, but it's the best I can do for now
+      vim.cmd "autocmd User TelescopePreviewerLoaded setlocal number"
+
       require('telescope').setup({
         defaults = {
           mappings = {
