@@ -414,6 +414,12 @@ return require('packer').startup(function(use)
       vim.cmd "autocmd User TelescopePreviewerLoaded setlocal number"
 
       require('telescope').setup({
+        pickers = {
+          colorscheme = {
+            enable_preview = true,
+          },
+        },
+
         defaults = {
           mappings = {
             i = {
