@@ -67,6 +67,9 @@ return require('packer').startup(function(use)
   use {
     'joshdick/onedark.vim',
     branch = 'main',
+    config = function()
+      vim.cmd "colorscheme onedark"
+    end,
   }
   use 'tjdevries/colorbuddy.vim'
   use 'tjdevries/gruvbuddy.nvim'
@@ -76,7 +79,7 @@ return require('packer').startup(function(use)
       vim.cmd [[
         let no_buffers_menu=1
         let g:sonokai_style = 'maia'
-        colorscheme sonokai
+        "colorscheme sonokai
       ]]
     end,
   }
