@@ -13,7 +13,7 @@ return require('packer').startup(function(use)
     'preservim/nerdtree',
     config = function()
       local km = require('local.keymap')
-			km.nnoremap.leader.ff = { ':NERDTreeToggle', silent = true }
+      km.nnoremap.leader.ff = { ':NERDTreeToggle', silent = true }
       vim.cmd [[let NERDTreeShowHidden=1]]
     end,
   }
@@ -112,9 +112,9 @@ return require('packer').startup(function(use)
     config = function()
       local km = require('local.keymap')
       -- Start interactive EasyAlign in visual mode (e.g. vipga)
-			km.xmap.ga = '<Plug>(EasyAlign)'
+      km.xmap.ga = '<Plug>(EasyAlign)'
       -- Start interactive EasyAlign for a motion/text object (e.g. gaip)
-			km.nmap.ga = '<Plug>(EasyAlign)'
+      km.nmap.ga = '<Plug>(EasyAlign)'
     end,
   }
 
