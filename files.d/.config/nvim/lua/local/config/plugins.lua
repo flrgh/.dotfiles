@@ -508,4 +508,7 @@ return require('packer').startup(function(use)
   }
 
   use 'aserowy/tmux.nvim'
+
+  -- direnv support and syntax hilighting
+  use 'direnv/direnv.vim'
 end)
