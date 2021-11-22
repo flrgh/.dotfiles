@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly REPO=cli/cli
+
+VERSION=${1:-latest}
+
+if [[ $VERSION == latest ]]; then
+    VERSION=$(gh-helper get-latest-release-tag "$REPO")
+fi
+
+VERSION=${VERSION#v}
+
+echo "Installing github cli $VERSION"
+
+readonly URL=https://github.com/cli/cli/releases/download/v${VERSION}/gh_${VERSION}_linux_amd64.tar.gz
+
+F=$(cache-get \
+    "$URL" \
+    "gh-cli-${VERSION}.tar.gz"
+)
+
+tmp=$(mktemp -d)
+cd "$tmp" || { echo "failed to cd to temp dir ($tmp), exiting"; exit 1; }
+
+cleanup() {
+    rm -r "$tmp"
+}
+
+trap cleanup ERR EXIT
+
+tar xzf "$F"
+cp -av "./gh_${VERSION}_linux_amd64/bin" "$HOME/.local/"
+cp -av "./gh_${VERSION}_linux_amd64/share" "$HOME/.local/"
