@@ -9,7 +9,8 @@ COMPLETE=(
     "openstack complete --shell bash"
     "kubectl completion bash"
     "luarocks completion bash"
-    "gh completion --shell bash"
+    "gh completion --shell bash" # github cli
+    "op completion bash"         # 1password
 )
 
 DIR="$HOME/.local/.bash_completion.d"
