@@ -5,24 +5,36 @@ export HISTCONTROL=ignorespace
 
 # History is valuable; let's keep lots of it
 export HISTFILESIZE=100000
-export HISTSIZE=1000
+export HISTSIZE=5000
 
 # timestamps with history
 export HISTTIMEFORMAT='%F %T '
 
+export HISTFILE=$HOME/.bash_history
+
+__HIST_SAVED=0
+
 # save+reload history after every command
 # this could get expensive and slow when the history file gets big
 __update_history() {
-    history -a
-    history -c
-    history -r
+    local -i now
+    printf -v now '%(%s)T'
+
+    if (( (now - __HIST_SAVED) > 5 )); then
+        # persist in-memory history items to the HISTFILE
+        history -a
+
+        # clear the in-memory history list
+        history -c
+
+        # re-read the HISTFILE into memory
+        history -r
+
+        __HIST_SAVED=$now
+    fi
 }
 
-_debug_rc "Prompt command: $PROMPT_COMMAND"
-if ! [[ $PROMPT_COMMAND == *__update_history* ]]; then
-    _debug_rc "Prepending history command (__update_history) to \$PROMPT_COMMAND"
-    export PROMPT_COMMAND="__update_history; ${PROMPT_COMMAND}"
-fi
+addPath "__update_history" "PROMPT_COMMAND" "; "
 
 # append to the history file, don't overwrite it
 shopt -s histappend
