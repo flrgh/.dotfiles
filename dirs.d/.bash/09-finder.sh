@@ -1,7 +1,7 @@
 # options for fzf
 if iHave fzf; then
     if [[ -f /usr/share/fzf/shell/key-bindings.bash ]]; then
-        . /usr/share/fzf/shell/key-bindings.bash
+        _source_file /usr/share/fzf/shell/key-bindings.bash
     fi
 
     FZF_DEFAULT_OPTS="--info=default --height=80% --border=sharp --tabstop=4"

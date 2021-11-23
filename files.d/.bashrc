@@ -1,3 +1,5 @@
+__RC_START=$(date "+%s.%3N")
+
 _CLEANUP=()
 
 _add_cleanup() {
@@ -26,6 +28,36 @@ _stamp() {
 
 _cleanup_func _stamp
 
+iHave() {
+    local -r cmd=$1
+    if command -v "$cmd" &> /dev/null; then
+        return 0
+    fi
+    return 1
+}
+
+if iHave bc; then
+    _subtract() {
+        local -r v=$(bc <<< "$1 - $2")
+        printf '%.3f' "$v"
+    }
+elif iHave python; then
+    _subtract() {
+        python \
+            -c 'import sys; sys.stdout.write(str(round(float(sys.argv[1]) - float(sys.argv[2]), 3)))' \
+            "$1" "$2"
+        }
+else
+    _subtract() {
+        local l=$1
+        local r=$2
+        printf "%s" "$(( l - r ))"
+    }
+fi
+
+_log_file="$HOME/.local/var/log/bashrc.log"
+_log_dir="$(dirname "$_log_file")"
+
 _log_rc() {
     local -r ctx=$1
     shift
@@ -36,65 +68,101 @@ _log_rc() {
     done
 }
 
-_debug_rc() {
-    if [[ ${DEBUG_BASHRC} == 1 ]]; then
-        local -r ctx="${BASH_SOURCE[2]}:${BASH_LINENO[1]} ${FUNCNAME[1]}"
-        for msg in "$@"; do
-            _log_rc "$ctx" "$msg"
-        done
+declare -A __times
+_cleanup_var __times
+
+
+: DEBUG_BASHRC=${DEBUG_BASHRC:-0}
+if (( DEBUG_BASHRC > 0 )); then
+    mkdir -p "$_log_dir"
+
+    _debug_rc() {
+        if [[ ${DEBUG_BASHRC} == 1 ]]; then
+            local -r ctx="${BASH_SOURCE[2]}:${BASH_LINENO[1]} ${FUNCNAME[1]}"
+            for msg in "$@"; do
+                _log_rc "$ctx" "$msg" | tee -a "$_log_file"
+            done
+        fi
+    }
+
+    _timer_start() {
+        local -r key=$1
+        __times[$key]=$(_stamp)
+    }
+
+    _timer_stop() {
+        local -r key=$1
+        local -r start=${__times[$key]}
+        local -r now=$(_stamp)
+        __times[$key]=$(_subtract "$now" "$start")
+    }
+
+    _cleanup_var __time_started
+else
+    _debug_rc()    { :; }
+    _timer_start() { :; }
+    _timer_stop() { :; }
+fi
+
+_cleanup_func _timer_start _timer_stop
+
+_source_file() {
+    local -r fname=$1
+    if [[ -f $fname || -h $fname ]] && [[ -r $fname ]]; then
+        _debug_rc "sourcing file: $fname"
+        local -r key="_source_file($fname)"
+        _timer_start "$key"
+
+        source "$fname"
+
+        _timer_stop "$key"
+        _debug_rc "sourced file $fname in ${__times[$key]}"
+    else
+        _debug_rc "$fname does not exist or is not a regular file"
     fi
 }
 
 _source_dir() {
     local dir=$1
-    [[ -d $dir ]] || return
+    if ! [[ -d $dir ]]; then
+        _debug_rc "$dir does not exist"
+        return
+    fi
 
-    local opts
-    opts=$(shopt -p nullglob dotglob)
-    shopt -s nullglob dotglob globstar
+    local -r key="_source_dir($dir)"
+    _timer_start "$key"
 
-    local p
-    local files=("$dir"/**)
-    eval "$opts"
+    local files=("$dir"/*)
 
     for p in "${files[@]}"; do
-        if [[ -f $p || -h $p ]] && [[ -r $p ]]; then
-            _debug_rc "sourcing file: $p"
-            . "$p"
-        fi
+        _source_file "$p"
     done
+
+    _timer_stop "$key"
+
+    _debug_rc "sourced dir $dir in ${__times[$key]}"
 }
 
 _cleanup_func _source_dir
 
-_RC_START=$(_stamp)
-
 _source_dir "$HOME/.bash"
 
-_RC_END=$(_stamp)
-
-_time=0
-
-if iHave bc; then
-    _time=$(bc <<< "$_RC_END - $_RC_START")
-
-elif iHave python; then
-    _time=$(python \
-        -c 'import sys; sys.stdout.write(str(round(float(sys.argv[1]) - float(sys.argv[2]), 3)))' \
-        "$_RC_END" "$_RC_START"
-    )
-fi
-
-printf -v  _time '%.3f' "$_time"
-_debug_rc ".bashrc sourced in $_time seconds"
-
-for stmt in "${_CLEANUP[@]}"; do
+for (( idx=${#_CLEANUP[@]}-1 ; idx>=0 ; idx-- )) ; do
+    stmt=${_CLEANUP[$idx]}
     _debug_rc "CLEANUP: $stmt"
     eval "$stmt"
 done
 
-unset -f _debug_rc _log_rc
-unset _RC_START _RC_END _time
+__RC_END=$(date "+%s.%3N")
+if [[ -d $_log_dir ]]; then
+    _log_rc \
+        "bashrc" \
+        "startup complete in $(_subtract "$__RC_END" "$__RC_START")" \
+    >> "$_log_file"
+fi
+
+unset -f _debug_rc _subtract _log_rc
+unset _CLEANUP __RC_START __RC_END _log_dir _log_dir
 
 # luamake is annoying and tries to add a bash alias for itself every time it runs,
 # so I need to leave this here so that it thinks the alias already exists *grumble*

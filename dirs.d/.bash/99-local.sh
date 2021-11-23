@@ -1,3 +1,3 @@
 if [[ -f $HOME/.local/.bashrc ]]; then
-    . "$HOME/.local/.bashrc"
+    _source_file "$HOME/.local/.bashrc"
 fi
