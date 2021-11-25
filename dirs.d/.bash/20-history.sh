@@ -34,7 +34,7 @@ __update_history() {
     fi
 }
 
-addPath "__update_history" "PROMPT_COMMAND" "; "
+addPath "__update_history" "PROMPT_COMMAND" ";"
 
 # append to the history file, don't overwrite it
 shopt -s histappend
