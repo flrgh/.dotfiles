@@ -35,3 +35,5 @@ cd "LuaJIT-${VERSION}"
 
 make PREFIX="$PREFIX"
 make install PREFIX="$PREFIX"
+
+ln -sfv "$PREFIX/bin/luajit-${VERSION}" "$PREFIX/bin/luajit"
