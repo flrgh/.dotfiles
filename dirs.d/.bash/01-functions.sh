@@ -38,6 +38,18 @@ iHave() {
 
 _cleanup_func iHave
 
+isFunction() {
+    [[ $(type -t "$1") = function ]]
+}
+
+_cleanup_func isFunction
+
+isExe() {
+    [[ -n $(type -f -p "$1") ]]
+}
+
+_cleanup_func isExe
+
 extract() {
     if [[ -z $1 ]]; then
         echo "usage: extract <filename>"
