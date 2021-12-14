@@ -146,6 +146,8 @@ return require('packer').startup(function(use)
   use 'rafcamlet/nvim-luapad'
   -- lua manual in vimdoc
   use 'wsdjeg/luarefvim'
+  -- lua neovim support
+  use 'folke/lua-dev.nvim'
 
   -- lang: teal
   use 'teal-language/vim-teal'
