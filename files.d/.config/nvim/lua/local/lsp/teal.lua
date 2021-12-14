@@ -1,7 +1,7 @@
 local lsp = require "lspconfig"
 
 -- Make sure this is a slash (as theres some metamagic happening behind the scenes)
-require("lspconfig/configs").tealls = {
+require("lspconfig.configs").tealls = {
   default_config = {
     cmd = {
       "teal-language-server",
