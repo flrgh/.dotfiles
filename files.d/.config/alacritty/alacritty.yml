@@ -1,31 +1,12 @@
 ---
 
-key_bindings:
+# flex-point for local, non-version-controlled settings
+import:
+  - ~/.config/alacritty/alacritty.local.yml
 
-  - key: V
-    mods: Alt
-    action: Paste
-
-  - key: C
-    mods: Alt
-    action: Copy
-
-  - key: N
-    mods: Control|Shift
-    action: SpawnNewInstance
-
-  - key: W
-    mods: Control|Shift
-    action: Quit
-
-  # open a new window in tmux
-  - key: T
-    mods: Control|Shift
-    chars: "\x06\x63"
+env: {}
 
 window:
-  dynamic_title: true
-
   # Window dimensions (changes require restart)
   dimensions:
     columns: 0
@@ -52,7 +33,18 @@ window:
   startup_mode: Maximized
 
   title: Alacritty
-  class: Alacritty
+  class:
+    instance: Alacritty
+    general: Alacritty
+
+  dynamic_title: true
+
+  # GTK theme variant (Linux/BSD only)
+  #
+  # Override the variant of the GTK theme. Commonly supported values are `dark`
+  # and `light`. Set this to `None` to use the default theme variant.
+  gtk_theme_variant: None
+
 
 scrolling:
   # Maximum number of lines in the scrollback buffer.
@@ -63,15 +55,20 @@ scrolling:
   # scrollback is enabled (history > 0).
   multiplier: 3
 
-  # The `faux_multiplier` setting controls the number of lines the terminal
-  # should scroll when the alternate screen buffer is active. This is used
-  # to allow mouse scrolling for applications like `man`.
-  #
-  # Specifying `0` will disable faux scrolling.
-  #
-  # Deprecated in 0.4.0
-  # faux_multiplier: 3
+font:
+  normal:
+    #family: DejaVuSansMono Nerd Font
+    #family: Sauce Code Pro Nerd Font
+    #family: Droid Sans Mono Nerd Font
+    #family: FiraCode Nerd Font
+    #family: UbuntoMono Nerd Font
+    family: LiterationMono Nerd Font
 
+  offset:
+    x: 0
+    y: 0
+
+# If `true`, bold text is drawn using the bright color variants.
 draw_bold_text_with_bright_colors: true
 
 colors:
@@ -99,18 +96,6 @@ colors:
     cyan:    '0x93a1a1' # base1
     white:   '0xfdf6e3' # base3
 
-font:
-  normal:
-    #family: DejaVuSansMono Nerd Font
-    #family: Sauce Code Pro Nerd Font
-    #family: Droid Sans Mono Nerd Font
-    #family: FiraCode Nerd Font
-    #family: UbuntoMono Nerd Font
-    family: LiterationMono Nerd Font
-
-  offset:
-    x: 0
-    y: 0
 # LIGHT Colors (Gruvbox light)
 # colors:
 #   # Default colors
@@ -140,12 +125,74 @@ font:
 #     cyan:    '0x427b58'
 #     white:   '0x3c3836'
 
+
+
+# Bell
+#
+# The bell is rung every time the BEL control character is received.
 bell:
-  animation: EaseOutExpo
-  duration: 0             # duration set to 0 to disable
-  color: '0xffffff'
+  # Visual Bell Animation
+  #
+  # Animation effect for flashing the screen when the visual bell is rung.
+  #
+  # Values for `animation`:
+  #   - Ease
+  #   - EaseOut
+  #   - EaseOutSine
+  #   - EaseOutQuad
+  #   - EaseOutCubic
+  #   - EaseOutQuart
+  #   - EaseOutQuint
+  #   - EaseOutExpo
+  #   - EaseOutCirc
+  #   - Linear
+  #animation: EaseOutExpo
+
+  # Duration of the visual bell flash in milliseconds. A `duration` of `0` will
+  # disable the visual bell animation.
+  duration: 0
+
+  # Visual bell animation color.
+  #color: '#ffffff'
+
+  # Bell Command
+  #
+  # This program is executed whenever the bell is rung.
+  #
+  # When set to `command: None`, no command will be executed.
+  #
+  # Example:
+  #   command:
+  #     program: notify-send
+  #     args: ["Hello, World!"]
+  #
+  #command: None
+
 
 background_opacity: 1.0
+
+selection:
+  # This string contains all characters that are used as separators for
+  # "semantic words" in Alacritty.
+  semantic_escape_chars: ",│`|:\"' ()[]{}<>"
+
+  # When set to `true`, selected text will be copied to the primary clipboard.
+  save_to_clipboard: false
+
+cursor:
+  style:
+    shape: Block
+    blinking: On
+
+  blink_interval: 500
+
+  # If this is `true`, the cursor will be rendered as a hollow box when the
+  # window is not focused.
+  unfocused_hollow: false
+
+  # Thickness of the cursor relative to the cell width as floating point number
+  # from `0.0` to `1.0`.
+  thickness: 0.15
 
 # Mouse bindings
 #
@@ -172,18 +219,6 @@ mouse:
     threshold: 300
   hide_when_typing: false
 
-selection:
-  semantic_escape_chars: ",│`|:\"' ()[]{}<>"
-  save_to_clipboard: false
-
-
-cursor:
-  style:
-    #shape: Beam
-    blinking: always
-
-  blink_interval: 500
-  unfocused_hollow: false
 
 live_config_reload: true
 
@@ -192,6 +227,74 @@ working_directory: None
 # Send ESC (\x1b) before characters when alt is pressed.
 # alt_send_esc: true
 alt_send_esc: true
+
+# Regex hints
+#
+# Terminal hints can be used to find text in the visible part of the terminal
+# and pipe it to other applications.
+hints:
+  # Keys used for the hint labels.
+  #alphabet: "jfkdls;ahgurieowpq"
+
+  # List with all available hints
+  #
+  # Each hint must have a `regex` and either an `action` or a `command` field.
+  # The fields `mouse`, `binding` and `post_processing` are optional.
+  #
+  # The fields `command`, `binding.key`, `binding.mods`, `binding.mode` and
+  # `mouse.mods` accept the same values as they do in the `key_bindings` section.
+  #
+  # The `mouse.enabled` field controls if the hint should be underlined while
+  # the mouse with all `mouse.mods` keys held or the vi mode cursor is above it.
+  #
+  # If the `post_processing` field is set to `true`, heuristics will be used to
+  # shorten the match if there are characters likely not to be part of the hint
+  # (e.g. a trailing `.`). This is most useful for URIs.
+  #
+  # Values for `action`:
+  #   - Copy
+  #       Copy the hint's text to the clipboard.
+  #   - Paste
+  #       Paste the hint's text to the terminal or search.
+  #   - Select
+  #       Select the hint's text.
+  #   - MoveViModeCursor
+  #       Move the vi mode cursor to the beginning of the hint.
+  #enabled:
+  # - regex: "(ipfs:|ipns:|magnet:|mailto:|gemini:|gopher:|https:|http:|news:|file:|git:|ssh:|ftp:)\
+  #           [^\u0000-\u001F\u007F-\u009F<>\"\\s{-}\\^⟨⟩`]+"
+  #   command: xdg-open
+  #   post_processing: true
+  #   mouse:
+  #     enabled: true
+  #     mods: None
+  #   binding:
+  #     key: U
+  #     mods: Control|Shift
+  enabled: []
+
+key_bindings:
+
+  - key: V
+    mods: Alt
+    action: Paste
+
+  - key: C
+    mods: Alt
+    action: Copy
+
+  - key: N
+    mods: Control|Shift
+    action: SpawnNewInstance
+
+  - key: W
+    mods: Control|Shift
+    action: Quit
+
+  # open a new window in tmux
+  - key: T
+    mods: Control|Shift
+    chars: "\x06\x63"
 
 debug:
   render_timer: false
@@ -207,5 +310,3 @@ debug:
   log_level: Warn
 
   print_events: false
-
-  ref_test: false
