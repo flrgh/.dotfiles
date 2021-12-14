@@ -315,14 +315,22 @@ return require('packer').startup(function(use)
       local cmp = require 'cmp'
       cmp.setup({
         mapping = {
-          [km.Ctrl.d] = cmp.mapping.scroll_docs(-4),
-          [km.Ctrl.f] = cmp.mapping.scroll_docs(4),
+          -- replace ctrl+n/ctrl+p with ctrl+j/ctrl+k
+          [km.Ctrl.j] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+          [km.Ctrl.k] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+          [km.Ctrl.n] = cmp.config.disable,
+          [km.Ctrl.p] = cmp.config.disable,
+
+          -- explicitly invoke completion
           [km.Ctrl.Space] = cmp.mapping.complete(),
+
           [km.Ctrl.e] = cmp.mapping.close(),
+
           [km.Enter] = cmp.mapping.confirm {
             behavior = cmp.ConfirmBehavior.Replace,
             select = true,
           },
+
           [km.Tab] = function(fallback)
             if cmp.visible() then
               cmp.select_next_item()
