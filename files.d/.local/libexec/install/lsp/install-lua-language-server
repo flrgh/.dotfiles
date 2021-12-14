@@ -16,9 +16,6 @@ docker build \
 << 'EOF'
 FROM alpine:latest
 
-ARG TAG=master
-ARG J=1
-
 WORKDIR /opt
 
 RUN apk add \
@@ -29,9 +26,12 @@ RUN apk add \
         ninja \
         g++ \
         git \
-        gcc \
-        && \
-    git clone \
+        gcc
+
+ARG TAG=master
+ARG J=1
+
+RUN git clone \
         --branch "$TAG" \
         --depth 1 \
         --recurse-submodules \
