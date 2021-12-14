@@ -127,6 +127,20 @@ end
 local function lua_path(settings, libs)
   local path = split(package.path, ';', false)
 
+  -- something changed in lua-language-server 2.5.0 with regards to locating
+  -- `require`-ed filenames from package.path. These no longer work:
+  --
+  -- * relative (`./`) references to the current working directory:
+  --   * ./?.lua
+  --   * ./?/init.lua
+  -- * absolute references to the current working directory:
+  --   * $PWD/?.lua
+  --   * $PWD/?/init.lua
+  --
+  -- ...but `?.lua` and `?/init.lua` work, so let's use them instead
+  insert(path, "?.lua")
+  insert(path, "?/init.lua")
+
   for lib in pairs(libs) do
     -- add $path
     add_lua_path(path, lib)
@@ -156,24 +170,34 @@ local library = lua_libs(settings)
 local path = lua_path(settings, library)
 
 -- https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json
-return {
+local conf = {
   cmd = { 'lua-language-server' },
   settings = {
     Lua = {
+
       runtime = {
         version = 'LuaJIT', -- neovim implies luajit
         path = path,
+        pathStrict = false,
       },
+
       completion = {
         enable = true,
         autoRequire = true,
       },
+
       signatureHelp = {
         enable = true,
       },
+
       hover = {
         enable = true,
       },
+
+      hint = {
+        enable = true,
+      },
+
       diagnostics = {
         enable = true,
         disable = {
@@ -224,3 +248,11 @@ return {
     },
   }
 }
+
+--if settings.include_vim then
+--  mod.if_exists("lua-dev", function(luadev)
+--    conf = luadev.setup({ lspconfig = conf })
+--  end)
+--end
+
+return conf
