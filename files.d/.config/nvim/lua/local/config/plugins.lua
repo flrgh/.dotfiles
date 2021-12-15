@@ -277,7 +277,6 @@ return require('packer').startup(function(use)
   }
 
   -- LSP stuff
-  use 'neovim/nvim-lsp'
   use 'neovim/nvim-lspconfig'
   use {
     'nvim-treesitter/nvim-treesitter',
