@@ -19,6 +19,7 @@ require('nvim-treesitter.configs').setup {
     "json",
     "jsonc",
     "lua",
+    "markdown",
     "php",
     "python",
     "regex",
