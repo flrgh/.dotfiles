@@ -4,6 +4,7 @@ local nnoremap = km.nnoremap
 local map      = km.map
 local noremap  = km.noremap
 local vmap     = km.vmap
+local vnoremap = km.vnoremap
 
 -- split nav
 nnoremap.ctrl.J = '<C-W><C-J>'
@@ -58,3 +59,8 @@ nnoremap.leader['<space>'] = {':noh', silent = true }
 -- search will center on the line it's found in.
 nnoremap.n = 'nzzzv'
 nnoremap.N = 'Nzzzv'
+
+-- Shift + J/K moves selected lines down/up in visual mode
+-- https://old.reddit.com/r/neovim/comments/rfrgq5/is_it_possible_to_do_something_like_his_on/hog28q3/
+vnoremap.J = { ":m '>+1<CR>gv=gv", no_auto_cr = true }
+vnoremap.K = { ":m '<-2<CR>gv=gv", no_auto_cr = true }
