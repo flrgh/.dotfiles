@@ -31,12 +31,18 @@ local mt = {
       opts = v
     end
 
-    -- auto-append <CR> to commands
-    if startswith(action, ':') then
-      if not endswith(action:upper(), '<CR>') then
-        action = action .. '<CR>'
+    opts = opts or {}
+
+    if not opts.no_auto_cr then
+      -- auto-append <CR> to commands
+      if startswith(action, ':') then
+        if not endswith(action:upper(), '<CR>') then
+          action = action .. '<CR>'
+        end
       end
     end
+
+    opts.no_auto_cr = nil
 
     keymap(
       self.mode or '',
