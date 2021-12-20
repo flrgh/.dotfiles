@@ -62,5 +62,5 @@ nnoremap.N = 'Nzzzv'
 
 -- Shift + J/K moves selected lines down/up in visual mode
 -- https://old.reddit.com/r/neovim/comments/rfrgq5/is_it_possible_to_do_something_like_his_on/hog28q3/
-vnoremap.J = { ":m '>+1<CR>gv=gv", no_auto_cr = true }
-vnoremap.K = { ":m '<-2<CR>gv=gv", no_auto_cr = true }
+vnoremap.J = { ":move '>+1<CR>gv=gv", no_auto_cr = true }
+vnoremap.K = { ":move '<-2<CR>gv=gv", no_auto_cr = true }
