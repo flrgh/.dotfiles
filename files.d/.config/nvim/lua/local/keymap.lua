@@ -1,5 +1,4 @@
 local fmt        = string.format
-local keymap     = vim.api.nvim_set_keymap
 local startswith = vim.startswith
 local endswith   = vim.endswith
 
@@ -14,6 +13,20 @@ local function extend(a, b)
   end
 
   return vim.tbl_deep_extend("force", a, b)
+end
+
+local function create_keymap(mode, key, action, opts, buf)
+  local handler, maps
+
+  if buf then
+    handler = vim.api.nvim_buf_set_keymap
+    maps = registry.buf
+  else
+    handler = vim.api.nvim_set_keymap
+    maps = registry
+  end
+
+  return handler(mode, key, action, opts)
 end
 
 local mt = {
@@ -44,17 +57,18 @@ local mt = {
 
     opts.no_auto_cr = nil
 
-    keymap(
+    return create_keymap(
       self.mode or '',
       key,
       action,
-      extend(self.opts, opts)
+      extend(self.opts, opts),
+      self.buf
     )
   end
 }
 
 ---@param t string
----@return fun(s:string):string
+---@return local.keymap.set_key
 local function template(t)
   return function(key)
     return t:format(key)
@@ -65,14 +79,29 @@ local wrap_ctrl = template('<C-%s>')
 local wrap_fn = template('<%s>')
 local add_leader = template('<Leader>%s')
 
+---@alias local.keymap.set_key fun(s:string):string
+
+---@alias local.keymap.mode '"n"'|'"v"'|'"x"'|'""'
+
+---@class local.keymap.opts : table
+---@field noremap boolean
+---@field silent  boolean
+---@field nowait  boolean
+---@field script  boolean
+---@field expr    boolean
+---@field unique  boolean
+
 ---@alias local.keymap.action string|table
 
 ---@alias local.keymap.binding table<string, local.keymap.action>
 
 ---@class local.keymap : table
----@field ctrl   local.keymap.binding
----@field fn     local.keymap.binding
----@field leader local.keymap.binding
+---@field ctrl     local.keymap.binding
+---@field fn       local.keymap.binding
+---@field leader   local.keymap.binding
+---@field mode     local.keymap.mode
+---@field opts     local.keymap.opts
+---@field set_key? local.keymap.set_key
 
 ---@return local.keymap
 local function make_map(mode, opts)
