@@ -50,5 +50,5 @@ RUN apk add \
 
 WORKDIR /opt/lua-language-server
 
-ENTRYPOINT ["/opt/lua-language-server/bin/Linux/lua-language-server", "/opt/lua-language-server/main.lua"]
+ENTRYPOINT ["/opt/lua-language-server/bin/lua-language-server", "/opt/lua-language-server/main.lua"]
 EOF
