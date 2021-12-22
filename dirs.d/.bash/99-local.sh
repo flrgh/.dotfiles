@@ -1,3 +1,2 @@
-if [[ -f $HOME/.local/.bashrc ]]; then
-    _source_file "$HOME/.local/.bashrc"
-fi
+_source_file "$HOME/.local/.bashrc"
+_source_dir  "$HOME/.local/.bash"
