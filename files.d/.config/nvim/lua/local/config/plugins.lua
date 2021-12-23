@@ -18,6 +18,9 @@ return require('packer').startup(function(use)
     end,
   }
 
+  -- adds some common readline key bindings to insert and command mode
+  use 'tpope/vim-rsi'
+
   use 'airblade/vim-gitgutter'
 
   -- hilight trailing whitespace
