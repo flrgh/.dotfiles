@@ -494,4 +494,10 @@ return require('packer').startup(function(use)
 
   -- direnv support and syntax hilighting
   use 'direnv/direnv.vim'
+
+  -- roku / brightscript support
+  use {
+    'entrez/roku.vim',
+    ft = { 'brs' }
+  }
 end)
