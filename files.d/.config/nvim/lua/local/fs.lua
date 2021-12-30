@@ -6,23 +6,27 @@ local _M = {
 
 local expand = vim.fn.expand
 local getcwd = vim.fn.getcwd
-
-local attributes = require('lfs').attributes
+local json_decode = vim.json.decode
+local fs_stat = vim.loop.fs_stat
+local fs_open = vim.loop.fs_open
+local fs_fstat = vim.loop.fs_fstat
+local fs_read = vim.loop.fs_read
+local fs_close = vim.loop.fs_close
 
 --- Check if a file exists.
 ---@param  fname   string
 ---@return boolean exists
 function _M.file_exists(fname)
-  local f = io.open(fname, 'rb')
-  if f then f:close() end
-  return f ~= nil
+  local st = fs_stat(fname)
+  return st and st.type == "file"
 end
 
 --- Check if a directory exists.
 ---@param  fname   string
 ---@return boolean exists
 function _M.dir_exists(fname)
-  return attributes(fname, 'mode') == 'directory'
+  local st = fs_stat(fname)
+  return st and st.type == "directory"
 end
 
 --- Read a file's contents to a string.
@@ -30,15 +34,26 @@ end
 ---@return string? content
 ---@return string? error
 function _M.read_file(fname)
-  local f, err = io.open(fname, 'rb')
-  if not f then
-    return nil, err
+  local stat, data, fd, err
+
+  fd, err = fs_open(fname, "r", 438)
+  if not fd then
+    return nil, err or "failed opening file"
   end
 
-  local content = f:read('*all')
-  f:close()
+  stat, err = fs_fstat(fd)
+  if not stat then
+    return nil, err or "failed fstat-ing file"
+  end
 
-  return content
+  data, err = fs_read(fd, stat.size, 0)
+  if not data then
+    return nil, err or "failed reading file"
+  end
+
+  assert(fs_close(fd))
+
+  return data
 end
 
 --- Decode the contents of a json file.
@@ -51,7 +66,8 @@ function _M.read_json_file(fname)
     return nil, err
   end
 
-  return vim.fn.json_decode(raw)
+
+  return json_decode(raw)
 end
 
 ---@return string
