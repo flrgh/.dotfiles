@@ -91,7 +91,10 @@ local add_leader = template('<Leader>%s')
 ---@field expr    boolean
 ---@field unique  boolean
 
----@alias local.keymap.action string|table
+---@class local.keymap.action.table : local.keymap.opts
+---@field [1] string # the RHS of the key map
+
+---@alias local.keymap.action string|local.keymap.action.table
 
 ---@alias local.keymap.binding table<string, local.keymap.action>
 
