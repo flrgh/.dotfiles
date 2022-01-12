@@ -6,9 +6,6 @@ strict_env = true
 
 prefix = [
     "/home/michaelm/pagely-git",
-    "/home/michaelm/git/att/.envrc",
-]
-
-exact = [
-    "/home/michaelm/git/kong/.envrc",
+    "/home/michaelm/git/att",
+    "/home/michaelm/git/kong",
 ]
