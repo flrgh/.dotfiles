@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly REPO=jgm/pandoc
+
+VERSION=${1:-latest}
+
+RELEASE_DATA=
+
+if [[ $VERSION == latest ]]; then
+    RELEASE_DATA=$( gh-helper get-latest-release "$REPO")
+    VERSION=$(jq <<< "$RELEASE_DATA" -r .tag_name)
+    echo "Detected latest version $VERSION"
+else
+    RELEASE_DATA=$(gh-helper get-tag "$REPO" "$VERSION")
+fi
+
+DOWNLOAD_URL=$(
+    jq -r \
+        '.assets[].browser_download_url
+        | select( test("linux-amd64.tar.gz") )' \
+    <<< "$RELEASE_DATA"
+)
+
+echo "Downloading... $DOWNLOAD_URL"
+
+FNAME=$(cache-get "$DOWNLOAD_URL" "pandoc-${VERSION}.tar.gz")
+
+echo "Installing..."
+
+cd "$(mktemp -d)"
+tar xzf "$FNAME"
+cd "pandoc-${VERSION}"
+
+cp -af -v ./bin/* "$HOME/.local/bin/"
+cp -af -v ./share/* "$HOME/.local/share/"
+
+pandoc --version
+
+echo "Done!"
