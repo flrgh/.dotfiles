@@ -16,11 +16,11 @@ addPath() {
     _debug_rc "VAR: $var CURRENT: $current SEP: $sep NEW: $p"
     if [[ -z $current ]]; then
         _debug_rc "Setting \$${var} to $p"
-        export "$var"="$p"
+        declare -g -x "$var"="$p"
     elif ! [[ $current =~ "${sep}"?"$p""${sep}"? ]]; then
         _debug_rc "Prepending $p to \$${var}"
         local new=${p}${sep}${current}
-        export "$var"="$new"
+        declare -g -x "$var"="$new"
     else
         _debug_rc "\$${var} already contains $p"
     fi

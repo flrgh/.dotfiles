@@ -1,2 +1,6 @@
 addPath "$HOME/.local/bin"
-addPath "$GOPATH/bin"
+
+addPath "$HOME/.local/share/man" MANPATH
+addPath "$HOME/.local/man"       MANPATH
+addPath /usr/share/man           MANPATH
+addPath /usr/local/share/man     MANPATH
