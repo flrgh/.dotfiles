@@ -171,8 +171,28 @@ return require('packer').startup(function(use)
     'plasticboy/vim-markdown',
     ft = { 'md', 'markdown' },
     config = function()
-      vim.cmd [[let g:vim_markdown_folding_disabled = 1]]
+      vim.cmd [[
+        " disable header folding
+        let g:vim_markdown_folding_disabled = 1
+
+        " disable the conceal feature
+        let g:vim_markdown_conceal = 0
+      ]]
     end,
+  }
+
+  use {
+    -- iamcco/markdown-preview.nvim was another good choice here, but
+    -- it has more dependencies and is a little more of a chore to install
+    'davidgranstrom/nvim-markdown-preview',
+    config = function()
+      vim.cmd [[let g:nvim_markdown_preview_theme = 'github']]
+    end,
+    run = {
+      os.getenv('HOME') .. '/.local/libexec/install/tools/install-pandoc',
+      'npm install -g live-server'
+    },
+    ft = { 'md', 'markdown' },
   }
 
   -- lang: go
