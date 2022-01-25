@@ -9,6 +9,7 @@ readonly BASE_URL=https://api.github.com/
 if command -v http &>/dev/null; then
     http() {
         command http \
+            --ignore-stdin \
             --auth "${GITHUB_USER}:${GITHUB_TOKEN}" \
             --follow \
             --check-status \
