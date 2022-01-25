@@ -485,10 +485,10 @@ local conf = {
         libraryFiles = "Opened",
 
         --- diagnostics.workspaceDelay
-        --- default: 0
+        --- default: 3000
         --- Latency (milliseconds) for workspace diagnostics. When you start the workspace, or edit any file, the entire workspace will be re-diagnosed in the background. Set to negative to disable workspace diagnostics.
         ---@type integer
-        workspaceDelay = 100,
+        workspaceDelay = 3000,
 
         --- diagnostics.workspaceRate
         --- default: 100
@@ -612,7 +612,7 @@ local conf = {
         checkThirdParty = false,
 
         --- workspace.ignoreDir
-        --- default: table: 0x14ac150
+        --- default: ?
         --- Ignored files and directories (Use `.gitignore` grammar).
         ---@type string[]
         ignoreDir = nil,
@@ -629,13 +629,13 @@ local conf = {
         library = library,
 
         --- workspace.maxPreload
-        --- default: 1000
+        --- default: 5000
         --- Max preloaded files.
         ---@type integer
         maxPreload = nil,
 
         --- workspace.preloadFileSize
-        --- default: 100
+        --- default: 500
         --- Skip files larger than this value (KB) when preloading.
         ---@type integer
         preloadFileSize = nil,
@@ -669,5 +669,4 @@ if settings.include_vim then
    conf = luadev.setup({ lspconfig = conf })
  end)
 end
-
 return conf
