@@ -1,8 +1,0 @@
-{
-  "include_vim": true,
-  "lib": {
-    "extra": [
-      "$NVIM_WORKSPACE/files.d/.config/nvim/lua"
-    ]
-  }
-}

@@ -9,13 +9,14 @@ local insert = table.insert
 
 local EMPTY = {}
 
-local USER_SETTINGS = expand('~/.config/lua/lua-lsp.json')
+local USER_SETTINGS = expand("~/.config/lua/lsp.lua")
 
 ---@alias local.lsp.filenames string[]
 
 ---@class local.lsp.settings
 ---@field include_vim boolean
 ---@field third_party? local.lsp.filenames
+---@field ignore? string[]
 local DEFAULT_SETTINGS = {
 
   -- Make the server aware of Neovim runtime files
@@ -34,6 +35,8 @@ local DEFAULT_SETTINGS = {
   },
 
   third_party = nil,
+
+  ignore = {},
 }
 
 ---@param p string
@@ -74,14 +77,11 @@ end
 local function load_user_settings()
   local settings = DEFAULT_SETTINGS
 
-  local user = fs.read_json_file(USER_SETTINGS)
-  merge(settings, user)
-
-  local root = fs.workspace_root()
-  if root then
-    local workspace = fs.read_json_file(root .. "/.lua-lsp.json")
-    merge(settings, workspace)
+  local user
+  if fs.file_exists(USER_SETTINGS) then
+    user = dofile(USER_SETTINGS)
   end
+  merge(settings, user)
 
   return settings
 end
@@ -102,13 +102,6 @@ local function lua_libs(settings)
     for _, elem in ipairs(expand_paths(item)) do
       libs[elem] = true
     end
-  end
-
-  libs[expand("$PWD")] = true
-
-  local ws = fs.workspace_root()
-  if ws then
-    libs[ws] = true
   end
 
   return libs
@@ -615,7 +608,7 @@ local conf = {
         --- default: ?
         --- Ignored files and directories (Use `.gitignore` grammar).
         ---@type string[]
-        ignoreDir = nil,
+        ignoreDir = settings.ignore,
 
         --- workspace.ignoreSubmodules
         --- default: true
