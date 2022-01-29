@@ -103,9 +103,6 @@ return require('packer').startup(function(use)
   -- Nerd Fonts helper
   use 'lambdalisue/nerdfont.vim'
 
-  -- statusline for neovim
-  use 'glepnir/galaxyline.nvim'
-
   -- tabline for neovim
   use 'romgrk/barbar.nvim'
 
