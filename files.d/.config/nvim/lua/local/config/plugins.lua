@@ -504,6 +504,19 @@ return require('packer').startup(function(use)
   }
 
   use {
+    'nvim-telescope/telescope-frecency.nvim',
+
+    config = function()
+      require("telescope").load_extension("frecency")
+    end,
+    requires = {
+      'nvim-telescope/telescope.nvim',
+      'tami5/sqlite.lua'
+    },
+    rocks = {'sqlite'},
+  }
+
+  use {
     'folke/which-key.nvim',
     config = function()
       require("which-key").setup {}
@@ -520,4 +533,5 @@ return require('packer').startup(function(use)
     'entrez/roku.vim',
     ft = { 'brs' }
   }
+
 end)
