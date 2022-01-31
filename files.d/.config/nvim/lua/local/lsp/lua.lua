@@ -415,7 +415,7 @@ local conf = {
         --- default: true
         --- Enable diagnostics.
         ---@type boolean
-        enable = true,
+        enable = false,
 
         --- diagnostics.disable
         --- Disabled diagnostic (Use code in hover brackets).
@@ -637,7 +637,7 @@ local conf = {
         --- default: true
         --- Ignore files list in `.gitignore` .
         ---@type boolean
-        useGitIgnore = nil,
+        useGitIgnore = true,
 
         --- workspace.userThirdParty
         --- Add private third-party library configuration file paths here, please refer to the built-in [configuration file path](https://github.com/sumneko/lua-language-server/tree/master/meta/3rd)
@@ -651,7 +651,7 @@ local conf = {
         --- default: userdata: (nil)
         --- Enable telemetry to send your editor information and error logs over the network. Read our privacy policy [here](https://github.com/sumneko/lua-language-server/wiki/Privacy-Policy).
         ---@type boolean
-        enable = false,
+        enable = true,
       },
     },
   }

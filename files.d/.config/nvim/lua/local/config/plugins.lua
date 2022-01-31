@@ -551,6 +551,17 @@ local plugins = {
     ft = { 'brs' }
   },
 
+  -- annotation generation
+  {
+    'danymat/neogen',
+    config = function()
+      local ng = require 'neogen'
+      ng.setup {
+        enabled = true
+      }
+    end,
+  },
+
 }
 
 for i = 1, #plugins do
