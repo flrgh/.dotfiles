@@ -5,7 +5,11 @@ end
 
 local mod = require 'local.module'
 
-local lsp = require 'lspconfig'
+if not mod.exists('lspconfig') then
+  return
+end
+
+local lspconfig = require 'lspconfig'
 
 ---@param client table
 ---@param buf    number
@@ -58,13 +62,13 @@ for lang, server in pairs(servers) do
   end)
 
 	conf.cmd = conf.cmd
-    or lsp[server]
-    and lsp[server].document_config
-    and lsp[server].document_config.default_config
-    and lsp[server].document_config.default_config.cmd
+    or lspconfig[server]
+    and lspconfig[server].document_config
+    and lspconfig[server].document_config.default_config
+    and lspconfig[server].document_config.default_config.cmd
 
   if conf.cmd and vim.fn.executable(conf.cmd[1]) == 1 then
-    lsp[server].setup(conf)
+    lspconfig[server].setup(conf)
   end
 end
 
