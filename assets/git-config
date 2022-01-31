@@ -18,3 +18,6 @@
 
 [mergetool "nvim"]
   cmd = nvim -f -c \"Gdiffsplit!\" \"$MERGED\"
+
+[core]
+  excludesfile = ~/.config/git/ignore
