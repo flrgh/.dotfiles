@@ -5,78 +5,98 @@ if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
   vim.api.nvim_command 'packadd packer.nvim'
 end
 
-return require('packer').startup(function(use)
-  use 'wbthomason/packer.nvim'
+---@type nvim.packer.config
+local config = {
+  display = {
+    open_fn = require('packer.util').float,
+  },
+  profile = {
+    enable = false,
+    threshold = 1,
+  },
+
+  log = {
+  },
+}
+
+local g = require "local.config.globals"
+if g.debug then
+  config.log.level = "debug"
+end
+
+---@type nvim.packer.plugin[]
+local plugins = {
+  'wbthomason/packer.nvim',
 
   -- file browser
-  use {
+  {
     'preservim/nerdtree',
     config = function()
       local km = require('local.keymap')
       km.nnoremap.leader.ff = { ':NERDTreeToggle', silent = true }
       vim.cmd [[let NERDTreeShowHidden=1]]
     end,
-  }
+  },
 
   -- adds some common readline key bindings to insert and command mode
-  use 'tpope/vim-rsi'
+  'tpope/vim-rsi',
 
-  use 'airblade/vim-gitgutter'
+  'airblade/vim-gitgutter',
 
   -- hilight trailing whitespace
-  use 'bronson/vim-trailing-whitespace'
+  'bronson/vim-trailing-whitespace',
 
   -- load tags in side pane
-  use {
+  {
     'majutsushi/tagbar',
     config = function()
       local km = require('local.keymap')
       km.nmap.fn.F4 = { ':TagbarToggle', silent = true }
       vim.cmd [[let g:tagbar_autofocus = 1]]
     end,
-  }
+  },
 
   -- highlight indentation levels
-  use 'lukas-reineke/indent-blankline.nvim'
+  'lukas-reineke/indent-blankline.nvim',
 
   -- useful for targetting surrounding quotes/parens/etc
-  use 'tpope/vim-surround'
+  'tpope/vim-surround',
 
   -- running shfmt commands on the buffer
-  use {
+  {
     'z0mbix/vim-shfmt',
     ft = { 'sh', 'bash' },
-  }
+  },
 
   -- syntax for .bats files
-  use {
+  {
     'aliou/bats.vim',
     ft = { 'bats' },
-  }
+  },
 
   -- fantastic git integration
-  use 'tpope/vim-fugitive'
-  use 'tpope/vim-rhubarb'
+  'tpope/vim-fugitive',
+  'tpope/vim-rhubarb',
 
   --" Color
-  use 'tomasr/molokai'
-  use 'morhetz/gruvbox'
-  use {
+  'tomasr/molokai',
+  'morhetz/gruvbox',
+  {
     'challenger-deep-theme/vim',
     as = 'challenger-deep',
-  }
-  use 'mhinz/vim-janah'
-  use 'mhartington/oceanic-next'
-  use {
+  },
+  'mhinz/vim-janah',
+  'mhartington/oceanic-next',
+  {
     'joshdick/onedark.vim',
     branch = 'main',
     config = function()
       vim.cmd "colorscheme onedark"
     end,
-  }
-  use 'tjdevries/colorbuddy.vim'
-  use 'tjdevries/gruvbuddy.nvim'
-  use {
+  },
+  'tjdevries/colorbuddy.vim',
+  'tjdevries/gruvbuddy.nvim',
+  {
     'sainnhe/sonokai',
     config = function()
       vim.cmd [[
@@ -85,29 +105,29 @@ return require('packer').startup(function(use)
         "colorscheme sonokai
       ]]
     end,
-  }
-  use 'folke/tokyonight.nvim'
+  },
+  'folke/tokyonight.nvim',
 
   -- Buffer management
-  use 'moll/vim-bbye'
+  'moll/vim-bbye',
 
   -- support .editorconfig files
-  use 'editorconfig/editorconfig-vim'
+  'editorconfig/editorconfig-vim',
 
   -- auto hlsearch stuff
-  use 'romainl/vim-cool'
+  'romainl/vim-cool',
 
   -- devicon assets
-  use 'kyazdani42/nvim-web-devicons'
+  'kyazdani42/nvim-web-devicons',
 
   -- Nerd Fonts helper
-  use 'lambdalisue/nerdfont.vim'
+  'lambdalisue/nerdfont.vim',
 
   -- tabline for neovim
-  use 'romgrk/barbar.nvim'
+  'romgrk/barbar.nvim',
 
   -- align!
-  use {
+  {
     'junegunn/vim-easy-align',
     config = function()
       local km = require('local.keymap')
@@ -116,55 +136,55 @@ return require('packer').startup(function(use)
       -- Start interactive EasyAlign for a motion/text object (e.g. gaip)
       km.nmap.ga = '<Plug>(EasyAlign)'
     end,
-  }
+  },
 
-  use {
+  {
     'numToStr/Comment.nvim',
     config = function()
       require('Comment').setup()
     end
-  }
+  },
 
   -- lang: jq
-  use {
+  {
     'vito-c/jq.vim',
     ft = { 'jq' },
-  }
+  },
 
   -- lang: terraform
-  use {
+  {
     'hashivim/vim-terraform',
     ft = { 'tf', 'terraform' },
-  }
+  },
 
   -- lang: PHP
-  use {
+  {
     'StanAngeloff/php.vim',
     ft = { 'php' },
-  }
+  },
 
   -- lang: lua
-  use {
+  {
     'euclidianAce/BetterLua.vim',
     config = function()
       vim.cmd [[let g:lua_inspect_events = '']]
     end
-  }
-  use 'rafcamlet/nvim-luapad'
+  },
+  'rafcamlet/nvim-luapad',
   -- lua manual in vimdoc
-  use 'wsdjeg/luarefvim'
+  'wsdjeg/luarefvim',
   -- lua neovim support
-  use 'folke/lua-dev.nvim'
+  'folke/lua-dev.nvim',
 
   -- lang: teal
-  use 'teal-language/vim-teal'
+  'teal-language/vim-teal',
 
   -- lang: markdown
-  use {
+  {
     'godlygeek/tabular',
     ft = { 'md', 'markdown' },
-  }
-  use {
+  },
+  {
     'plasticboy/vim-markdown',
     ft = { 'md', 'markdown' },
     config = function()
@@ -176,9 +196,9 @@ return require('packer').startup(function(use)
         let g:vim_markdown_conceal = 0
       ]]
     end,
-  }
+  },
 
-  use {
+  {
     -- iamcco/markdown-preview.nvim was another good choice here, but
     -- it has more dependencies and is a little more of a chore to install
     'davidgranstrom/nvim-markdown-preview',
@@ -190,10 +210,10 @@ return require('packer').startup(function(use)
       'npm install -g live-server'
     },
     ft = { 'md', 'markdown' },
-  }
+  },
 
   -- lang: go
-  use {
+  {
     'fatih/vim-go',
     ft = { 'go' },
     tag = 'v1.25',
@@ -234,10 +254,10 @@ return require('packer').startup(function(use)
         let g:go_auto_type_info = 1
       ]]
     end,
-  }
+  },
 
   -- FZF
-  use {
+  {
     'junegunn/fzf.vim',
     requires = 'junegunn/fzf',
     config = function()
@@ -258,25 +278,25 @@ return require('packer').startup(function(use)
         endif
       ]]
     end,
-  }
+  },
 
-  use {
+  {
     'nvim-lua/popup.nvim',
     requires = {
       'nvim-lua/plenary.nvim',
     },
-  }
+  },
 
   -- LSP stuff
-  use 'neovim/nvim-lspconfig'
-  use {
+  'neovim/nvim-lspconfig',
+  {
     'nvim-treesitter/nvim-treesitter',
     run = ':TSUpdate',
-  }
-  use 'nvim-treesitter/nvim-treesitter-textobjects'
-  use 'nvim-treesitter/playground'
-  use 'nvim-lua/lsp-status.nvim'
-  use {
+  },
+  'nvim-treesitter/nvim-treesitter-textobjects',
+  'nvim-treesitter/playground',
+  'nvim-lua/lsp-status.nvim',
+  {
     'hrsh7th/nvim-cmp',
     requires = {
       'hrsh7th/cmp-buffer',
@@ -378,11 +398,11 @@ return require('packer').startup(function(use)
       })
 
     end,
-  }
+  },
 
-  use 'glepnir/lspsaga.nvim'
+  'glepnir/lspsaga.nvim',
 
-  use {
+  {
     'mhartington/formatter.nvim',
     config = function()
       require('formatter').setup({
@@ -399,9 +419,9 @@ return require('packer').startup(function(use)
         },
       })
     end,
-  }
+  },
 
-  use {
+  {
     'nvim-telescope/telescope.nvim',
     requires = { 'nvim-lua/plenary.nvim' },
     config = function()
@@ -466,9 +486,9 @@ return require('packer').startup(function(use)
         },
       })
     end,
-  }
+  },
 
-  use {
+  {
     'nvim-telescope/telescope-fzf-native.nvim',
     run = 'make',
     requires = {
@@ -491,16 +511,16 @@ return require('packer').startup(function(use)
       -- load_extension, somewhere after setup function:
       require('telescope').load_extension('fzf')
     end,
-  }
+  },
 
-  use {
+  {
     'nvim-telescope/telescope-symbols.nvim',
     requires = {
       'nvim-telescope/telescope.nvim',
     },
-  }
+  },
 
-  use {
+  {
     'nvim-telescope/telescope-frecency.nvim',
 
     config = function()
@@ -511,24 +531,35 @@ return require('packer').startup(function(use)
       'tami5/sqlite.lua'
     },
     rocks = {'sqlite'},
-  }
+  },
 
-  use {
+  {
     'folke/which-key.nvim',
     config = function()
       require("which-key").setup {}
     end,
-  }
+  },
 
-  use 'aserowy/tmux.nvim'
+  'aserowy/tmux.nvim',
 
   -- direnv support and syntax hilighting
-  use 'direnv/direnv.vim'
+  'direnv/direnv.vim',
 
   -- roku / brightscript support
-  use {
+  {
     'entrez/roku.vim',
     ft = { 'brs' }
-  }
+  },
 
-end)
+}
+
+for i = 1, #plugins do
+  local plugin = plugins[i]
+  if type(plugin) == "string" then
+    plugin = { plugin }
+    plugins[i] = plugin
+  end
+end
+
+
+require('packer').startup({ plugins, config })
