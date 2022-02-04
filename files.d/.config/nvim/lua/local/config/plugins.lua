@@ -322,6 +322,15 @@ local plugins = {
       local lspkind = require "lspkind"
       lspkind.init()
 
+      local get_cwd
+      do
+        local g = require "local.config.globals"
+        local ws = g.workspace or os.getenv("PWD")
+        if ws then
+          get_cwd = function() return ws end
+        end
+      end
+
       local cmp = require 'cmp'
       cmp.setup({
         mapping = {
@@ -363,7 +372,9 @@ local plugins = {
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'buffer' },
-          { name = 'path' },
+          { name = 'path',
+            option = { get_cwd = get_cwd },
+          },
           { name = 'calc' },
           { name = 'emoji' },
         },
