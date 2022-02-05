@@ -312,102 +312,7 @@ local plugins = {
       'saadparwaiz1/cmp_luasnip',
     },
     config = function()
-      local km = require('local.keymap')
-      -- Set completeopt to have a better completion experience
-      vim.opt.completeopt = { "menu", "menuone", "noselect" }
-
-      -- Don't show the dumb matching stuff.
-      vim.opt.shortmess:append "c"
-
-      local lspkind = require "lspkind"
-      lspkind.init()
-
-      local get_cwd
-      do
-        local g = require "local.config.globals"
-        local ws = g.workspace or os.getenv("PWD")
-        if ws then
-          get_cwd = function() return ws end
-        end
-      end
-
-      local cmp = require 'cmp'
-      cmp.setup({
-        mapping = {
-          -- replace ctrl+n/ctrl+p with ctrl+j/ctrl+k
-          [km.Ctrl.j] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
-          [km.Ctrl.k] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
-          [km.Ctrl.n] = cmp.config.disable,
-          [km.Ctrl.p] = cmp.config.disable,
-
-          -- explicitly invoke completion
-          [km.Ctrl.Space] = cmp.mapping.complete(),
-
-          [km.Ctrl.e] = cmp.mapping.close(),
-
-          [km.Enter] = cmp.mapping.confirm {
-            behavior = cmp.ConfirmBehavior.Replace,
-            select = true,
-          },
-
-          [km.Tab] = function(fallback)
-            if cmp.visible() then
-              cmp.select_next_item()
-            else
-              fallback()
-            end
-          end,
-          [km.S_Tab] = function(fallback)
-            if cmp.visible() then
-              cmp.select_prev_item()
-            else
-              fallback()
-            end
-          end,
-        },
-
-        ---@type cmp.SourceConfig
-        sources = {
-          { name = 'nvim_lua' },
-          { name = 'nvim_lsp' },
-          { name = 'luasnip' },
-          { name = 'buffer' },
-          { name = 'path',
-            option = { get_cwd = get_cwd },
-          },
-          { name = 'calc' },
-          { name = 'emoji' },
-        },
-
-        ---@type cmp.ExperimentalConfig
-        experimental = {
-          native_menu = false,
-          ghost_text = true,
-        },
-
-        ---@type cmp.SnippetConfig
-        snippet = {
-          expand = function(opts)
-            require('luasnip').lsp_expand(opts.body)
-          end,
-        },
-
-        ---@type cmp.FormattingConfig
-        formatting = {
-          format = lspkind.cmp_format({
-            with_text = true,
-            menu = {
-              buffer   = "[buf]",
-              nvim_lsp = "[lsp]",
-              nvim_lua = "[nvim]",
-              path     = "[path]",
-              luasnip  = "[snip]",
-            },
-          }),
-        },
-
-      })
-
+      require("local.config.plugins.cmp").setup()
     end,
   },
 
@@ -436,66 +341,8 @@ local plugins = {
     'nvim-telescope/telescope.nvim',
     requires = { 'nvim-lua/plenary.nvim' },
     config = function()
-      local km = require('local.keymap')
-      local actions = require "telescope.actions"
+      require("local.config.plugins.telescope").setup()
 
-      -- turn on line numbers for previewers
-      --
-      -- this is kind of buggy, but it's the best I can do for now
-      vim.cmd "autocmd User TelescopePreviewerLoaded setlocal number"
-
-      require('telescope').setup({
-        pickers = {
-          colorscheme = {
-            enable_preview = true,
-          },
-        },
-
-        defaults = {
-          mappings = {
-            i = {
-              [km.Ctrl.j] = actions.move_selection_next,
-              [km.Ctrl.k] = actions.move_selection_previous,
-            },
-          },
-
-          layout_strategy = "flex",
-
-          layout_config = {
-            horizontal = {
-              width = 0.95,
-              height = 0.9,
-              prompt_position = "bottom",
-              preview_cutoff = 120,
-            },
-
-            vertical = {
-              width = 0.9,
-              height = 0.9,
-              prompt_position = "bottom",
-              preview_cutoff = 40,
-            },
-
-            center = {
-              width = 0.9,
-              height = 0.9,
-              preview_cutoff = 40,
-              prompt_position = "top",
-            },
-
-            cursor = {
-              width = 0.9,
-              height = 0.9,
-              preview_cutoff = 40,
-            },
-
-            bottom_pane = {
-              height = 25,
-              prompt_position = "top",
-            },
-          },
-        },
-      })
     end,
   },
 
@@ -506,21 +353,7 @@ local plugins = {
       'nvim-telescope/telescope.nvim',
     },
     config = function()
-      require('telescope').setup({
-        extensions = {
-          fzf = {
-            fuzzy                   = true,         -- false will only do exact matching
-            override_generic_sorter = false,        -- override the generic sorter
-            override_file_sorter    = true,         -- override the file sorter
-            case_mode               = "smart_case", -- or "ignore_case" or "respect_case"
-                                                    -- the default case_mode is "smart_case"
-          }
-        }
-      })
-
-      -- To get fzf loaded and working with telescope, you need to call
-      -- load_extension, somewhere after setup function:
-      require('telescope').load_extension('fzf')
+      require("local.config.plugins.telescope").setup_fzf_native()
     end,
   },
 
@@ -533,7 +366,6 @@ local plugins = {
 
   {
     'nvim-telescope/telescope-frecency.nvim',
-
     config = function()
       require("telescope").load_extension("frecency")
     end,
@@ -543,6 +375,7 @@ local plugins = {
     },
     rocks = {'sqlite'},
   },
+
 
   {
     'folke/which-key.nvim',
@@ -566,10 +399,12 @@ local plugins = {
   {
     'danymat/neogen',
     config = function()
-      local ng = require 'neogen'
-      ng.setup {
-        enabled = true
-      }
+      local mod = require "local.module"
+      mod.if_exists("neogen", function(neogen)
+        neogen.setup {
+          enabled = true
+        }
+      end)
     end,
   },
 
