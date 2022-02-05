@@ -71,7 +71,6 @@ opt.titlestring = '%F'
 
 opt.modeline   = true
 opt.modelines  = 10
-opt.statusline = [[%F%m%r%h%w%=(%{&ff}/%Y)\ (line\ %l\/%L,\ col\ %c)\]]
 
 -- no folding
 opt.foldenable = false

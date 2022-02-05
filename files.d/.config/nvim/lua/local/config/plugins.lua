@@ -408,6 +408,16 @@ local plugins = {
     end,
   },
 
+  {
+    'nvim-lualine/lualine.nvim',
+    config = function()
+      local mod = require "local.module"
+			mod.if_exists("lualine", function()
+				mod.reload("local.config.plugins.evil_lualine")
+			end)
+    end,
+  }
+
 }
 
 for i = 1, #plugins do
