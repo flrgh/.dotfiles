@@ -29,6 +29,26 @@ local function create_keymap(mode, key, action, opts, buf)
   return handler(mode, key, action, opts)
 end
 
+local registry = { n = 0 }
+
+local function add_fn(fn)
+  local id = registry.n + 1
+  registry[id] = fn
+  registry.n = id
+  return id
+end
+
+local function call_fn(id)
+  local fn = assert(registry[id], "function with id " .. id .. " not found")
+  return fn()
+end
+
+local function fn_handler(fn)
+  local id = add_fn(fn)
+  return fmt([[<cmd>lua require("local.keymap").call_fn(%s)<CR>]], id)
+end
+
+
 local mt = {
   __newindex = function(self, key, v)
     if self.set_key then
@@ -42,6 +62,10 @@ local mt = {
       action = v[1]
       v[1] = nil
       opts = v
+    end
+
+    if type(action) == "function" then
+      action = fn_handler(action)
     end
 
     opts = opts or {}
@@ -148,6 +172,8 @@ local noremap  = make_map('',  { noremap = true })
 local vnoremap = make_map('v', { noremap = true })
 local nnoremap = make_map('n', { noremap = true })
 local xmap     = make_map('x', { noremap = false })
+local imap     = make_map('i', { noremap = false })
+local smap     = make_map('s', { noremap = false })
 
 ---@type table<string,table>
 local lsp_functions = setmetatable({}, {
@@ -169,12 +195,13 @@ local ctrl = setmetatable({}, {
   end,
 })
 
-
 return {
   map  = map,
   nmap = nmap,
   vmap = vmap,
   xmap = xmap,
+  imap = imap,
+  smap = smap,
 
   noremap  = noremap,
   nnoremap = nnoremap,
@@ -191,4 +218,7 @@ return {
   Enter = '<CR>',
   Tab   = '<Tab>',
   S_Tab = '<S-Tab>',
+  Leader = '<leader>',
+
+  call_fn = call_fn,
 }

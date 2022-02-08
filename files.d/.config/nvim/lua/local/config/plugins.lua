@@ -296,6 +296,14 @@ local plugins = {
   'nvim-treesitter/nvim-treesitter-textobjects',
   'nvim-treesitter/playground',
   'nvim-lua/lsp-status.nvim',
+
+  {
+    'L3MON4D3/LuaSnip',
+    config = function()
+      require("local.config.plugins.luasnip").setup()
+    end,
+  },
+
   {
     'hrsh7th/nvim-cmp',
     requires = {
