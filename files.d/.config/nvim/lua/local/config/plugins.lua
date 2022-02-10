@@ -38,6 +38,8 @@ local plugins = {
     end,
   },
 
+  'lewis6991/impatient.nvim',
+
   -- adds some common readline key bindings to insert and command mode
   'tpope/vim-rsi',
 
