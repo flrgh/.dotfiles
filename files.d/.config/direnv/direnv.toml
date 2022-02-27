@@ -3,6 +3,9 @@
 strict_env = true
 
 [whitelist]
+exact = [
+    "/home/michaelm/.envrc"
+]
 
 prefix = [
     "/home/michaelm/pagely-git",
