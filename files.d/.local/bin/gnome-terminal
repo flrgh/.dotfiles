@@ -1,0 +1,18 @@
+#!/bin/bash
+
+LOG=$HOME/.local/var/log/fake-gnome-terminal.log
+
+while [[ $1 != -- ]]; do
+    shift
+done
+shift
+
+echo "Running $@" >> "$LOG"
+
+exec alacritty \
+    --class "$1,$1" \
+    --title "$1" \
+    --option window.decorations=full \
+    --option window.startup_mode=Windowed \
+    --option window.dynamic_padding=true \
+    --command "$@"
