@@ -29,6 +29,15 @@ function _M.dir_exists(fname)
   return st and st.type == "directory"
 end
 
+--- Check if a path exists.
+---@param  fname   string
+---@return boolean exists
+function _M.exists(path)
+  local st = fs_stat(path)
+  return st and st.type
+end
+
+
 --- Read a file's contents to a string.
 ---@param  fname   string
 ---@return string? content

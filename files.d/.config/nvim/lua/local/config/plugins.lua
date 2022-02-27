@@ -5,10 +5,13 @@ if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
   vim.api.nvim_command 'packadd packer.nvim'
 end
 
+local packer = require "packer"
+local util = require "packer.util"
+
 ---@type nvim.packer.config
 local config = {
   display = {
-    open_fn = require('packer.util').float,
+    open_fn = util.float,
   },
   profile = {
     enable = false,
@@ -18,6 +21,17 @@ local config = {
   log = {
   },
 }
+
+do
+  local dir = vim.fn.stdpath("config")
+  local fname = "packer-snapshot.json"
+
+  -- TODO: snapshot workflow
+
+  --  config.snapshot_path = dir
+  --  config.snapshot = fname
+end
+
 
 local g = require "local.config.globals"
 if g.debug then
@@ -337,7 +351,7 @@ local plugins = {
             function()
               return {
                 exe = "jq",
-                args = {"."},
+                args = {"-S", "."},
                 stdin = true,
               }
             end,
@@ -439,4 +453,4 @@ for i = 1, #plugins do
 end
 
 
-require('packer').startup({ plugins, config })
+packer.startup({ plugins, config = config })
