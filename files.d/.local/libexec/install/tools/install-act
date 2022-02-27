@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly REPO=nektos/act
+
+VERSION=${1:-latest}
+
+if [[ $VERSION == latest ]]; then
+    VERSION=$(gh-helper get-latest-release-name "$REPO")
+    echo "Detected latest version $VERSION"
+fi
+
+
+SRC=$(cache-get \
+    https://github.com/nektos/act/releases/download/${VERSION}/act_Linux_x86_64.tar.gz \
+    "act-${VERSION}.tar.gz"
+)
+
+cd "$(mktemp -d)"
+tar xzf "$SRC"
+mv -v act "$HOME/.local/bin/"
+
+act --version
