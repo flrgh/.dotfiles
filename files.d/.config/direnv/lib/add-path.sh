@@ -21,9 +21,58 @@ add-path() {
 
 add-lua-path() {
     local -r path="$1"
+    local -r cpath="${2:-1}"
 
     add-path LUA_PATH "$path/?/init.lua" ";"
     add-path LUA_PATH "$path/?.lua"      ";"
+}
+
+add-lua-cpath() {
+    local -r path="$1"
 
     add-path LUA_CPATH "$path/?.so" ";"
+}
+
+add-lua-paths() {
+    local -r path="$1"
+
+    add-lua-path "$path"
+    add-lua-cpath "$path"
+}
+
+
+layout_openresty() {
+    local dir="${1?OpenResty dir is required}"
+    if [[ ! -d "$dir" ]]; then
+        echo "ERROR: OpenResty not found at $dir"
+        return 1
+    fi
+
+    echo "Using OpenResty at $dir"
+
+    PATH_add "$dir"/bin
+    PATH_add "$dir"/nginx/sbin
+
+    PATH_add "$dir"/luajit/bin
+    MANPATH_add "$dir"/luajit/share/man
+
+    # variables used by Kong for special things
+    export KONG_OPENRESTY_PREFIX="$dir"
+    export KONG_TEST_OPENRESTY_PREFIX="$KONG_OPENRESTY_PREFIX"
+
+    add-lua-paths "$dir"/lualib
+}
+
+layout_luarocks() {
+    local dir="${1?LuaRocks dir is required}"
+    if [[ ! -d "$dir" ]]; then
+        echo "ERROR: LuaRocks dir not found!"
+        return 1
+    fi
+
+    echo "Using LuaRocks at $dir"
+
+    PATH_add "$dir/bin"
+    add-lua-path "$dir/share/lua/5.1"
+    add-lua-cpath "$dir/lib/lua/5.1"
 }
