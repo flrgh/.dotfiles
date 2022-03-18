@@ -13,18 +13,18 @@ VERSION=${1:-latest}
 readonly REPO=neovim/neovim
 
 DOWNLOAD_URL=https://github.com/neovim/neovim/releases/download/${VERSION}/nvim-linux64.tar.gz
+FNAME=nvim-${VERSION}.tar.gz
 
 case "$VERSION" in
     latest)
         echo "Checking for the lastest release..."
         VERSION=$(gh-helper get-latest-release-tag "$REPO")
         DOWNLOAD_URL=${DOWNLOAD_URL/latest/$VERSION}
+        FNAME=${FNAME/latest/$VERSION}
         ;;
 
     nightly)
-        echo "Checking for the latest nightly release..."
-        VERSION=$(gh-helper get-releases "$REPO" | jq -r 'map(select(.tag_name == "nightly")) | .[0].name')
-        VERSION=${VERSION/NVIM /}
+        echo "Using the latest nightly release..."
         ;;
 esac
 
@@ -39,10 +39,10 @@ cleanup() {
     fi
 }
 
-FNAME=nvim-${VERSION}.tar.gz
 
 trap cleanup ERR EXIT
 
+echo "DOWNLOAD_URL: $DOWNLOAD_URL"
 echo "Downloading neovim $VERSION"
 F=$(cache-get "$DOWNLOAD_URL" "$FNAME")
 
