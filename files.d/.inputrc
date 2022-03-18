@@ -1,0 +1,6 @@
+$ include /etc/inputrc
+
+"\C-w": backward-kill-word
+
+# Mark symlinked directories
+set mark-symlinked-directories On
