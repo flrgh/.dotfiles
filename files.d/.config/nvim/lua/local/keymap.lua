@@ -16,15 +16,8 @@ local function extend(a, b)
 end
 
 local function create_keymap(mode, key, action, opts, buf)
-  local handler, maps
-
-  if buf then
-    handler = vim.api.nvim_buf_set_keymap
-    maps = registry.buf
-  else
-    handler = vim.api.nvim_set_keymap
-    maps = registry
-  end
+  local handler = buf and vim.api.nvim_buf_set_keymap
+                  or vim.api.nvim_set_keymap
 
   return handler(mode, key, action, opts)
 end

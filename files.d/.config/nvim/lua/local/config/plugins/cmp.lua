@@ -41,7 +41,7 @@ local function mapping(cmp)
 end
 
 ---@return cmp.SourceConfig[]
-local function sources(cmp)
+local function sources(_)
   local get_cwd
   do
     local ws = g.workspace or os.getenv("PWD")
@@ -50,7 +50,7 @@ local function sources(cmp)
     end
   end
 
-  local sources = {
+  local src = {
     { name = 'nvim_lua' },
     { name = 'nvim_lsp' },
     { name = 'buffer' },
@@ -60,10 +60,10 @@ local function sources(cmp)
   }
 
   if mod.exists("luasnip") then
-    table.insert(sources, { name = "luasnip" })
+    table.insert(src, { name = "luasnip" })
   end
 
-  return sources
+  return src
 end
 
 ---@return cmp.SnippetConfig
@@ -78,7 +78,7 @@ local function snippet()
 end
 
 ---@return cmp.FormattingConfig
-local function formatting(cmp)
+local function formatting(_)
   mod.if_exists("lspkind", function(lspkind)
     return {
       format = lspkind.cmp_format({

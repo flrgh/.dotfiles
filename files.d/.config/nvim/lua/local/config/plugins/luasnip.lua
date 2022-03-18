@@ -63,7 +63,6 @@ function _M.setup()
   km.smap.ctrl.l = { list, silent = true }
 
   km.nnoremap[km.Leader .. km.Leader .. "s"] = function()
-    local mod = require "local.module"
     mod.reload("local.config.plugins.luasnip").snippets()
     vim.notify("snippets reloaded!")
   end

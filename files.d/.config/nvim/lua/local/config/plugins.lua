@@ -22,15 +22,15 @@ local config = {
   },
 }
 
+-- TODO: snapshot workflow
+--[[
 do
   local dir = vim.fn.stdpath("config")
   local fname = "packer-snapshot.json"
-
-  -- TODO: snapshot workflow
-
-  --  config.snapshot_path = dir
-  --  config.snapshot = fname
+  config.snapshot_path = dir
+  config.snapshot = fname
 end
+]]--
 
 
 local g = require "local.config.globals"
