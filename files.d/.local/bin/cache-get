@@ -21,18 +21,22 @@ log "Destination: $DEST\n"
 
 log "Fetching ... "
 
+
+ARGS=(
+    --silent
+    --fail
+    --location
+    --output "$DEST"
+    --url "$URL"
+)
+
 if [[ -e $DEST ]]; then
-	log "already cached.\n"
-	printf "%s\n" "$DEST"
-	exit 0
+	log "File is cached locally; using If-Modified-Since\n"
+
+    ARGS+=(--time-cond "$DEST")
 fi
 
-curl \
-	--silent \
-	-f \
-	-L \
-	-o "$DEST" \
-	--url "$URL"
+curl "${ARGS[@]}"
 
 log "done.\n"
 
