@@ -646,6 +646,27 @@ local conf = {
 
       },
 
+      semantic = {
+        --- Semantic coloring of type annotations.
+        --- default: true
+        ---@type boolean
+        annotation = nil,
+
+        --- Enable semantic color. You may need to set `editor.semanticHighlighting.enabled` to `true` to take effect.
+        --- default: true
+        ---@type boolean
+        enable = nil,
+
+        --- Semantic coloring of keywords/literals/operators. You only need to enable this feature if your editor cannot do syntax coloring.
+        --- default: false
+        ---@type boolean
+        keyword = nil,
+
+        --- Semantic coloring of variables/fields/parameters.
+        ---@type boolean
+        variable = nil,
+      },
+
       telemetry = {
         --- telemetry.enable
         --- default: userdata: (nil)
