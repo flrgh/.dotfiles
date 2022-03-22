@@ -415,7 +415,7 @@ local conf = {
         --- default: true
         --- Enable diagnostics.
         ---@type boolean
-        enable = false,
+        enable = true,
 
         --- diagnostics.disable
         --- Disabled diagnostic (Use code in hover brackets).
