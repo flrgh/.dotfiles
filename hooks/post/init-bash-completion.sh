@@ -31,3 +31,16 @@ for cmd in "${COMPLETE[@]}"; do
         echo "$bin (skipped)"
     fi
 done
+
+declare -A REMOTE_FILES=(
+    [busted]="https://raw.githubusercontent.com/Olivine-Labs/busted/master/completions/bash/busted.bash"
+)
+
+for bin in "${!REMOTE_FILES[@]}"; do
+    url=${REMOTE_FILES[$bin]}
+    if command -v "$bin" &>/dev/null; then
+        echo "Downloading $bin completion from $url"
+        f=$(cache-get "$url" "bash-completion-${bin}")
+        cat "$f" > "$DIR/$bin"
+    fi
+done
