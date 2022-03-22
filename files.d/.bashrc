@@ -108,18 +108,23 @@ _cleanup_func _timer_start _timer_stop
 
 _source_file() {
     local -r fname=$1
+    local ret
     if [[ -f $fname || -h $fname ]] && [[ -r $fname ]]; then
         _debug_rc "sourcing file: $fname"
         local -r key="_source_file($fname)"
         _timer_start "$key"
 
         source "$fname"
+        ret=$?
 
         _timer_stop "$key"
         _debug_rc "sourced file $fname in ${__times[$key]}"
     else
         _debug_rc "$fname does not exist or is not a regular file"
+        ret=1
     fi
+
+    return $ret
 }
 
 _source_dir() {
