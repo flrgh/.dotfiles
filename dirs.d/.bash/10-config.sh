@@ -26,3 +26,5 @@ if iHave command_not_found_handle; then
     _debug_rc "unsetting command_not_found_handle func"
     unset -f command_not_found_handle
 fi
+
+export PS1="\[\e[0;36m\]\u@\h\[\e[m\] \[\e[0;34m\]\w\[\e[m\] \[\e[0;33m\]\[\e[m\]\$ "
