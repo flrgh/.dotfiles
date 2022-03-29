@@ -57,8 +57,8 @@ layout_openresty() {
     MANPATH_add "$dir"/luajit/share/man
 
     # variables used by Kong for special things
-    export KONG_OPENRESTY_PREFIX="$dir"
-    export KONG_TEST_OPENRESTY_PREFIX="$KONG_OPENRESTY_PREFIX"
+    export KONG_OPENRESTY_PATH="$dir"
+    export KONG_TEST_OPENRESTY_PATH="$KONG_OPENRESTY_PATH"
 
     add-lua-paths "$dir"/lualib
 }
