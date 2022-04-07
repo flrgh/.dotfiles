@@ -45,6 +45,8 @@ window:
   # and `light`. Set this to `None` to use the default theme variant.
   gtk_theme_variant: None
 
+  opacity: 1.0
+
 
 scrolling:
   # Maximum number of lines in the scrollback buffer.
@@ -169,8 +171,6 @@ bell:
   #command: None
 
 
-background_opacity: 1.0
-
 selection:
   # This string contains all characters that are used as separators for
   # "semantic words" in Alacritty.
@@ -211,6 +211,7 @@ cursor:
 # section.
 mouse_bindings:
   - { mouse: Middle, action: PasteSelection }
+  # - { mouse: Right, mods: Shift, Action: ExpandSelection }
 
 mouse:
   double_click:
