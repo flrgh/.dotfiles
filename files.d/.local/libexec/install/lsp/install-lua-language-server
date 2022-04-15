@@ -7,48 +7,13 @@ if [[ $VERSION == latest ]]; then
     echo "Latest version is $VERSION"
 fi
 
-docker build \
-    --build-arg TAG="$VERSION" \
-    --build-arg J=$(nproc) \
-    -t "lsp/lua:$VERSION" \
-    -t "lsp/lua:latest" \
-    - \
-<< 'EOF'
-FROM alpine:latest
+URL=https://github.com/sumneko/lua-language-server/releases/download/${VERSION}/lua-language-server-${VERSION}-linux-x64.tar.gz
 
-ARG TAG=master
-ARG J=1
+F=$(cache-get "$URL" lua-language-server-${VERSION}.tar.gz)
 
-WORKDIR /opt
+T=$(mktemp -d)
 
-RUN apk add \
-        libgcc \
-        libstdc++ && \
-    apk add --virtual deps \
-        bash \
-        ninja \
-        g++ \
-        git \
-        gcc \
-        && \
-    git clone \
-        --branch "$TAG" \
-        --depth 1 \
-        --recurse-submodules \
-        --shallow-submodules \
-        --jobs "$J" \
-        https://github.com/sumneko/lua-language-server && \
-    cd /opt/lua-language-server/3rd/luamake && \
-    ./compile/install.sh && \
-    cd /opt/lua-language-server && \
-    ./3rd/luamake/luamake rebuild && \
-    apk del deps && \
-    rm -rf \
-        /opt/lua-language-server/3rd/luamake \
-        /opt/lua-language-server/.git \
-        /opt/lua-language-server/locale/zh-cn
+tar -C "$T" -xzf "$F"
 
-WORKDIR /opt/lua-language-server
-
-ENTRYPOINT ["/opt/lua-language-server/bin/lua-language-server", "/opt/lua-language-server/main.lua"]
-EOF
+mv "$T" "$HOME/.local/libexec/lua-language-server"
+"$HOME"/.local/libexec/lua-language-server/bin/lua-language-server --version
