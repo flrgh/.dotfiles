@@ -64,3 +64,6 @@ nnoremap.N = 'Nzzzv'
 -- https://old.reddit.com/r/neovim/comments/rfrgq5/is_it_possible_to_do_something_like_his_on/hog28q3/
 vnoremap.J = { ":move '>+1<CR>gv=gv", no_auto_cr = true }
 vnoremap.K = { ":move '<-2<CR>gv=gv", no_auto_cr = true }
+
+-- Leader + rn => rename
+nnoremap.leader.rn = vim.lsp.buf.rename
