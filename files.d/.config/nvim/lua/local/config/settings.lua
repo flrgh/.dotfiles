@@ -74,3 +74,5 @@ opt.modelines  = 10
 
 -- no folding
 opt.foldenable = false
+
+opt.tagfunc = 'v:lua.vim.lsp.tagfunc'
