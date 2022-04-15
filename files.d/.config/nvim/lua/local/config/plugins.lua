@@ -93,6 +93,7 @@ local plugins = {
   -- fantastic git integration
   'tpope/vim-fugitive',
   'tpope/vim-rhubarb',
+  'rhysd/conflict-marker.vim',
 
   --" Color
   'tomasr/molokai',
