@@ -32,12 +32,15 @@ local function on_attach(client, buf)
   do
     local km = require('local.keymap')
 
-    km.nnoremap.ctrl['-]'] = km.lsp.definition
+    -- superceded by vim.lsp.tagfunc
+    --km.nnoremap.ctrl[']'] = km.lsp.definition
+
     km.nnoremap.gD = km.lsp.declaration
     km.nnoremap.gd = km.lsp.definition
     km.nnoremap.K  = km.lsp.hover
   end
 
+  vim.api.nvim_buf_set_option(buf, 'tagfunc', 'v:lua.vim.lsp.tagfunc')
   vim.api.nvim_buf_set_option(buf, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
   mod.if_exists('lsp-status', function(status)
