@@ -35,9 +35,9 @@ local function on_attach(client, buf)
     -- superceded by vim.lsp.tagfunc
     --km.nnoremap.ctrl[']'] = km.lsp.definition
 
-    km.nnoremap.gD = km.lsp.declaration
-    km.nnoremap.gd = km.lsp.definition
-    km.nnoremap.K  = km.lsp.hover
+    km.buf.nnoremap.gD = vim.lsp.buf.declaration
+    km.buf.nnoremap.gd = vim.lsp.buf.definition
+    km.buf.nnoremap.K  = vim.lsp.buf.hover
   end
 
   vim.api.nvim_buf_set_option(buf, 'tagfunc', 'v:lua.vim.lsp.tagfunc')

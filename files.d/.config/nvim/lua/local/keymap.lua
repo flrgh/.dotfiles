@@ -1,6 +1,8 @@
 local fmt        = string.format
 local startswith = vim.startswith
 local endswith   = vim.endswith
+local nvim_buf_set_keymap = vim.api.nvim_buf_set_keymap
+local nvim_set_keymap = vim.api.nvim_set_keymap
 
 ---@param a table
 ---@param b table
@@ -16,31 +18,12 @@ local function extend(a, b)
 end
 
 local function create_keymap(mode, key, action, opts, buf)
-  local handler = buf and vim.api.nvim_buf_set_keymap
-                  or vim.api.nvim_set_keymap
-
-  return handler(mode, key, action, opts)
+  if buf then
+    return nvim_buf_set_keymap(0, mode, key, action, opts)
+  else
+    return nvim_set_keymap(mode, key, action, opts)
+  end
 end
-
-local registry = { n = 0 }
-
-local function add_fn(fn)
-  local id = registry.n + 1
-  registry[id] = fn
-  registry.n = id
-  return id
-end
-
-local function call_fn(id)
-  local fn = assert(registry[id], "function with id " .. id .. " not found")
-  return fn()
-end
-
-local function fn_handler(fn)
-  local id = add_fn(fn)
-  return fmt([[<cmd>lua require("local.keymap").call_fn(%s)<CR>]], id)
-end
-
 
 local mt = {
   __newindex = function(self, key, v)
@@ -57,11 +40,13 @@ local mt = {
       opts = v
     end
 
-    if type(action) == "function" then
-      action = fn_handler(action)
-    end
-
     opts = opts or {}
+
+    if type(action) == "function" then
+      opts = vim.deepcopy(opts)
+      opts.callback = action
+      action = ""
+    end
 
     if not opts.no_auto_cr then
       -- auto-append <CR> to commands
@@ -125,15 +110,19 @@ local add_leader = template('<Leader>%s')
 
 ---@return local.keymap
 local function make_map(mode, opts)
+  local buf = opts.buf
+  opts.buf = nil
   return setmetatable({
     mode = mode,
     opts = opts,
+    buf  = buf,
 
     ctrl = setmetatable(
       {
         mode    = mode,
         opts    = opts,
         set_key = wrap_ctrl,
+        buf     = buf,
       },
       mt
     ),
@@ -143,6 +132,7 @@ local function make_map(mode, opts)
         mode    = mode,
         opts    = opts,
         set_key = wrap_fn,
+        buf     = buf,
       },
       mt
     ),
@@ -152,6 +142,7 @@ local function make_map(mode, opts)
         mode    = mode,
         opts    = opts,
         set_key = add_leader,
+        buf     = buf,
       },
       mt
     ),
@@ -168,18 +159,17 @@ local xmap     = make_map('x', { noremap = false })
 local imap     = make_map('i', { noremap = false })
 local smap     = make_map('s', { noremap = false })
 
----@type table<string,table>
-local lsp_functions = setmetatable({}, {
-  __index = function(_, k)
-    if not vim.lsp.buf[k] then
-      error("unknown function `vim.lsp.buf." .. k .. "()`")
-    end
-    return {
-      fmt('<cmd>lua vim.lsp.buf.%s()<CR>', k),
-      silent = true,
-    }
-  end,
-})
+local buf = {
+  map      = make_map('',  { buf = true, noremap = false }),
+  vmap     = make_map('v', { buf = true, noremap = false }),
+  nmap     = make_map('n', { buf = true, noremap = false }),
+  noremap  = make_map('',  { buf = true, noremap = true }),
+  vnoremap = make_map('v', { buf = true, noremap = true }),
+  nnoremap = make_map('n', { buf = true, noremap = true }),
+  xmap     = make_map('x', { buf = true, noremap = false }),
+  imap     = make_map('i', { buf = true, noremap = false }),
+  smap     = make_map('s', { buf = true, noremap = false }),
+}
 
 ---@type table<string, string>
 local ctrl = setmetatable({}, {
@@ -200,18 +190,16 @@ return {
   nnoremap = nnoremap,
   vnoremap = vnoremap,
 
+  buf = buf,
 
   setup = function(fn)
     fn(map, nmap, vmap, noremap, nnoremap, vnoremap, xmap)
   end,
 
-  lsp = lsp_functions,
 
   Ctrl  = ctrl,
   Enter = '<CR>',
   Tab   = '<Tab>',
   S_Tab = '<S-Tab>',
   Leader = '<leader>',
-
-  call_fn = call_fn,
 }
