@@ -65,6 +65,7 @@ PACKAGES=(
     readline-devel
     ripgrep
     rsync
+    scdoc             # man-page/doc generator
     sed
     sqlite
     sqlite-devel

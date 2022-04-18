@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+VERSION=${1:-latest}
+REPO=gpanders/ijq
+
+if [[ $VERSION == latest ]]; then
+    echo "Checking for latest version of $REPO"
+    VERSION=$(gh-helper get-latest-tag "$REPO")
+fi
+
+echo "Installing ijq ${VERSION}..."
+
+URL="https://github.com/${REPO}/archive/refs/tags/${VERSION}.tar.gz"
+FNAME=ijq-${VERSION}.tar.gz
+
+F=$(cache-get "$URL" "$FNAME")
+
+T=$(mktemp -d)
+
+cd "$T"
+
+tar xzf "$F"
+
+cd ijq-*
+
+make "prefix=$HOME/.local" install
+
+ijq -V
