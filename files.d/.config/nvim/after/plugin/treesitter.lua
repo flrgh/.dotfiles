@@ -30,6 +30,9 @@ require('nvim-treesitter.configs').setup {
     "typescript",
     "yaml",
   },
+  ignore_install = {
+    "swift",
+  },
   highlight = {
     enable = true,
   },
