@@ -129,7 +129,7 @@ local plugins = {
   'moll/vim-bbye',
 
   -- support .editorconfig files
-  'editorconfig/editorconfig-vim',
+  'gpanders/editorconfig.nvim',
 
   -- auto hlsearch stuff
   'romainl/vim-cool',
