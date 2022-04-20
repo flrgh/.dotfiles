@@ -11,9 +11,14 @@ URL=https://github.com/sumneko/lua-language-server/releases/download/${VERSION}/
 
 F=$(cache-get "$URL" lua-language-server-${VERSION}.tar.gz)
 
-T=$(mktemp -d)
+TEMP=$(mktemp -d)
 
-tar -C "$T" -xzf "$F"
+tar -C "$TEMP" -xzf "$F"
 
-mv "$T" "$HOME/.local/libexec/lua-language-server"
+rsync -avuP \
+    --remove-source-files \
+    --delete \
+    "$TEMP/" \
+    "$HOME/.local/libexec/lua-language-server/"
+
 "$HOME"/.local/libexec/lua-language-server/bin/lua-language-server --version
