@@ -2,10 +2,10 @@
 
 case "$XDG_SESSION_TYPE" in
     x11)
-        xclip -in -selection clipboard
+        exec xclip -in -selection clipboard
         ;;
     wayland)
-        wl-copy
+        exec wl-copy
         ;;
     *)
         printf "Unknown XDG_SESSION_TYPE (%q)\n" "$XDG_SESSION_TYPE" >&2
