@@ -56,6 +56,7 @@ PACKAGES=(
     pcre
     pcre-devel
     pcre2
+    perl-FindBin      # kong-build-tools
     pre-commit        # fancy git pre-commit framework
     psutils
     python3
@@ -77,6 +78,8 @@ PACKAGES=(
     traceroute
     tree
     unzip
+    valgrind
+    valgrind-devel
     util-linux
     vim-common
     wget
