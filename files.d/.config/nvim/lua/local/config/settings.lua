@@ -8,7 +8,8 @@ opt.fileencoding  = 'utf-8'
 opt.fileencodings = 'utf-8'
 opt.bomb          = true
 opt.binary        = true
-opt.fileformats   = {'unix', 'mac'}
+opt.fileformat    = 'unix'
+opt.fileformats   = 'unix'
 
 -- fix backspace indent
 opt.backspace = {'indent', 'eol', 'start'}
