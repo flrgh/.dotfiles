@@ -422,6 +422,7 @@ local conf = {
         ---@type string[]
         disable = {
           'lowercase-global',
+          'need-check-nil',
         },
 
         --- diagnostics.globals
