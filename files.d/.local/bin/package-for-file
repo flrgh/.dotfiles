@@ -2,12 +2,20 @@
 
 set -eu
 
-readonly file=$1
+file=$1
 
 ihave() {
     local cmd=$1
     command -v "$cmd" &>/dev/null
 }
+
+# if we were passed a command, attempt to lookup the full path to the binary
+if ! [[ $file =~ / ]]; then
+    bin=$(type -p -P "$file" 2>/dev/null)
+    if [[ -n $bin ]]; then
+        file=$bin
+    fi
+fi
 
 if ihave rpm; then
     rpm -q --whatprovides "$file"
