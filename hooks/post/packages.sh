@@ -33,6 +33,7 @@ PACKAGES=(
     httpie
     iftop
     inotify-tools
+    iotop
     irqbalance
     jq
     jwhois
@@ -40,6 +41,7 @@ PACKAGES=(
     libyaml
     libyaml-devel
     libyaml-devel     # Kong
+    lshw
     lsof
     m4                # Kong
     man-db
@@ -71,6 +73,7 @@ PACKAGES=(
     sqlite
     sqlite-devel
     strace
+    sysstat
     taglib
     tcpdump
     telnet
