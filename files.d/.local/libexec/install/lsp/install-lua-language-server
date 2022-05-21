@@ -15,10 +15,10 @@ TEMP=$(mktemp -d)
 
 tar -C "$TEMP" -xzf "$F"
 
-rsync -avuP \
+rsync -HavP \
     --remove-source-files \
     --delete \
     "$TEMP/" \
     "$HOME/.local/libexec/lua-language-server/"
 
-"$HOME"/.local/libexec/lua-language-server/bin/lua-language-server --version
+lua-language-server --version

@@ -7,6 +7,6 @@ mkdir -p "$DATA"/{log,meta}
 
 exec "$HOME"/.local/libexec/lua-language-server/bin/lua-language-server \
     --logpath="$DATA/log" \
-    --metapath="$HOME/.local/libexec/lua-language-server/meta" \
+    --metapath="$DATA/meta" \
     --locale=en-us \
     "$@"
