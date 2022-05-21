@@ -10,7 +10,7 @@ if [[ -z $FNAME ]]; then
     FNAME=${FNAME%\?*}
 fi
 
-readonly DEST="$HOME/.cache/$FNAME"
+readonly DEST="$HOME/.cache/download/$FNAME"
 
 log() {
 	printf "$@" >&2
