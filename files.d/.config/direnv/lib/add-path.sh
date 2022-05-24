@@ -21,7 +21,6 @@ add-path() {
 
 add-lua-path() {
     local -r path="$1"
-    local -r cpath="${2:-1}"
 
     add-path LUA_PATH "$path/?/init.lua" ";"
     add-path LUA_PATH "$path/?.lua"      ";"
@@ -61,6 +60,10 @@ layout_openresty() {
     export KONG_TEST_OPENRESTY_PATH="$KONG_OPENRESTY_PATH"
 
     add-lua-paths "$dir"/lualib
+
+    for lj in "$dir"/luajit/share/luajit-*; do
+        add-lua-paths "$lj"
+    done
 }
 
 layout_luarocks() {
