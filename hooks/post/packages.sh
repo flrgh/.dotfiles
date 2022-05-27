@@ -41,6 +41,7 @@ PACKAGES=(
     libyaml
     libyaml-devel
     libyaml-devel     # Kong
+    lsd               # modern ls replacement
     lshw
     lsof
     m4                # Kong
