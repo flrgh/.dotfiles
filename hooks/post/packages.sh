@@ -79,6 +79,7 @@ PACKAGES=(
     scdoc             # man-page/doc generator
     sd                # find+replace (simpler, faster sed)
     sed
+    ShellCheck
     sqlite
     sqlite-devel
     strace
