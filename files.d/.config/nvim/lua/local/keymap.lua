@@ -1,4 +1,3 @@
-local fmt        = string.format
 local startswith = vim.startswith
 local endswith   = vim.endswith
 local nvim_buf_set_keymap = vim.api.nvim_buf_set_keymap

@@ -30,7 +30,7 @@ function _M.dir_exists(fname)
 end
 
 --- Check if a path exists.
----@param  fname   string
+---@param  path   string
 ---@return boolean exists
 function _M.exists(path)
   local st = fs_stat(path)
