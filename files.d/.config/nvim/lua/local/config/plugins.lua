@@ -391,19 +391,6 @@ local plugins = {
   },
 
   {
-    'nvim-telescope/telescope-frecency.nvim',
-    config = function()
-      require("telescope").load_extension("frecency")
-    end,
-    requires = {
-      'nvim-telescope/telescope.nvim',
-      'tami5/sqlite.lua'
-    },
-    rocks = {'sqlite'},
-  },
-
-
-  {
     'folke/which-key.nvim',
     config = function()
       require("which-key").setup {}
