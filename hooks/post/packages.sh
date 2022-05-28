@@ -21,6 +21,7 @@ PACKAGES=(
     curl
     diffutils
     dos2unix
+    duf               # modern version of df
     etckeeper         # /etc as a git repo
     fd-find           # fast file finder
     file
@@ -35,12 +36,16 @@ PACKAGES=(
     inotify-tools
     iotop
     irqbalance
+    jc                # convert text output from common tools to JSON
     jq
+    jo                # command-line JSON object creation
     jwhois
     libpasswdqc-devel # Kong
     libyaml
     libyaml-devel
     libyaml-devel     # Kong
+    litecli           # nicer SQLite CLI
+    lnav              # log file navigator
     lsd               # modern ls replacement
     lshw
     lsof
@@ -48,6 +53,7 @@ PACKAGES=(
     man-db
     mkpasswd
     mlocate
+    mycli             # nicer MySQL CLI
     net-tools         # netstat
     ninja-build
     nmap
@@ -60,6 +66,7 @@ PACKAGES=(
     pcre-devel
     pcre2
     perl-FindBin      # kong-build-tools
+    pgcli             # nicer Postgres CLI
     pre-commit        # fancy git pre-commit framework
     psutils
     python3
@@ -70,6 +77,7 @@ PACKAGES=(
     ripgrep
     rsync
     scdoc             # man-page/doc generator
+    sd                # find+replace (simpler, faster sed)
     sed
     sqlite
     sqlite-devel
