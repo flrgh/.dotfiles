@@ -193,6 +193,13 @@ local plugins = {
   'wsdjeg/luarefvim',
   -- lua neovim support
   'folke/lua-dev.nvim',
+  -- etlua template syntax support
+  {
+    'VaiN474/vim-etlua',
+    config = function()
+      vim.cmd [[au BufRead,BufNewFile *.etlua set filetype=etlua]]
+    end,
+  },
 
   -- lang: teal
   'teal-language/vim-teal',
