@@ -79,3 +79,45 @@ extract() {
                      ;;
     esac
 }
+
+dump-array() {
+    local -r name=$1
+    local -rn ref=$1
+
+    for i in "${!ref[@]}"; do
+        local fq="${name}[$i]"
+
+    printf "%-32s => %q\n" \
+            "$fq" \
+            "${ref[$i]}"
+    done
+}
+
+complete -A arrayvar dump-array
+
+dump-var() {
+    local -r name=$1
+    if [[ -z $name ]]; then
+        for v in $(compgen -v); do
+            dump-var "$v"
+        done
+        return
+    fi
+
+    local -rn ref=$1
+
+    local -r dec=${ref@A}
+
+    local -r pat="declare -(a|A)"
+
+    if [[ $dec =~ $pat ]]; then
+        dump-array "$name"
+        return
+    fi
+
+    printf "%-32s => %q\n" \
+        "$name" \
+        "$ref"
+}
+
+complete -A variable dump-var

@@ -26,10 +26,18 @@ else
     }
 fi
 
+get-release() {
+    local -r repo=$1
+    local -r release=$2
+
+    http "repos/$repo/releases/$release"
+}
+
+
 get-latest-release() {
     local -r repo=$1
 
-    http "repos/$repo/releases/latest"
+    get-release "$repo" latest
 }
 
 
@@ -37,6 +45,13 @@ get-releases() {
     local -r repo=$1
 
     http "repos/$repo/releases"
+}
+
+get-release-names() {
+    local -r repo=$1
+
+    http "repos/$repo/releases" \
+    | jq -r '.[].name'
 }
 
 get-latest-release-name() {
@@ -48,6 +63,7 @@ get-latest-release-tag() {
     local -r repo=$1
     get-latest-release "$repo" | jq -r '.tag_name'
 }
+
 
 
 get-tag() {

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+PRIVATE=${1?Private Key file required}
+PUBLIC=${2:-$PRIVATE.pub}
+
+ssh-keygen -y -f "$PRIVATE" > "$PUBLIC"
