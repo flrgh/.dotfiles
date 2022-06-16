@@ -11,4 +11,6 @@ npm install -g \
     pyright \
     sql-language-server \
     vscode-json-languageserver \
-    yaml-language-server
+    yaml-language-server \
+    awk-language-server \
+    dockerfile-language-server-nodejs

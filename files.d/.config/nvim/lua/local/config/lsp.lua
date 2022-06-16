@@ -55,15 +55,19 @@ mod.if_exists('cmp_nvim_lsp', function(cmp_nvim_lsp)
 end)
 
 local servers = {
-  bash      = "bashls",
-  go        = "gopls",
-  json      = "jsonls",
-  lua       = "sumneko_lua",
-  python    = "pyright",
-  sql       = "sqlls",
-  teal      = "tealls",
-  terraform = "terraformls",
-  yaml      = "yamlls",
+  bash         = "bashls",
+  go           = "gopls",
+  json         = "jsonls",
+  lua          = "sumneko_lua",
+  python       = "pyright",
+  sql          = "sqlls",
+  teal         = "tealls",
+  terraform    = "terraformls",
+  yaml         = "yamlls",
+  awk          = "awk_ls",
+  dockerfile   = "dockerls",
+  markdown     = "marksman",
+  rust         = "rust_analyzer",
 }
 
 for lang, server in pairs(servers) do

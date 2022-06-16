@@ -203,6 +203,8 @@ install::cmd() {
     local fname; fname=$(cache-get "$url")
 
     driver-exec install-from-asset "$name" "$fname" "$version"
+
+    echo "$name" "$(driver-exec get-installed-version "$name")"
 }
 
 install::complete() {
