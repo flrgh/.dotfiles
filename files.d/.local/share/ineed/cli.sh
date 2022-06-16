@@ -218,6 +218,10 @@ install::complete() {
     complete-from-drivers
 }
 
+_bash_completion::cmd() {
+    cat "$INEED_ROOT"/completion.sh
+}
+
 declare -ga INEED_CLI_COMMANDS=()
 declare -gA INEED_CLI_COMMANDS_HASH=()
 for fn in $(compgen -A function); do

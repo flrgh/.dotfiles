@@ -15,17 +15,17 @@ __ineed_completions() {
     _FLAGS=()
     _OTHER=()
 
-    {
-        echo "----"
-        for var in ${!COMP@}; do
-            dump-var "$var"
-        done
+    #{
+    #    echo "----"
+    #    for var in ${!COMP@}; do
+    #        dump-var "$var"
+    #    done
 
-        for var in ${!INEED@}; do
-            dump-var "$var"
-        done
+    #    for var in ${!INEED@}; do
+    #        dump-var "$var"
+    #    done
 
-    } >> ./log.txt
+    #} >> ./log.txt
 
 
     if (( ${#COMP_WORDS[@]} == 2 )); then
@@ -66,13 +66,13 @@ __ineed_completions() {
         _OTHER+=("$w")
     done
 
-    {
-        dump-var _COMMAND
-        dump-var _DRIVER
-        dump-var _VERSION
-        dump-var _FLAGS
-        dump-var _OTHER
-    } >> ./log.txt
+    #{
+    #    dump-var _COMMAND
+    #    dump-var _DRIVER
+    #    dump-var _VERSION
+    #    dump-var _FLAGS
+    #    dump-var _OTHER
+    #} >> ./log.txt
 
 
     if (( ${#COMP_WORDS[@]} > 2 )); then

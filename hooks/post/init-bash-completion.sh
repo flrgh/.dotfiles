@@ -17,6 +17,7 @@ declare -A COMMANDS=(
     [luarocks]="completion bash"
     [gh]="completion --shell bash" # github cli
     [op]="completion bash"         # 1password
+    [ineed]="_bash_completion"
 )
 
 declare -A REMOTE_FILES=(
