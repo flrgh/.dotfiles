@@ -14,7 +14,7 @@ echo "Installing neovim plugins"
 nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
 echo "Installing tree-sitter CLI"
-"$HOME/.local/libexec/install/tools/install-tree-sitter"
+ineed install tree-sitter
 
 echo "Upgrading tree-sitter grammers"
 nvim --headless -c 'TSUpdateSync' -c 'quitall'
