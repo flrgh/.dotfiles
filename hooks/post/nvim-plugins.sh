@@ -8,7 +8,7 @@ echo "Installing python deps for neovim"
 pip3 install --user --upgrade pynvim
 
 echo "Updating neovim"
-"$HOME"/.local/libexec/install/install-neovim latest
+ineed install neovim
 
 echo "Installing neovim plugins"
 nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
