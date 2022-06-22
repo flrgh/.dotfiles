@@ -7,6 +7,7 @@ local split = vim.fn.split
 local endswith   = vim.endswith
 local insert = table.insert
 
+
 local EMPTY = {}
 
 local USER_SETTINGS = expand("~/.config/lua/lsp.lua")
@@ -172,7 +173,7 @@ local conf = {
         --- runtime.fileEncoding
         --- default: utf8
         --- File encoding. The `ansi` option is only available under the `Windows` platform.
-        ---@type '"utf8"'|'"ansi"'|'"utf16le"'|'"utf16be"'
+        ---@type "utf8"|"ansi"|"utf16le"|"utf16be"
         fileEncoding = "utf8",
 
         --- runtime.nonstandardSymbol
@@ -207,13 +208,13 @@ local conf = {
         --- runtime.version
         --- default: Lua 5.4
         --- Lua runtime version.
-        ---@type '"Lua 5.1"'|'"Lua 5.2"'|'"Lua 5.3"'|'"Lua 5.4"'|'"LuaJIT"'
+        ---@type "Lua 5.1"|"Lua 5.2"|"Lua 5.3"|"Lua 5.4"|"LuaJIT"
         version = 'LuaJIT', -- neovim implies luajit
 
         ---@alias runtime.builtin.state
-        ---| '"default"' # Indicates that the library will be enabled or disabled according to the runtime version
-        ---| '"enable"'  # Always enabled
-        ---| '"disable"' # Always disabled
+        ---| "default" # Indicates that the library will be enabled or disabled according to the runtime version
+        ---| "enable"  # Always enabled
+        ---| "disable" # Always disabled
 
         --- runtime.builtin
         --- Adjust the enabled state of the built-in library. You can disable (or redefine) the non-existent library according to the actual runtime environment.
@@ -237,15 +238,15 @@ local conf = {
         builtin = nil,
 
         ---@alias runtime.special.variable
-        ---| '"_G"'
-        ---| '"rawset"'
-        ---| '"rawget"'
-        ---| '"setmetatable"'
-        ---| '"require"'
-        ---| '"dofile"'
-        ---| '"loadfile"'
-        ---| '"pcall"'
-        ---| '"xpcall"'
+        ---| "_G"
+        ---| "rawset"
+        ---| "rawget"
+        ---| "setmetatable"
+        ---| "require"
+        ---| "dofile"
+        ---| "loadfile"
+        ---| "pcall"
+        ---| "xpcall"
 
         --- runtime.special
         --- The custom global variables are regarded as some special built-in variables, and the language server will provide special support
@@ -277,9 +278,9 @@ local conf = {
         --- default: Disable
         --- Shows function call snippets.
         ---@type
-        ---| '"Disable"' # Only shows `function name`.
-        ---| '"Both"' # Shows `function name` and `call snippet`.
-        ---| '"Replace"' # Only shows `call snippet.`
+        ---| "Disable" # Only shows `function name`.
+        ---| "Both" # Shows `function name` and `call snippet`.
+        ---| "Replace" # Only shows `call snippet.`
         callSnippet = "Disable",
 
         --- completion.displayContext
@@ -293,19 +294,19 @@ local conf = {
         --- default: Replace
         --- Shows keyword syntax snippets.
         ---@type
-        ---| '"Disable"' # Only shows `keyword`.
-        ---| '"Both"' # Shows `keyword` and `syntax snippet`.
-        ---| '"Replace"' # Only shows `syntax snippet`.
+        ---| "Disable" # Only shows `keyword`.
+        ---| "Both" # Shows `keyword` and `syntax snippet`.
+        ---| "Replace" # Only shows `syntax snippet`.
         keywordSnippet = "Replace",
 
         --- completion.postfix
-        --- default: @
+        --- default: `@`
         --- The symbol used to trigger the postfix suggestion.
         ---@type string
         postfix = "@",
 
         --- completion.requireSeparator
-        --- default: .
+        --- default: `.`
         --- The separator used when `require`.
         ---@type string
         requireSeparator = ".",
@@ -320,9 +321,9 @@ local conf = {
         --- default: Fallback
         --- Show contextual words in suggestions.
         ---@type
-        ---| '"Enable"' # Always show context words in suggestions.
-        ---| '"Fallback"' # Contextual words are only displayed when suggestions based on semantics cannot be provided.
-        ---| '"Disable"' # Do not display context words.
+        ---| "Enable" # Always show context words in suggestions.
+        ---| "Fallback" # Contextual words are only displayed when suggestions based on semantics cannot be provided.
+        ---| "Disable" # Do not display context words.
         showWord = "Fallback",
 
         --- completion.workspaceWord
@@ -370,6 +371,11 @@ local conf = {
         ---@type integer
         viewStringMax = 1000,
 
+        --- hover.expandAlias
+        --- Whether to expand the alias. For example, expands ---@alias myType boolean|number appears as boolean|number, otherwise it appears as `myType'.
+        ---@type boolean
+        expandAlias = true,
+
       },
 
       hint = {
@@ -379,9 +385,9 @@ local conf = {
         --- default: All
         --- Show hints of parameter name at the function call.
         ---@type
-        ---| '"All"' # All types of parameters are shown.
-        ---| '"Literal"' # Only literal type parameters are shown.
-        ---| '"Disable"' # Disable parameter hints.
+        ---| "All" # All types of parameters are shown.
+        ---| "Literal" # Only literal type parameters are shown.
+        ---| "Disable" # Disable parameter hints.
         paramName = "All",
 
         --- hint.paramType
@@ -394,6 +400,16 @@ local conf = {
         --- Show hints of type at assignment operation.
         ---@type boolean
         setType = true,
+
+        --- hint.arrayIndex
+        --- Show hints of array index when constructing a table.
+        ---@type "Enable"|"Auto"|"Disable"
+        arrayIndex = "Enable",
+
+        --- hint.await
+        --- If the called function is marked ---@async, prompt await at the call.
+        ---@type boolean
+        await = false,
 
       },
 
@@ -464,18 +480,18 @@ local conf = {
         --- default: Opened
         --- How to diagnose ignored files.
         ---@type
-        ---| '"Enable"' # Always diagnose these files.
-        ---| '"Opened"' # Only when these files are opened will it be diagnosed.
-        ---| '"Disable"' # These files are not diagnosed.
+        ---| "Enable" # Always diagnose these files.
+        ---| "Opened" # Only when these files are opened will it be diagnosed.
+        ---| "Disable" # These files are not diagnosed.
         ignoredFiles = "Opened",
 
         --- diagnostics.libraryFiles
         --- default: Opened
         --- How to diagnose files loaded via `Lua.workspace.library`.
         ---@type
-        ---| '"Enable"' # Always diagnose these files.
-        ---| '"Opened"' # Only when these files are opened will it be diagnosed.
-        ---| '"Disable"' # These files are not diagnosed.
+        ---| "Enable" # Always diagnose these files.
+        ---| "Opened" # Only when these files are opened will it be diagnosed.
+        ---| "Disable" # These files are not diagnosed.
         libraryFiles = "Opened",
 
         --- diagnostics.workspaceDelay
@@ -490,7 +506,7 @@ local conf = {
         ---@type integer
         workspaceRate = 80,
 
-        ---@alias diagnostics.neededFileStatus.Status '"Any"'|'"Opened"'|'"None"'
+        ---@alias diagnostics.neededFileStatus.Status "Any"|"Opened"|"None"
 
         --- diagnostics.neededFileStatus
         --- If you want to check only opened files, choice Opened; else choice Any.
@@ -539,10 +555,10 @@ local conf = {
         neededFileStatus = nil,
 
         ---@alias diagnostics.severity.Level
-        ---| '"Hint"'
-        ---| '"Information"'
-        ---| '"Warning"'
-        ---| '"Error"'
+        ---| "Hint"
+        ---| "Information"
+        ---| "Warning"
+        ---| "Error"
 
         --- diagnostics.severity
         --- Modified diagnostic severity.
@@ -651,12 +667,12 @@ local conf = {
         --- Semantic coloring of type annotations.
         --- default: true
         ---@type boolean
-        annotation = nil,
+        annotation = true,
 
         --- Enable semantic color. You may need to set `editor.semanticHighlighting.enabled` to `true` to take effect.
         --- default: true
         ---@type boolean
-        enable = nil,
+        enable = true,
 
         --- Semantic coloring of keywords/literals/operators. You only need to enable this feature if your editor cannot do syntax coloring.
         --- default: false
@@ -665,7 +681,7 @@ local conf = {
 
         --- Semantic coloring of variables/fields/parameters.
         ---@type boolean
-        variable = nil,
+        variable = true,
       },
 
       telemetry = {
