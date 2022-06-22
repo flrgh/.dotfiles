@@ -148,6 +148,11 @@ local function lua_path(settings, libs)
     if not endswith(lib, '/src') and fs.dir_exists(lib .. '/src') then
       add_lua_path(path, lib .. '/src')
     end
+
+    -- add $path/lib
+    if not endswith(lib, '/lib') and fs.dir_exists(lib .. '/lib') then
+      add_lua_path(path, lib .. '/lib')
+    end
   end
 
   for _, extra in ipairs(settings.path.extra or EMPTY) do
