@@ -25,7 +25,9 @@ get-latest-version() {
 
 
 get-installed-version() {
-    "$NAME" --version | awk '{print $4}' | tr -d '()'
+    if is-installed; then
+        "$NAME" --version | awk '{print $4}' | tr -d '()'
+    fi
 }
 
 is-installed() {

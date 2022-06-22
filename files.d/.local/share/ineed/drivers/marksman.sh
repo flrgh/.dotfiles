@@ -24,7 +24,9 @@ get-latest-version() {
 
 
 get-installed-version() {
-    "$NAME" --version
+    if is-installed; then
+        "$NAME" --version
+    fi
 }
 
 is-installed() {
