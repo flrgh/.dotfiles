@@ -1,5 +1,10 @@
-export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
-export CONFIG_HOME=$XDG_CONFIG_HOME
+export CONFIG_HOME="$HOME"/.config
+export XDG_CONFIG_HOME="$CONFIG_HOME"
 
-mkdir -p "$HOME/.cache"
+# where to cache things
 export CACHE_DIR="$HOME/.cache"
+
+
+# lang/charset
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
