@@ -105,7 +105,7 @@ local function lua_libs(settings)
     end
   end
 
-  return libs
+  return vim.tbl_keys(libs)
 end
 
 ---@param paths local.lsp.filenames
@@ -135,7 +135,7 @@ local function lua_path(settings, libs)
   insert(path, "?.lua")
   insert(path, "?/init.lua")
 
-  for lib in pairs(libs) do
+  for _, lib in ipairs(libs) do
     -- add $path
     add_lua_path(path, lib)
 
