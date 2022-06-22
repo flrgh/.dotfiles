@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# detect the current workspace by present of .git dir
+WORKSPACE=${1:-$PWD}
+
+while [[ ! -d "$WORKSPACE/.git" && $WORKSPACE != / ]]; do
+    WORKSPACE=$(dirname "$WORKSPACE")
+done
+
+if [[ ! -d "$WORKSPACE/.git" ]]; then
+    WORKSPACE=$PWD
+fi
+
+echo "$HOME/.cache/nvim/lua-lsp/log/file${WORKSPACE//\//_}.log"

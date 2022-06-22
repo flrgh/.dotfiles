@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+
+LOG_ROOT=$HOME/.cache/nvim
+
+PATHS=(
+    "$LOG_ROOT/lsp.log"
+    "$LOG_ROOT/lua-lsp/log/service.log"
+)
+
+WORKSPACE_LOG=$(lua-lsp-log "$PWD")
+
+if [[ -e "$WORKSPACE_LOG" ]]; then
+    echo "Found workspace log"
+    PATHS+=("$WORKSPACE_LOG")
+fi
+
+
+tail -F "${PATHS[@]}"

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+
+LOG_ROOT=$HOME/.cache/nvim
+
+truncate -s 0 \
+    "$LOG_ROOT/lsp.log" \
+    "$LOG_ROOT"/lua-lsp/log/*.log
+
