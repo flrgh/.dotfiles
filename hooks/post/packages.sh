@@ -11,10 +11,12 @@ set -euo pipefail
 # and `lib-whatever` installed in order to run such-and-such" moments.
 
 PACKAGES=(
+    axel              # openresty build dep
     alacritty         # terminal emulator
     automake
     bash-completion
     bc                # maths
+    bear              # database generator for clang
     bind-utils        # DNS cli tools
     cmake
     ctags
@@ -97,6 +99,7 @@ PACKAGES=(
     vim-common
     wget
     which
+    wireshark
     wl-clipboard
     xdg-user-dirs
     xdg-utils
