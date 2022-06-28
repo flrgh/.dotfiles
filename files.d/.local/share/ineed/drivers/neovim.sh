@@ -22,7 +22,7 @@ get-latest-version() {
 get-asset-download-url() {
     local -r version=$1
 
-    echo "https://github.com/neovim/neovim/releases/download/${version}/nvim-linux64.tar.gz"
+    echo "https://github.com/neovim/neovim/releases/download/v${version}/nvim-linux64.tar.gz"
 }
 
 install-from-asset() {
