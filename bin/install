@@ -59,25 +59,7 @@ def dirs_d(path):
         link = path  / directory.relative_to(dirs)
         symlink(directory, link, isdir=True)
 
-
-def delete_link(path):
-    if not path.is_symlink():
-        return None
-
-    print(f'deleting symlink orphan: {path}')
-    path.unlink()
-
 SKIP = object()
-
-def walk_path(path, cb):
-    if not path.is_dir():
-        return cb(path)
-
-    if cb(path) == SKIP:
-        return SKIP
-
-    for child in path.iterdir():
-        walk_path(child, cb)
 
 def mine(path):
     return path.owner() == getlogin()
@@ -115,31 +97,6 @@ def non_repo_target(path):
 def target_exists(path):
     return path.resolve().exists()
 
-def cleanup(path):
-    if path.is_dir():
-        if not mine(path):
-            return SKIP
-
-        if ignore_dir(path):
-            return SKIP
-
-        return None
-
-    if not path.is_symlink():
-        return SKIP
-
-    if non_repo_target(path):
-        return SKIP
-
-    if target_exists(path):
-        return SKIP
-
-    delete_link(path)
-    return None
-
-def cleanup_links(path):
-    walk_path(path / '.local', cleanup)
-    walk_path(path / '.config', cleanup)
 
 def print_lines(label, lines):
     for line in lines:
@@ -216,7 +173,6 @@ def main():
 
     run_hooks("pre", install_path)
 
-    cleanup_links(install_path)
     files_d(install_path)
     dirs_d(install_path)
 
