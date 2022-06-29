@@ -629,7 +629,7 @@ local conf = {
         --- workspace.ignoreDir
         --- default: ?
         --- Ignored files and directories (Use `.gitignore` grammar).
-        ---@type string[]
+        ---@type string[]?
         ignoreDir = settings.ignore,
 
         --- workspace.ignoreSubmodules
@@ -663,7 +663,7 @@ local conf = {
 
         --- workspace.userThirdParty
         --- Add private third-party library configuration file paths here, please refer to the built-in [configuration file path](https://github.com/sumneko/lua-language-server/tree/master/meta/3rd)
-        ---@type string[]
+        ---@type string[]?
         userThirdParty = settings.third_party,
 
       },
@@ -695,6 +695,21 @@ local conf = {
         --- Enable telemetry to send your editor information and error logs over the network. Read our privacy policy [here](https://github.com/sumneko/lua-language-server/wiki/Privacy-Policy).
         ---@type boolean
         enable = true,
+      },
+
+      type = {
+        --- castNumberToInteger
+        -- Allowed to assign the number type to the integer type.
+        ---@type boolean
+        castNumberToInteger = true,
+
+        --- weakUnionCheck
+        --
+        -- Once one subtype of a union type meets the condition, the union type also meets the condition.
+        --
+        -- When this setting is false, the number|boolean type cannot be assigned to the number type. It can be with true.
+        ---@type boolean
+        weakUnionCheck = true,
       },
     },
   }
