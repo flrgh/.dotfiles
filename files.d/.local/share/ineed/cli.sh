@@ -21,6 +21,19 @@ have-completion() {
     function-exists "${name}::complete"
 }
 
+complete-from-args() {
+    local oifs="$IFS"
+    IFS=$' '
+
+    local words="$*"
+    IFS="$oifs"
+
+    COMPREPLY=()
+    for elem in $(compgen -W "$words" "$cur"); do
+        COMPREPLY+=("$elem")
+    done
+}
+
 complete-from-array() {
     local -r name=$1
     local -rn ref=${name}
@@ -44,7 +57,7 @@ complete-from-drivers() {
         return
     fi
 
-    complete-from-array INEED_DRIVERS_LIST
+    complete-from-args "${INEED_DRIVERS_LIST[@]}"
 }
 
 complete-from-commands() {
@@ -52,11 +65,12 @@ complete-from-commands() {
         return
     fi
 
-    complete-from-array INEED_CLI_COMMANDS
+    complete-from-args "${INEED_CLI_COMMANDS[@]}"
 }
 
 get-available-versions() {
     local -r name=$1
+
     for v in $(driver-exec list-available-versions "$name"); do
         normalize-version "$v"
     done
@@ -81,16 +95,14 @@ get-latest-version() {
 complete-from-versions() {
     local -r name=$1
 
-    declare -ga _VERSIONS=()
+    local versions=()
 
     for v in $(get-available-versions "$name"); do
-        _VERSIONS+=("$v")
+        versions+=("$v")
     done
 
 
-    complete-from-array __VERSIONS
-
-    unset __VERSIONS
+    complete-from-args "${versions[@]}"
 }
 
 
@@ -124,7 +136,7 @@ usage::cmd() {
     echo "Commands:"
     echo
     local cmd
-    for cmd in ${INEED_CLI_COMMANDS[@]}; do
+    for cmd in "${INEED_CLI_COMMANDS[@]}"; do
         echo "    $cmd"
     done
 }
