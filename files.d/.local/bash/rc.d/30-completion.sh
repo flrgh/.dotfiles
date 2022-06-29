@@ -25,4 +25,4 @@ if [[ $OSTYPE =~ darwin ]]; then
 fi
 
 # local bash completion
-_source_dir "$HOME/.local/.bash_completion.d"
+_source_dir "$HOME/.local/bash/completion.d"

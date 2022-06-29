@@ -53,12 +53,6 @@ def files_d(path):
         symlink(filename, link)
 
 
-def dirs_d(path):
-    dirs = Path(REPO_ROOT / 'dirs.d')
-    for directory in dirs.iterdir():
-        link = path  / directory.relative_to(dirs)
-        symlink(directory, link, isdir=True)
-
 SKIP = object()
 
 def mine(path):
@@ -174,7 +168,6 @@ def main():
     run_hooks("pre", install_path)
 
     files_d(install_path)
-    dirs_d(install_path)
 
     if not args.link_only:
         run_hooks("post", install_path)

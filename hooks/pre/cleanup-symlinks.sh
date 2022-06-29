@@ -2,14 +2,19 @@
 
 # delete orphaned symlinks
 
+readonly REPO_ROOT=${1:-$HOME/git/flrgh/.dotfiles}
+readonly INSTALL_PATH=${2:-$HOME}
+readonly FILES_D=${REPO_ROOT}/files.d
+
+if [[ -L "$INSTALL_PATH/.bash" ]]; then
+    echo "removing legacy ~/.bash path"
+    rm -v "$INSTALL_PATH/.bash"
+fi
+
 if ! type -f -t fd &>/dev/null; then
     echo "fd not installed, exiting"
     exit 0
 fi
-
-readonly REPO_ROOT=${1:-$HOME/git/flrgh/.dotfiles}
-readonly INSTALL_PATH=${2:-$HOME}
-readonly FILES_D=${REPO_ROOT}/files.d
 
 shopt -s dotglob
 shopt -s nullglob

@@ -6,7 +6,9 @@ have() {
     command -v "$1" &>/dev/null
 }
 
-DIR="$HOME/.local/.bash_completion.d"
+DIR="$HOME/.local/bash/completion.d"
+
+mkdir -p "$DIR"
 
 declare -A COMMANDS=(
     [pip]="completion --bash"

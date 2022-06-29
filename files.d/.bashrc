@@ -55,8 +55,8 @@ else
     }
 fi
 
-_log_file="$HOME/.local/var/log/bashrc.log"
-_log_dir="$(dirname "$_log_file")"
+_log_dir="$HOME/.local/var/log"
+_log_file="$_log_dir/bashrc.log"
 
 _log_rc() {
     local -r ctx=$1
@@ -150,7 +150,7 @@ _source_dir() {
 
 _cleanup_func _source_dir
 
-_source_dir "$HOME/.bash"
+_source_dir "$HOME/.local/bash/rc.d"
 
 for (( idx=${#_CLEANUP[@]}-1 ; idx>=0 ; idx-- )) ; do
     stmt=${_CLEANUP[$idx]}
