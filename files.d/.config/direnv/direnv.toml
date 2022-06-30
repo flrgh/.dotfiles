@@ -1,6 +1,10 @@
 [global]
 
+# `set -euo pipefail` when evaluating .envrc
 strict_env = true
+
+# don't read from /dev/stdin when evaluating .envrc
+disable_stdin = true
 
 [whitelist]
 exact = [
