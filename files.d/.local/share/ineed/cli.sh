@@ -107,6 +107,8 @@ complete-from-versions() {
 
 
 list::cmd() {
+    printf "%-32s %s\n" "name" "version"
+    printf "%-32s %s\n" "----" "-------"
     for d in $(list-drivers); do
         local v; v=$(get-installed-version "$d")
         if [[ -n $v ]]; then
@@ -127,6 +129,20 @@ version::complete() {
     complete-from-drivers
 }
 
+
+drivers::cmd() {
+    printf "%-32s %s\n" "name" "installed"
+    printf "%-32s %s\n" "----" "---------"
+    for d in "${INEED_DRIVERS_LIST[@]}"; do
+        local mark
+        if is-installed "$d"; then
+            mark="✓"
+        else
+            mark="✗"
+        fi
+        printf "%-32s %s\n" "$d" "$mark"
+    done
+}
 
 usage::cmd() {
     echo "Usage:"
