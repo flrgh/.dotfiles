@@ -27,7 +27,7 @@ get-latest-version() {
 get-asset-download-url() {
     local -r version=$1
 
-    echo "https://dl.k8s.io/release/$version/bin/linux/amd64/kubectl"
+    echo "https://dl.k8s.io/release/v${version}/bin/linux/amd64/kubectl"
 }
 
 install-from-asset() {
