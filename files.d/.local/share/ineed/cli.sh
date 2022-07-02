@@ -248,6 +248,12 @@ install::complete() {
     complete-from-drivers
 }
 
+update::cmd() {
+    for d in "${INEED_DRIVERS_LIST[@]}"; do
+        install::cmd "$d"
+    done
+}
+
 _bash_completion::cmd() {
     cat "$INEED_ROOT"/completion.sh
 }
