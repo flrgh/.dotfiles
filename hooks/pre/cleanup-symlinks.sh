@@ -78,7 +78,7 @@ fd . \
 
     target=$(readlink "$link")
 
-    if [[ $target = "$FILES_D"/* ]]; then
+    if [[ $target = "$FILES_D"/* ]] || [[ $target = *dotfiles* ]]; then
 
         if [[ ! -e $target ]]; then
             printf "Danging symlink %q => %q\n" \
