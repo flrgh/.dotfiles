@@ -1,12 +1,19 @@
 local _M = {}
 
 local mod = require 'local.module'
+
+if not mod.exists('cmp') then
+  return { setup = function() end }
+end
+
+local cmp = require 'cmp'
+
 local km = require 'local.keymap'
 local g = require "local.config.globals"
 
 ---@return table<any, cmp.Mapping>
-local function mapping(cmp)
-  return {
+local function mapping()
+  return cmp.mapping.preset.insert {
     -- replace ctrl+n/ctrl+p with ctrl+j/ctrl+k
     [km.Ctrl.j] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
     [km.Ctrl.k] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
@@ -14,7 +21,7 @@ local function mapping(cmp)
     [km.Ctrl.p] = cmp.config.disable,
 
     -- explicitly invoke completion
-    [km.Ctrl.Space] = cmp.mapping.complete(),
+    [km.Ctrl.Space] = cmp.mapping.complete,
 
     [km.Ctrl.e] = cmp.mapping.close(),
 
@@ -40,8 +47,7 @@ local function mapping(cmp)
   }
 end
 
----@return cmp.SourceConfig[]
-local function sources(_)
+local function sources()
   local get_cwd
   do
     local ws = g.workspace or os.getenv("PWD")
@@ -53,20 +59,19 @@ local function sources(_)
   local src = {
     { name = 'nvim_lua' },
     { name = 'nvim_lsp' },
+    { name = 'treesitter' },
     { name = 'buffer' },
     { name = 'path', option = { get_cwd = get_cwd } },
+    { name = 'cmdline' },
+    { name = 'plugins' },
     { name = 'calc' },
     { name = 'emoji' },
+    { name = 'luasnip' },
   }
 
-  if mod.exists("luasnip") then
-    table.insert(src, { name = "luasnip" })
-  end
-
-  return src
+  return cmp.config.sources(src)
 end
 
----@return cmp.SnippetConfig
 local function snippet()
   if mod.exists("luasnip") then
     return {
@@ -77,52 +82,94 @@ local function snippet()
   end
 end
 
----@return cmp.FormattingConfig
+---@return cmp.FormattingConfig|nil
 local function formatting(_)
-  mod.if_exists("lspkind", function(lspkind)
-    return {
-      format = lspkind.cmp_format({
-        with_text = true,
-        mode = 'symbol_text',
-        menu = {
-          buffer   = "[buf]",
-          nvim_lsp = "[lsp]",
-          nvim_lua = "[nvim]",
-          path     = "[path]",
-          luasnip  = "[snip]",
-        },
-      })
-    }
-  end)
+  if not mod.exists("lspkind") then
+    return
+  end
+
+  local lspkind = require "lspkind"
+  return {
+    format = lspkind.cmp_format({
+      with_text = true,
+      mode = 'symbol_text',
+      menu = {
+        buffer   = "[buf]",
+        nvim_lsp = "[lsp]",
+        nvim_lua = "[nvim]",
+        path     = "[path]",
+        luasnip  = "[snip]",
+      },
+    })
+  }
 end
 
 ---@return cmp.ExperimentalConfig
 local function experimental()
+  ---@type cmp.ExperimentalConfig
   return {
     native_menu = false,
     ghost_text = true,
   }
 end
 
-function _M.setup()
-  if not mod.exists('cmp') then
-    return
+local function window()
+  return {
+    documentation = true,
+  }
+end
+
+local function view()
+  return {
+  }
+end
+
+
+---@param extend? cmp.ConfigSchema|fun(cfg: cmp.ConfigSchema):cmp.ConfigSchema
+---@return cmp.ConfigSchema
+local function defaults(extend)
+  ---@type cmp.ConfigSchema
+  local cfg = {
+    mapping      = mapping(),
+    sources      = sources(),
+    snippet      = snippet(),
+    formatting   = formatting(),
+    experimental = experimental(),
+    window       = window(),
+  }
+
+  local typ = type(extend)
+  if typ == "function" then
+    cfg = extend(cfg)
+
+  elseif typ == "table" then
+    cfg = vim.tbl_deep_extend({ "force" }, cfg, extend)
   end
 
-  local cmp = require 'cmp'
+  return cfg
+end
 
+function _M.setup()
   -- Set completeopt to have a better completion experience
   vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
   -- Don't show the dumb matching stuff.
   vim.opt.shortmess:append "c"
 
-  cmp.setup({
-    mapping      = mapping(cmp),
-    sources      = sources(cmp),
-    snippet      = snippet(cmp),
-    formatting   = formatting(cmp),
-    experimental = experimental(cmp),
+  if mod.exists("cmp-plugins") then
+    require("cmp-plugins").setup {
+      files = { "plugins.lua" },
+    }
+  end
+
+  cmp.setup(defaults())
+
+  cmp.setup.cmdline(':', {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = cmp.config.sources({
+      { name = 'path' },
+      { name = 'cmdline' },
+    })
   })
 end
 

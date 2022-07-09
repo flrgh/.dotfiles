@@ -22,6 +22,7 @@ local config = {
   },
 }
 
+
 -- TODO: snapshot workflow
 --[[
 do
@@ -31,7 +32,6 @@ do
   config.snapshot = fname
 end
 ]]--
-
 
 local g = require "local.config.globals"
 if g.debug then
@@ -338,6 +338,8 @@ local plugins = {
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-nvim-lua',
       'hrsh7th/cmp-path',
+      'hrsh7th/cmp-cmdline',
+      'ray-x/cmp-treesitter',
 
       'onsails/lspkind-nvim',
 
