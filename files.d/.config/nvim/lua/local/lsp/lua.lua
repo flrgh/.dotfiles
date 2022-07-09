@@ -717,8 +717,8 @@ local conf = {
 }
 
 if settings.include_vim then
- mod.if_exists("lua-dev", function(luadev)
-   conf = luadev.setup({ lspconfig = conf })
- end)
+  mod.if_exists("lua-dev", function(luadev)
+    conf = luadev.setup({ lspconfig = conf })
+  end)
 end
 return conf
