@@ -18,6 +18,7 @@ PACKAGES=(
     bc                # maths
     bear              # database generator for clang
     bind-utils        # DNS cli tools
+    cargo             # rustlang package manager
     cmake
     ctags
     curl
@@ -78,6 +79,8 @@ PACKAGES=(
     readline-devel
     ripgrep
     rsync
+    rust
+    rust-src
     scdoc             # man-page/doc generator
     sd                # find+replace (simpler, faster sed)
     sed
