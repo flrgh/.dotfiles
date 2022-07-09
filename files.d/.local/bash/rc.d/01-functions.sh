@@ -30,10 +30,7 @@ _cleanup_func addPath
 
 iHave() {
     local -r cmd=$1
-    if command -v "$cmd" &> /dev/null; then
-        return 0
-    fi
-    return 1
+    command -v "$cmd" &> /dev/null
 }
 
 _cleanup_func iHave
