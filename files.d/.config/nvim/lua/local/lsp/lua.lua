@@ -1,11 +1,11 @@
 local fs = require 'local.fs'
 local mod = require 'local.module'
 
-local stdpath = vim.fn.stdpath
 local expand = vim.fn.expand
 local split = vim.fn.split
 local endswith   = vim.endswith
 local insert = table.insert
+local runtime_paths = vim.api.nvim_list_runtime_paths
 
 
 local EMPTY = {}
@@ -52,9 +52,10 @@ end
 local function packer_dirs()
   local dirs = {}
   mod.if_exists('packer', function()
-    local glob = stdpath('data') .. '/site/pack/packer/*/*/lua'
-    for _, dir in ipairs(expand_paths(glob)) do
-      insert(dirs, dir)
+    for _, dir in ipairs(runtime_paths()) do
+      if dir:find("pack/packer", nil, true) then
+        insert(dirs, dir)
+      end
     end
   end)
   return dirs
