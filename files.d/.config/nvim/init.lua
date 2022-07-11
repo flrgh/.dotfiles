@@ -1,3 +1,5 @@
+require("jit.p").start("2-2vjp", "/home/michaelm/git/flrgh/.dotfiles/profile.log")
+
 local mod = require "local.module"
 
 mod.if_exists("impatient")

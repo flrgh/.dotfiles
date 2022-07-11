@@ -75,5 +75,14 @@ do
         vim.bo.modified = false
       end,
     },
+
+    {
+      desc = "stop jit profile",
+      event = "VimLeavePre",
+      pattern = "*",
+      callback = function()
+        require("jit.p").stop()
+      end,
+    },
   })
 end
