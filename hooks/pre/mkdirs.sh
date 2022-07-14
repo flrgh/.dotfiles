@@ -18,6 +18,7 @@ DIRS=(
     .local/var/log
     .local/var/log/nvim
     .local/var/log/lsp
+    .local/bash/overrides.d
 )
 
 for d in "${DIRS[@]}"; do
