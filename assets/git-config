@@ -21,3 +21,6 @@
 
 [core]
   excludesfile = ~/.config/git/ignore
+
+[diff]
+  noprefix = true
