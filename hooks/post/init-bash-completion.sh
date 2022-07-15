@@ -20,6 +20,8 @@ declare -A COMMANDS=(
     [gh]="completion --shell bash" # github cli
     [op]="completion bash"         # 1password
     [ineed]="_bash_completion"
+    [rustup]="completions bash rustup"
+    [cargo]="!rustup completions bash cargo"
 )
 
 declare -A REMOTE_FILES=(
@@ -31,7 +33,15 @@ echo "Initializing bash completion"
 
 for bin in "${!COMMANDS[@]}"; do
     if have "$bin"; then
-        cmd="$bin ${COMMANDS[$bin]}"
+        cmd="${COMMANDS[$bin]}"
+
+        # commands that start with `!` use an alternate binary
+        # included in the command string
+        if [[ ${cmd#!} != $cmd ]]; then
+            cmd=${cmd#!}
+        else
+            cmd="$bin $cmd"
+        fi
 
         echo "Generating $bin completion from '$cmd'"
 
