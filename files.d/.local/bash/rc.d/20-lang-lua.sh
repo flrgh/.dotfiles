@@ -35,3 +35,13 @@ if [[ -n $LUAROCKS ]]; then
         addPath "$path" LUA_CPATH ";"
     done < "$rocks_cpath"
 fi
+
+LUAJIT=$(type -f -p luajit)
+if [[ -n $LUAJIT ]]; then
+    _ljit_base=$(realpath "$LUAJIT")
+    _ljit_include="$HOME/.local/share/${_ljit_base##*/}"
+
+    if [[ -d "$_ljit_include" ]]; then
+        addPath "$_ljit_include/?.lua" LUA_PATH ";"
+    fi
+fi
