@@ -31,6 +31,7 @@ PACKAGES=(
     fzf
     gcc
     git
+    git-extras
     golang
     gzip
     htop
