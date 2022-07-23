@@ -42,10 +42,6 @@ local function on_attach(client, buf)
 
   vim.api.nvim_buf_set_option(buf, 'tagfunc', 'v:lua.vim.lsp.tagfunc')
   vim.api.nvim_buf_set_option(buf, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-
-  mod.if_exists('lsp-status', function(status)
-    status.on_attach(client, buf)
-  end)
 end
 
 local caps = vim.lsp.protocol.make_client_capabilities()
@@ -93,7 +89,3 @@ for lang, server in pairs(servers) do
     lspconfig[server].setup(conf)
   end
 end
-
-mod.if_exists('lsp-status', function(status)
-  status.register_progress()
-end)

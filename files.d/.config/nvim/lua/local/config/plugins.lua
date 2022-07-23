@@ -320,7 +320,6 @@ local plugins = {
   },
   'nvim-treesitter/nvim-treesitter-textobjects',
   'nvim-treesitter/playground',
-  'nvim-lua/lsp-status.nvim',
 
   {
     'L3MON4D3/LuaSnip',
@@ -352,6 +351,13 @@ local plugins = {
   },
 
   'glepnir/lspsaga.nvim',
+
+  {
+    "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
+    config = function()
+      require("lsp_lines").setup()
+    end,
+  },
 
   {
     'mhartington/formatter.nvim',
