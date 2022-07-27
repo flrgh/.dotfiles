@@ -2,3 +2,7 @@
 
 # direnv files
 .envrc
+
+# kong
+.resty
+.kbt
