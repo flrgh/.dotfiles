@@ -9,6 +9,8 @@ if not mod.exists('lspconfig') then
   return
 end
 
+local extend = vim.tbl_deep_extend
+
 vim.lsp.handlers["textDocument/definition"] = function(_, result)
   if not result or vim.tbl_isempty(result) then
     print "[LSP] Could not find definition"
@@ -74,18 +76,26 @@ for lang, server in pairs(servers) do
   }
 
   local mod_name = "local.lsp." .. lang
+  local setup = true
   mod.if_exists(mod_name, function(m)
-    conf.settings = m.settings
-    conf.cmd = m.cmd
+    if type(m) == "table" then
+      conf = extend("force", conf, m)
+
+    elseif type(m) == "function" then
+      setup = false
+      m(conf)
+    end
   end)
 
-	conf.cmd = conf.cmd
-    or lspconfig[server]
-    and lspconfig[server].document_config
-    and lspconfig[server].document_config.default_config
-    and lspconfig[server].document_config.default_config.cmd
+  if setup then
+    conf.cmd = conf.cmd
+      or lspconfig[server]
+      and lspconfig[server].document_config
+      and lspconfig[server].document_config.default_config
+      and lspconfig[server].document_config.default_config.cmd
 
-  if conf.cmd and vim.fn.executable(conf.cmd[1]) == 1 then
-    lspconfig[server].setup(conf)
+    if conf.cmd and vim.fn.executable(conf.cmd[1]) == 1 then
+      lspconfig[server].setup(conf)
+    end
   end
 end

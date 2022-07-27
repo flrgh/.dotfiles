@@ -446,7 +446,32 @@ local plugins = {
 				mod.reload("local.config.plugins.evil_lualine")
 			end)
     end,
-  }
+  },
+
+  -- lang: rust
+  {
+    "simrat39/rust-tools.nvim",
+    run = {
+      "rustup component add clippy-preview",
+    },
+    config = function()
+      if true then return end
+      require("local.module").if_exists("rust-tools", function()
+        require("rust-tools").setup({
+          tools = {
+            autoSetHints = true,
+            hover_with_actions = true,
+            inlay_hints = {
+              show_parameter_hints = false,
+              parmeter_hints_prefix = "",
+              other_hints_prefix = "",
+            },
+          },
+
+        })
+      end)
+    end,
+  },
 
 }
 
