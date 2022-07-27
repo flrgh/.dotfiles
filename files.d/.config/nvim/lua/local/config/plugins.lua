@@ -355,7 +355,9 @@ local plugins = {
   {
     "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
     config = function()
-      require("lsp_lines").setup()
+      require("local.module").if_exists("lsp_lines", function()
+        require("lsp_lines").setup()
+      end)
     end,
   },
 
