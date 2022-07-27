@@ -383,9 +383,9 @@ local plugins = {
   {
     'nvim-telescope/telescope.nvim',
     requires = { 'nvim-lua/plenary.nvim' },
+    branch = "0.1.x",
     config = function()
       require("local.config.plugins.telescope").setup()
-
     end,
   },
 
