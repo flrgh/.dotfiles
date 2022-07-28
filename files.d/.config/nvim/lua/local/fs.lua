@@ -4,14 +4,17 @@ local _M = {
   _VERSION = '0.1'
 }
 
-local expand = vim.fn.expand
-local getcwd = vim.fn.getcwd
+local vim = vim
+local fn = vim.fn
+local loop = vim.loop
+local expand = fn.expand
+local getcwd = fn.getcwd
 local json_decode = vim.json.decode
-local fs_stat = vim.loop.fs_stat
-local fs_open = vim.loop.fs_open
-local fs_fstat = vim.loop.fs_fstat
-local fs_read = vim.loop.fs_read
-local fs_close = vim.loop.fs_close
+local fs_stat = loop.fs_stat
+local fs_open = loop.fs_open
+local fs_fstat = loop.fs_fstat
+local fs_read = loop.fs_read
+local fs_close = loop.fs_close
 
 --- Check if a file exists.
 ---@param  fname   string
