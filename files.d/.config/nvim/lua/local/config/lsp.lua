@@ -34,7 +34,10 @@ local maps = {
     hover = vim.lsp.buf.hover,
 }
 
-if mod.exists("lspsaga") then
+if mod.exists("hover") then
+  maps.hover = require("hover").hover
+
+elseif mod.exists("lspsaga") then
   maps.hover = require("lspsaga.hover").render_hover_doc
 end
 

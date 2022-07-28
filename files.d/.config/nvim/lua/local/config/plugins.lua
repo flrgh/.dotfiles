@@ -362,6 +362,27 @@ local plugins = {
   },
 
   {
+    "lewis6991/hover.nvim",
+    config = function()
+      local mod = require "local.module"
+      if not mod.exists("hover") then return end
+
+      require("hover").setup({
+        init = function()
+          require("hover.providers.lsp")
+          require("hover.providers.man")
+          require("hover.providers.gh")
+        end,
+        preview_opts = {
+          border = nil,
+        },
+        -- can't use this until nvim 0.8 drops
+        title = false,
+      })
+    end,
+  },
+
+  {
     'mhartington/formatter.nvim',
     config = function()
       require('formatter').setup({
