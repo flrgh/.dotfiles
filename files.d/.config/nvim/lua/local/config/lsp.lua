@@ -27,9 +27,19 @@ end
 
 local lspconfig = require 'lspconfig'
 
----@param client table
+---@type table<string, function>
+local maps = {
+    declaration = vim.lsp.buf.declaration,
+    definition = vim.lsp.buf.definition,
+    hover = vim.lsp.buf.hover,
+}
+
+if mod.exists("lspsaga") then
+  maps.hover = require("lspsaga.hover").render_hover_doc
+end
+
 ---@param buf    number
-local function on_attach(client, buf)
+local function on_attach(_, buf)
   -- set up key bindings
   do
     local km = require('local.keymap')
@@ -37,9 +47,9 @@ local function on_attach(client, buf)
     -- superceded by vim.lsp.tagfunc
     --km.nnoremap.ctrl[']'] = km.lsp.definition
 
-    km.buf.nnoremap.gD = vim.lsp.buf.declaration
-    km.buf.nnoremap.gd = vim.lsp.buf.definition
-    km.buf.nnoremap.K  = vim.lsp.buf.hover
+    km.buf.nnoremap.gD = maps.declaration
+    km.buf.nnoremap.gd = maps.definition
+    km.buf.nnoremap.K  = maps.hover
   end
 
   vim.api.nvim_buf_set_option(buf, 'tagfunc', 'v:lua.vim.lsp.tagfunc')
