@@ -6,11 +6,15 @@ local split = vim.fn.split
 local endswith   = vim.endswith
 local insert = table.insert
 local runtime_paths = vim.api.nvim_list_runtime_paths
+local dir_exists = fs.dir_exists
 
 
 local EMPTY = {}
 
-local USER_SETTINGS = expand("~/.config/lua/lsp.lua")
+---@type string
+local USER_SETTINGS = expand("~/.config/lua/lsp.lua", nil, false)
+
+local ANNOTATIONS = expand("~/git/flrgh/lua-type-annotations", nil, false)
 
 ---@alias local.lsp.filenames string[]
 
@@ -43,22 +47,23 @@ local DEFAULT_SETTINGS = {
 ---@param p string
 ---@return local.lsp.filenames
 local function expand_paths(p)
-  p = expand(p)
-  p = split(p, "\n", false)
-  return p
+  return expand(p, nil, true)
 end
 
+local _runtime_dirs
+
 ---@return local.lsp.filenames
-local function packer_dirs()
-  local dirs = {}
-  mod.if_exists('packer', function()
-    for _, dir in ipairs(runtime_paths()) do
-      if dir:find("pack/packer", nil, true) then
-        insert(dirs, dir)
-      end
+local function runtime_lua_dirs()
+  if _runtime_dirs then return _runtime_dirs end
+  _runtime_dirs = {}
+
+  for _, dir in ipairs(runtime_paths()) do
+    if dir_exists(dir .. "/lua") then
+      insert(_runtime_dirs, dir .. "/lua")
     end
-  end)
-  return dirs
+  end
+
+  return _runtime_dirs
 end
 
 ---@param t table
@@ -93,12 +98,23 @@ local function lua_libs(settings)
   local libs = {}
 
   if settings.include_vim then
-    libs[expand('$VIMRUNTIME/lua')] = true
+    if mod.exists("lua-dev.sumneko") then
+      local sumneko = require "lua-dev.sumneko"
+      if type(sumneko.types) == "function" then
+        libs[sumneko.types()] = true
+      else
+        vim.notify("function `lua-dev.sumneko.types()` is missing")
+      end
+    else
+      vim.notify("module `lua-dev.sumneko` is missing")
+    end
 
-    for _, dir in ipairs(packer_dirs()) do
-      libs[dir] = true
+    if ANNOTATIONS and dir_exists(ANNOTATIONS) then
+      libs[ANNOTATIONS .. "/neovim"] = true
+      libs[ANNOTATIONS .. "/luv"] = true
     end
   end
+
 
   for _, item in ipairs(settings.lib.extra or EMPTY) do
     for _, elem in ipairs(expand_paths(item)) do
@@ -159,6 +175,13 @@ local function lua_path(settings, libs)
   for _, extra in ipairs(settings.path.extra or EMPTY) do
     for _, elem in ipairs(expand_paths(extra)) do
       add_lua_path(path, elem)
+    end
+  end
+
+  if settings.include_vim then
+    add_lua_path(path, expand("$VIMRUNTIME/lua"))
+    for _, p in ipairs(runtime_lua_dirs()) do
+      add_lua_path(path, p)
     end
   end
 
