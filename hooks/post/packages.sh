@@ -45,6 +45,7 @@ PACKAGES=(
     jo                # command-line JSON object creation
     jwhois
     libpasswdqc-devel # Kong
+    libtool           # nvim build dep
     libyaml
     libyaml-devel
     libyaml-devel     # Kong
