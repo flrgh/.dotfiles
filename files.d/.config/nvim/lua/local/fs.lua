@@ -15,6 +15,11 @@ local fs_open = loop.fs_open
 local fs_fstat = loop.fs_fstat
 local fs_read = loop.fs_read
 local fs_close = loop.fs_close
+local fs_realpath = loop.fs_realpath
+local concat = table.concat
+local assert = assert
+local byte = string.byte
+
 
 --- Check if a file exists.
 ---@param  fname   string
@@ -107,6 +112,73 @@ function _M.workspace_root()
   end
 
   return dir
+end
+
+do
+  local buf = {}
+  local i = 0
+  local SLASH = byte("/")
+  local gsub = string.gsub
+
+  local function handle_part(part)
+    if part == "." or part == "" then
+      return
+
+    elseif part == ".." then
+      assert(i > 1, "path out of range")
+
+      buf[i] = nil
+      i = i - 1
+
+      return
+
+    else
+      i = i + 1
+      buf[i] = part
+    end
+  end
+
+  --- normalize a path string
+  ---
+  --- 1. De-dupe path separators  (/a//b => /a/b)
+  --- 2. Collapse self references (/a/./b => /a/b)
+  --- 3. Collapse parent references (/a/b/../b => /a/b)
+  --- 4. Trim trailing separators (/a/b/ => /a/b)
+  ---
+  ---@param path string
+  ---@return string
+  function _M.normalize(path)
+    if path == "" or path == "/" then
+      return path
+    end
+
+    i = 0
+    if byte(path, 1) == SLASH then
+      i = i + 1
+      buf[i] = ""
+    end
+
+    ---@diagnostic disable-next-line
+    gsub(path, "[^/]+", handle_part)
+
+    if i == 1 then
+      path = buf[1]
+      if path == "" then
+        path = "/"
+      end
+    else
+      path = concat(buf, "/", 1, i)
+    end
+
+    return path
+  end
+end
+
+
+---@param path string
+---@return string
+function _M.realpath(path)
+  return fs_realpath(path) or _M.normalize(path)
 end
 
 return _M
