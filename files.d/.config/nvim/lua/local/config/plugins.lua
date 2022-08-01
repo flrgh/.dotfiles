@@ -353,15 +353,6 @@ local plugins = {
   'glepnir/lspsaga.nvim',
 
   {
-    "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
-    config = function()
-      require("local.module").if_exists("lsp_lines", function()
-        require("lsp_lines").setup()
-      end)
-    end,
-  },
-
-  {
     "lewis6991/hover.nvim",
     config = function()
       local mod = require "local.module"
