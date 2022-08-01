@@ -2,57 +2,67 @@ local fs = require 'local.fs'
 local mod = require 'local.module'
 
 local expand = vim.fn.expand
-local split = vim.fn.split
 local endswith   = vim.endswith
 local insert = table.insert
 local runtime_paths = vim.api.nvim_list_runtime_paths
 local dir_exists = fs.dir_exists
+local find = string.find
 
+local WORKSPACE = fs.normalize(require("local.config.globals").workspace)
+
+local LUA_PATH = os.getenv("LUA_PATH") or package.path
 
 local EMPTY = {}
 
 ---@type string
 local USER_SETTINGS = expand("~/.config/lua/lsp.lua", nil, false)
 
+---@type string
 local ANNOTATIONS = expand("~/git/flrgh/lua-type-annotations", nil, false)
 
----@alias local.lsp.filenames string[]
 
 ---@class local.lsp.settings
 ---@field include_vim boolean
----@field third_party? local.lsp.filenames
----@field ignore? string[]
+---@field third_party string[]
+---@field ignore string[]
+---@field paths string[]
+---@field libraries string[]
 local DEFAULT_SETTINGS = {
-
   -- Make the server aware of Neovim runtime files
   include_vim = false,
 
-  ---@class local.lsp.settings.lib : table
-  ---@field extra?      local.lsp.filenames
-  lib = {
-    extra = {},
-  },
-
-  ---@class local.lsp.settings.path : table
-  ---@field extra? local.lsp.filenames
-  path = {
-    extra = {},
-  },
-
-  third_party = nil,
-
+  libraries = {},
+  paths = {},
+  third_party = {},
   ignore = {},
 }
 
 ---@param p string
+---@return string
+local function normalize(p, skip_realpath)
+  if skip_realpath then
+    return fs.normalize(p)
+  else
+    return fs.realpath(p)
+  end
+end
+
+---@param p string
 ---@return local.lsp.filenames
 local function expand_paths(p)
+  p = p:gsub("$TYPES", ANNOTATIONS)
+
+  if p:find("$SUMNEKO", nil, true) then
+    p = p:gsub("$SUMNEKO", "~/.local/libexec/lua-language-server/meta/3rd")
+    p = p .. "/library"
+  end
+
   return expand(p, nil, true)
 end
 
 local _runtime_dirs
 
----@return local.lsp.filenames
+---@return string[]
 local function runtime_lua_dirs()
   if _runtime_dirs then return _runtime_dirs end
   _runtime_dirs = {}
@@ -80,6 +90,51 @@ local function merge(t, extra)
   return extra
 end
 
+local function append(a, b)
+  for _, v in ipairs(b) do
+    insert(a, v)
+  end
+end
+
+---@param a table
+---@param b table
+---@return table
+local function imerge(a, b)
+  if not b then return end
+  local seen = {}
+
+  for _, v in ipairs(a) do
+    seen[v] = true
+  end
+
+  for _, v in ipairs(b) do
+    if not seen[v] then
+      seen[v] = true
+      insert(a, v)
+    end
+  end
+
+  return a
+end
+
+---@param paths string[]
+---@return string[]
+local function dedupe(paths, skip_realpath)
+  local seen = {}
+  local new = {}
+  local i = 0
+  for _, p in ipairs(paths) do
+    p = normalize(p, skip_realpath)
+    if not seen[p] then
+      seen[p] = true
+      i = i + 1
+      new[i] = p
+    end
+  end
+  return new
+end
+
+
 ---@return local.lsp.settings
 local function load_user_settings()
   local settings = DEFAULT_SETTINGS
@@ -88,7 +143,22 @@ local function load_user_settings()
   if fs.file_exists(USER_SETTINGS) then
     user = dofile(USER_SETTINGS)
   end
-  merge(settings, user)
+
+  local base = fs.basename(WORKSPACE)
+
+  for ws, conf in pairs(user.workspaces or {}) do
+    if ws == base or
+       ws == "*" or
+       find(base, ws, nil, true)
+    then
+      imerge(settings.libraries, conf.libraries)
+      imerge(settings.paths, conf.paths)
+      imerge(settings.ignore, conf.ignore)
+      if conf.include_vim then
+        settings.include_vim = true
+      end
+    end
+  end
 
   return settings
 end
@@ -97,46 +167,53 @@ end
 local function lua_libs(settings)
   local libs = {}
 
+  for _, item in ipairs(settings.libraries or EMPTY) do
+    for _, elem in ipairs(expand_paths(item)) do
+      elem = fs.normalize(elem)
+      if elem ~= WORKSPACE then
+        insert(libs, elem)
+      end
+    end
+  end
+
   if settings.include_vim then
     if mod.exists("lua-dev.sumneko") then
       local sumneko = require "lua-dev.sumneko"
+
       if type(sumneko.types) == "function" then
-        libs[sumneko.types()] = true
+        insert(libs, sumneko.types())
+
       else
         vim.notify("function `lua-dev.sumneko.types()` is missing")
       end
+
     else
       vim.notify("module `lua-dev.sumneko` is missing")
     end
 
     if ANNOTATIONS and dir_exists(ANNOTATIONS) then
-      libs[ANNOTATIONS .. "/neovim"] = true
-      libs[ANNOTATIONS .. "/luv"] = true
+      insert(libs, ANNOTATIONS .. "/luv")
+      insert(libs, ANNOTATIONS .. "/neovim")
     end
   end
 
-
-  for _, item in ipairs(settings.lib.extra or EMPTY) do
-    for _, elem in ipairs(expand_paths(item)) do
-      libs[elem] = true
-    end
-  end
-
-  return vim.tbl_keys(libs)
+  return dedupe(libs)
 end
 
 ---@param paths local.lsp.filenames
 ---@param dir string
 local function add_lua_path(paths, dir)
-  insert(paths, dir .. '/?.lua')
-  insert(paths, dir .. '/?/init.lua')
+  if dir then
+    insert(paths, dir .. '/?.lua')
+    insert(paths, dir .. '/?/init.lua')
+  end
 end
 
 ---@param settings local.lsp.settings
 ---@param libs table<string, boolean>
 ---@return string[]
 local function lua_path(settings, libs)
-  local path = split(package.path, ';', false)
+  local paths = {}
 
   -- something changed in lua-language-server 2.5.0 with regards to locating
   -- `require`-ed filenames from package.path. These no longer work:
@@ -149,43 +226,56 @@ local function lua_path(settings, libs)
   --   * $PWD/?/init.lua
   --
   -- ...but `?.lua` and `?/init.lua` work, so let's use them instead
-  insert(path, "?.lua")
-  insert(path, "?/init.lua")
+  insert(paths, "?.lua")
+  insert(paths, "?/init.lua")
 
-  for _, lib in ipairs(libs) do
-    -- add $path
-    add_lua_path(path, lib)
-
-    -- add $path/lua
-    if not endswith(lib, '/lua') and fs.dir_exists(lib .. '/lua') then
-      add_lua_path(path, lib .. '/lua')
-    end
-
-    -- add $path/src
-    if not endswith(lib, '/src') and fs.dir_exists(lib .. '/src') then
-      add_lua_path(path, lib .. '/src')
-    end
-
-    -- add $path/lib
-    if not endswith(lib, '/lib') and fs.dir_exists(lib .. '/lib') then
-      add_lua_path(path, lib .. '/lib')
-    end
-  end
-
-  for _, extra in ipairs(settings.path.extra or EMPTY) do
+  for _, extra in ipairs(settings.paths or EMPTY) do
     for _, elem in ipairs(expand_paths(extra)) do
-      add_lua_path(path, elem)
+      add_lua_path(paths, elem)
     end
   end
 
   if settings.include_vim then
-    add_lua_path(path, expand("$VIMRUNTIME/lua"))
+    add_lua_path(paths, expand("$VIMRUNTIME/lua"))
     for _, p in ipairs(runtime_lua_dirs()) do
-      add_lua_path(path, p)
+      add_lua_path(paths, p)
     end
   end
 
-  return path
+  for _, lib in ipairs(libs) do
+    -- add $path
+    add_lua_path(paths, lib)
+
+    -- add $path/lua
+    if not endswith(lib, '/lua') and fs.dir_exists(lib .. '/lua') then
+      add_lua_path(paths, lib .. '/lua')
+    end
+
+    -- add $path/src
+    if not endswith(lib, '/src') and fs.dir_exists(lib .. '/src') then
+      add_lua_path(paths, lib .. '/src')
+    end
+
+    -- add $path/lib
+    if not endswith(lib, '/lib') and fs.dir_exists(lib .. '/lib') then
+      add_lua_path(paths, lib .. '/lib')
+    end
+  end
+
+  ---@diagnostic disable-next-line
+  LUA_PATH:gsub("[^;]+", function(path)
+    path = fs.normalize(path)
+    local dir = path:gsub("%?%.lua$", ""):gsub("%?/init%.lua$", "")
+
+    if path ~= "" and
+       path ~= "/" and
+       dir ~= WORKSPACE
+    then
+      insert(paths, path)
+    end
+  end)
+
+  return dedupe(paths, true)
 end
 
 local settings = load_user_settings()
