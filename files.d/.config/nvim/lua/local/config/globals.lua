@@ -1,7 +1,7 @@
 local globals = {}
 
 --- nvim workspace directory
----@type string|nil
+---@type string
 globals.workspace = nil
 
 do
