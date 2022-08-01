@@ -1,5 +1,6 @@
 local fs = require 'local.fs'
 local mod = require 'local.module'
+local globals = require "local.config.globals"
 
 local expand = vim.fn.expand
 local endswith   = vim.endswith
@@ -18,7 +19,12 @@ local EMPTY = {}
 local USER_SETTINGS = expand("~/.config/lua/lsp.lua", nil, false)
 
 ---@type string
-local ANNOTATIONS = expand("~/git/flrgh/lua-type-annotations", nil, false)
+local ANNOTATIONS = globals.git_user_root .. "/lua-type-annotations"
+
+---@type string
+local SUMNEKO = vim.fn.expand("~/.local/libexec/lua-language-server/meta/3rd", nil, false)
+
+local NVIM_LUA = globals.dotfiles.config_nvim_lua
 
 
 ---@class local.lsp.settings
@@ -48,14 +54,17 @@ local function normalize(p, skip_realpath)
 end
 
 ---@param p string
----@return local.lsp.filenames
+---@return string[]
 local function expand_paths(p)
   p = p:gsub("$TYPES", ANNOTATIONS)
 
   if p:find("$SUMNEKO", nil, true) then
-    p = p:gsub("$SUMNEKO", "~/.local/libexec/lua-language-server/meta/3rd")
+    p = p:gsub("$SUMNEKO", SUMNEKO)
     p = p .. "/library"
   end
+
+  p = p:gsub("$DOTFILES_CONFIG_NVIM_LUA", NVIM_LUA)
+
 
   return expand(p, nil, true)
 end

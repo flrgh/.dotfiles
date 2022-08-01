@@ -1,11 +1,21 @@
+---@class user.globals
 local globals = {}
 
---- nvim workspace directory
----@type string
-globals.workspace = nil
 
-do
+---@param path string
+---@return string expanded
+local function expand(path)
+  local res = vim.fn.expand(path, nil, false)
+  if not res then
+    vim.notify("could not expand path (" .. path .. ")")
+    return path
+  end
+  return res
+end
+
+local function detect_workspace()
   local mod = require "local.module"
+  local fs = require 'local.fs'
   local ws
 
   if mod.exists("lspconfig") then
@@ -14,26 +24,25 @@ do
     ws = util.find_git_ancestor(f)
   end
 
-  local fs = require 'local.fs'
-  if not ws then
-    ws = fs.workspace_root()
-  end
-
-  if not ws then
-    ws = fs.buffer_directory()
-  end
-
-  if ws then
-    vim.fn.setenv("NVIM_WORKSPACE", ws)
-    globals.workspace = ws
-  end
+  return ws
+      or fs.workspace_root()
+      or fs.buffer_directory()
+      or vim.loop.cwd()
+      or vim.fn.getenv("PWD")
 end
 
 
---- LSP debug enabled
+--- nvim workspace directory
+---@type string
+globals.workspace = detect_workspace()
+if globals.workspace then
+  vim.fn.setenv("NVIM_WORKSPACE", globals.workspace)
+end
+
+
+--- LSP debug enabled (based on `NVIM_LSP_DEBUG=1`)
 ---@type boolean
 globals.lsp_debug = false
-
 do
   local env = os.getenv("NVIM_LSP_DEBUG")
   if env and env ~= "0" then
@@ -59,6 +68,8 @@ do
   end
 end
 
+
+--- Debug flag (based on the value of `NVIM_DEBUG=1`)
 ---@type boolean
 globals.debug = false
 do
@@ -67,5 +78,44 @@ do
     globals.debug = true
   end
 end
+
+
+--- My github username
+---@type string
+globals.github_username = "flrgh"
+
+
+--- Path to ~/git
+---@type string
+globals.git_root = expand("~/git")
+
+
+--- Path to ~/git/{{github_username}}
+---@type string
+globals.git_user_root = globals.git_root .. "/" .. globals.github_username
+
+
+do
+  local dotfiles = globals.git_user_root .. "/.dotfiles"
+  local config_nvim = dotfiles .. "/files.d/.config/nvim"
+
+  --- Special locations within my dotfiles repo
+  ---@class user.globals.dotfiles
+  globals.dotfiles = {
+    --- Absolute to my dotfiles repo (~/git/flrgh/.dotfiles)
+    ---@type string
+    root = dotfiles,
+
+    --- Path to ~/.config/nvim _within_ my dotfiles repo
+    ---@type string
+    config_nvim = config_nvim,
+
+    --- Path to ~/.config/nvim/lua _within_ my dotfiles repo
+    ---@type string
+    config_nvim_lua = config_nvim .. "/lua",
+
+  }
+end
+
 
 return globals
