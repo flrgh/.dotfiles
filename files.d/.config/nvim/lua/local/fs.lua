@@ -114,6 +114,7 @@ function _M.workspace_root()
   return dir
 end
 
+local normalize
 do
   local buf = {}
   local i = 0
@@ -172,6 +173,7 @@ do
 
     return path
   end
+  normalize = _M.normalize
 end
 
 
@@ -179,6 +181,12 @@ end
 ---@return string
 function _M.realpath(path)
   return fs_realpath(path) or _M.normalize(path)
+end
+
+---@param path string
+---@return string
+function _M.basename(path)
+  return (normalize(path):gsub(".*/+", ""))
 end
 
 return _M
