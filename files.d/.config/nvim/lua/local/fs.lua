@@ -16,9 +16,22 @@ local fs_fstat = loop.fs_fstat
 local fs_read = loop.fs_read
 local fs_close = loop.fs_close
 local fs_realpath = loop.fs_realpath
+local fs_write = loop.fs_write
+local fs_rename = loop.fs_rename
 local concat = table.concat
 local assert = assert
 local byte = string.byte
+
+local type = type
+local tostring = tostring
+local tonumber = tonumber
+
+
+---@param n integer
+---@return integer
+local function oct_to_dec(n)
+  return tonumber(tostring(n), 8)
+end
 
 
 --- Check if a file exists.
@@ -53,7 +66,7 @@ end
 function _M.read_file(fname)
   local stat, data, fd, err
 
-  fd, err = fs_open(fname, "r", 438)
+  fd, err = fs_open(fname, "r", oct_to_dec(666))
   if not fd then
     return nil, err or "failed opening file"
   end
@@ -75,14 +88,13 @@ end
 
 --- Decode the contents of a json file.
 ---@param  fname   string
----@return any?    json
+---@return table|string|number|boolean|nil json
 ---@return string? error
 function _M.read_json_file(fname)
   local raw, err = _M.read_file(fname)
   if not raw then
     return nil, err
   end
-
 
   return json_decode(raw)
 end
@@ -186,7 +198,74 @@ end
 ---@param path string
 ---@return string
 function _M.basename(path)
-  return (normalize(path):gsub(".*/+", ""))
+  return (normalize(path):gsub("^.*/+", ""))
+end
+
+
+---@param path string
+---@return string
+function _M.dirname(path)
+  return (normalize(path):gsub("/[^/]+$", ""))
+end
+
+
+--- Write data to a file
+---@param path string
+---@param data string|string[]
+---@return integer|nil written
+---@return string|nil error
+function _M.write_file(path, data, mode)
+  mode = mode or oct_to_dec(640)
+
+  local fd, err = fs_open(path, "w+", mode)
+  if not fd then
+    return nil, err
+  end
+
+  local typ = type(data)
+  assert(typ == "string" or typ == "table",
+         "invalid data type, expected a string or table "
+         .. "(got " .. typ .. ")")
+
+  local written = 0
+
+  if typ == "table" then
+    local bytes
+
+    for _, chunk in ipairs(data) do
+      bytes, err = fs_write(fd, chunk)
+
+      if not bytes then
+        written = nil
+        break
+      end
+
+      written = written + bytes
+    end
+
+  else
+    written, err = fs_write(data)
+  end
+
+  local ok, cerr = fs_close(fd)
+
+  if not ok then
+    return nil, cerr
+
+  elseif not written then
+    return nil, err
+  end
+
+  return written
+end
+
+--- Rename a file
+---@param from string
+---@param to string
+---@return boolean|nil success
+---@return string|nil error
+function _M.rename(from, to)
+  return fs_rename(from, to)
 end
 
 return _M

@@ -1,3 +1,8 @@
+if require("local.config.globals").bootstrap then
+  return
+end
+
+
 local fs = require 'local.fs'
 local mod = require 'local.module'
 local globals = require "local.config.globals"

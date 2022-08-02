@@ -1,3 +1,7 @@
+if require("local.config.globals").bootstrap then
+  return
+end
+
 local km = require 'local.keymap'
 
 local nnoremap = km.nnoremap

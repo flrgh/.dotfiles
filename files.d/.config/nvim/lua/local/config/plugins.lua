@@ -1,41 +1,42 @@
-local install_path = vim.fn.stdpath('data')..'/site/pack/packer/start/packer.nvim'
-
-if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-  vim.fn.system({'git', 'clone', 'https://github.com/wbthomason/packer.nvim', install_path})
-  vim.api.nvim_command 'packadd packer.nvim'
-end
-
-local packer = require "packer"
-local util = require "packer.util"
-
----@type nvim.packer.config
-local config = {
-  display = {
-    open_fn = util.float,
-  },
-  profile = {
-    enable = false,
-    threshold = 1,
-  },
-
-  log = {
-  },
-}
-
-
--- TODO: snapshot workflow
---[[
-do
-  local dir = vim.fn.stdpath("config")
-  local fname = "packer-snapshot.json"
-  config.snapshot_path = dir
-  config.snapshot = fname
-end
-]]--
-
 local g = require "local.config.globals"
-if g.debug then
-  config.log.level = "debug"
+
+
+local function build_config()
+  local ps = require "local.tools.plugin-snapshot"
+  local fs = require "local.fs"
+
+  if g.bootstrap then
+    return {
+      snapshot = fs.basename(ps.SNAPSHOT_PATH),
+      snapshot_path = fs.dirname(ps.SNAPSHOT_PATH),
+      display = {
+        non_interactive = true,
+      },
+      autoremove = true,
+    }
+  end
+
+  local util = require "packer.util"
+
+  ---@type nvim.packer.config
+  local config = {
+    display = {
+      open_fn = util.float,
+    },
+    profile = {
+      enable = false,
+      threshold = 1,
+    },
+
+    log = {
+      level = (g.debug and "debug") or nil,
+    },
+
+    snapshot = fs.basename(ps.SNAPSHOT_PATH),
+    snapshot_path = fs.dirname(ps.SNAPSHOT_PATH),
+  }
+
+  return config
 end
 
 ---@type nvim.packer.plugin[]
@@ -422,7 +423,10 @@ local plugins = {
   {
     'folke/which-key.nvim',
     config = function()
-      require("which-key").setup {}
+      local mod = require "local.module"
+      mod.if_exists("which-key", function()
+        require("which-key").setup {}
+      end)
     end,
   },
 
@@ -454,9 +458,9 @@ local plugins = {
     'nvim-lualine/lualine.nvim',
     config = function()
       local mod = require "local.module"
-			mod.if_exists("lualine", function()
-				mod.reload("local.config.plugins.evil_lualine")
-			end)
+      mod.if_exists("lualine", function()
+        mod.reload("local.config.plugins.evil_lualine")
+      end)
     end,
   },
 
@@ -484,7 +488,6 @@ local plugins = {
       end)
     end,
   },
-
 }
 
 for i = 1, #plugins do
@@ -495,5 +498,56 @@ for i = 1, #plugins do
   end
 end
 
+if g.bootstrap then
+  vim.notify("bootstrap packer...")
+  local install_path = vim.fn.stdpath('data')..'/site/pack/packer/start/packer.nvim'
 
-packer.startup({ plugins, config = config })
+  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
+    vim.notify("installing packer...")
+    vim.fn.system({'git', 'clone', 'https://github.com/wbthomason/packer.nvim', install_path})
+
+    vim.notify("packadd packer.nvim...")
+    vim.api.nvim_command('packadd packer.nvim')
+  end
+
+  local conf = build_config()
+  local snapshot = conf.snapshot_path .. "/" .. conf.snapshot
+
+  vim.notify("reading plugin snapshot file...")
+  local fs = require "local.fs"
+  local data = fs.read_json_file(snapshot)
+  if data then
+    for _, plugin in ipairs(plugins) do
+      local name = plugin.as or plugin[1]:match("[^/]+/(.+)")
+      if data[name] and data[name].commit then
+        plugin.commit = data[name].commit
+      end
+    end
+  end
+
+  local packer = require "packer"
+
+  vim.api.nvim_create_autocmd({"User"}, {
+    pattern = { "PackerComplete" },
+    callback = function()
+      vim.notify("...done!")
+      packer.compile()
+    end,
+    group = vim.api.nvim_create_augroup("user-bootstrap", { clear = true }),
+  })
+
+
+  vim.notify("packer.startup()...")
+  packer.startup({ plugins, config = conf })
+
+  vim.notify("packer.install()")
+  packer.install()
+
+  vim.notify("almost done...")
+else
+  require("packer").startup({
+    plugins,
+    config = build_config(),
+  })
+end
+

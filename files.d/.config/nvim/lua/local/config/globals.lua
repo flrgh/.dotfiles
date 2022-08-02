@@ -117,5 +117,8 @@ do
   }
 end
 
+---@type boolean
+globals.bootstrap = (_G.___BOOTSTRAP and true)
+                    or os.getenv("NVIM_BOOTSTRAP") == "1"
 
 return globals

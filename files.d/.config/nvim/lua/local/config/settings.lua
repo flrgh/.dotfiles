@@ -1,3 +1,7 @@
+if require("local.config.globals").bootstrap then
+  return
+end
+
 local g = vim.g
 local opt = vim.opt
 

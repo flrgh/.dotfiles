@@ -1,3 +1,7 @@
+if require("local.config.globals").bootstrap then
+  return
+end
+
 local create_augroup = vim.api.nvim_create_augroup
 local create_autocmd = vim.api.nvim_create_autocmd
 
@@ -73,6 +77,15 @@ do
       callback = function()
         vim.bo.modifiable = false
         vim.bo.modified = false
+      end,
+    },
+
+    {
+      desc = "Update packer snapshot file",
+      event = "User",
+      pattern = "PackerComplete",
+      callback = function()
+        require("local.tools.plugin-snapshot").snapshot()
       end,
     },
   })
