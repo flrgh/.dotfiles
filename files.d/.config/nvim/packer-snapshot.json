@@ -3,10 +3,10 @@
     "commit": "d2d6c11"
   },
   "Comment.nvim": {
-    "commit": "006724e"
+    "commit": "fe9bbdb"
   },
   "LuaSnip": {
-    "commit": "d8cacf8"
+    "commit": "c599c56"
   },
   "barbar.nvim": {
     "commit": "02cee52"
@@ -24,7 +24,7 @@
     "commit": "f7efc20"
   },
   "cmp-cmdline": {
-    "commit": "c36ca4b"
+    "commit": "9c0e331"
   },
   "cmp-emoji": {
     "commit": "19075c3"
@@ -60,13 +60,13 @@
     "commit": "b522628"
   },
   "formatter.nvim": {
-    "commit": "bf7c0e4"
+    "commit": "6e5fbf4"
   },
   "fzf": {
-    "commit": "3a7447d"
+    "commit": "d826f9e"
   },
   "fzf.vim": {
-    "commit": "6a34c90"
+    "commit": "2f3e29f"
   },
   "gruvbox": {
     "commit": "bf2885a"
@@ -90,13 +90,13 @@
     "commit": "57e5b5d"
   },
   "lspsaga.nvim": {
-    "commit": "1bac205"
+    "commit": "584e4da"
   },
   "lua-dev.nvim": {
     "commit": "f5c3193"
   },
   "lualine.nvim": {
-    "commit": "c880c8c"
+    "commit": "e22c7b3"
   },
   "luarefvim": {
     "commit": "acc1181"
@@ -108,7 +108,7 @@
     "commit": "c5a0c39"
   },
   "nerdfont.vim": {
-    "commit": "b7dec1f"
+    "commit": "ee07f3e"
   },
   "nerdtree": {
     "commit": "fc85a6f"
@@ -117,7 +117,7 @@
     "commit": "706371f"
   },
   "nvim-lspconfig": {
-    "commit": "06744ba"
+    "commit": "6e047f1"
   },
   "nvim-luapad": {
     "commit": "9815e26"
@@ -126,7 +126,7 @@
     "commit": "3d6f941"
   },
   "nvim-treesitter": {
-    "commit": "2282461"
+    "commit": "a9a6493"
   },
   "nvim-treesitter-textobjects": {
     "commit": "b8df8b0"
@@ -141,7 +141,7 @@
     "commit": "1fe54f2"
   },
   "packer.nvim": {
-    "commit": "213ed03"
+    "commit": "afab895"
   },
   "php.vim": {
     "commit": "930aec5"
@@ -162,7 +162,7 @@
     "commit": "11dcd67"
   },
   "sonokai": {
-    "commit": "888b68b"
+    "commit": "09800d0"
   },
   "tabular": {
     "commit": "339091a"
@@ -180,7 +180,7 @@
     "commit": "2dffa85"
   },
   "tmux.nvim": {
-    "commit": "3b6a1ee"
+    "commit": "925dc91"
   },
   "tokyonight.nvim": {
     "commit": "8223c97"
