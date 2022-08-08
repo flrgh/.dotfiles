@@ -1,239 +1,317 @@
 {
   "BetterLua.vim": {
-    "commit": "d2d6c11"
+    "commit": "d2d6c11",
+    "updated": "2020-08-14T02:25:32+00:00"
   },
   "Comment.nvim": {
-    "commit": "fe9bbdb"
+    "commit": "fe9bbdb",
+    "updated": "2022-08-07T14:41:43+00:00"
   },
   "LuaSnip": {
-    "commit": "c599c56"
+    "commit": "c599c56",
+    "updated": "2022-08-07T09:12:39+00:00"
   },
   "barbar.nvim": {
-    "commit": "02cee52"
+    "commit": "02cee52",
+    "updated": "2022-08-01T19:11:20+00:00"
   },
   "bats.vim": {
-    "commit": "6a5d2ef"
+    "commit": "6a5d2ef",
+    "updated": "2021-01-10T19:17:22+00:00"
   },
   "challenger-deep": {
-    "commit": "e3d5b7d"
+    "commit": "e3d5b7d",
+    "updated": "2022-04-25T05:18:04+00:00"
   },
   "cmp-buffer": {
-    "commit": "62fc67a"
+    "commit": "62fc67a",
+    "updated": "2022-06-15T18:51:29+00:00"
   },
   "cmp-calc": {
-    "commit": "f7efc20"
+    "commit": "f7efc20",
+    "updated": "2022-04-25T13:02:50+00:00"
   },
   "cmp-cmdline": {
-    "commit": "9c0e331"
+    "commit": "9c0e331",
+    "updated": "2022-08-05T01:07:06+00:00"
   },
   "cmp-emoji": {
-    "commit": "19075c3"
+    "commit": "19075c3",
+    "updated": "2021-09-28T13:10:58+00:00"
   },
   "cmp-nvim-lsp": {
-    "commit": "affe808"
+    "commit": "affe808",
+    "updated": "2022-05-16T12:45:10+00:00"
   },
   "cmp-nvim-lua": {
-    "commit": "d276254"
+    "commit": "d276254",
+    "updated": "2021-10-11T02:28:24+00:00"
   },
   "cmp-path": {
-    "commit": "447c87c"
+    "commit": "447c87c",
+    "updated": "2022-07-26T14:10:13+00:00"
   },
   "cmp-treesitter": {
-    "commit": "c2886bb"
+    "commit": "c2886bb",
+    "updated": "2022-06-09T10:28:54+00:00"
   },
   "cmp_luasnip": {
-    "commit": "a9de941"
+    "commit": "a9de941",
+    "updated": "2022-05-01T19:31:33+00:00"
   },
   "colorbuddy.vim": {
-    "commit": "cdb5b06"
+    "commit": "cdb5b06",
+    "updated": "2022-02-28T02:24:29+00:00"
   },
   "conflict-marker.vim": {
-    "commit": "22b6133"
+    "commit": "22b6133",
+    "updated": "2021-10-18T02:00:46+00:00"
   },
   "direnv.vim": {
-    "commit": "4c858b8"
+    "commit": "4c858b8",
+    "updated": "2022-04-09T05:39:17+00:00"
   },
   "editorconfig.nvim": {
-    "commit": "7645774"
+    "commit": "7378650",
+    "updated": "2022-08-07T13:44:56+00:00"
   },
   "filetype.nvim": {
-    "commit": "b522628"
+    "commit": "b522628",
+    "updated": "2022-06-02T18:30:33+00:00"
   },
   "formatter.nvim": {
-    "commit": "6e5fbf4"
+    "commit": "6e5fbf4",
+    "updated": "2022-08-06T14:56:35+00:00"
   },
   "fzf": {
-    "commit": "d826f9e"
+    "commit": "d826f9e",
+    "updated": "2022-08-07T01:28:45+00:00"
   },
   "fzf.vim": {
-    "commit": "2f3e29f"
+    "commit": "2f3e29f",
+    "updated": "2022-08-03T13:24:13+00:00"
   },
   "gruvbox": {
-    "commit": "bf2885a"
+    "commit": "bf2885a",
+    "updated": "2020-07-03T12:42:06+00:00"
   },
   "gruvbuddy.nvim": {
-    "commit": "52bdae8"
+    "commit": "52bdae8",
+    "updated": "2021-04-15T20:31:40+00:00"
   },
   "hover.nvim": {
-    "commit": "5018f91"
+    "commit": "5018f91",
+    "updated": "2022-07-28T21:08:28+00:00"
   },
   "impatient.nvim": {
-    "commit": "4ccbe74"
+    "commit": "4ccbe74",
+    "updated": "2022-08-01T10:46:38+00:00"
   },
   "indent-blankline.nvim": {
-    "commit": "c15bbe9"
+    "commit": "c15bbe9",
+    "updated": "2022-07-27T07:51:20+00:00"
   },
   "jq.vim": {
-    "commit": "6e056fa"
+    "commit": "6e056fa",
+    "updated": "2019-05-21T08:14:55+00:00"
   },
   "lspkind-nvim": {
-    "commit": "57e5b5d"
+    "commit": "57e5b5d",
+    "updated": "2022-04-18T16:11:11+00:00"
   },
   "lspsaga.nvim": {
-    "commit": "584e4da"
+    "commit": "584e4da",
+    "updated": "2022-08-07T02:02:48+00:00"
   },
   "lua-dev.nvim": {
-    "commit": "f5c3193"
+    "commit": "f5c3193",
+    "updated": "2022-05-12T16:22:21+00:00"
   },
   "lualine.nvim": {
-    "commit": "e22c7b3"
+    "commit": "03bcf01",
+    "updated": "2022-08-08T15:52:28+00:00"
   },
   "luarefvim": {
-    "commit": "acc1181"
+    "commit": "acc1181",
+    "updated": "2017-01-20T14:35:58+00:00"
   },
   "molokai": {
-    "commit": "c67bdfc"
+    "commit": "c67bdfc",
+    "updated": "2015-11-11T12:17:45+00:00"
   },
   "neogen": {
-    "commit": "c5a0c39"
+    "commit": "c5a0c39",
+    "updated": "2022-06-15T17:13:07+00:00"
   },
   "nerdfont.vim": {
-    "commit": "ee07f3e"
+    "commit": "ee07f3e",
+    "updated": "2022-08-02T12:56:35+00:00"
   },
   "nerdtree": {
-    "commit": "fc85a6f"
+    "commit": "fc85a6f",
+    "updated": "2022-06-13T10:10:46+00:00"
   },
   "nvim-cmp": {
-    "commit": "706371f"
+    "commit": "706371f",
+    "updated": "2022-07-25T03:47:47+00:00"
   },
   "nvim-lspconfig": {
-    "commit": "6e047f1"
+    "commit": "6e047f1",
+    "updated": "2022-08-06T12:37:29+00:00"
   },
   "nvim-luapad": {
-    "commit": "9815e26"
+    "commit": "9815e26",
+    "updated": "2022-07-09T14:08:07+00:00"
   },
   "nvim-markdown-preview": {
-    "commit": "3d6f941"
+    "commit": "3d6f941",
+    "updated": "2022-05-21T09:13:17+00:00"
   },
   "nvim-treesitter": {
-    "commit": "a9a6493"
+    "commit": "a9a6493",
+    "updated": "2022-08-06T08:51:53+00:00"
   },
   "nvim-treesitter-textobjects": {
-    "commit": "b8df8b0"
+    "commit": "b8df8b0",
+    "updated": "2022-07-31T00:01:39+00:00"
   },
   "nvim-web-devicons": {
-    "commit": "2d02a56"
+    "commit": "2d02a56",
+    "updated": "2022-07-05T11:48:04+00:00"
   },
   "oceanic-next": {
-    "commit": "5ef31a3"
+    "commit": "5ef31a3",
+    "updated": "2021-02-05T13:55:25+00:00"
   },
   "onedark.vim": {
-    "commit": "1fe54f2"
+    "commit": "1fe54f2",
+    "updated": "2022-07-18T07:26:45+00:00"
   },
   "packer.nvim": {
-    "commit": "afab895"
+    "commit": "afab895",
+    "updated": "2022-08-02T09:44:28+00:00"
   },
   "php.vim": {
-    "commit": "930aec5"
+    "commit": "930aec5",
+    "updated": "2020-05-28T17:33:15+00:00"
   },
   "playground": {
-    "commit": "ce7e4b7"
+    "commit": "ce7e4b7",
+    "updated": "2022-06-22T16:16:42+00:00"
   },
   "plenary.nvim": {
     "commit": "31807ee"
   },
   "popup.nvim": {
-    "commit": "b7404d3"
+    "commit": "b7404d3",
+    "updated": "2021-11-18T16:48:11+00:00"
   },
   "roku.vim": {
-    "commit": "c53dbc7"
+    "commit": "c53dbc7",
+    "updated": "2021-08-31T19:22:40+00:00"
   },
   "rust-tools.nvim": {
-    "commit": "11dcd67"
+    "commit": "11dcd67",
+    "updated": "2022-05-18T07:41:59+00:00"
   },
   "sonokai": {
-    "commit": "09800d0"
+    "commit": "09800d0",
+    "updated": "2022-08-07T13:31:47+00:00"
   },
   "tabular": {
-    "commit": "339091a"
+    "commit": "339091a",
+    "updated": "2019-02-19T17:42:08+00:00"
   },
   "tagbar": {
-    "commit": "0243b19"
+    "commit": "0243b19",
+    "updated": "2022-06-09T14:03:47+00:00"
   },
   "telescope-fzf-native.nvim": {
-    "commit": "6a33ece"
+    "commit": "6a33ece",
+    "updated": "2022-06-09T13:26:14+00:00"
   },
   "telescope-symbols.nvim": {
-    "commit": "f7d7c84"
+    "commit": "f7d7c84",
+    "updated": "2022-04-17T14:09:31+00:00"
   },
   "telescope.nvim": {
-    "commit": "2dffa85"
+    "commit": "2dffa85",
+    "updated": "2022-08-01T16:13:06+00:00"
   },
   "tmux.nvim": {
-    "commit": "925dc91"
+    "commit": "925dc91",
+    "updated": "2022-08-02T04:47:32+00:00"
   },
   "tokyonight.nvim": {
-    "commit": "8223c97"
+    "commit": "8223c97",
+    "updated": "2021-12-31T08:43:19+00:00"
   },
   "vim-bbye": {
-    "commit": "25ef93a"
+    "commit": "25ef93a",
+    "updated": "2018-03-03T12:01:01+00:00"
   },
   "vim-cool": {
-    "commit": "0ad6a21"
+    "commit": "0ad6a21",
+    "updated": "2022-03-30T19:16:14+00:00"
   },
   "vim-easy-align": {
-    "commit": "12dd631"
+    "commit": "12dd631",
+    "updated": "2019-04-25T18:22:32+00:00"
   },
   "vim-etlua": {
-    "commit": "bb2974d"
+    "commit": "bb2974d",
+    "updated": "2018-08-24T06:07:30+00:00"
   },
   "vim-fugitive": {
-    "commit": "66a921b"
+    "commit": "66a921b",
+    "updated": "2022-07-28T12:46:14+00:00"
   },
   "vim-gitgutter": {
-    "commit": "ded1194"
+    "commit": "ded1194",
+    "updated": "2022-05-24T08:24:40+00:00"
   },
   "vim-go": {
-    "commit": "f3ebf20e"
+    "commit": "f3ebf20e",
+    "updated": "2021-04-18T22:09:39+00:00"
   },
   "vim-janah": {
-    "commit": "3b8ae97"
+    "commit": "3b8ae97",
+    "updated": "2018-09-16T21:37:33+00:00"
   },
   "vim-markdown": {
-    "commit": "3a96439"
+    "commit": "3a96439",
+    "updated": "2022-05-07T11:25:06+00:00"
   },
   "vim-rhubarb": {
-    "commit": "cad60fe"
+    "commit": "cad60fe",
+    "updated": "2022-07-27T13:16:40+00:00"
   },
   "vim-rsi": {
-    "commit": "4c673fb"
+    "commit": "4c673fb",
+    "updated": "2022-07-12T17:16:32+00:00"
   },
   "vim-shfmt": {
-    "commit": "1f0e723"
+    "commit": "1f0e723",
+    "updated": "2020-04-20T16:01:01+00:00"
   },
   "vim-surround": {
-    "commit": "bf3480d"
+    "commit": "bf3480d",
+    "updated": "2022-04-22T23:25:12+00:00"
   },
   "vim-teal": {
-    "commit": "d2aa107"
+    "commit": "d2aa107",
+    "updated": "2021-01-05T14:04:05+00:00"
   },
   "vim-terraform": {
-    "commit": "f0b17ac"
+    "commit": "f0b17ac",
+    "updated": "2021-07-10T18:08:06+00:00"
   },
   "vim-trailing-whitespace": {
-    "commit": "05f068e"
+    "commit": "05f068e",
+    "updated": "2020-11-18T19:32:39+00:00"
   },
   "which-key.nvim": {
-    "commit": "bd4411a"
+    "commit": "bd4411a",
+    "updated": "2022-05-04T08:11:17+00:00"
   }
 }

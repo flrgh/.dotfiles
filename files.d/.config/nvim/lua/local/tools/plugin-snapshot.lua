@@ -1,5 +1,6 @@
 local globals = require "local.config.globals"
 local fs = require "local.fs"
+local Job = require "plenary.job"
 
 local FNAME = globals.dotfiles.config_nvim .. "/packer-snapshot.json"
 local BACKUP = FNAME .. ".bak"
@@ -16,7 +17,71 @@ local uv = vim.loop
 local unlink = uv.fs_unlink
 local fmt = string.format
 local file_exists = fs.file_exists
+local dir_exists = fs.dir_exists
 local rename = fs.rename
+local decode = vim.json.decode
+local encode = vim.json.encode
+
+local PACKER_PATH = vim.fn.stdpath('data').."/site/pack/packer"
+
+
+---@param plugin string
+local function get_git_timestamp(plugin)
+end
+
+---@param name string
+---@return string|nil
+local function plugin_dir(name)
+  local dir = PACKER_PATH .. "/start/" .. name
+  if dir_exists(dir) then return dir end
+
+  dir = PACKER_PATH .. "/opt/" .. name
+  if dir_exists(dir) then return dir end
+end
+
+---@param contents string
+---@return string
+local function set_updated(contents)
+  local json = decode(contents)
+  local jobs = {}
+
+  for name, spec in pairs(json) do
+    local dir = plugin_dir(name)
+
+    local job
+    if dir then
+      job = Job:new({
+        command = "git",
+        args = {
+          "-C", dir,
+          "log",
+          "-n", "1",
+          "--pretty=format:%ad",
+          "--date=iso-strict-local",
+        },
+        env = {
+          TZ = "UTC",
+        },
+        on_exit = function(self, code)
+          if code == 0 then
+            spec.updated = self:result()[1]
+          else
+            spec.updated = "unknown"
+          end
+        end,
+      })
+    end
+
+    if job then
+      job:start()
+      table.insert(jobs, job)
+    end
+  end
+
+  Job.join(unpack(jobs))
+
+  return encode(json)
+end
 
 --- packer plugin snapshot utils
 local _M = {
@@ -29,6 +94,7 @@ local _M = {
 
 local function format_file()
   local contents = assert(fs.read_file(FNAME))
+  contents = set_updated(contents)
 
   local stdin = uv.new_pipe()
   local stdout = uv.new_pipe()
