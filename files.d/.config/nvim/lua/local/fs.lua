@@ -55,7 +55,7 @@ end
 ---@return boolean exists
 function _M.exists(path)
   local st = fs_stat(path)
-  return st and st.type
+  return st and st.type and true or false
 end
 
 
@@ -227,36 +227,19 @@ function _M.write_file(path, data, mode)
          "invalid data type, expected a string or table "
          .. "(got " .. typ .. ")")
 
-  local written = 0
-
-  if typ == "table" then
-    local bytes
-
-    for _, chunk in ipairs(data) do
-      bytes, err = fs_write(fd, chunk)
-
-      if not bytes then
-        written = nil
-        break
-      end
-
-      written = written + bytes
-    end
-
-  else
-    written, err = fs_write(data)
-  end
+  local bytes
+  bytes, err = fs_write(fd, data)
 
   local ok, cerr = fs_close(fd)
 
   if not ok then
     return nil, cerr
 
-  elseif not written then
+  elseif not bytes then
     return nil, err
   end
 
-  return written
+  return bytes
 end
 
 --- Rename a file
