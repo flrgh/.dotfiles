@@ -97,7 +97,7 @@ clean_symlinks() {
 # $HOME itself (no recurse)
 fd "${ARGS[@]}" \
     --max-depth 1 \
-    --search-path "$HOME" \
+    --search-path "$INSTALL_PATH" \
 | clean_symlinks
 
 # $HOME sub-paths (with recurse)
