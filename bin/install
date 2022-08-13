@@ -47,7 +47,7 @@ def symlink(target, link, isdir=False):
 
 
 def files_d(path):
-    dirname = Path(REPO_ROOT / 'files.d')
+    dirname = Path(REPO_ROOT / 'home')
     for filename in list_tree(dirname):
         link = path  / filename.relative_to(dirname)
         symlink(filename, link)

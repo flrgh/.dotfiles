@@ -97,7 +97,7 @@ globals.git_user_root = globals.git_root .. "/" .. globals.github_username
 
 do
   local dotfiles = globals.git_user_root .. "/.dotfiles"
-  local config_nvim = dotfiles .. "/files.d/.config/nvim"
+  local config_nvim = dotfiles .. "/home/.config/nvim"
 
   --- Special locations within my dotfiles repo
   ---@class user.globals.dotfiles

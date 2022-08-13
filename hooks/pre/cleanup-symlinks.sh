@@ -4,7 +4,7 @@
 
 readonly REPO_ROOT=${1:-$HOME/git/flrgh/.dotfiles}
 readonly INSTALL_PATH=${2:-$HOME}
-readonly FILES_D=${REPO_ROOT}/files.d
+readonly FILES_D=${REPO_ROOT}/home
 
 if [[ -L "$INSTALL_PATH/.bash" ]]; then
     echo "removing legacy ~/.bash path"
@@ -18,6 +18,16 @@ fi
 
 shopt -s dotglob
 shopt -s nullglob
+
+ARGS=(
+    .
+    --type symlink
+    --hidden
+    --absolute-path
+    --one-file-system
+    --full-path
+    --min-depth 1
+)
 
 PATHS=()
 
@@ -60,32 +70,37 @@ readonly IGNORE=(
     systemtap/tapset/linux
 )
 
-EXCLUDE=()
 for p in "${IGNORE[@]}"; do
-    EXCLUDE+=(--exclude "**/$p/")
+    ARGS+=(--exclude "**/$p/")
 done
 
-fd . \
-    --type symlink \
-    --hidden \
-    --absolute-path \
-    --min-depth 1 \
-    --one-file-system \
-    --full-path \
-    "${EXCLUDE[@]}" \
-    "${PATHS[@]}" \
-| while read -r link; do
 
-    target=$(readlink "$link")
+clean_symlinks() {
+    while read -r link; do
 
-    if [[ $target = "$FILES_D"/* ]] || [[ $target = *dotfiles* ]]; then
+        target=$(readlink "$link")
 
-        if [[ ! -e $target ]]; then
-            printf "Danging symlink %q => %q\n" \
-                "$link" \
-                "$target"
+        if [[ $target = "$FILES_D"/* ]] || [[ $target = *dotfiles* ]]; then
 
-            rm -v "$link"
+            if [[ ! -e $target ]]; then
+                printf "Danging symlink %q => %q\n" \
+                    "$link" \
+                    "$target"
+
+                rm -v "$link"
+            fi
         fi
-    fi
-done
+    done
+}
+
+
+# $HOME itself (no recurse)
+fd "${ARGS[@]}" \
+    --max-depth 1 \
+    --search-path "$HOME" \
+| clean_symlinks
+
+# $HOME sub-paths (with recurse)
+fd "${ARGS[@]}" \
+    "${PATHS[@]}" \
+| clean_symlinks
