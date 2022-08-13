@@ -75,21 +75,43 @@ for p in "${IGNORE[@]}"; do
 done
 
 
+remove_dangling() {
+    local -r link="$1"
+
+    if [[ ! -L "$link" ]]; then
+        printf "weird, %q does not exist or is not a symlink" \
+            "$link"
+        return
+    fi
+
+    local target
+
+    target=$(readlink \
+        --canonicalize-missing \
+        --no-newline \
+        "$link"
+    )
+
+    if [[ -z "${target:-}" ]]; then
+        printf "weird, readlink returned an empty string for %q" "$link"
+        return
+    fi
+
+    if [[ $target = "$FILES_D"/* ]] || [[ $target = *dotfiles* ]]; then
+
+        if [[ ! -e $target ]]; then
+            printf "Danging symlink %q => %q\n" \
+                "$link" \
+                "$target"
+
+            rm -v "$link"
+        fi
+    fi
+}
+
 clean_symlinks() {
     while read -r link; do
-
-        target=$(readlink "$link")
-
-        if [[ $target = "$FILES_D"/* ]] || [[ $target = *dotfiles* ]]; then
-
-            if [[ ! -e $target ]]; then
-                printf "Danging symlink %q => %q\n" \
-                    "$link" \
-                    "$target"
-
-                rm -v "$link"
-            fi
-        fi
+        remove_dangling "$link"
     done
 }
 
