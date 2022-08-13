@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+COUNT=0
+INTERVAL=${INTERVAL:-3}
+FAILED=0
+MAX=${MAX:-100}
+
+while true; do
+    COUNT=$(( COUNT + 1 ))
+
+    clear
+    echo "Try #$COUNT"
+    echo
+
+    if "$@"; then
+        echo
+        echo "Success!"
+
+    else
+        echo
+        echo "Failure!"
+        FAILED=1
+        break
+    fi
+
+    if (( COUNT >= MAX )); then
+        break
+    fi
+
+    sleep "$INTERVAL"
+done
+
+if (( FAILED == 1 )); then
+    echo "Command failed after $FAILED attempts"
+else
+    echo "Command did not fail within $COUNT tries"
+fi
