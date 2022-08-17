@@ -59,8 +59,6 @@ local plugins = {
   -- adds some common readline key bindings to insert and command mode
   'tpope/vim-rsi',
 
-  'airblade/vim-gitgutter',
-
   -- hilight trailing whitespace
   'bronson/vim-trailing-whitespace',
 
@@ -92,10 +90,25 @@ local plugins = {
     ft = { 'bats' },
   },
 
-  -- fantastic git integration
+
+  -- git[hub] integration
+
   'tpope/vim-fugitive',
   'tpope/vim-rhubarb',
   'rhysd/conflict-marker.vim',
+  {
+    'lewis6991/gitsigns.nvim',
+    config = function()
+      require("local.module").if_exists("gitsigns", function(gs)
+        gs.setup({
+          signcolumn         = false,
+          numhl              = true,
+          word_diff          = false,
+          current_line_blame = true,
+        })
+      end)
+    end,
+  },
 
   --" Color
   'tomasr/molokai',
