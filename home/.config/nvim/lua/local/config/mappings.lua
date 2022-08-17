@@ -9,6 +9,7 @@ local map      = km.map
 local noremap  = km.noremap
 local vmap     = km.vmap
 local vnoremap = km.vnoremap
+local nmap     = km.nmap
 
 -- split nav
 nnoremap.ctrl.J = '<C-W><C-J>'
@@ -71,3 +72,6 @@ vnoremap.K = { ":move '<-2<CR>gv=gv", no_auto_cr = true }
 
 -- Leader + rn => rename
 nnoremap.leader.rn = vim.lsp.buf.rename
+
+-- disable macro
+nmap.q = '<nop>'
