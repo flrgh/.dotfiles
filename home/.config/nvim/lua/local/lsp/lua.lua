@@ -27,7 +27,7 @@ local USER_SETTINGS = expand("~/.config/lua/lsp.lua", nil, false)
 local ANNOTATIONS = globals.git_user_root .. "/lua-type-annotations"
 
 ---@type string
-local SUMNEKO = vim.fn.expand("~/.local/libexec/lua-language-server/meta/3rd", nil, false)
+local SUMNEKO = expand("~/.local/libexec/lua-language-server/meta/3rd", nil, false)
 
 local NVIM_LUA = globals.dotfiles.config_nvim_lua
 
@@ -112,7 +112,7 @@ end
 
 ---@param a table
 ---@param b table
----@return table
+---@return table|nil
 local function imerge(a, b)
   if not b then return end
   local seen = {}
@@ -174,6 +174,10 @@ local function load_user_settings()
     end
   end
 
+  if base == ".dotfiles" or base == "dotfiles" then
+    settings.include_vim = true
+  end
+
   return settings
 end
 
@@ -214,7 +218,7 @@ local function lua_libs(settings)
   return dedupe(libs)
 end
 
----@param paths local.lsp.filenames
+---@param paths string[]
 ---@param dir string
 local function add_lua_path(paths, dir)
   if dir then
@@ -843,9 +847,4 @@ local conf = {
   }
 }
 
-if settings.include_vim then
-  mod.if_exists("lua-dev", function(luadev)
-    conf = luadev.setup({ lspconfig = conf })
-  end)
-end
 return conf
