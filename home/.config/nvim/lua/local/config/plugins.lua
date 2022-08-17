@@ -34,6 +34,7 @@ local function build_config()
 
     snapshot = fs.basename(ps.SNAPSHOT_PATH),
     snapshot_path = fs.dirname(ps.SNAPSHOT_PATH),
+    autoremove = true,
   }
 
   return config
