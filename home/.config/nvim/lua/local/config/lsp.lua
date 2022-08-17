@@ -41,6 +41,21 @@ elseif mod.exists("lspsaga") then
   maps.hover = require("lspsaga.hover").render_hover_doc
 end
 
+do
+  local enabled = true
+  maps.toggle_diagnostics = function()
+    if enabled then
+      vim.notify("disabling diagnostics")
+      vim.diagnostic.disable()
+      enabled = false
+    else
+      vim.notify("enabling diagnostics")
+      vim.diagnostic.enable()
+      enabled = true
+    end
+  end
+end
+
 ---@param buf    number
 local function on_attach(_, buf)
   -- set up key bindings
@@ -53,6 +68,7 @@ local function on_attach(_, buf)
     km.buf.nnoremap.gD = maps.declaration
     km.buf.nnoremap.gd = maps.definition
     km.buf.nnoremap.K  = maps.hover
+    km.buf.nnoremap.leader.td = maps.toggle_diagnostics
   end
 
   vim.api.nvim_buf_set_option(buf, 'tagfunc', 'v:lua.vim.lsp.tagfunc')
