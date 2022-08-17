@@ -9,7 +9,14 @@ if not mod.exists('lspconfig') then
   return
 end
 
+local lspconfig = require 'lspconfig'
+
 local extend = vim.tbl_deep_extend
+local vim = vim
+local api = vim.api
+local lsp = vim.lsp
+local is_list = vim.tbl_islist
+
 
 vim.lsp.handlers["textDocument/definition"] = function(_, result)
   if not result or vim.tbl_isempty(result) then
@@ -17,69 +24,75 @@ vim.lsp.handlers["textDocument/definition"] = function(_, result)
     return
   end
 
-  if vim.tbl_islist(result) then
-    vim.lsp.util.jump_to_location(result[1], "utf-8")
+  if is_list(result) then
+    lsp.util.jump_to_location(result[1], "utf-8")
   else
-    vim.lsp.util.jump_to_location(result, "utf-8")
+    lsp.util.jump_to_location(result, "utf-8")
   end
 end
 
 
-local lspconfig = require 'lspconfig'
-
----@type table<string, function>
-local maps = {
-    declaration = vim.lsp.buf.declaration,
-    definition = vim.lsp.buf.definition,
-    hover = vim.lsp.buf.hover,
-}
-
-if mod.exists("hover") then
-  maps.hover = require("hover").hover
-
-elseif mod.exists("lspsaga") then
-  maps.hover = require("lspsaga.hover").render_hover_doc
-end
-
+local on_attach
 do
-  local enabled = true
-  maps.toggle_diagnostics = function()
-    if enabled then
-      vim.notify("disabling diagnostics")
-      vim.diagnostic.disable()
-      enabled = false
-    else
-      vim.notify("enabling diagnostics")
-      vim.diagnostic.enable()
-      enabled = true
+  ---@type table<string, function>
+  local maps = {
+      declaration = lsp.buf.declaration,
+      definition = lsp.buf.definition,
+      hover = lsp.buf.hover,
+  }
+
+  if mod.exists("hover") then
+    maps.hover = require("hover").hover
+
+  elseif mod.exists("lspsaga") then
+    maps.hover = require("lspsaga.hover").render_hover_doc
+  end
+
+  do
+    local enabled = true
+    maps.toggle_diagnostics = function()
+      if enabled then
+        vim.notify("disabling diagnostics")
+        vim.diagnostic.disable()
+        enabled = false
+      else
+        vim.notify("enabling diagnostics")
+        vim.diagnostic.enable()
+        enabled = true
+      end
     end
   end
-end
 
----@param buf    number
-local function on_attach(_, buf)
-  -- set up key bindings
-  do
-    local km = require('local.keymap')
+  ---@param buf    number
+  function on_attach(_, buf)
+    -- set up key bindings
+    do
+      local km = require('local.keymap')
 
-    -- superceded by vim.lsp.tagfunc
-    --km.nnoremap.ctrl[']'] = km.lsp.definition
+      -- superceded by vim.lsp.tagfunc
+      --km.nnoremap.ctrl[']'] = km.lsp.definition
 
-    km.buf.nnoremap.gD = maps.declaration
-    km.buf.nnoremap.gd = maps.definition
-    km.buf.nnoremap.K  = maps.hover
-    km.buf.nnoremap.leader.td = maps.toggle_diagnostics
+      km.buf.nnoremap.gD = maps.declaration
+      km.buf.nnoremap.gd = maps.definition
+      km.buf.nnoremap.K  = maps.hover
+      km.buf.nnoremap.leader.td = maps.toggle_diagnostics
+    end
+
+    api.nvim_buf_set_option(buf, 'tagfunc', 'v:lua.vim.lsp.tagfunc')
+    api.nvim_buf_set_option(buf, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
   end
-
-  vim.api.nvim_buf_set_option(buf, 'tagfunc', 'v:lua.vim.lsp.tagfunc')
-  vim.api.nvim_buf_set_option(buf, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 end
 
-local caps = vim.lsp.protocol.make_client_capabilities()
 
-mod.if_exists('cmp_nvim_lsp', function(cmp_nvim_lsp)
-  caps = cmp_nvim_lsp.update_capabilities(caps)
-end)
+local caps
+do
+  caps = lsp.protocol.make_client_capabilities()
+
+  mod.if_exists('cmp_nvim_lsp', function(cmp_nvim_lsp)
+    caps = cmp_nvim_lsp.update_capabilities(caps)
+  end)
+end
+
 
 local servers = {
   awk          = "awk_ls",
