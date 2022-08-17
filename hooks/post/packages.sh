@@ -57,7 +57,6 @@ PACKAGES=(
     m4                # Kong
     man-db
     mkpasswd
-    mlocate
     mycli             # nicer MySQL CLI
     net-tools         # netstat
     ninja-build
@@ -72,6 +71,7 @@ PACKAGES=(
     pcre2
     perl-FindBin      # kong-build-tools
     pgcli             # nicer Postgres CLI
+    plocate
     pre-commit        # fancy git pre-commit framework
     psutils
     python3
