@@ -77,7 +77,14 @@ local plugins = {
   'lukas-reineke/indent-blankline.nvim',
 
   -- useful for targetting surrounding quotes/parens/etc
-  'tpope/vim-surround',
+  {
+    "kylechui/nvim-surround",
+    config = function()
+      require("local.module").if_exists("nvim-surround", function(ns)
+        ns.setup()
+      end)
+    end,
+  },
 
   -- running shfmt commands on the buffer
   {

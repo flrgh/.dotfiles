@@ -170,6 +170,10 @@
     "commit": "3d6f941",
     "updated": "2022-05-21T09:13:17+00:00"
   },
+  "nvim-surround": {
+    "commit": "01e1731",
+    "updated": "2022-08-29T01:26:45+00:00"
+  },
   "nvim-treesitter": {
     "commit": "826c951",
     "updated": "2022-08-16T18:50:46+00:00"
@@ -297,10 +301,6 @@
   "vim-shfmt": {
     "commit": "1f0e723",
     "updated": "2020-04-20T16:01:01+00:00"
-  },
-  "vim-surround": {
-    "commit": "bf3480d",
-    "updated": "2022-04-22T23:25:12+00:00"
   },
   "vim-teal": {
     "commit": "d2aa107",
