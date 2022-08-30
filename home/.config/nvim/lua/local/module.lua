@@ -33,7 +33,9 @@ function _M.if_exists(name, cb)
     return mod
   end
 
-  if not mod:find(name .. '.*not found') then
+  if mod:find(name, nil, true) and mod:find('not found', nil, true) then
+    return
+  else
     error("Failed loading module (" .. name .. "): " .. mod)
   end
 end
