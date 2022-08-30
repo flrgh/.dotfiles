@@ -25,9 +25,6 @@ local encode = vim.json.encode
 local PACKER_PATH = vim.fn.stdpath('data').."/site/pack/packer"
 
 
----@param plugin string
-local function get_git_timestamp(plugin)
-end
 
 ---@param name string
 ---@return string|nil
