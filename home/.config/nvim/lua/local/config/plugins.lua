@@ -361,6 +361,7 @@ local plugins = {
       'hrsh7th/cmp-path',
       'hrsh7th/cmp-cmdline',
       'ray-x/cmp-treesitter',
+      'hrsh7th/cmp-nvim-lsp-signature-help',
 
       'onsails/lspkind-nvim',
 
