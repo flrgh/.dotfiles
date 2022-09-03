@@ -27,6 +27,10 @@ end
 
 local mt = {
   __newindex = function(self, key, v)
+    if v == nil then
+      return
+    end
+
     if self.set_key then
       key = self.set_key(key)
     end
@@ -39,6 +43,7 @@ local mt = {
       v[1] = nil
       opts = v
     end
+
 
     opts = opts or {}
 

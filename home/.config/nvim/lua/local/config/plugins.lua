@@ -373,8 +373,29 @@ local plugins = {
     end,
   },
 
-  'glepnir/lspsaga.nvim',
+  {
+    "glepnir/lspsaga.nvim",
+    branch = "main",
+    config = function()
+      require("local.module").if_exists("lspsaga", function(saga)
+        saga.init_lsp_saga({
+          symbol_in_winbar = {
+            enable = false, -- I only work on nvim 0.8
+          },
+        })
+      end)
+    end,
+  },
 
+  -- {
+  --   "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
+  --   disable = true,
+  --   config = function()
+  --     require("local.module").if_exists("lsp_lines", function()
+  --       require("lsp_lines").setup()
+  --     end)
+  --   end,
+  -- },
   {
     "lewis6991/hover.nvim",
     config = function()

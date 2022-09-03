@@ -37,15 +37,28 @@ do
   ---@type table<string, function>
   local maps = {
       declaration = lsp.buf.declaration,
-      definition = lsp.buf.definition,
-      hover = lsp.buf.hover,
+      definition  = lsp.buf.definition,
+      hover       = lsp.buf.hover,
+      code_action = lsp.buf.code_action,
+      show_diagnostic  = vim.diagnostic.open_float,
   }
 
-  if mod.exists("hover") then
-    maps.hover = require("hover").hover
+  if mod.exists("lspsaga") then
+    local saga = require "lspsaga"
+    local cmd = function(s)
+      return ("<cmd>Lspsaga %s<CR>"):format(s)
+    end
 
-  elseif mod.exists("lspsaga") then
-    maps.hover = require("lspsaga.hover").render_hover_doc
+    maps.hover = cmd("hover_doc")
+    maps.code_action = cmd("code_action")
+    maps.range_code_action = cmd("range_code_action")
+    maps.show_diagnostic = cmd("show_line_diagnostics")
+    maps.next_diagnostic = cmd("diagnostic_jump_next")
+    maps.prev_diagnostic = cmd("diagnostic_jump_prev")
+
+
+  elseif mod.exists("hover") then
+    maps.hover = require("hover").hover
   end
 
   do
@@ -76,7 +89,16 @@ do
       km.buf.nnoremap.gd = maps.definition
       km.buf.nnoremap.K  = maps.hover
       km.buf.nnoremap.leader.td = maps.toggle_diagnostics
+      km.buf.nnoremap.leader.sd = maps.show_diagnostic
+      km.buf.nnoremap.leader.nd = maps.next_diagnostic
+      km.buf.nnoremap.leader.pd = maps.prev_diagnostic
+      km.buf.nnoremap.leader.ca = maps.code_action
+      km.buf.vnoremap.leader.ca = maps.range_code_action
     end
+
+    vim.diagnostic.config({
+      virtual_text = false,
+    })
 
     api.nvim_buf_set_option(buf, 'tagfunc', 'v:lua.vim.lsp.tagfunc')
     api.nvim_buf_set_option(buf, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
