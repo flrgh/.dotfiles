@@ -382,10 +382,18 @@ local plugins = {
           symbol_in_winbar = {
             enable = false, -- I only work on nvim 0.8
           },
+          code_action_lightbulb  = {
+            -- this causes some visual defects, so it's disabled
+            --
+            -- the sign is also displayed in the gutter, so the virtual
+            -- text is redundant anyways
+            virtual_text = false,
+          },
         })
       end)
     end,
   },
+
 
   -- {
   --   "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
@@ -540,6 +548,7 @@ for i = 1, #plugins do
     plugins[i] = plugin
   end
 end
+
 
 if g.bootstrap then
   vim.notify("bootstrap packer...")
