@@ -47,6 +47,22 @@ local function mapping()
   }
 end
 
+
+---@param entry cmp.Entry
+---@param ctx cmp.Context
+---@return boolean
+local function entry_filter(entry, ctx)
+  -- 1. filter out rust snippets
+  if entry.completion_item.kind == 15 and -- snippet
+    entry.source.name == "nvim_lsp" and
+    ctx.filetype == "rust"
+  then
+    return false
+  end
+
+  return true
+end
+
 local function sources()
   local get_cwd
   do
@@ -58,17 +74,20 @@ local function sources()
 
   local src = {
     { name = 'nvim_lua' },
-    { name = 'nvim_lsp' },
+    { name = 'nvim_lsp',
+    },
     { name = 'nvim_lsp_signature_help' },
     { name = 'treesitter' },
     { name = 'buffer' },
     { name = 'path', option = { get_cwd = get_cwd } },
     { name = 'cmdline' },
-    { name = 'plugins' },
     { name = 'calc' },
     { name = 'emoji' },
-    { name = 'luasnip' },
   }
+
+  for i = 1, #src do
+    src[i].entry_filter = entry_filter
+  end
 
   return cmp.config.sources(src)
 end
