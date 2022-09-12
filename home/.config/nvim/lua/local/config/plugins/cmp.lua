@@ -144,6 +144,10 @@ local function view()
   }
 end
 
+local function sorting()
+  return require("cmp.config.default")().sorting
+end
+
 
 ---@param extend? cmp.ConfigSchema|fun(cfg: cmp.ConfigSchema):cmp.ConfigSchema
 ---@return cmp.ConfigSchema
@@ -156,6 +160,7 @@ local function defaults(extend)
     formatting   = formatting(),
     experimental = experimental(),
     window       = window(),
+    sorting      = sorting(),
   }
 
   local typ = type(extend)
