@@ -44,7 +44,6 @@ do
   }
 
   if mod.exists("lspsaga") then
-    local saga = require "lspsaga"
     local cmd = function(s)
       return ("<cmd>Lspsaga %s<CR>"):format(s)
     end
