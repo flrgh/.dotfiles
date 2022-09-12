@@ -2,7 +2,6 @@ if require("local.config.globals").bootstrap then
   return
 end
 
-
 local fs = require 'local.fs'
 local mod = require 'local.module'
 local globals = require "local.config.globals"
@@ -13,6 +12,7 @@ local insert = table.insert
 local runtime_paths = vim.api.nvim_list_runtime_paths
 local dir_exists = fs.dir_exists
 local find = string.find
+local runtime_file = vim.api.nvim_get_runtime_file
 
 local WORKSPACE = fs.normalize(require("local.config.globals").workspace)
 
@@ -30,6 +30,32 @@ local ANNOTATIONS = globals.git_user_root .. "/lua-type-annotations"
 local SUMNEKO = expand("~/.local/libexec/lua-language-server/meta/3rd", nil, false)
 
 local NVIM_LUA = globals.dotfiles.config_nvim_lua
+
+local get_plugin_dir
+do
+  local cache = {}
+  ---@param name string
+  ---@return string|nil
+  function get_plugin_dir(name)
+    local dir = cache[name]
+    if dir then return dir end
+
+    local len = name:len()
+    for _, p in ipairs(runtime_file("", true)) do
+      if p:sub(-len) == name then
+        cache[name] = p
+        return p
+      end
+    end
+  end
+end
+
+local function get_plugin_lua_dir(name)
+  local dir = get_plugin_dir(name)
+  if dir then
+    return dir .. "/lua"
+  end
+end
 
 
 ---@class local.lsp.settings
@@ -181,6 +207,11 @@ local function load_user_settings()
   return settings
 end
 
+local plugin_libs = {
+  "nvim-cmp",
+  "packer.nvim",
+}
+
 ---@param settings local.lsp.settings
 local function lua_libs(settings)
   local libs = {}
@@ -212,6 +243,13 @@ local function lua_libs(settings)
     if ANNOTATIONS and dir_exists(ANNOTATIONS) then
       insert(libs, ANNOTATIONS .. "/luv")
       insert(libs, ANNOTATIONS .. "/neovim")
+    end
+
+    for _, name in ipairs(plugin_libs) do
+      local lib = get_plugin_lua_dir(name)
+      if lib then
+        insert(libs, lib)
+      end
     end
   end
 
