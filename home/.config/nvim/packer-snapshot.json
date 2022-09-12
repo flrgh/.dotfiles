@@ -4,16 +4,16 @@
     "updated": "2020-08-14T02:25:32+00:00"
   },
   "Comment.nvim": {
-    "commit": "80e7746",
-    "updated": "2022-08-27T06:17:13+00:00"
+    "commit": "30d23aa",
+    "updated": "2022-09-04T12:22:57+00:00"
   },
   "LuaSnip": {
-    "commit": "1843932",
-    "updated": "2022-08-30T13:39:59+00:00"
+    "commit": "6e506ce",
+    "updated": "2022-09-08T20:45:29+00:00"
   },
   "barbar.nvim": {
-    "commit": "8c6a2e6",
-    "updated": "2022-08-10T07:54:04+00:00"
+    "commit": "c41ad6e",
+    "updated": "2022-09-01T16:57:36+00:00"
   },
   "bats.vim": {
     "commit": "6a5d2ef",
@@ -88,16 +88,16 @@
     "updated": "2022-08-26T14:08:48+00:00"
   },
   "fzf": {
-    "commit": "54d42e3",
-    "updated": "2022-08-30T04:28:01+00:00"
+    "commit": "b9e6e79",
+    "updated": "2022-09-10T02:38:41+00:00"
   },
   "fzf.vim": {
-    "commit": "c491d70",
-    "updated": "2022-08-09T04:47:17+00:00"
+    "commit": "f64c5b7",
+    "updated": "2022-09-10T02:27:56+00:00"
   },
   "gitsigns.nvim": {
-    "commit": "1e107c9",
-    "updated": "2022-08-22T09:33:16+00:00"
+    "commit": "d7e0bcb",
+    "updated": "2022-09-01T11:14:45+00:00"
   },
   "gruvbox": {
     "commit": "bf2885a",
@@ -108,16 +108,16 @@
     "updated": "2021-04-15T20:31:40+00:00"
   },
   "hover.nvim": {
-    "commit": "58d54fc",
-    "updated": "2022-08-08T17:04:54+00:00"
+    "commit": "1b22dc8",
+    "updated": "2022-09-05T18:42:14+00:00"
   },
   "impatient.nvim": {
     "commit": "b842e16",
     "updated": "2022-08-19T20:34:08+00:00"
   },
   "indent-blankline.nvim": {
-    "commit": "c15bbe9",
-    "updated": "2022-07-27T07:51:20+00:00"
+    "commit": "db7cbcb",
+    "updated": "2022-09-02T07:46:16+00:00"
   },
   "jq.vim": {
     "commit": "6e056fa",
@@ -128,16 +128,16 @@
     "updated": "2022-04-18T16:11:11+00:00"
   },
   "lspsaga.nvim": {
-    "commit": "0635ed5",
-    "updated": "2022-08-30T10:26:18+00:00"
+    "commit": "13a9eaa",
+    "updated": "2022-09-10T13:18:00+00:00"
   },
   "lua-dev.nvim": {
-    "commit": "f5c3193",
-    "updated": "2022-05-12T16:22:21+00:00"
+    "commit": "67e2c87",
+    "updated": "2022-09-10T00:24:40+00:00"
   },
   "lualine.nvim": {
-    "commit": "3cf4540",
-    "updated": "2022-08-22T05:13:35+00:00"
+    "commit": "5d133a1",
+    "updated": "2022-09-10T09:39:38+00:00"
   },
   "luarefvim": {
     "commit": "acc1181",
@@ -160,12 +160,12 @@
     "updated": "2022-06-13T10:10:46+00:00"
   },
   "nvim-cmp": {
-    "commit": "058100d",
-    "updated": "2022-08-23T06:21:32+00:00"
+    "commit": "913eb85",
+    "updated": "2022-09-08T03:48:27+00:00"
   },
   "nvim-lspconfig": {
-    "commit": "df17834",
-    "updated": "2022-08-30T13:49:38+00:00"
+    "commit": "8e65dbb",
+    "updated": "2022-09-09T12:06:57+00:00"
   },
   "nvim-luapad": {
     "commit": "9815e26",
@@ -176,16 +176,16 @@
     "updated": "2022-05-21T09:13:17+00:00"
   },
   "nvim-surround": {
-    "commit": "01e1731",
-    "updated": "2022-08-29T01:26:45+00:00"
+    "commit": "d91787d",
+    "updated": "2022-09-04T22:44:21+00:00"
   },
   "nvim-treesitter": {
-    "commit": "11e88f6",
-    "updated": "2022-08-17T09:09:14+00:00"
+    "commit": "f53a5a6",
+    "updated": "2022-08-26T22:44:14+00:00"
   },
   "nvim-treesitter-textobjects": {
-    "commit": "761e283",
-    "updated": "2022-08-27T07:34:09+00:00"
+    "commit": "e63c2ff",
+    "updated": "2022-09-03T15:49:56+00:00"
   },
   "nvim-web-devicons": {
     "commit": "2d02a56",
@@ -200,36 +200,36 @@
     "updated": "2022-07-18T07:26:45+00:00"
   },
   "packer.nvim": {
-    "commit": "3a9f980",
-    "updated": "2022-08-22T15:03:55+00:00"
+    "commit": "6afb674",
+    "updated": "2022-09-10T09:13:35+00:00"
   },
   "php.vim": {
     "commit": "930aec5",
     "updated": "2020-05-28T17:33:15+00:00"
   },
   "playground": {
-    "commit": "90d2b3e",
-    "updated": "2022-08-28T09:05:53+00:00"
+    "commit": "bcfab84",
+    "updated": "2022-09-03T10:07:07+00:00"
   },
   "plenary.nvim": {
-    "commit": "a3dafaa",
-    "updated": "2022-08-26T11:54:28+00:00"
+    "commit": "4b66054",
+    "updated": "2022-09-03T09:21:04+00:00"
   },
   "popup.nvim": {
     "commit": "b7404d3",
     "updated": "2021-11-18T16:48:11+00:00"
   },
   "roku.vim": {
-    "commit": "c53dbc7",
-    "updated": "2021-08-31T19:22:40+00:00"
+    "commit": "ea513e9",
+    "updated": "2022-09-08T15:54:22+00:00"
   },
   "rust-tools.nvim": {
-    "commit": "b696e6d",
-    "updated": "2022-08-18T04:51:45+00:00"
+    "commit": "86a2b4e",
+    "updated": "2022-09-02T21:35:44+00:00"
   },
   "sonokai": {
-    "commit": "17b5a8e",
-    "updated": "2022-08-28T11:39:55+00:00"
+    "commit": "7b0ad56",
+    "updated": "2022-09-09T13:50:04+00:00"
   },
   "tabular": {
     "commit": "339091a",
@@ -240,23 +240,24 @@
     "updated": "2022-08-09T13:51:45+00:00"
   },
   "telescope-fzf-native.nvim": {
-    "commit": "6791f74",
-    "updated": "2022-08-10T19:56:45+00:00"
+    "commit": "65c0ee3",
+    "updated": "2022-09-06T05:39:20+00:00"
   },
   "telescope-symbols.nvim": {
-    "commit": "f7d7c84"
+    "commit": "f7d7c84",
+    "updated": "2022-04-17T14:09:31+00:00"
   },
   "telescope.nvim": {
-    "commit": "8dce937",
-    "updated": "2022-08-26T12:04:23+00:00"
+    "commit": "0b1c41a",
+    "updated": "2022-09-04T19:55:54+00:00"
   },
   "tmux.nvim": {
-    "commit": "925dc91",
-    "updated": "2022-08-02T04:47:32+00:00"
+    "commit": "f3af091",
+    "updated": "2022-09-06T12:47:01+00:00"
   },
   "tokyonight.nvim": {
-    "commit": "8223c97",
-    "updated": "2021-12-31T08:43:19+00:00"
+    "commit": "ffa7768",
+    "updated": "2022-09-10T20:18:47+00:00"
   },
   "vim-bbye": {
     "commit": "25ef93a",
@@ -267,16 +268,15 @@
     "updated": "2022-03-30T19:16:14+00:00"
   },
   "vim-easy-align": {
-    "commit": "12dd631",
-    "updated": "2019-04-25T18:22:32+00:00"
+    "commit": "12dd631"
   },
   "vim-etlua": {
     "commit": "bb2974d",
     "updated": "2018-08-24T06:07:30+00:00"
   },
   "vim-fugitive": {
-    "commit": "b411b75",
-    "updated": "2022-08-17T13:21:45+00:00"
+    "commit": "dd8107c",
+    "updated": "2022-09-04T09:37:27+00:00"
   },
   "vim-go": {
     "commit": "f3ebf20e",
@@ -315,7 +315,7 @@
     "updated": "2020-11-18T19:32:39+00:00"
   },
   "which-key.nvim": {
-    "commit": "bd4411a",
-    "updated": "2022-05-04T08:11:17+00:00"
+    "commit": "439637d",
+    "updated": "2022-09-06T18:37:36+00:00"
   }
 }

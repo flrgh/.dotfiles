@@ -1,6 +1,7 @@
 local g = require "local.config.globals"
 
 
+---@return nvim.packer.config
 local function build_config()
   local ps = require "local.tools.plugin-snapshot"
   local fs = require "local.fs"
@@ -32,9 +33,9 @@ local function build_config()
       level = (g.debug and "debug") or nil,
     },
 
-    snapshot = fs.basename(ps.SNAPSHOT_PATH),
-    snapshot_path = fs.dirname(ps.SNAPSHOT_PATH),
-    autoremove = true,
+    --snapshot = fs.basename(ps.SNAPSHOT_PATH),
+    --snapshot_path = fs.dirname(ps.SNAPSHOT_PATH),
+    --autoremove = true,
   }
 
   return config

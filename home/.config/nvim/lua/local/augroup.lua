@@ -85,6 +85,7 @@ do
       event = "User",
       pattern = "PackerComplete",
       callback = function()
+        if true then return end
         require("local.tools.plugin-snapshot").snapshot()
       end,
     },
