@@ -181,12 +181,6 @@ function _M.setup()
   -- Don't show the dumb matching stuff.
   vim.opt.shortmess:append "c"
 
-  if mod.exists("cmp-plugins") then
-    require("cmp-plugins").setup {
-      files = { "plugins.lua" },
-    }
-  end
-
   cmp.setup(defaults())
 
   cmp.setup.cmdline(':', {
