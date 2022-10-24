@@ -26,6 +26,7 @@ require('nvim-treesitter.configs').setup {
     "markdown",
     "php",
     "python",
+    "query", -- parser for treesitter queries
     "regex",
     "rust",
     "rst",
@@ -37,16 +38,19 @@ require('nvim-treesitter.configs').setup {
   ignore_install = {
     "swift",
   },
+  auto_install = true,
   highlight = {
     enable = true,
   },
   incremental_selection = {
     enable = true,
     keymaps = {
-      init_selection = "gnn",
-      node_incremental = "grn",
-      scope_incremental = "grc",
-      node_decremental = "grm",
+      init_selection = "ss",
+
+      node_incremental = "+",
+      node_decremental = "-",
+
+      scope_incremental = "++",
     },
   },
   indent = {
