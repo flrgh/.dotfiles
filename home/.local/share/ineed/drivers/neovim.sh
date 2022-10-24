@@ -11,7 +11,8 @@ is-installed() {
 
 get-installed-version() {
     if is-installed; then
-        "$NAME" --version | head -1 | awk '{print $2}'
+        "$NAME" --version \
+            | sed -n -r -e 's/^NVIM v?([0-9.]+).*/\1/p'
     fi
 }
 
