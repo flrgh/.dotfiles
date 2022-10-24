@@ -60,6 +60,7 @@ local function entry_filter(entry, ctx)
     return false
   end
 
+
   return true
 end
 
@@ -74,13 +75,11 @@ local function sources()
 
   local src = {
     { name = 'nvim_lua' },
-    { name = 'nvim_lsp',
-    },
+    { name = 'nvim_lsp' },
     { name = 'nvim_lsp_signature_help' },
     { name = 'treesitter' },
     { name = 'buffer' },
     { name = 'path', option = { get_cwd = get_cwd } },
-    { name = 'cmdline' },
     { name = 'calc' },
     { name = 'emoji' },
   }
