@@ -131,8 +131,12 @@ local function merge(t, extra)
 end
 
 local function append(a, b)
-  for _, v in ipairs(b) do
-    insert(a, v)
+  if type(b) == "table" then
+    for _, v in ipairs(b) do
+      insert(a, v)
+    end
+  else
+    insert(a, b)
   end
 end
 
@@ -210,6 +214,7 @@ end
 local plugin_libs = {
   "nvim-cmp",
   "packer.nvim",
+  "neodev.nvim",
 }
 
 ---@param settings local.lsp.settings
@@ -226,18 +231,22 @@ local function lua_libs(settings)
   end
 
   if settings.include_vim then
-    if mod.exists("lua-dev.sumneko") then
-      local sumneko = require "lua-dev.sumneko"
+    if mod.exists("neodev.sumneko") then
+      local sumneko = require "neodev.sumneko"
 
-      if type(sumneko.types) == "function" then
-        insert(libs, sumneko.types())
+      if type(sumneko.library) == "function" then
+        append(libs, sumneko.library({
+          library = {
+            types = true,
+          }
+        }))
 
       else
-        vim.notify("function `lua-dev.sumneko.types()` is missing")
+        vim.notify("function `neodev.sumneko.library()` is missing")
       end
 
     else
-      vim.notify("module `lua-dev.sumneko` is missing")
+      vim.notify("module `neodev.sumneko` is missing")
     end
 
     if ANNOTATIONS and dir_exists(ANNOTATIONS) then

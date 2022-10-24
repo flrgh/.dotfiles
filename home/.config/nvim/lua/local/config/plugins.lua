@@ -215,7 +215,7 @@ local plugins = {
   -- lua manual in vimdoc
   'wsdjeg/luarefvim',
   -- lua neovim support
-  'folke/lua-dev.nvim',
+  'folke/neodev.nvim',
   -- etlua template syntax support
   {
     'VaiN474/vim-etlua',
