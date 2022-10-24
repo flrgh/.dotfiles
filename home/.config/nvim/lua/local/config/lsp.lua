@@ -110,7 +110,7 @@ do
   caps = lsp.protocol.make_client_capabilities()
 
   mod.if_exists('cmp_nvim_lsp', function(cmp_nvim_lsp)
-    caps = cmp_nvim_lsp.update_capabilities(caps)
+    caps = cmp_nvim_lsp.default_capabilities(caps)
   end)
 end
 
