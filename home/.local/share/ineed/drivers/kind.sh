@@ -16,7 +16,7 @@ get-installed-version() {
 }
 
 get-latest-version() {
-    gh-helper get-latest-release-name "$REPO" | tr -d 'v'
+    gh-helper get-latest-release-tag "$REPO" | tr -d 'v'
 }
 
 list-available-versions() {
@@ -24,7 +24,7 @@ list-available-versions() {
 }
 
 get-asset-download-url() {
-    local -r version=$1
+    local -r version=v${1}
     gh-helper get-tag "$REPO" "$version" \
     | jq -r \
         '.assets[]
