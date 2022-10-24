@@ -61,6 +61,9 @@ local plugins = {
   -- adds some common readline key bindings to insert and command mode
   'tpope/vim-rsi',
 
+  -- auto-insert function/block delimiters
+  'tpope/vim-endwise',
+
   -- hilight trailing whitespace
   'bronson/vim-trailing-whitespace',
 
@@ -148,6 +151,8 @@ local plugins = {
     end,
   },
   'folke/tokyonight.nvim',
+  'lunarvim/darkplus.nvim',
+  'folke/noice.nvim',
 
   -- Buffer management
   'moll/vim-bbye',
