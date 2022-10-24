@@ -26,7 +26,8 @@ get-latest-version() {
 
 get-installed-version() {
     if is-installed; then
-        "$NAME" --version | awk '{print $4}' | tr -d '()'
+        "$NAME" --version \
+        | sed -r -n -e 's/rust-analyzer ([0-9.]+).*/\1/p'
     fi
 }
 
