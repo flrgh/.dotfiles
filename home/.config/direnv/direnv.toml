@@ -8,7 +8,8 @@ disable_stdin = true
 
 [whitelist]
 exact = [
-    "/home/michaelm/.envrc"
+    "/home/michaelm/.envrc",
+    "/home/michaelm/git/.envrc"
 ]
 
 prefix = [
