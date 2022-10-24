@@ -36,6 +36,7 @@ PACKAGES=(
     gzip
     htop
     httpie
+    hub               # github CLI
     iftop
     inotify-tools
     iotop
