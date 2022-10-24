@@ -38,3 +38,6 @@ addPath "__update_history" "PROMPT_COMMAND" ";"
 
 # append to the history file, don't overwrite it
 shopt -s histappend
+
+# turn off history expansion with !
+set +H
