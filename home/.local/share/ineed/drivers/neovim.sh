@@ -17,7 +17,12 @@ get-installed-version() {
 }
 
 get-latest-version() {
-    gh-helper get-latest-release-tag "$REPO"
+    gh-helper get-releases "$REPO" \
+    | jq -r '.[].tag_name' \
+    | grep -vE 'stable|nightly' \
+    | sort -r \
+    | head -1 \
+    | sed -r -e 's/#v//'
 }
 
 get-asset-download-url() {
