@@ -445,7 +445,10 @@ local conf = {
         --- }
         --- ```
         ---@type table<string, runtime.special.variable>
-        special = nil,
+        special = {
+          ["local.module.reload"] = "require",
+          ["local.module.if_exists"] = "require",
+        },
 
       },
 
