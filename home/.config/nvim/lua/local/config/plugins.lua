@@ -41,7 +41,7 @@ local function build_config()
   return config
 end
 
----@type nvim.packer.plugin[]
+---@type (nvim.packer.plugin|string)[]
 local plugins = {
   'wbthomason/packer.nvim',
 
@@ -368,6 +368,7 @@ local plugins = {
       'hrsh7th/cmp-cmdline',
       'ray-x/cmp-treesitter',
       'hrsh7th/cmp-nvim-lsp-signature-help',
+      'hrsh7th/cmp-copilot',
 
       'onsails/lspkind-nvim',
 
@@ -545,6 +546,9 @@ local plugins = {
       end)
     end,
   },
+
+  -- weeeee
+  "github/copilot.vim",
 }
 
 for i = 1, #plugins do

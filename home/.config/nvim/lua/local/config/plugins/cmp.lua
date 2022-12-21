@@ -82,6 +82,7 @@ local function sources()
     { name = 'path', option = { get_cwd = get_cwd } },
     { name = 'calc' },
     { name = 'emoji' },
+    { name = 'copilot' },
   }
 
   for i = 1, #src do
