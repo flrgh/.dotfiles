@@ -11,7 +11,8 @@ is-installed() {
 
 get-installed-version() {
     if is-installed; then
-        "$NAME" --version
+        "$NAME" --version \
+        | sed -r -e 's/-dev//'
     fi
 }
 
