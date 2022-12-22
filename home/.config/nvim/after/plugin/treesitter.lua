@@ -33,6 +33,7 @@ require('nvim-treesitter.configs').setup {
     "teal",
     "toml",
     "typescript",
+    "vim",
     "yaml",
   },
   ignore_install = {
