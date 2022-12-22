@@ -5,7 +5,6 @@ local conf = {
   colorscheme = { "onedark", "tokyonight" },
 }
 
----@type (nvim.packer.plugin|string)[]
 local plugins = {
   "folke/lazy.nvim",
 
