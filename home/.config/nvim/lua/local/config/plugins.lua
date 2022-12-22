@@ -1,59 +1,13 @@
 local g = require "local.config.globals"
 
-
----@return nvim.packer.config
-local function build_config()
-  local ps = require "local.tools.plugin-snapshot"
-  local fs = require "local.fs"
-
-  if g.bootstrap then
-    return {
-      snapshot = fs.basename(ps.SNAPSHOT_PATH),
-      snapshot_path = fs.dirname(ps.SNAPSHOT_PATH),
-      display = {
-        non_interactive = true,
-      },
-      autoremove = true,
-    }
-  end
-
-  local util = require "packer.util"
-
-  ---@type nvim.packer.config
-  local config = {
-    display = {
-      open_fn = util.float,
-    },
-    profile = {
-      enable = false,
-      threshold = 1,
-    },
-
-    log = {
-      level = (g.debug and "debug") or nil,
-    },
-
-    --snapshot = fs.basename(ps.SNAPSHOT_PATH),
-    --snapshot_path = fs.dirname(ps.SNAPSHOT_PATH),
-    --autoremove = true,
-  }
-
-  return config
-end
+local conf = {
+  lockfile = g.dotfiles.config_nvim .. "/plugins.lock.json",
+  colorscheme = { "onedark", "tokyonight" },
+}
 
 ---@type (nvim.packer.plugin|string)[]
 local plugins = {
-  'wbthomason/packer.nvim',
-
-  -- file browser
-  {
-    'preservim/nerdtree',
-    config = function()
-      local km = require('local.keymap')
-      km.nnoremap.leader.ff = { ':NERDTreeToggle', silent = true }
-      vim.cmd [[let NERDTreeShowHidden=1]]
-    end,
-  },
+  "folke/lazy.nvim",
 
   'lewis6991/impatient.nvim',
   'nathom/filetype.nvim',
@@ -127,7 +81,7 @@ local plugins = {
   'morhetz/gruvbox',
   {
     'challenger-deep-theme/vim',
-    as = 'challenger-deep',
+    name = 'challenger-deep',
   },
   'mhinz/vim-janah',
   'mhartington/oceanic-next',
@@ -258,7 +212,7 @@ local plugins = {
     config = function()
       vim.cmd [[let g:nvim_markdown_preview_theme = 'github']]
     end,
-    run = {
+    build = {
       os.getenv('HOME') .. '/.local/libexec/install/tools/install-pandoc',
       'npm install -g live-server'
     },
@@ -270,7 +224,7 @@ local plugins = {
     'fatih/vim-go',
     ft = { 'go' },
     tag = 'v1.25',
-    run = ':GoUpdateBinaries',
+    build = ':GoUpdateBinaries',
     config = function()
       vim.cmd [[
         " run :GoBuild or :GoTestCompile based on the go file
@@ -312,7 +266,7 @@ local plugins = {
   -- FZF
   {
     'junegunn/fzf.vim',
-    requires = 'junegunn/fzf',
+    dependencies = 'junegunn/fzf',
     config = function()
       local km = require('local.keymap')
       -- fuzzy-find git-files
@@ -335,7 +289,7 @@ local plugins = {
 
   {
     'nvim-lua/popup.nvim',
-    requires = {
+    dependencies = {
       'nvim-lua/plenary.nvim',
     },
   },
@@ -344,7 +298,7 @@ local plugins = {
   'neovim/nvim-lspconfig',
   {
     'nvim-treesitter/nvim-treesitter',
-    run = ':TSUpdate',
+    build = ':TSUpdate',
   },
   'nvim-treesitter/nvim-treesitter-textobjects',
   'nvim-treesitter/playground',
@@ -358,7 +312,7 @@ local plugins = {
 
   {
     'hrsh7th/nvim-cmp',
-    requires = {
+    dependencies = {
       'hrsh7th/cmp-buffer',
       'hrsh7th/cmp-calc',
       'hrsh7th/cmp-emoji',
@@ -453,7 +407,7 @@ local plugins = {
 
   {
     'nvim-telescope/telescope.nvim',
-    requires = { 'nvim-lua/plenary.nvim' },
+    dependencies = { 'nvim-lua/plenary.nvim' },
     branch = "0.1.x",
     config = function()
       require("local.config.plugins.telescope").setup()
@@ -462,8 +416,8 @@ local plugins = {
 
   {
     'nvim-telescope/telescope-fzf-native.nvim',
-    run = 'make',
-    requires = {
+    build = 'make',
+    dependencies = {
       'nvim-telescope/telescope.nvim',
     },
     config = function()
@@ -473,7 +427,7 @@ local plugins = {
 
   {
     'nvim-telescope/telescope-symbols.nvim',
-    requires = {
+    dependencies = {
       'nvim-telescope/telescope.nvim',
     },
   },
@@ -525,7 +479,7 @@ local plugins = {
   -- lang: rust
   {
     "simrat39/rust-tools.nvim",
-    run = {
+    build = {
       "rustup component add clippy-preview",
     },
     config = function()
@@ -560,56 +514,19 @@ for i = 1, #plugins do
 end
 
 
-if g.bootstrap then
-  vim.notify("bootstrap packer...")
-  local install_path = vim.fn.stdpath('data')..'/site/pack/packer/start/packer.nvim'
-
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("installing packer...")
-    vim.fn.system({'git', 'clone', 'https://github.com/wbthomason/packer.nvim', install_path})
-
-    vim.notify("packadd packer.nvim...")
-    vim.api.nvim_command('packadd packer.nvim')
+do
+  local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+  if not vim.loop.fs_stat(lazypath) then
+   vim.fn.system({
+     "git",
+     "clone",
+     "--filter=blob:none",
+     "--single-branch",
+     "https://github.com/folke/lazy.nvim.git",
+     lazypath,
+   })
   end
-
-  local conf = build_config()
-  local snapshot = conf.snapshot_path .. "/" .. conf.snapshot
-
-  vim.notify("reading plugin snapshot file...")
-  local fs = require "local.fs"
-  local data = fs.read_json_file(snapshot)
-  if data then
-    for _, plugin in ipairs(plugins) do
-      local name = plugin.as or plugin[1]:match("[^/]+/(.+)")
-      if data[name] and data[name].commit then
-        plugin.commit = data[name].commit
-      end
-    end
-  end
-
-  local packer = require "packer"
-
-  vim.api.nvim_create_autocmd({"User"}, {
-    pattern = { "PackerComplete" },
-    callback = function()
-      vim.notify("...done!")
-      packer.compile()
-    end,
-    group = vim.api.nvim_create_augroup("user-bootstrap", { clear = true }),
-  })
-
-
-  vim.notify("packer.startup()...")
-  packer.startup({ plugins, config = conf })
-
-  vim.notify("packer.install()")
-  packer.install()
-
-  vim.notify("almost done...")
-else
-  require("packer").startup({
-    plugins,
-    config = build_config(),
-  })
+  vim.opt.runtimepath:prepend(lazypath)
 end
 
+require("lazy").setup(plugins, conf)

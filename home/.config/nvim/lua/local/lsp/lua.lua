@@ -213,8 +213,8 @@ end
 
 local plugin_libs = {
   "nvim-cmp",
-  "packer.nvim",
   "neodev.nvim",
+  "lazy.nvim",
 }
 
 ---@param settings local.lsp.settings

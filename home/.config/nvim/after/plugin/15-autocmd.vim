@@ -20,10 +20,4 @@ augroup vimrc-make-cmake
   autocmd BufNewFile,BufRead CMakeLists.txt setlocal filetype=cmake
 augroup END
 
-" run packer whenver plugins file is changed
-augroup vimrc-packer
-  autocmd!
-  autocmd BufWritePost plugins.lua source <afile> | PackerCompile
-augroup END
-
 set autoread

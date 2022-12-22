@@ -20,7 +20,7 @@ local fmt = string.format
 ---@field events   string[]
 ---@field pattern  string
 ---@field buffer   number
----@field callback fun(event:vim.autocmd.event):boolean
+---@field callback fun(event:vim.autocmd.event):boolean?
 ---@field command  string
 ---@field once     boolean
 ---@field nested   boolean
@@ -77,16 +77,6 @@ do
       callback = function()
         vim.bo.modifiable = false
         vim.bo.modified = false
-      end,
-    },
-
-    {
-      desc = "Update packer snapshot file",
-      event = "User",
-      pattern = "PackerComplete",
-      callback = function()
-        if true then return end
-        require("local.tools.plugin-snapshot").snapshot()
       end,
     },
   })
