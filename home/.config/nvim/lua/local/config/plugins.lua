@@ -18,7 +18,7 @@ local plugins = {
   'tpope/vim-endwise',
 
   -- hilight trailing whitespace
-  'bronson/vim-trailing-whitespace',
+  'ntpeters/vim-better-whitespace',
 
   -- load tags in side pane
   {
