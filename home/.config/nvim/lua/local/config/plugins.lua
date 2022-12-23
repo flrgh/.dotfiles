@@ -19,7 +19,13 @@ local plugins = {
   'tpope/vim-endwise',
 
   -- hilight trailing whitespace
-  'ntpeters/vim-better-whitespace',
+  {
+    'ntpeters/vim-better-whitespace',
+    config = function()
+      vim.cmd "EnableWhitespace"
+      vim.cmd "DisableStripWhitespaceOnSave"
+    end,
+  },
 
   -- load tags in side pane
   {
@@ -85,7 +91,6 @@ local plugins = {
   },
   'folke/tokyonight.nvim',
   'lunarvim/darkplus.nvim',
-  'folke/noice.nvim',
 
   -- Buffer management
   'moll/vim-bbye',
@@ -147,15 +152,22 @@ local plugins = {
     'euclidianAce/BetterLua.vim',
     config = function()
       vim.cmd [[let g:lua_inspect_events = '']]
-    end
+    end,
+    ft = { "lua" },
   },
-  'rafcamlet/nvim-luapad',
 
   -- lua manual in vimdoc
-  'wsdjeg/luarefvim',
+  {
+    'wsdjeg/luarefvim',
+    ft = { "lua" },
+  },
 
   -- lua neovim support
-  { 'folke/neodev.nvim' },
+  {
+    'folke/neodev.nvim',
+    ft = { "lua" },
+    lazy = true,
+  },
 
   -- etlua template syntax support
   {
@@ -166,7 +178,10 @@ local plugins = {
   },
 
   -- lang: teal
-  'teal-language/vim-teal',
+  {
+    'teal-language/vim-teal',
+    ft = { "teal" },
+  },
 
   -- lang: markdown
   {
@@ -441,6 +456,7 @@ local plugins = {
         enabled = true
       }
     end,
+    ft = { "lua" },
   },
 
   {
@@ -474,6 +490,7 @@ local plugins = {
         })
       end)
     end,
+    ft = { "rust", "rs" },
   },
 
   -- weeeee
