@@ -10,5 +10,3 @@ reload 'local.config.settings'
 reload 'local.config.plugins'
 reload 'local.config.mappings'
 reload 'local.config.commands'
-
-require 'local.config.lsp'

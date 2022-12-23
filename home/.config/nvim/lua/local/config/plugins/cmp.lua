@@ -96,7 +96,7 @@ local function snippet()
   if mod.exists("luasnip") then
     return {
       expand = function(opts)
-        require('luasnip').lsp_expand(opts.body)
+        require("luasnip").lsp_expand(opts.body)
       end,
     }
   end

@@ -2,9 +2,10 @@ local g = require "local.config.globals"
 
 local conf = {
   lockfile = g.dotfiles.config_nvim .. "/plugins.lock.json",
-  colorscheme = { "onedark", "tokyonight" },
+  colorscheme = { "sonokai", "tokyonight" },
 }
 
+---@type LazySpec[]
 local plugins = {
   "folke/lazy.nvim",
 
@@ -37,9 +38,7 @@ local plugins = {
   {
     "kylechui/nvim-surround",
     config = function()
-      require("local.module").if_exists("nvim-surround", function(ns)
-        ns.setup()
-      end)
+      require("nvim-surround").setup()
     end,
   },
 
@@ -64,42 +63,23 @@ local plugins = {
   {
     'lewis6991/gitsigns.nvim',
     config = function()
-      require("local.module").if_exists("gitsigns", function(gs)
-        gs.setup({
-          signcolumn         = false,
-          numhl              = true,
-          word_diff          = false,
-          current_line_blame = true,
-        })
-      end)
+      require("gitsigns").setup({
+        signcolumn         = false,
+        numhl              = true,
+        word_diff          = false,
+        current_line_blame = true,
+      })
     end,
   },
 
-  --" Color
-  'tomasr/molokai',
-  'morhetz/gruvbox',
-  {
-    'challenger-deep-theme/vim',
-    name = 'challenger-deep',
-  },
-  'mhinz/vim-janah',
-  'mhartington/oceanic-next',
-  {
-    'joshdick/onedark.vim',
-    branch = 'main',
-    config = function()
-      vim.cmd "colorscheme onedark"
-    end,
-  },
-  'tjdevries/colorbuddy.vim',
-  'tjdevries/gruvbuddy.nvim',
+  -- Color
   {
     'sainnhe/sonokai',
     config = function()
       vim.cmd [[
         let no_buffers_menu=1
-        let g:sonokai_style = 'maia'
-        "colorscheme sonokai
+        let g:sonokai_style = 'atlantis'
+        colorscheme sonokai
       ]]
     end,
   },
@@ -170,10 +150,13 @@ local plugins = {
     end
   },
   'rafcamlet/nvim-luapad',
+
   -- lua manual in vimdoc
   'wsdjeg/luarefvim',
+
   -- lua neovim support
-  'folke/neodev.nvim',
+  { 'folke/neodev.nvim' },
+
   -- etlua template syntax support
   {
     'VaiN474/vim-etlua',
@@ -211,10 +194,10 @@ local plugins = {
     config = function()
       vim.cmd [[let g:nvim_markdown_preview_theme = 'github']]
     end,
-    build = {
-      os.getenv('HOME') .. '/.local/libexec/install/tools/install-pandoc',
-      'npm install -g live-server'
-    },
+    build = function()
+      assert(os.execute(os.getenv('HOME') .. '/.local/libexec/install/tools/install-pandoc'))
+      assert(os.execute('npm install -g live-server'))
+    end,
     ft = { 'md', 'markdown' },
   },
 
@@ -265,7 +248,9 @@ local plugins = {
   -- FZF
   {
     'junegunn/fzf.vim',
-    dependencies = 'junegunn/fzf',
+    dependencies = {
+      'junegunn/fzf',
+    },
     config = function()
       local km = require('local.keymap')
       -- fuzzy-find git-files
@@ -294,13 +279,27 @@ local plugins = {
   },
 
   -- LSP stuff
-  'neovim/nvim-lspconfig',
+  {
+    'neovim/nvim-lspconfig',
+    config = function()
+      require('local.config.lsp')
+    end,
+  },
   {
     'nvim-treesitter/nvim-treesitter',
-    build = ':TSUpdate',
+    build = function()
+      require('local.config.treesitter').bootstrap()
+      vim.cmd 'TSUpdateSync'
+    end,
+    config = function()
+      require('local.config.treesitter').setup()
+    end,
   },
   'nvim-treesitter/nvim-treesitter-textobjects',
-  'nvim-treesitter/playground',
+  {
+    'nvim-treesitter/playground',
+    cmd = { "TSPlaygroundToggle" },
+  },
 
   {
     'L3MON4D3/LuaSnip',
@@ -321,7 +320,6 @@ local plugins = {
       'hrsh7th/cmp-cmdline',
       'ray-x/cmp-treesitter',
       'hrsh7th/cmp-nvim-lsp-signature-help',
-      'hrsh7th/cmp-copilot',
 
       'onsails/lspkind-nvim',
 
@@ -337,39 +335,25 @@ local plugins = {
     "glepnir/lspsaga.nvim",
     branch = "main",
     config = function()
-      require("local.module").if_exists("lspsaga", function(saga)
-        saga.init_lsp_saga({
-          symbol_in_winbar = {
-            enable = false, -- I only work on nvim 0.8
-          },
-          code_action_lightbulb  = {
-            -- this causes some visual defects, so it's disabled
-            --
-            -- the sign is also displayed in the gutter, so the virtual
-            -- text is redundant anyways
-            virtual_text = false,
-          },
-        })
-      end)
+      require("lspsaga").init_lsp_saga({
+        symbol_in_winbar = {
+          enable = true, -- I only work on nvim 0.8
+        },
+        code_action_lightbulb  = {
+          -- this causes some visual defects, so it's disabled
+          --
+          -- the sign is also displayed in the gutter, so the virtual
+          -- text is redundant anyways
+          virtual_text = false,
+        },
+      })
     end,
   },
 
 
-  -- {
-  --   "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
-  --   disable = true,
-  --   config = function()
-  --     require("local.module").if_exists("lsp_lines", function()
-  --       require("lsp_lines").setup()
-  --     end)
-  --   end,
-  -- },
   {
     "lewis6991/hover.nvim",
     config = function()
-      local mod = require "local.module"
-      if not mod.exists("hover") then return end
-
       require("hover").setup({
         init = function()
           require("hover.providers.lsp")
@@ -380,7 +364,7 @@ local plugins = {
           border = nil,
         },
         -- can't use this until nvim 0.8 drops
-        title = false,
+        title = true,
       })
     end,
   },
@@ -434,10 +418,7 @@ local plugins = {
   {
     'folke/which-key.nvim',
     config = function()
-      local mod = require "local.module"
-      mod.if_exists("which-key", function()
-        require("which-key").setup {}
-      end)
+      require("which-key").setup({})
     end,
   },
 
@@ -456,31 +437,26 @@ local plugins = {
   {
     'danymat/neogen',
     config = function()
-      local mod = require "local.module"
-      mod.if_exists("neogen", function(neogen)
-        neogen.setup {
-          enabled = true
-        }
-      end)
+      require("neogen").setup {
+        enabled = true
+      }
     end,
   },
 
   {
-    'nvim-lualine/lualine.nvim',
+    'feline-nvim/feline.nvim',
     config = function()
-      local mod = require "local.module"
-      mod.if_exists("lualine", function()
-        mod.reload("local.config.plugins.evil_lualine")
-      end)
+      require("feline").setup()
+      require("feline").winbar.setup()
     end,
   },
 
   -- lang: rust
   {
     "simrat39/rust-tools.nvim",
-    build = {
-      "rustup component add clippy-preview",
-    },
+    build = function()
+      assert(os.execute("rustup component add clippy-preview"))
+    end,
     config = function()
       if true then return end
       require("local.module").if_exists("rust-tools", function()
@@ -501,7 +477,24 @@ local plugins = {
   },
 
   -- weeeee
-  "github/copilot.vim",
+  {
+    "zbirenbaum/copilot.lua",
+    event = { "VimEnter" },
+    config = function()
+      vim.defer_fn(function()
+        require("copilot").setup()
+      end, 100)
+    end,
+  },
+
+  {
+    "zbirenbaum/copilot-cmp",
+    after = { "copilot.lua" },
+    config = function ()
+      require("copilot_cmp").setup()
+    end
+  }
+
 }
 
 for i = 1, #plugins do
