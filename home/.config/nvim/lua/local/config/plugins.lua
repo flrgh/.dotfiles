@@ -510,8 +510,10 @@ local plugins = {
     config = function ()
       require("copilot_cmp").setup()
     end
-  }
+  },
 
+  -- bazel
+  "bazelbuild/vim-ft-bzl",
 }
 
 for i = 1, #plugins do
