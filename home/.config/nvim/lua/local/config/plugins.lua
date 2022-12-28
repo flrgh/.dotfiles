@@ -81,13 +81,16 @@ local plugins = {
   -- Color
   {
     'sainnhe/sonokai',
-    config = function()
+    init = function()
       vim.cmd [[
-        let no_buffers_menu=1
+        let no_buffers_menu = 1
         let g:sonokai_style = 'atlantis'
-        colorscheme sonokai
       ]]
     end,
+    config = function()
+      vim.cmd "colorscheme sonokai"
+    end,
+    priority = 2^16,
   },
   'folke/tokyonight.nvim',
   'lunarvim/darkplus.nvim',
@@ -165,8 +168,6 @@ local plugins = {
   -- lua neovim support
   {
     'folke/neodev.nvim',
-    ft = { "lua" },
-    lazy = true,
   },
 
   -- etlua template syntax support
@@ -296,6 +297,7 @@ local plugins = {
   -- LSP stuff
   {
     'neovim/nvim-lspconfig',
+    dependencies = { "neodev.nvim" },
     config = function()
       require('local.config.lsp')
     end,
@@ -310,10 +312,14 @@ local plugins = {
       require('local.config.treesitter').setup()
     end,
   },
-  'nvim-treesitter/nvim-treesitter-textobjects',
+  {
+    'nvim-treesitter/nvim-treesitter-textobjects',
+    dependencies = { "nvim-treesitter" },
+  },
   {
     'nvim-treesitter/playground',
     cmd = { "TSPlaygroundToggle" },
+    dependencies = { "nvim-treesitter" },
   },
 
   {
@@ -462,24 +468,27 @@ local plugins = {
   {
     'feline-nvim/feline.nvim',
     config = function()
-      require("feline").setup()
-      require("feline").winbar.setup()
+      require("local.config.plugins.feline")
     end,
   },
 
   -- lang: rust
   {
     "simrat39/rust-tools.nvim",
+    -- FIXME
+    enabled = false,
+    dependencies = {
+      "nvim-lspconfig",
+    },
     build = function()
       assert(os.execute("rustup component add clippy-preview"))
     end,
     config = function()
-      if true then return end
       require("local.module").if_exists("rust-tools", function()
         require("rust-tools").setup({
           tools = {
             autoSetHints = true,
-            hover_with_actions = true,
+            hover_with_actions = false,
             inlay_hints = {
               show_parameter_hints = false,
               parmeter_hints_prefix = "",
@@ -506,7 +515,7 @@ local plugins = {
 
   {
     "zbirenbaum/copilot-cmp",
-    after = { "copilot.lua" },
+    dependencies = { "copilot.lua" },
     config = function ()
       require("copilot_cmp").setup()
     end
