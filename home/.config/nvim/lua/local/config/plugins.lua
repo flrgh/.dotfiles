@@ -33,7 +33,7 @@ local plugins = {
     config = function()
       local km = require('local.keymap')
       km.nmap.fn.F4 = { ':TagbarToggle', silent = true }
-      vim.cmd [[let g:tagbar_autofocus = 1]]
+      vim.g.tagbar_autofocus = 1
     end,
   },
 
@@ -82,13 +82,11 @@ local plugins = {
   {
     'sainnhe/sonokai',
     init = function()
-      vim.cmd [[
-        let no_buffers_menu = 1
-        let g:sonokai_style = 'atlantis'
-      ]]
+      vim.g.sonokai_style = "atlantis"
+      vim.g.sonokai_better_performance = 1
     end,
     config = function()
-      vim.cmd "colorscheme sonokai"
+      vim.cmd.colorscheme("sonokai")
     end,
     priority = 2^16,
   },
@@ -154,7 +152,7 @@ local plugins = {
   {
     'euclidianAce/BetterLua.vim',
     config = function()
-      vim.cmd [[let g:lua_inspect_events = '']]
+      vim.g.lua_inspect_events = ""
     end,
     ft = { "lua" },
   },
@@ -193,13 +191,11 @@ local plugins = {
     'plasticboy/vim-markdown',
     ft = { 'md', 'markdown' },
     config = function()
-      vim.cmd [[
-        " disable header folding
-        let g:vim_markdown_folding_disabled = 1
+        -- disable header folding
+        vim.g.vim_markdown_folding_disabled = 1
 
-        " disable the conceal feature
-        let g:vim_markdown_conceal = 0
-      ]]
+        -- disable the conceal feature
+        vim.g.vim_markdown_conceal = 0
     end,
   },
 
@@ -208,7 +204,7 @@ local plugins = {
     -- it has more dependencies and is a little more of a chore to install
     'davidgranstrom/nvim-markdown-preview',
     config = function()
-      vim.cmd [[let g:nvim_markdown_preview_theme = 'github']]
+      vim.g.nvim_markdown_preview_theme = 'github'
     end,
     build = function()
       assert(os.execute(os.getenv('HOME') .. '/.local/libexec/install/tools/install-pandoc'))
@@ -224,6 +220,29 @@ local plugins = {
     tag = 'v1.25',
     build = ':GoUpdateBinaries',
     config = function()
+      local g = vim.g
+      g.go_list_type = "quickfix"
+      g.go_fmt_command = "goimports"
+      g.go_fmt_fail_silently = 1
+
+      g.go_highlight_types = 1
+      g.go_highlight_fields = 1
+      g.go_highlight_functions = 1
+      g.go_highlight_methods = 1
+      g.go_highlight_operators = 1
+      g.go_highlight_build_constraints = 1
+      g.go_highlight_structs = 1
+      g.go_highlight_generate_tags = 1
+      g.go_highlight_space_tab_error = 0
+      g.go_highlight_array_whitespace_error = 0
+      g.go_highlight_trailing_whitespace_error = 0
+      g.go_highlight_extra_types = 1
+
+      g.go_metalinter_autosave = 0
+
+      -- Automatically show type info when cursor is on an identifier
+      g.go_auto_type_info = 1
+
       vim.cmd [[
         " run :GoBuild or :GoTestCompile based on the go file
         function! s:build_go_files()
@@ -234,29 +253,6 @@ local plugins = {
             call go#cmd#Build(0)
           endif
         endfunction
-
-        let g:go_list_type = "quickfix"
-        let g:go_fmt_command = "goimports"
-        let g:go_fmt_fail_silently = 1
-
-        let g:go_highlight_types = 1
-        let g:go_highlight_fields = 1
-        let g:go_highlight_functions = 1
-        let g:go_highlight_methods = 1
-        let g:go_highlight_operators = 1
-        let g:go_highlight_build_constraints = 1
-        let g:go_highlight_structs = 1
-        let g:go_highlight_generate_tags = 1
-        let g:go_highlight_space_tab_error = 0
-        let g:go_highlight_array_whitespace_error = 0
-        let g:go_highlight_trailing_whitespace_error = 0
-        let g:go_highlight_extra_types = 1
-
-        let g:go_metalinter_autosave = 0
-
-
-        " Automatically show type info when cursor is on an identifier
-        let g:go_auto_type_info = 1
       ]]
     end,
   },
