@@ -2,7 +2,7 @@ local g = require "local.config.globals"
 
 local conf = {
   lockfile = g.dotfiles.config_nvim .. "/plugins.lock.json",
-  colorscheme = { "sonokai", "tokyonight" },
+  colorscheme = { "tokyonight" },
 }
 
 ---@type LazySpec[]
@@ -81,16 +81,24 @@ local plugins = {
   -- Color
   {
     'sainnhe/sonokai',
+    enabled = false,
     init = function()
       vim.g.sonokai_style = "atlantis"
       vim.g.sonokai_better_performance = 1
     end,
     config = function()
+      if true then return end
       vim.cmd.colorscheme("sonokai")
     end,
     priority = 2^16,
   },
-  'folke/tokyonight.nvim',
+  {
+    'folke/tokyonight.nvim',
+    priority = 2^16,
+    config = function()
+      vim.cmd.colorscheme('tokyonight')
+    end,
+  },
   'lunarvim/darkplus.nvim',
 
   -- Buffer management
