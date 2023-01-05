@@ -95,11 +95,13 @@ local plugins = {
   {
     'folke/tokyonight.nvim',
     priority = 2^16,
+    lazy = false,
     config = function()
       vim.cmd.colorscheme('tokyonight')
     end,
   },
-  'lunarvim/darkplus.nvim',
+
+  { 'lunarvim/darkplus.nvim', lazy = true },
 
   -- Buffer management
   'moll/vim-bbye',
@@ -335,6 +337,7 @@ local plugins = {
 
   {
     'hrsh7th/nvim-cmp',
+    event = { "InsertEnter" },
     dependencies = {
       'hrsh7th/cmp-buffer',
       'hrsh7th/cmp-calc',
