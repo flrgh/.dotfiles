@@ -303,9 +303,11 @@ local plugins = {
   -- LSP stuff
   {
     'neovim/nvim-lspconfig',
+    event = { "VimEnter" },
     dependencies = { "neodev.nvim" },
     config = function()
       require('local.config.lsp')
+      vim.cmd 'LspStart'
     end,
   },
   {
