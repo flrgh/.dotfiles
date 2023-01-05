@@ -5,9 +5,16 @@ local conf = {
   colorscheme = { "tokyonight" },
 }
 
+-- for some reason, an empty string tells lazy.nvim to use the latest "stable"
+-- version of a plugin
+local LATEST_STABLE = ""
+
 ---@type LazySpec[]
 local plugins = {
-  "folke/lazy.nvim",
+  {
+    "folke/lazy.nvim",
+    --version = LATEST_STABLE,
+  },
 
   'lewis6991/impatient.nvim',
   'nathom/filetype.nvim',
