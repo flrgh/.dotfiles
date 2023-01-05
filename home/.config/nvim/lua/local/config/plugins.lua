@@ -28,9 +28,9 @@ local plugins = {
   -- hilight trailing whitespace
   {
     'ntpeters/vim-better-whitespace',
-    config = function()
-      vim.cmd "EnableWhitespace"
-      vim.cmd "DisableStripWhitespaceOnSave"
+    init = function()
+      vim.g.better_whitespace_enabled = 1
+      vim.g.strip_whitespace_on_save = 0
     end,
   },
 
