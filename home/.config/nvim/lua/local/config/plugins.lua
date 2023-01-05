@@ -280,7 +280,7 @@ local plugins_by_category = {
         -- fuzzy-find with ripgrep
         km.nnoremap.leader.rg = {':Rg',      silent = true }
       end,
-      cmd = { "Gfiles", "Buffers", "Rg" },
+      cmd = { "GFiles", "Buffers", "Rg" },
       config = function()
         vim.cmd [[
           " ripgrep
