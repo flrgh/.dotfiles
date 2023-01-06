@@ -1,5 +1,7 @@
 local g = require "local.config.globals"
 local km = require "local.keymap"
+local cmd = vim.cmd
+
 
 local conf = {
   lockfile = g.dotfiles.config_nvim .. "/plugins.lock.json",
@@ -20,9 +22,6 @@ end
 local LATEST_STABLE = ""
 
 local FT_ALIAS = {
-  markdown = { "md", "markdown" },
-  rust = { "rust", "rs" },
-  sh = { "sh", "shell", "bash" },
   terraform = { "tf", "terraform" },
 }
 
@@ -114,7 +113,7 @@ local plugins_by_filetype = {
         -- Automatically show type info when cursor is on an identifier
         g.go_auto_type_info = 1
 
-        vim.cmd [[
+        cmd [[
           " run :GoBuild or :GoTestCompile based on the go file
           function! s:build_go_files()
             let l:file = expand('%')
@@ -200,7 +199,7 @@ local plugins_by_category = {
       end,
       config = function()
         if true then return end
-        vim.cmd.colorscheme("sonokai")
+        cmd.colorscheme("sonokai")
       end,
       priority = 2^16,
     },
@@ -209,25 +208,47 @@ local plugins_by_category = {
       priority = 2^16,
       lazy = false,
       config = function()
-        vim.cmd.colorscheme('tokyonight')
+        local tn = require "tokyonight"
+        tn.setup()
+        tn.load()
       end,
     },
 
     { 'lunarvim/darkplus.nvim', lazy = true },
 
     -- devicon assets
-    'kyazdani42/nvim-web-devicons',
+    "nvim-tree/nvim-web-devicons",
 
     -- Nerd Fonts helper
     'lambdalisue/nerdfont.vim',
 
     -- tabline for neovim
-    'romgrk/barbar.nvim',
+    {
+      'romgrk/barbar.nvim',
+      init = function()
+        vim.g.bufferline = {
+          animation = false,
+          auto_hide = false,
+          closable = true,
+          clickable = true,
+          icon_separator_active = '▎',
+          icon_separator_inactive = '▎',
+          icon_close_tab = '',
+          icon_close_tab_modified = '●',
+          icon_pinned = '車',
+          maximum_padding = 4,
+          maximum_length = 30,
+          semantic_letters = true,
+          no_name_title = nil,
+        }
+      end,
+    },
 
     {
-      'feline-nvim/feline.nvim',
+      "nvim-lualine/lualine.nvim",
+      event = "VeryLazy",
       config = function()
-        require("local.config.plugins.feline")
+        require("local.config.plugins.lualine").setup()
       end,
     },
 
@@ -257,6 +278,25 @@ local plugins_by_category = {
       end,
       cmd = { "TagbarToggle" },
     },
+
+    -- better vim.ui
+    {
+      "stevearc/dressing.nvim",
+      init = function()
+        local select = vim.ui.select
+        local input = vim.ui.input
+
+        vim.ui.select = function(...)
+          require("lazy").load({ plugins = { "dressing.nvim" } })
+          return select(...)
+        end
+
+        vim.ui.input = function(...)
+          require("lazy").load({ plugins = { "dressing.nvim" } })
+          return input(...)
+        end
+      end,
+    },
   },
 
   functions = {
@@ -282,7 +322,7 @@ local plugins_by_category = {
       end,
       cmd = { "GFiles", "Buffers", "Rg" },
       config = function()
-        vim.cmd [[
+        cmd [[
           " ripgrep
           if executable('rg')
             let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
@@ -298,11 +338,10 @@ local plugins_by_category = {
   treesitter = {
     {
       'nvim-treesitter/nvim-treesitter',
-      lazy = true,
-      event = { "VimEnter" },
+      event = "VeryLazy",
       build = function()
         require('local.config.treesitter').bootstrap()
-        vim.cmd 'TSUpdateSync'
+        cmd 'TSUpdateSync'
       end,
       config = function()
         require('local.config.treesitter').setup()
@@ -310,7 +349,7 @@ local plugins_by_category = {
     },
     {
       'nvim-treesitter/nvim-treesitter-textobjects',
-      event = { "VimEnter" },
+      event = "VeryLazy",
       dependencies = { "nvim-treesitter" },
     },
     {
@@ -323,6 +362,7 @@ local plugins_by_category = {
   telescope = {
     {
       'nvim-telescope/telescope.nvim',
+      event = "VeryLazy",
       dependencies = { 'nvim-lua/plenary.nvim' },
       branch = "0.1.x",
       config = function()
@@ -332,6 +372,7 @@ local plugins_by_category = {
 
     {
       'nvim-telescope/telescope-fzf-native.nvim',
+      event = "VeryLazy",
       build = 'make',
       dependencies = {
         'nvim-telescope/telescope.nvim',
@@ -343,6 +384,7 @@ local plugins_by_category = {
 
     {
       'nvim-telescope/telescope-symbols.nvim',
+      event = "VeryLazy",
       dependencies = {
         'nvim-telescope/telescope.nvim',
       },
@@ -351,11 +393,18 @@ local plugins_by_category = {
 
   -- git[hub] integration
   git = {
-    'tpope/vim-fugitive',
-    'tpope/vim-rhubarb',
+    {
+      'tpope/vim-fugitive',
+      event = "VeryLazy",
+      dependencies = {
+        'tpope/vim-rhubarb',
+      },
+    },
+
     'rhysd/conflict-marker.vim',
     {
       'lewis6991/gitsigns.nvim',
+      event = "BufReadPre",
       config = function()
         require("gitsigns").setup({
           signcolumn         = false,
@@ -372,7 +421,7 @@ local plugins_by_category = {
     -- auto hlsearch stuff
     {
       'romainl/vim-cool',
-      event = { "VimEnter" },
+      event = "VeryLazy",
     },
 
     -- adds some common readline key bindings to insert and command mode
@@ -397,7 +446,15 @@ local plugins_by_category = {
     },
 
     -- highlight indentation levels
-    'lukas-reineke/indent-blankline.nvim',
+    {
+      "lukas-reineke/indent-blankline.nvim",
+      event = "BufReadPre",
+      config = {
+        filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
+        --show_trailing_blankline_indent = false,
+        --show_current_context = false,
+      },
+    },
 
     -- useful for targetting surrounding quotes/parens/etc
     {
@@ -422,7 +479,7 @@ local plugins_by_category = {
 
     {
       'numToStr/Comment.nvim',
-      event = { "VimEnter" },
+      event = "VeryLazy",
       config = function()
         require('Comment').setup()
       end
@@ -434,6 +491,14 @@ local plugins_by_category = {
       config = function()
         require("local.config.plugins.luasnip").setup()
       end,
+      dependencies = {
+        {
+          "rafamadriz/friendly-snippets",
+          config = function()
+            require("luasnip.loaders.from_vscode").lazy_load()
+          end,
+        },
+      },
     },
 
     {
@@ -485,11 +550,11 @@ local plugins_by_category = {
     -- LSP stuff
     {
       'neovim/nvim-lspconfig',
-      event = { "VimEnter" },
-      dependencies = { "neodev.nvim" },
+      event = "BufReadPre",
+      dependencies = { "folke/neodev.nvim" },
       config = function()
         require('local.config.lsp')
-        vim.cmd 'LspStart'
+        cmd 'LspStart'
       end,
     },
 
@@ -514,6 +579,7 @@ local plugins_by_category = {
 
     {
       "lewis6991/hover.nvim",
+      event = "VeryLazy",
       config = function()
         require("hover").setup({
           init = function()
@@ -542,6 +608,7 @@ local plugins_by_category = {
 
     {
       "zbirenbaum/copilot-cmp",
+      event = { "VimEnter" },
       dependencies = { "copilot.lua" },
       config = function ()
         require("copilot_cmp").setup()
@@ -552,11 +619,14 @@ local plugins_by_category = {
   plumbing = {
     "folke/lazy.nvim",
 
-    -- cache lua code
-    "lewis6991/impatient.nvim",
-
     -- filetype detection optimization
     "nathom/filetype.nvim",
+
+    -- startup time profiling
+    {
+      "dstein64/vim-startuptime",
+      cmd = "StartupTime",
+    },
   },
 
   filetype = {
@@ -573,7 +643,7 @@ local plugins_by_category = {
     {
       'VaiN474/vim-etlua',
       init = function()
-        vim.cmd [[au BufRead,BufNewFile *.etlua set filetype=etlua]]
+        cmd [[au BufRead,BufNewFile *.etlua set filetype=etlua]]
       end,
     },
 

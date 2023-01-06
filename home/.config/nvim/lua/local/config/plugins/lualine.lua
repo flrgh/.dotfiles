@@ -1,7 +1,17 @@
 -- Eviline config for lualine
 -- Author: shadmansaleh
 -- Credit: glepnir
-local lualine = require('lualine')
+
+local vim_fn_expand = vim.fn.expand
+local vim_fn_empty = vim.fn.empty
+local vim_fn_winwidth = vim.fn.winwidth
+local vim_fn_mode = vim.fn.mode
+local vim_fn_index = vim.fn.index
+local vim_fn_finddir = vim.fn.finddir
+local vim_api_nvim_buf_get_option = vim.api.nvim_buf_get_option
+local vim_lsp_get_active_clients = vim.lsp.get_active_clients
+local table_insert = table.insert
+local next = next
 
 -- Color table for highlights
 -- stylua: ignore
@@ -21,14 +31,14 @@ local colors = {
 
 local conditions = {
   buffer_not_empty = function()
-    return vim.fn.empty(vim.fn.expand('%:t')) ~= 1
+    return vim_fn_empty(vim_fn_expand('%:t')) ~= 1
   end,
   hide_in_width = function()
-    return vim.fn.winwidth(0) > 80
+    return vim_fn_winwidth(0) > 80
   end,
   check_git_workspace = function()
-    local filepath = vim.fn.expand('%:p:h')
-    local gitdir = vim.fn.finddir('.git', filepath .. ';')
+    local filepath = vim_fn_expand('%:p:h')
+    local gitdir = vim_fn_finddir('.git', filepath .. ';')
     return gitdir and #gitdir > 0 and #gitdir < #filepath
   end,
 }
@@ -36,6 +46,9 @@ local conditions = {
 -- Config
 local config = {
   options = {
+    globalstatus = true,
+    disabled_filetypes = { "lazy", "alpha" },
+
     -- Disable sections and component separators
     component_separators = '',
     section_separators = '',
@@ -70,12 +83,12 @@ local config = {
 
 -- Inserts a component in lualine_c at left section
 local function ins_left(component)
-  table.insert(config.sections.lualine_c, component)
+  table_insert(config.sections.lualine_c, component)
 end
 
 -- Inserts a component in lualine_x ot right section
 local function ins_right(component)
-  table.insert(config.sections.lualine_x, component)
+  table_insert(config.sections.lualine_x, component)
 end
 
 ins_left {
@@ -86,38 +99,42 @@ ins_left {
   padding = { left = 0, right = 1 }, -- We don't need space before this
 }
 
-ins_left {
-  -- mode component
-  function()
-    -- auto change color according to neovims mode
-    local mode_color = {
-      n = colors.red,
-      i = colors.green,
-      v = colors.blue,
-      [''] = colors.blue,
-      V = colors.blue,
-      c = colors.magenta,
-      no = colors.red,
-      s = colors.orange,
-      S = colors.orange,
-      [''] = colors.orange,
-      ic = colors.yellow,
-      R = colors.violet,
-      Rv = colors.violet,
-      cv = colors.red,
-      ce = colors.red,
-      r = colors.cyan,
-      rm = colors.cyan,
-      ['r?'] = colors.cyan,
-      ['!'] = colors.red,
-      t = colors.red,
-    }
-    vim.api.nvim_command('hi! LualineMode guifg=' .. mode_color[vim.fn.mode()] .. ' guibg=' .. colors.bg)
-    return ''
-  end,
-  color = 'LualineMode',
-  padding = { right = 1 },
-}
+do
+  local mode_color = {
+    n = colors.red,
+    i = colors.green,
+    v = colors.blue,
+    [''] = colors.blue,
+    V = colors.blue,
+    c = colors.magenta,
+    no = colors.red,
+    s = colors.orange,
+    S = colors.orange,
+    [''] = colors.orange,
+    ic = colors.yellow,
+    R = colors.violet,
+    Rv = colors.violet,
+    cv = colors.red,
+    ce = colors.red,
+    r = colors.cyan,
+    rm = colors.cyan,
+    ['r?'] = colors.cyan,
+    ['!'] = colors.red,
+    t = colors.red,
+  }
+
+  ins_left {
+    -- mode component
+    function()
+      return ''
+    end,
+    color = function()
+      -- auto change color according to neovims mode
+      return { fg = mode_color[vim_fn_mode()] }
+    end,
+    padding = { right = 1 },
+  }
+end
 
 ins_left {
   -- filesize component
@@ -158,14 +175,14 @@ ins_left {
   -- Lsp server name .
   function()
     local msg = 'No Active Lsp'
-    local buf_ft = vim.api.nvim_buf_get_option(0, 'filetype')
-    local clients = vim.lsp.get_active_clients()
+    local buf_ft = vim_api_nvim_buf_get_option(0, 'filetype')
+    local clients = vim_lsp_get_active_clients()
     if next(clients) == nil then
       return msg
     end
     for _, client in ipairs(clients) do
       local filetypes = client.config.filetypes
-      if filetypes and vim.fn.index(filetypes, buf_ft) ~= -1 then
+      if filetypes and vim_fn_index(filetypes, buf_ft) ~= -1 then
         return client.name
       end
     end
@@ -216,5 +233,8 @@ ins_right {
   padding = { left = 1 },
 }
 
--- Now don't forget to initialize lualine
-lualine.setup(config)
+return {
+  setup = function()
+    require("lualine").setup(config)
+  end,
+}

@@ -64,7 +64,11 @@ function _M.setup()
       disable = {
         "lua", -- 2021-01-02: treesitter overindents tables
       }
-    }
+    },
+    context_commentstring = {
+      enable = true,
+      enable_autocmd = false,
+    },
   }
 end
 
