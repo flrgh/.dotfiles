@@ -231,6 +231,8 @@ local function lua_libs(settings)
   end
 
   if settings.include_vim then
+    insert(libs, expand("$VIMRUNTIME/lua"))
+
     if mod.exists("neodev.sumneko") then
       local sumneko = require "neodev.sumneko"
 
