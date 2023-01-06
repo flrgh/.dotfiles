@@ -9,7 +9,7 @@ if not mod.exists('lspconfig') then
   return
 end
 
-local lspconfig = require 'lspconfig'
+local lspconfig = require "lspconfig"
 
 local executable = vim.fn.executable
 local extend = vim.tbl_deep_extend

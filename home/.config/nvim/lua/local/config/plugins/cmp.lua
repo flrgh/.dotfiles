@@ -139,10 +139,6 @@ local function window()
   }
 end
 
-local function view()
-  return {
-  }
-end
 
 local function sorting()
   return require("cmp.config.default")().sorting

@@ -4,7 +4,6 @@ local _M = {
   _VERSION = '0.1'
 }
 
-local vim = vim
 local fn = vim.fn
 local loop = vim.loop
 local expand = fn.expand

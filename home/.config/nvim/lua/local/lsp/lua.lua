@@ -12,7 +12,6 @@ local insert = table.insert
 local runtime_paths = vim.api.nvim_list_runtime_paths
 local dir_exists = fs.dir_exists
 local find = string.find
-local runtime_file = vim.api.nvim_get_runtime_file
 
 local WORKSPACE = fs.normalize(require("local.config.globals").workspace)
 
@@ -21,39 +20,48 @@ local LUA_PATH = os.getenv("LUA_PATH") or package.path
 local EMPTY = {}
 
 ---@type string
-local USER_SETTINGS = expand("~/.config/lua/lsp.lua", nil, false)
+local USER_SETTINGS = expand("~/.config/lua/lsp.lua")
 
 ---@type string
 local ANNOTATIONS = globals.git_user_root .. "/lua-type-annotations"
 
 ---@type string
-local SUMNEKO = expand("~/.local/libexec/lua-language-server/meta/3rd", nil, false)
+local SUMNEKO = expand("~/.local/libexec/lua-language-server/meta/3rd")
 
 local NVIM_LUA = globals.dotfiles.config_nvim_lua
 
-local get_plugin_dir
+local get_plugin_lua_dir
 do
-  local cache = {}
-  ---@param name string
-  ---@return string|nil
-  function get_plugin_dir(name)
-    local dir = cache[name]
-    if dir then return dir end
+  local dirs
 
-    local len = name:len()
-    for _, p in ipairs(runtime_file("", true)) do
-      if p:sub(-len) == name then
-        cache[name] = p
-        return p
+  local function enumerate_plugin_directories()
+    dirs = {}
+
+    local plugins = require("lazy").plugins()
+    for _, p in ipairs(plugins) do
+      local name = p.name
+      local lua_dir = p.dir .. "/lua"
+      dirs[name] = lua_dir
+
+      -- normalized, for convenience
+      name = name:gsub("[%-_.]*nvim[%-_.]*", "")
+      if name ~= "" then
+        dirs[name] = lua_dir
+
+        name = name:lower()
+        dirs[name] = lua_dir
+
+        name = name:gsub("[%-._]", "")
+        dirs[name] = lua_dir
       end
     end
   end
-end
 
-local function get_plugin_lua_dir(name)
-  local dir = get_plugin_dir(name)
-  if dir then
-    return dir .. "/lua"
+  ---@param name string
+  ---@return string|nil
+  function get_plugin_lua_dir(name)
+    if not dirs then enumerate_plugin_directories() end
+    return dirs[name]
   end
 end
 
@@ -114,20 +122,6 @@ local function runtime_lua_dirs()
   end
 
   return _runtime_dirs
-end
-
----@param t table
----@param extra table?
----@return table
-local function merge(t, extra)
-  if type(t) == 'table' and type(extra) == 'table' then
-    for k, v in pairs(extra) do
-      t[k] = merge(t[k], v)
-    end
-    return t
-  end
-
-  return extra
 end
 
 local function append(a, b)
@@ -213,8 +207,14 @@ end
 
 local plugin_libs = {
   "nvim-cmp",
-  "neodev.nvim",
   "lazy.nvim",
+  "nvim-lspconfig",
+  "lspsaga.nvim",
+  "hover.nvim",
+  "lualine.nvim",
+  "lspkind-nvim",
+  "nvim-treesitter",
+  "telescope",
 }
 
 ---@param settings local.lsp.settings

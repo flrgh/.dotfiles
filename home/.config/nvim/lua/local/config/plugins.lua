@@ -1,10 +1,9 @@
-local g = require "local.config.globals"
 local km = require "local.keymap"
 local cmd = vim.cmd
 
 
 local conf = {
-  lockfile = g.dotfiles.config_nvim .. "/plugins.lock.json",
+  lockfile = require("local.config.globals").dotfiles.config_nvim .. "/plugins.lock.json",
   colorscheme = { "tokyonight" },
 }
 
@@ -19,11 +18,8 @@ end
 
 -- for some reason, an empty string tells lazy.nvim to use the latest "stable"
 -- version of a plugin
-local LATEST_STABLE = ""
+-- local LATEST_STABLE = ""
 
-local FT_ALIAS = {
-  terraform = { "tf", "terraform" },
-}
 
 ---@type table<string, LazySpec[]>
 local plugins_by_filetype = {
@@ -193,12 +189,12 @@ local plugins_by_category = {
     {
       'sainnhe/sonokai',
       enabled = false,
+      cond = false,
       init = function()
         vim.g.sonokai_style = "atlantis"
         vim.g.sonokai_better_performance = 1
       end,
       config = function()
-        if true then return end
         cmd.colorscheme("sonokai")
       end,
       priority = 2^16,
@@ -580,6 +576,7 @@ local plugins_by_category = {
     {
       "lewis6991/hover.nvim",
       event = "VeryLazy",
+      cond = false,
       config = function()
         require("hover").setup({
           init = function()
@@ -669,7 +666,6 @@ local plugins = {}
 
 do
   for ft, list in pairs(plugins_by_filetype) do
-    ft = FT_ALIAS[ft] or ft
     for _, plugin in ipairs(list) do
       plugin = hydrate(plugin)
 
