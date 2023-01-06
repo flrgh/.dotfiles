@@ -11,23 +11,26 @@ end
 
 local lspconfig = require 'lspconfig'
 
+local executable = vim.fn.executable
 local extend = vim.tbl_deep_extend
-local vim = vim
+local is_empty = vim.tbl_isempty
 local api = vim.api
 local lsp = vim.lsp
 local is_list = vim.tbl_islist
+local jump_to_location = lsp.util.jump_to_location
+local vim = vim
 
 
 vim.lsp.handlers["textDocument/definition"] = function(_, result)
-  if not result or vim.tbl_isempty(result) then
+  if not result or is_empty(result) then
     print "[LSP] Could not find definition"
     return
   end
 
   if is_list(result) then
-    lsp.util.jump_to_location(result[1], "utf-8")
+    jump_to_location(result[1], "utf-8")
   else
-    lsp.util.jump_to_location(result, "utf-8")
+    jump_to_location(result, "utf-8")
   end
 end
 
@@ -157,7 +160,7 @@ for lang, server in pairs(servers) do
       and lspconfig[server].document_config.default_config
       and lspconfig[server].document_config.default_config.cmd
 
-    if conf.cmd and vim.fn.executable(conf.cmd[1]) == 1 then
+    if conf.cmd and executable(conf.cmd[1]) == 1 then
       lspconfig[server].setup(conf)
     end
   end
