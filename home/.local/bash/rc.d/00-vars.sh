@@ -8,3 +8,6 @@ export CACHE_DIR="$HOME/.cache"
 # lang/charset
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
+
+# clean slate
+unset PROMPT_COMMAND
