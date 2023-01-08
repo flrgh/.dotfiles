@@ -1,0 +1,11 @@
+_gh-helper() {
+    if (( ${#COMP_WORDS[@]} <= 2 )); then
+        local commands; commands=$(gh-helper list-commands)
+        local cur=${COMP_WORDS[$COMP_CWORD]}
+
+        mapfile -t COMPREPLY \
+            < <(compgen -W "$commands" -- "$cur")
+    fi
+}
+
+complete -F _gh-helper gh-helper

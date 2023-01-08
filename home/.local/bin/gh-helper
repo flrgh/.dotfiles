@@ -6,6 +6,7 @@ source "$HOME/.config/github/helper-access-token"
 
 readonly BASE_URL=https://api.github.com/
 
+
 if command -v http &>/dev/null; then
     http() {
         command http \
@@ -26,7 +27,16 @@ else
     }
 fi
 
-get-release() {
+
+is-function() {
+    [[ $(type -t "$1") = function ]]
+}
+
+is-gh-command() {
+    is-function "cmd-$1"
+}
+
+cmd-get-release() {
     local -r repo=$1
     local -r release=$2
 
@@ -34,53 +44,89 @@ get-release() {
 }
 
 
-get-latest-release() {
+cmd-get-latest-release() {
     local -r repo=$1
 
-    get-release "$repo" latest
+    cmd-get-release "$repo" latest
 }
 
 
-get-releases() {
+cmd-get-releases() {
     local -r repo=$1
 
     http "repos/$repo/releases"
 }
 
-get-release-names() {
+cmd-get-release-names() {
     local -r repo=$1
 
     http "repos/$repo/releases" \
     | jq -r '.[].name'
 }
 
-get-latest-release-name() {
+cmd-get-latest-release-name() {
     local -r repo=$1
-    get-latest-release "$repo" | jq -r '.name'
+    cmd-get-latest-release "$repo" | jq -r '.name'
 }
 
-get-latest-release-tag() {
+cmd-get-latest-release-tag() {
     local -r repo=$1
-    get-latest-release "$repo" | jq -r '.tag_name'
+    cmd-get-latest-release "$repo" | jq -r '.tag_name'
 }
 
 
-
-get-tag() {
+cmd-get-tag() {
     local -r repo=$1
     local -r tag=$2
     http "repos/$repo/releases/tags/$tag"
 }
 
-get-tags() {
+cmd-get-tags() {
     local -r repo=$1
     http "repos/$repo/tags"
 }
 
-get-latest-tag() {
+cmd-get-latest-tag() {
     local -r repo=$1
-    get-tags "$repo" | jq -r '.[0].name'
+    cmd-get-tags "$repo" | jq -r '.[0].name'
+}
+
+cmd-list-commands() {
+    declare -F \
+    | grep -o 'cmd-.*' \
+    | cut -d- -f2- \
+    | sort
+}
+
+cmd-usage() {
+    printf "USAGE:\n  %s COMMAND [ARGS...]\n\n" "$0"
+    printf "COMMANDS:\n"
+    cmd-list-commands | while read -r c; do
+        printf "  %s\n" "$c"
+    done
+}
+
+run() {
+    local -r fn=cmd-$1
+    shift
+
+    "$fn" "$@"
 }
 
 
-"$@"
+main() {
+    local -r command=$1
+    shift
+
+    if ! is-gh-command "$command"; then
+        printf "Unknown command: %s\n\n" "$command" >&2
+        cmd-usage >&2
+        exit 1
+    fi
+
+    run "$command" "$@"
+}
+
+
+
+main "$@"
