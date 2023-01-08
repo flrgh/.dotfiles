@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# shellcheck source-path=SCRIPTDIR
+
 
 source "$INEED_ROOT/lib.sh"
 
@@ -29,6 +31,7 @@ complete-from-args() {
     IFS="$oifs"
 
     COMPREPLY=()
+    # shellcheck disable=SC2154
     for elem in $(compgen -W "$words" "$cur"); do
         COMPREPLY+=("$elem")
     done

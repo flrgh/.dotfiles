@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck source-path=SCRIPTDIR
 
 set -euo pipefail
 
@@ -19,6 +20,7 @@ main() {
 
     shift 2
 
+    # shellcheck disable=SC1090
     source "$driver"
 
     if ! function-exists "$fn"; then

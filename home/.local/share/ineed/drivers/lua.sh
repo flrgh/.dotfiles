@@ -38,7 +38,7 @@ install-from-asset() {
     local -r asset=$1
     local -r version=$2
 
-    cd $(mktemp -d)
+    cd "$(mktemp -d)"
 
     tar xzf "$asset"
 
