@@ -19,7 +19,7 @@ DIRS=(
     .local/var/log/nvim
     .local/var/log/lsp
     .local/bash/overrides.d
-    .local/share/bash-completion
+    .local/share/bash-completion/completions
 )
 
 for d in "${DIRS[@]}"; do
