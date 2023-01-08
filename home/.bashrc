@@ -72,7 +72,8 @@ declare -A __times
 _cleanup_var __times
 
 
-: DEBUG_BASHRC=${DEBUG_BASHRC:-0}
+DEBUG_BASHRC=${DEBUG_BASHRC:-0}
+
 if (( DEBUG_BASHRC > 0 )); then
     mkdir -p "$_log_dir"
 
@@ -114,6 +115,7 @@ _source_file() {
         local -r key="_source_file($fname)"
         _timer_start "$key"
 
+        # shellcheck disable=SC1090
         source "$fname"
         ret=$?
 

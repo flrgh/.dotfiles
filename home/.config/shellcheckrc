@@ -1,0 +1,5 @@
+# default shell is always bash
+shell=bash
+
+# allow shellcheck to search/read files
+external-sources=true
