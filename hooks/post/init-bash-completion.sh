@@ -6,7 +6,7 @@ have() {
     command -v "$1" &>/dev/null
 }
 
-DIR="$HOME/.local/bash/completion.d"
+DIR="$HOME/.local/share/bash-completion"
 
 mkdir -p "$DIR"
 
