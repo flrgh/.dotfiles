@@ -558,7 +558,7 @@ local plugins_by_category = {
       "glepnir/lspsaga.nvim",
       branch = "main",
       config = function()
-        require("lspsaga").init_lsp_saga({
+        require("lspsaga").setup({
           symbol_in_winbar = {
             enable = true, -- I only work on nvim 0.8
           },
