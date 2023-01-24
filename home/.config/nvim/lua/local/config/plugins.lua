@@ -652,8 +652,10 @@ local plugins_by_category = {
   ["*"] = {
     {
       'folke/which-key.nvim',
-      event = { "VimEnter" },
+      event = "VimEnter",
       config = function()
+        vim.o.timeout = true
+        vim.o.ttimeoutlen = 100
         require("which-key").setup({})
       end,
     },
