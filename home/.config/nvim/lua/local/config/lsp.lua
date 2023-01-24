@@ -46,7 +46,10 @@ do
       show_diagnostic  = vim.diagnostic.open_float,
   }
 
-  if mod.exists("lspsaga") then
+  if mod.exists("hover") then
+    maps.hover = require("hover").hover
+
+  elseif mod.exists("lspsaga") then
     local cmd = function(s)
       return ("<cmd>Lspsaga %s<CR>"):format(s)
     end
@@ -57,10 +60,6 @@ do
     maps.show_diagnostic = cmd("show_line_diagnostics")
     maps.next_diagnostic = cmd("diagnostic_jump_next")
     maps.prev_diagnostic = cmd("diagnostic_jump_prev")
-
-
-  elseif mod.exists("hover") then
-    maps.hover = require("hover").hover
   end
 
   do

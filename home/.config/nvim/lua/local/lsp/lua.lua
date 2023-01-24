@@ -213,6 +213,7 @@ local plugin_libs = {
   "hover.nvim",
   "lualine.nvim",
   "lspkind-nvim",
+  "neodev",
   "nvim-treesitter",
   "telescope",
 }

@@ -556,6 +556,7 @@ local plugins_by_category = {
 
     {
       "glepnir/lspsaga.nvim",
+      event = "VeryLazy",
       branch = "main",
       config = function()
         require("lspsaga").setup({
@@ -576,7 +577,6 @@ local plugins_by_category = {
     {
       "lewis6991/hover.nvim",
       event = "VeryLazy",
-      cond = false,
       config = function()
         require("hover").setup({
           init = function()
