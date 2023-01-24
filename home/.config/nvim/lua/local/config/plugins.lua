@@ -284,11 +284,13 @@ local plugins_by_category = {
 
         vim.ui.select = function(...)
           require("lazy").load({ plugins = { "dressing.nvim" } })
+          vim.ui.select = select
           return select(...)
         end
 
         vim.ui.input = function(...)
           require("lazy").load({ plugins = { "dressing.nvim" } })
+          vim.ui.input = input
           return input(...)
         end
       end,
