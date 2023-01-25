@@ -1,4 +1,6 @@
 local km = require "local.keymap"
+local evt = require "local.event"
+
 local cmd = vim.cmd
 
 
@@ -242,7 +244,7 @@ local plugins_by_category = {
 
     {
       "nvim-lualine/lualine.nvim",
-      event = "VeryLazy",
+      event = evt.VeryLazy,
       config = function()
         require("local.config.plugins.lualine").setup()
       end,
@@ -301,7 +303,7 @@ local plugins_by_category = {
     -- Buffer management
     {
       'moll/vim-bbye',
-      event = { "VimEnter" },
+      event = evt.VimEnter,
     },
 
     -- FZF
@@ -336,7 +338,7 @@ local plugins_by_category = {
   treesitter = {
     {
       'nvim-treesitter/nvim-treesitter',
-      event = "VeryLazy",
+      event = evt.VeryLazy,
       build = function()
         require('local.config.treesitter').bootstrap()
         cmd 'TSUpdateSync'
@@ -347,7 +349,7 @@ local plugins_by_category = {
     },
     {
       'nvim-treesitter/nvim-treesitter-textobjects',
-      event = "VeryLazy",
+      event = evt.VeryLazy,
       dependencies = { "nvim-treesitter" },
     },
     {
@@ -360,7 +362,7 @@ local plugins_by_category = {
   telescope = {
     {
       'nvim-telescope/telescope.nvim',
-      event = "VeryLazy",
+      event = evt.VeryLazy,
       dependencies = { 'nvim-lua/plenary.nvim' },
       branch = "0.1.x",
       config = function()
@@ -370,7 +372,7 @@ local plugins_by_category = {
 
     {
       'nvim-telescope/telescope-fzf-native.nvim',
-      event = "VeryLazy",
+      event = evt.VeryLazy,
       build = 'make',
       dependencies = {
         'nvim-telescope/telescope.nvim',
@@ -382,7 +384,7 @@ local plugins_by_category = {
 
     {
       'nvim-telescope/telescope-symbols.nvim',
-      event = "VeryLazy",
+      event = evt.VeryLazy,
       dependencies = {
         'nvim-telescope/telescope.nvim',
       },
@@ -393,7 +395,7 @@ local plugins_by_category = {
   git = {
     {
       'tpope/vim-fugitive',
-      event = "VeryLazy",
+      event = evt.VeryLazy,
       dependencies = {
         'tpope/vim-rhubarb',
       },
@@ -402,7 +404,7 @@ local plugins_by_category = {
     'rhysd/conflict-marker.vim',
     {
       'lewis6991/gitsigns.nvim',
-      event = "BufReadPre",
+      event = evt.BufReadPre,
       config = function()
         require("gitsigns").setup({
           signcolumn         = false,
@@ -419,19 +421,19 @@ local plugins_by_category = {
     -- auto hlsearch stuff
     {
       'romainl/vim-cool',
-      event = "VeryLazy",
+      event = evt.VeryLazy,
     },
 
     -- adds some common readline key bindings to insert and command mode
     {
       'tpope/vim-rsi',
-      event = { "VimEnter" },
+      event = evt.VimEnter,
     },
 
     -- auto-insert function/block delimiters
     {
       'tpope/vim-endwise',
-      event = { "InsertEnter" },
+      event = evt.InsertEnter,
     },
 
     -- hilight trailing whitespace
@@ -446,7 +448,7 @@ local plugins_by_category = {
     -- highlight indentation levels
     {
       "lukas-reineke/indent-blankline.nvim",
-      event = "BufReadPre",
+      event = evt.BufReadPre,
       config = {
         filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
         --show_trailing_blankline_indent = false,
@@ -457,7 +459,7 @@ local plugins_by_category = {
     -- useful for targetting surrounding quotes/parens/etc
     {
       "kylechui/nvim-surround",
-      event = { "VimEnter" },
+      event = evt.VimEnter,
       config = function()
         require("nvim-surround").setup()
       end,
@@ -466,7 +468,7 @@ local plugins_by_category = {
     -- align!
     {
       'junegunn/vim-easy-align',
-      event = { "VimEnter" },
+      event = evt.VimEnter,
       config = function()
         -- Start interactive EasyAlign in visual mode (e.g. vipga)
         km.xmap.ga = '<Plug>(EasyAlign)'
@@ -477,7 +479,7 @@ local plugins_by_category = {
 
     {
       'numToStr/Comment.nvim',
-      event = "VeryLazy",
+      event = evt.VeryLazy,
       config = function()
         require('Comment').setup()
       end
@@ -501,7 +503,7 @@ local plugins_by_category = {
 
     {
       'hrsh7th/nvim-cmp',
-      event = { "InsertEnter" },
+      event = evt.InsertEnter,
       dependencies = {
         'hrsh7th/cmp-buffer',
         'hrsh7th/cmp-calc',
@@ -548,7 +550,7 @@ local plugins_by_category = {
     -- LSP stuff
     {
       'neovim/nvim-lspconfig',
-      event = "BufReadPre",
+      event = evt.BufReadPre,
       dependencies = { "folke/neodev.nvim" },
       config = function()
         require('local.config.lsp')
@@ -558,7 +560,7 @@ local plugins_by_category = {
 
     {
       "glepnir/lspsaga.nvim",
-      event = "VeryLazy",
+      event = evt.VeryLazy,
       branch = "main",
       config = function()
         require("lspsaga").setup({
@@ -578,7 +580,7 @@ local plugins_by_category = {
 
     {
       "lewis6991/hover.nvim",
-      event = "VeryLazy",
+      event = evt.VeryLazy,
       config = function()
         require("hover").setup({
           init = function()
@@ -597,7 +599,7 @@ local plugins_by_category = {
 
     {
       "zbirenbaum/copilot.lua",
-      event = { "VimEnter" },
+      event = evt.VimEnter,
       config = function()
         vim.defer_fn(function()
           require("copilot").setup()
@@ -607,7 +609,7 @@ local plugins_by_category = {
 
     {
       "zbirenbaum/copilot-cmp",
-      event = { "VimEnter" },
+      event = evt.VimEnter,
       dependencies = { "copilot.lua" },
       config = function ()
         require("copilot_cmp").setup()
@@ -652,7 +654,7 @@ local plugins_by_category = {
   ["*"] = {
     {
       'folke/which-key.nvim',
-      event = "VimEnter",
+      event = evt.VimEnter,
       config = function()
         vim.o.timeout = true
         vim.o.ttimeoutlen = 100
