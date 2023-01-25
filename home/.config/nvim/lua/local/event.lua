@@ -1085,7 +1085,37 @@ e.WinNew = "WinNew"
 --- Does not trigger when the command is added, only after the first scroll or resize.
 e.WinScrolled = "WinScrolled"
 
---- special lazy.nvim event
+
+--- When lazy.nvim has finished starting up and loaded your config
+e.LazyDone = "LazyDone"
+
+--- After running sync
+e.LazySync = "LazySync"
+
+--- After an install
+e.LazyInstall = "LazyInstall"
+
+--- After an update
+e.LazyUpdate = "LazyUpdate"
+
+--- After a clean
+e.LazyClean = "LazyClean"
+
+--- After checking for updates
+e.LazyCheck = "LazyCheck"
+
+--- After running log
+e.LazyLog = "LazyLog"
+
+--- Triggered by change detection after reloading plugin specs
+e.LazyReload = "LazyReload"
+
+--- Triggered after `LazyDone` and processing `VimEnter` auto commands
 e.VeryLazy = "VeryLazy"
+
+--- Triggered after `UIEnter` when `require("lazy").stats().startuptime` has been calculated.
+---
+--- Useful to update the startuptime on your dashboard.
+e.LazyVimStarted = "LazyVimStarted"
 
 return e
