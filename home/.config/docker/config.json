@@ -1,3 +1,7 @@
 {
-    "psFormat": "table {{.Names}}\t{{.Image}}\t{{.Networks}}\t{{.Status}}\t{{.Command}}"
+	"auths": {
+		"https://index.docker.io/v1/": {}
+	},
+	"psFormat": "table {{.Names}}\t{{.Image}}\t{{.Networks}}\t{{.Status}}\t{{.Command}}",
+	"credsStore": "secretservice"
 }
