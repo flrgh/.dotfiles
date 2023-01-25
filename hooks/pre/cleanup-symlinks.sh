@@ -46,6 +46,7 @@ readonly IGNORE=(
     "luarocks/rocks-*"
     .cpan/build
     .git
+    .local/share/Steam
     .local/share/gnome-shell
     .local/share/nvim
     .local/share/virtualenv
