@@ -37,7 +37,7 @@ for bin in "${!COMMANDS[@]}"; do
 
         # commands that start with `!` use an alternate binary
         # included in the command string
-        if [[ ${cmd#!} != $cmd ]]; then
+        if [[ ${cmd#!} != "$cmd" ]]; then
             cmd=${cmd#!}
         else
             cmd="$bin $cmd"
@@ -48,9 +48,11 @@ for bin in "${!COMMANDS[@]}"; do
         out="${DIR}/$bin"
 
         if [[ $cmd == *%%FILE%%* ]]; then
-            ${cmd//%%FILE%%/$out}
-        else
-            $cmd > "$DIR/$bin"
+            out=/dev/null
+        fi
+
+        if ! $cmd > "$out"; then
+            echo "Failed generating completion for $bin: $?"
         fi
     else
         echo "Skipping $bin"
@@ -63,7 +65,11 @@ for bin in "${!REMOTE_FILES[@]}"; do
 
         echo "Downloading $bin completion from $url"
         f=$(cache-get "$url" "bash-completion-${bin}")
-        cat "$f" > "$DIR/$bin"
+        if [[ -n ${f:-} ]]; then
+            cat "$f" > "$DIR/$bin"
+        else
+            echo "Failed downloading completion for $bin"
+        fi
     else
         echo "Skipping $bin"
     fi
