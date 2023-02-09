@@ -3,7 +3,7 @@
 set -euo pipefail
 
 readonly NAME=lua-language-server
-readonly REPO=sumneko/lua-language-server
+readonly REPO=LuaLS/lua-language-server
 
 is-installed() {
     binary-exists "$NAME"
