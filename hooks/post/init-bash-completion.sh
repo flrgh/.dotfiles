@@ -13,7 +13,7 @@ mkdir -p "$DIR"
 declare -A COMMANDS=(
     [pip]="completion --bash"
     [pip3]="completion --bash"
-    [hugo]="gen autocomplete --completionfile=%%FILE%%"
+    [hugo]="completion bash"
     [openstack]="complete --shell bash"
     [kubectl]="completion bash"
     [luarocks]="completion bash"
