@@ -26,7 +26,7 @@ local USER_SETTINGS = expand("~/.config/lua/lsp.lua")
 local ANNOTATIONS = globals.git_user_root .. "/lua-type-annotations"
 
 ---@type string
-local SUMNEKO = expand("~/.local/libexec/lua-language-server/meta/3rd")
+local LUA_LS = expand("~/.local/libexec/lua-language-server/meta/3rd")
 
 local NVIM_LUA = globals.dotfiles.config_nvim_lua
 
@@ -97,8 +97,8 @@ end
 local function expand_paths(p)
   p = p:gsub("$TYPES", ANNOTATIONS)
 
-  if p:find("$SUMNEKO", nil, true) then
-    p = p:gsub("$SUMNEKO", SUMNEKO)
+  if p:find("$LUA_LS", nil, true) then
+    p = p:gsub("$LUA_LS", LUA_LS)
     p = p .. "/library"
   end
 
@@ -234,22 +234,22 @@ local function lua_libs(settings)
   if settings.include_vim then
     insert(libs, expand("$VIMRUNTIME/lua"))
 
-    if mod.exists("neodev.sumneko") then
-      local sumneko = require "neodev.sumneko"
+    if mod.exists("neodev.lua_ls") then
+      local lua_ls = require "neodev.lua_ls"
 
-      if type(sumneko.library) == "function" then
-        append(libs, sumneko.library({
+      if type(lua_ls.library) == "function" then
+        append(libs, lua_ls.library({
           library = {
             types = true,
           }
         }))
 
       else
-        vim.notify("function `neodev.sumneko.library()` is missing")
+        vim.notify("function `neodev.lua_ls.library()` is missing")
       end
 
     else
-      vim.notify("module `neodev.sumneko` is missing")
+      vim.notify("module `neodev.lua_ls` is missing")
     end
 
     if ANNOTATIONS and dir_exists(ANNOTATIONS) then
