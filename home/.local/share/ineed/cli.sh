@@ -230,7 +230,13 @@ install::cmd() {
 
     echo "Downloading $name $version from $url"
 
-    local fname; fname=$(cache-get "$url")
+    local base;
+    printf -v base \
+      '%s.%s' \
+      "$name" \
+      "$(basename "$url")"
+
+    local fname; fname=$(cache-get "$url" "$base")
 
     driver-exec install-from-asset "$name" "$fname" "$version"
 
