@@ -202,7 +202,6 @@ install::cmd() {
         shift;
         case $arg in
             --reinstall)
-                echo setting reinstall
                 reinstall=1
                 ;;
             *)
