@@ -175,3 +175,8 @@ unset _CLEANUP __RC_START __RC_END _log_dir _log_dir
 # so I need to leave this here so that it thinks the alias already exists *grumble*
 #
 # alias luamake=/home/michaelm/.config/nvim/tools/lua-language-server/3rd/luamake/luamake
+
+# nvm is just as dumb as luamake
+# export NVM_DIR="$HOME/.config/nvm"
+# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
