@@ -10,7 +10,7 @@ export HISTSIZE=5000
 # timestamps with history
 export HISTTIMEFORMAT='%F %T '
 
-export HISTFILE=$HOME/.bash_history
+export HISTFILE=$XDG_STATE_HOME/.bash_history
 
 __HIST_SAVED=0
 
