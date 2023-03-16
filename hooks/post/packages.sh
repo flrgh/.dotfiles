@@ -58,6 +58,7 @@ PACKAGES=(
     m4                # Kong
     man-db
     mkpasswd
+    moreutils
     mycli             # nicer MySQL CLI
     net-tools         # netstat
     ninja-build
