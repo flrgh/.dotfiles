@@ -20,6 +20,7 @@ local fs_rename = loop.fs_rename
 local concat = table.concat
 local assert = assert
 local byte = string.byte
+local gsub = string.gsub
 
 local type = type
 local tostring = tostring
@@ -129,8 +130,6 @@ local normalize
 do
   local buf = {}
   local i = 0
-  local SLASH = byte("/")
-  local gsub = string.gsub
 
   local function handle_part(part)
     if part == "." or part == "" then
@@ -249,5 +248,36 @@ end
 function _M.rename(from, to)
   return fs_rename(from, to)
 end
+
+
+---@param ... string
+---@return string
+function _M.join(...)
+  local n = select("#", ...)
+  assert(n > 1, "fs.join() requires at least 2 arguments")
+
+  local first = select(1, ...)
+  first = first:gsub("/+$", "")
+  if first == "" then
+    first = "/"
+  end
+
+  local parts = { first }
+
+  for i = 1, n do
+    local part = select(i, ...)
+    part = part:gsub("/+$", "")
+    if i > 1 then
+      part = part:gsub("^/+", "")
+    elseif part == "/" then
+      part = ""
+    end
+
+    parts[i] = part
+  end
+
+  return concat(parts, "/")
+end
+
 
 return _M

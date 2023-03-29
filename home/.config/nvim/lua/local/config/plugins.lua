@@ -1,12 +1,14 @@
 local km = require "local.keymap"
 local evt = require "local.event"
+local g = require "local.config.globals"
+local fs = require "local.fs"
 
 local cmd = vim.cmd
 
 
 local conf = {
-  lockfile = require("local.config.globals").dotfiles.config_nvim .. "/plugins.lock.json",
-  colorscheme = { "tokyonight" },
+  lockfile = fs.join(g.dotfiles.config_nvim, "plugins.lock.json"),
+  colorscheme = { "ayu-mirage", "tokyonight" },
 }
 
 ---@param plugin string|table
@@ -189,26 +191,27 @@ local plugins_by_category = {
   appearance = {
     -- Color
     {
-      'sainnhe/sonokai',
-      enabled = false,
-      cond = false,
-      init = function()
-        vim.g.sonokai_style = "atlantis"
-        vim.g.sonokai_better_performance = 1
-      end,
-      config = function()
-        cmd.colorscheme("sonokai")
-      end,
-      priority = 2^16,
-    },
-    {
       'folke/tokyonight.nvim',
+      enabled = false,
       priority = 2^16,
       lazy = false,
       config = function()
         local tn = require "tokyonight"
         tn.setup()
         tn.load()
+      end,
+    },
+
+    {
+      'Shatur/neovim-ayu',
+      priority = 2^16,
+      lazy = false,
+      config = function()
+        local ayu = require("ayu")
+        ayu.setup({
+          mirage = true,
+        })
+        ayu.colorscheme()
       end,
     },
 
