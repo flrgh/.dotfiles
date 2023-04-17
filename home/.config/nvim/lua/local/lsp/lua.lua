@@ -371,7 +371,7 @@ local conf = {
 
       completion = {
         enable = true,
-        autoRequire = true,
+        autoRequire = false,
         callSnippet = "Disable",
         displayContext = 0,
         keywordSnippet = "Replace",
