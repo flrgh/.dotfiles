@@ -653,9 +653,6 @@ local plugins_by_category = {
     -- direnv support and syntax hilighting
     'direnv/direnv.vim',
 
-    -- bazel
-    "bazelbuild/vim-ft-bzl",
-
     -- etlua template syntax support
     {
       'VaiN474/vim-etlua',
