@@ -226,22 +226,35 @@ local plugins_by_category = {
     -- tabline for neovim
     {
       'romgrk/barbar.nvim',
-      init = function()
-        vim.g.bufferline = {
+      setup = function()
+        require("barbar").setup({
+          icons = {
+            separator = {
+              left = '▎',
+            },
+            inactive = {
+              separator = {
+                left =  '▎',
+              },
+            },
+            pinned = {
+              button = '車',
+            },
+            button = '',
+            modified = {
+              button= '●',
+            },
+
+          },
           animation = false,
           auto_hide = false,
           closable = true,
           clickable = true,
-          icon_separator_active = '▎',
-          icon_separator_inactive = '▎',
-          icon_close_tab = '',
-          icon_close_tab_modified = '●',
-          icon_pinned = '車',
           maximum_padding = 4,
           maximum_length = 30,
           semantic_letters = true,
           no_name_title = nil,
-        }
+        })
       end,
     },
 
