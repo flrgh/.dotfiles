@@ -149,6 +149,8 @@ do
     end
   end
 
+  local SLASH = byte("/")
+
   --- normalize a path string
   ---
   --- 1. De-dupe path separators  (/a//b => /a/b)
