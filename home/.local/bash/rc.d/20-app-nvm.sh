@@ -7,6 +7,7 @@ if [[ -d $NVM_DIR ]]; then
         nvm() {
             unset -f nvm
             . "$NVM_DIR/nvm.sh"
+            nvm alias default lts/hydrodgen
             nvm "$@"
         }
 
