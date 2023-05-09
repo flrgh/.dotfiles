@@ -20,14 +20,18 @@ add-path() {
 }
 
 add-lua-path() {
-    local -r path="$1"
+    local path="$1"
+
+    path=$(realpath "$path")
 
     add-path LUA_PATH "$path/?/init.lua" ";"
     add-path LUA_PATH "$path/?.lua"      ";"
 }
 
 add-lua-cpath() {
-    local -r path="$1"
+    local path="$1"
+
+    path=$(realpath "$path")
 
     add-path LUA_CPATH "$path/?.so" ";"
 }
@@ -72,6 +76,7 @@ layout_luarocks() {
         echo "ERROR: LuaRocks dir not found!"
         return 1
     fi
+
 
     echo "Using LuaRocks at $dir"
 
