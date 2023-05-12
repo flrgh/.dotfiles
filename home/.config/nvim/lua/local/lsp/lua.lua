@@ -28,6 +28,10 @@ local ANNOTATIONS = globals.git_user_root .. "/lua-type-annotations"
 ---@type string
 local LUA_LS = expand("~/.local/libexec/lua-language-server/meta/3rd")
 
+--- annotations from https://github.com/LuaCATS
+---@type string
+local LUA_CATS = expand("~/git/LuaCATS")
+
 local NVIM_LUA = globals.dotfiles.config_nvim_lua
 
 local get_plugin_lua_dir
@@ -99,6 +103,11 @@ local function expand_paths(p)
 
   if p:find("$LUA_LS", nil, true) then
     p = p:gsub("$LUA_LS", LUA_LS)
+    p = p .. "/library"
+  end
+
+  if p:find("$LUA_CATS", nil, true) then
+    p = p:gsub("$LUA_CATS", LUA_CATS)
     p = p .. "/library"
   end
 
