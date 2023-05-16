@@ -617,6 +617,9 @@ local plugins_by_category = {
       "zbirenbaum/copilot.lua",
       event = evt.VimEnter,
       config = function()
+        -- disabled for now
+        if true then return end
+
         vim.defer_fn(function()
           require("copilot").setup()
         end, 100)
@@ -626,7 +629,7 @@ local plugins_by_category = {
     {
       "zbirenbaum/copilot-cmp",
       event = evt.VimEnter,
-      dependencies = { "copilot.lua" },
+      dependencies = { "zbirenbaum/copilot.lua" },
       config = function ()
         require("copilot_cmp").setup()
       end
