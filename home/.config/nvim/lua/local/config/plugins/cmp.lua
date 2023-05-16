@@ -134,9 +134,11 @@ local function experimental()
 end
 
 local function window()
-  return {
-    documentation = true,
-  }
+  ---@type cmp.WindowConfig
+  local w = {}
+  w.completion = cmp.config.window.bordered()
+  w.documentation = cmp.config.window.bordered()
+  return w
 end
 
 
@@ -149,15 +151,15 @@ end
 ---@return cmp.ConfigSchema
 local function defaults(extend)
   ---@type cmp.ConfigSchema
-  local cfg = {
-    mapping      = mapping(),
-    sources      = sources(),
-    snippet      = snippet(),
-    formatting   = formatting(),
-    experimental = experimental(),
-    window       = window(),
-    sorting      = sorting(),
-  }
+  local cfg = {}
+
+  cfg.mapping      = mapping()
+  cfg.sources      = sources()
+  cfg.snippet      = snippet()
+  cfg.formatting   = formatting()
+  cfg.experimental = experimental()
+  cfg.window       = window()
+  cfg.sorting      = sorting()
 
   local typ = type(extend)
   if typ == "function" then
