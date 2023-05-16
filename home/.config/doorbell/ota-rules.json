@@ -1,0 +1,24 @@
+[
+  {
+    "comment": "stop annoying WP scanning",
+    "path": "~/wp-login[.]php$|/wp-admin/|^/wordpress",
+    "terminate": true,
+    "action": "deny"
+  },
+  {
+    "comment": "stop trying to scrape my shit, Slack",
+    "ua": "~Slackbot",
+    "action": "deny"
+  },
+  {
+    "comment": "annoying bots",
+    "ua": "~YandexBot|NetSystemsResearch|NetcraftSurveyAgent|scaninfo@expanseinc[.]com|CensysInspect",
+    "terminate": true,
+    "action": "deny"
+  },
+  {
+    "comment": "empty user-agent",
+    "ua": "",
+    "action": "deny"
+  }
+]
