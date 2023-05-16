@@ -78,14 +78,15 @@ local function sources()
     { name = 'nvim_lsp' },
     { name = 'nvim_lsp_signature_help' },
     { name = 'treesitter' },
-    { name = 'buffer' },
+    { name = 'buffer', priority = 50 },
     { name = 'path', option = { get_cwd = get_cwd } },
     { name = 'calc' },
     { name = 'emoji' },
-    { name = 'copilot' },
+    { name = 'copilot', priority = 50 },
   }
 
   for i = 1, #src do
+    src[i].priority = src[i].priority or 100
     src[i].entry_filter = entry_filter
   end
 
