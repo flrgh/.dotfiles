@@ -20,5 +20,9 @@
     "comment": "empty user-agent",
     "ua": "",
     "action": "deny"
+  },
+  {
+    "country" "RU",
+    "action": "deny"
   }
 ]
