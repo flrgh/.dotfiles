@@ -60,6 +60,7 @@ PACKAGES=(
     mkpasswd
     moreutils
     mycli             # nicer MySQL CLI
+    musl-gcc
     net-tools         # netstat
     ninja-build
     nmap
