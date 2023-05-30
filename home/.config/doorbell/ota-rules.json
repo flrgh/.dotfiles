@@ -24,5 +24,10 @@
   {
     "country": "RU",
     "action": "deny"
+  },
+  {
+    "comment": "stop crawling me, yo",
+    "org": "PONYNET",
+    "action": "deny"
   }
 ]
