@@ -190,32 +190,50 @@ local plugins_by_filetype = {
 local plugins_by_category = {
   appearance = {
     -- Color
-    {
-      'folke/tokyonight.nvim',
-      enabled = false,
+
+    -- tokyonight-moon
+    { "folke/tokyonight.nvim",
+      enabled = true,
       priority = 2^16,
       lazy = false,
       config = function()
-        local tn = require "tokyonight"
-        tn.setup()
-        tn.load()
+        require("tokyonight").setup()
       end,
     },
 
-    {
-      'Shatur/neovim-ayu',
-      priority = 2^16,
-      lazy = false,
+    -- catppuccin-mocha
+    { "catppuccin/nvim", name = "catppuccin" },
+
+    -- warm, low contrast
+    -- kanagawa-dragon is pretty nice
+    { "rebelot/kanagawa.nvim" },
+
+    -- more bright, high contrast
+    { "bluz71/vim-nightfly-colors",
+      as = "nightfly",
       config = function()
-        local ayu = require("ayu")
-        ayu.setup({
-          mirage = true,
-        })
-        ayu.colorscheme()
+        local g = vim.g
+        g.nightflyCursorColor         = true
+        g.nightflyItalics             = true
+        g.nightflyTerminalColors      = false
+        g.nightflyNormalFloat         = false
+        g.nightflyUndercurls          = false
+        g.nightflyVirtualTextColor    = true
+        g.nightflyTransparent         = false
+        g.nightflyUnderlineMatchParen = true
+
+        --[[
+          0 will display no window separators
+          1 will display block separators; this is the default
+          2 will diplay line separators
+        ]]--
+        g.nightflyWinSeparator        = 0
+
+        cmd.colorscheme("nightfly")
       end,
     },
 
-    { 'lunarvim/darkplus.nvim', lazy = true },
+    "lunarvim/darkplus.nvim",
 
     -- devicon assets
     "nvim-tree/nvim-web-devicons",
