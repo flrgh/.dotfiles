@@ -30,7 +30,7 @@ color:
   # when specifying <theme-file-name>, lsd will look up theme file
   # XDG Base Directory if relative, e.g. ~/.config/lsd/themes/<theme-file-name>.yaml,
   # The file path if absolute
-  theme: default
+  theme: flrgh
 
 # == Date ==
 # This specifies the date format for the date column. The freeform format
@@ -96,7 +96,7 @@ size: default
 # == Permission ==
 # Specify the format of the permission column
 # Possible value: rwx, octal
-#permission: rwx
+permission: rwx
 
 # == Sorting ==
 sorting:
@@ -109,7 +109,7 @@ sorting:
   # Whether to group directories together and where.
   # When "classic" is set, this is set to "none".
   # Possible values: first, last, none
-  dir-grouping: none
+  dir-grouping: first
 
 # == No Symlink ==
 # Whether to omit showing symlink targets
@@ -133,4 +133,4 @@ symlink-arrow: ⇒
 # == Header ==
 # Whether to display block headers.
 # Possible values: false, true
-#header: true
+header: false
