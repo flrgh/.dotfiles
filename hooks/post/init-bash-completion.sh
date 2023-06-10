@@ -22,6 +22,7 @@ declare -A COMMANDS=(
     [ineed]="_bash_completion"
     [rustup]="completions bash rustup"
     [cargo]="!rustup completions bash cargo"
+    [gitsign]="completion bash"
 )
 
 declare -A REMOTE_FILES=(
