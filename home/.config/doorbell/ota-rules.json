@@ -29,5 +29,10 @@
     "comment": "stop crawling me, yo",
     "org": "PONYNET",
     "action": "deny"
+  },
+  {
+    "comment": "ugggggh",
+    "path": "/.git/config",
+    "action": "deny"
   }
 ]
