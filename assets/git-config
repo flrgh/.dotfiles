@@ -1,14 +1,25 @@
 [alias]
+	s = status
+	c = commit
+	last = log -1 HEAD
 	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
 	tg = tag --sort=-creatordate --format='* %(objectname:short) %(align:width=13,position=left)%(refname:lstrip=2)%(end) %(align:width=28)%(creatordate:iso8601)%(end) %(align:width=20,position=left)(%(authorname))%(end) %(subject)'
 	cat = "!git show \"$1:$2\" #"
 	lb = branch --sort=-authordate --format '%(align:width=18)%(authordate:format:%Y-%m-%d %H:%M)%(end) %(align:width=14,position=right)%(authordate:relative)%(end)  %(objectname:short)  %(HEAD) %(if)%(HEAD)%(then)%(color:green)%(end)%(refname:short)'
 
+[color]
+	ui = true
+
+[core]
+	autocrlf = input
+	safecrlf = true
+
 [init]
 	templatedir = ~/.config/git/template
+	defaultBranch = main
 
 [merge]
-	tool = nvim
+	tool = nvim -d
 
 [mergetool]
 	prompt = false
@@ -25,6 +36,8 @@
 
 [diff]
 	noprefix = true
+	algorithm = patience
+	compactionHeuristic = true
 
 [commit]
 	gpgsign = true
@@ -34,6 +47,10 @@
 
 [url "https://github.com/"]
 	insteadOf = git://github.com:
+
+[user]
+	name = Michael Martin
+	email = flrgh@protonmail.com
 
 [tag]
 	gpgsign = true
