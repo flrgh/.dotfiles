@@ -37,13 +37,18 @@ end
 
 local on_attach
 do
-  ---@type table<string, function>
+  ---@type table<string, function|string>
   local maps = {
-      declaration = lsp.buf.declaration,
-      definition  = lsp.buf.definition,
-      hover       = lsp.buf.hover,
-      code_action = lsp.buf.code_action,
-      show_diagnostic  = vim.diagnostic.open_float,
+    rename              = lsp.buf.rename,
+    references         = lsp.buf.references,
+    code_action         = lsp.buf.code_action,
+    declaration         = lsp.buf.declaration,
+    definition          = lsp.buf.definition,
+    type_definition     = lsp.buf.type_definition,
+    signature_help      = lsp.buf.signature_help,
+    hover               = lsp.buf.hover,
+    implementation      = lsp.buf.implementation,
+    show_diagnostic     = vim.diagnostic.open_float,
   }
 
   if mod.exists("hover") then
@@ -86,15 +91,22 @@ do
       -- superceded by vim.lsp.tagfunc
       --km.nnoremap.ctrl[']'] = km.lsp.definition
 
-      km.buf.nnoremap.gD = maps.declaration
-      km.buf.nnoremap.gd = maps.definition
-      km.buf.nnoremap.K  = maps.hover
-      km.buf.nnoremap.leader.td = maps.toggle_diagnostics
-      km.buf.nnoremap.leader.sd = maps.show_diagnostic
-      km.buf.nnoremap.leader.nd = maps.next_diagnostic
-      km.buf.nnoremap.leader.pd = maps.prev_diagnostic
-      km.buf.nnoremap.leader.ca = maps.code_action
-      km.buf.vnoremap.leader.ca = maps.range_code_action
+      km.buf.nnoremap.gD          = maps.declaration
+      km.buf.nnoremap.gd          = maps.type_definition
+      km.buf.nnoremap.gi          = maps.implementation
+
+      km.buf.nnoremap.K           = maps.hover
+      --km.buf.nnoremap.ctrl.K      = maps.signature_help
+
+      km.buf.nnoremap.leader.ca   = maps.code_action
+      km.buf.vnoremap.leader.ca   = maps.range_code_action
+
+      km.buf.nnoremap.leader.nd   = maps.next_diagnostic
+      km.buf.nnoremap.leader.pd   = maps.prev_diagnostic
+      km.buf.nnoremap.leader.sd   = maps.show_diagnostic
+      km.buf.nnoremap.leader.td   = maps.toggle_diagnostics
+
+      km.buf.nnoremap.leader.rn   = maps.rename
     end
 
     vim.diagnostic.config({

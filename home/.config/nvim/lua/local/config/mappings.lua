@@ -70,8 +70,5 @@ nnoremap.N = 'Nzzzv'
 vnoremap.J = { ":move '>+1<CR>gv=gv", no_auto_cr = true }
 vnoremap.K = { ":move '<-2<CR>gv=gv", no_auto_cr = true }
 
--- Leader + rn => rename
-nnoremap.leader.rn = vim.lsp.buf.rename
-
 -- disable macro
 nmap.q = '<nop>'
