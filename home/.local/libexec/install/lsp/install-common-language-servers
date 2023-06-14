@@ -13,4 +13,5 @@ npm install -g \
     vscode-json-languageserver \
     yaml-language-server \
     awk-language-server \
-    dockerfile-language-server-nodejs
+    dockerfile-language-server-nodejs \
+    typescript-language-server

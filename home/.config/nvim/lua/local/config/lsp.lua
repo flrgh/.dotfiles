@@ -132,6 +132,7 @@ local servers = {
   teal         = "tealls",
   terraform    = "terraformls",
   yaml         = "yamlls",
+  typescript   = "tsserver",
 }
 
 for lang, server in pairs(servers) do
