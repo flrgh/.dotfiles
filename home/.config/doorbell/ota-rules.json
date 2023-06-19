@@ -12,7 +12,7 @@
   },
   {
     "comment": "annoying bots",
-    "ua": "~YandexBot|NetSystemsResearch|NetcraftSurveyAgent|scaninfo@expanseinc[.]com|CensysInspect",
+    "ua": "~YandexBot|NetSystemsResearch|NetcraftSurveyAgent|scaninfo@expanseinc[.]com|CensysInspect|Palo Alto Networks company",
     "terminate": true,
     "action": "deny"
   },
