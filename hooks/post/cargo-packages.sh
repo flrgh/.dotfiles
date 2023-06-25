@@ -33,3 +33,7 @@ for p in "${PACKAGES[@]}"; do
     cargo binstall --no-confirm "$p" \
     || cargo install "$p"
 done
+
+# cargo-binstall is insufficient for packages that must be built with
+# additional --features enabled
+cargo install nu --features dataframe

@@ -184,6 +184,24 @@ local plugins_by_filetype = {
       end,
     },
   },
+
+  nu = {
+    {
+      'LhKipp/nvim-nu',
+      build = function()
+        cmd 'TSInstall nu'
+      end,
+      config = function()
+        require("nu").setup {
+          use_lsp_features = true,
+          all_cmd_names = [[nu -c 'help commands | get name | str join "\n"']],
+        }
+      end,
+      dependencies = {
+        "jose-elias-alvarez/null-ls.nvim",
+      },
+    }
+  },
 }
 
 ---@type table<string, LazySpec[]>
