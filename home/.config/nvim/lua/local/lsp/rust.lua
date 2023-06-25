@@ -22,6 +22,9 @@ return function(conf)
           checkOnSave = {
             command = "clippy",
           },
+          cargo = {
+            allFeatures = true,
+          },
         },
       },
     }),
