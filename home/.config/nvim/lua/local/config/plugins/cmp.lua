@@ -23,11 +23,11 @@ local function mapping()
     -- explicitly invoke completion
     [km.Ctrl.Space] = cmp.mapping.complete,
 
-    [km.Ctrl.e] = cmp.mapping.close(),
+    [km.Ctrl.e] = cmp.mapping.abort(),
 
     [km.Enter] = cmp.mapping.confirm {
       behavior = cmp.ConfirmBehavior.Replace,
-      select = true,
+      select = false,
     },
 
     [km.Tab] = function(fallback)
