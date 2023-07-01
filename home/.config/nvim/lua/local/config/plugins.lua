@@ -8,7 +8,7 @@ local cmd = vim.cmd
 
 local conf = {
   lockfile = fs.join(g.dotfiles.config_nvim, "plugins.lock.json"),
-  colorscheme = { "ayu-mirage", "tokyonight" },
+  colorscheme = { "tokyonight", "catppuccin", "kanagawa" },
 }
 
 ---@param plugin string|table
@@ -224,7 +224,11 @@ local plugins_by_category = {
 
     -- warm, low contrast
     -- kanagawa-dragon is pretty nice
-    { "rebelot/kanagawa.nvim" },
+    { "rebelot/kanagawa.nvim",
+      config = function()
+        cmd.colorscheme("kanagawa")
+      end,
+    },
 
     -- more bright, high contrast
     { "bluz71/vim-nightfly-colors",
@@ -247,7 +251,7 @@ local plugins_by_category = {
         ]]--
         g.nightflyWinSeparator        = 0
 
-        cmd.colorscheme("nightfly")
+        --cmd.colorscheme("nightfly")
       end,
     },
 
