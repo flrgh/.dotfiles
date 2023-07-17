@@ -34,5 +34,10 @@
     "comment": "ugggggh",
     "path": "/.git/config",
     "action": "deny"
+  },
+  {
+    "comment": "bots bots bots (AMAZON-AES)",
+    "asn": 14618,
+    "action": "deny"
   }
 ]
