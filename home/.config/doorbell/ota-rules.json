@@ -39,5 +39,10 @@
     "comment": "bots bots bots (AMAZON-AES)",
     "asn": 14618,
     "action": "deny"
+  },
+  {
+    "comment": "open file share",
+    "host": "share.pancakes2.com",
+    "action": "allow"
   }
 ]
