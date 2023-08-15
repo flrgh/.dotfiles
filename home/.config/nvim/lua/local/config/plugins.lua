@@ -193,13 +193,11 @@ local plugins_by_filetype = {
       end,
       config = function()
         require("nu").setup {
-          use_lsp_features = true,
+          -- LSP features require null-ls, but it is no more
+          use_lsp_features = false,
           all_cmd_names = [[nu -c 'help commands | get name | str join "\n"']],
         }
       end,
-      dependencies = {
-        "jose-elias-alvarez/null-ls.nvim",
-      },
     }
   },
 }
