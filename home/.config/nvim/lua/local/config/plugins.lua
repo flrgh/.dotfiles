@@ -375,18 +375,20 @@ local plugins_by_category = {
         km.nnoremap.leader.b  = {':Buffers', silent = true }
         -- fuzzy-find with ripgrep
         km.nnoremap.leader.rg = {':Rg',      silent = true }
+
+        vim.g.fzf_preview_window = {
+          "right,50%,<70(down,70%)",
+          "ctrl-/"
+        }
+
+        vim.g.fzf_layout = {
+          window = {
+            width = 0.9,
+            height = 0.8
+          }
+        }
       end,
       cmd = { "GFiles", "Buffers", "Rg" },
-      config = function()
-        cmd [[
-          " ripgrep
-          if executable('rg')
-            let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --follow --glob "!.git/*"'
-            set grepprg=rg\ --vimgrep
-            command! -bang -nargs=* Find call fzf#vim#grep('rg --column --line-number --no-heading --fixed-strings --ignore-case --hidden --follow --glob "!.git/*" --color "always" '.shellescape(<q-args>).'| tr -d "\017"', 1, <bang>0)
-          endif
-        ]]
-      end,
     },
   },
 
