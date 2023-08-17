@@ -628,7 +628,7 @@ local plugins_by_category = {
     },
 
     {
-      "glepnir/lspsaga.nvim",
+      "nvimdev/lspsaga.nvim",
       event = evt.VeryLazy,
       branch = "main",
       config = function()
@@ -636,12 +636,16 @@ local plugins_by_category = {
           symbol_in_winbar = {
             enable = true, -- I only work on nvim 0.8
           },
-          code_action_lightbulb  = {
+          lightbulb = {
             -- this causes some visual defects, so it's disabled
             --
             -- the sign is also displayed in the gutter, so the virtual
             -- text is redundant anyways
             virtual_text = false,
+          },
+
+          code_action = {
+            extend_gitsigns = true,
           },
         })
       end,
