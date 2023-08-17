@@ -458,15 +458,28 @@ local plugins_by_category = {
     },
 
     'rhysd/conflict-marker.vim',
+
     {
       'lewis6991/gitsigns.nvim',
       event = evt.BufReadPre,
       config = function()
         require("gitsigns").setup({
-          signcolumn         = false,
-          numhl              = true,
-          word_diff          = false,
+          signcolumn = true,
+          numhl      = false,
+          word_diff  = false,
+
+          max_file_length = 20000,
+
           current_line_blame = true,
+          current_line_blame_opts = {
+            virt_text = true,
+            virt_text_pos = 'eol',
+            delay = 500,
+          },
+
+          yadm = {
+            enable = false,
+          }
         })
       end,
     },
