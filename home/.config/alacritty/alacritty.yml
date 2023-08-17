@@ -9,8 +9,8 @@ env: {}
 window:
   # Window dimensions (changes require restart)
   dimensions:
-    columns: 0
-    lines: 0
+    columns: 90
+    lines: 60
 
   # Window padding (changes require restart)
   padding:
