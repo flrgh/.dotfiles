@@ -65,6 +65,7 @@ opt.number        = true
 opt.background    = 'dark'
 opt.termguicolors = true
 opt.gfn           = 'Monospace 10'
+opt.signcolumn    = 'yes'
 
 -- no cursor blinking
 opt.gcr = 'a:blinkon0'
