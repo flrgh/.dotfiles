@@ -2,17 +2,16 @@
 
 set -euo pipefail
 
-readonly CACHE=$HOME/.cache
 readonly INSTALL_PATH=$HOME/.local/share/fonts
 readonly REPO=ryanoasis/nerd-fonts
 readonly FONTS=(
-   SourceCodePro
-   FiraCode
-   DejaVuSansMono
-   DroidSansMono
-   JetBrainsMono
-   UbuntuMono
-   LiberationMono
+    SourceCodePro
+    FiraCode
+    DejaVuSansMono
+    DroidSansMono
+    JetBrainsMono
+    UbuntuMono
+    LiberationMono
 )
 
 TAG=$(gh-helper get-latest-release-tag "$REPO")
@@ -20,25 +19,25 @@ TAG=$(gh-helper get-latest-release-tag "$REPO")
 echo "Latest tag: $TAG"
 
 get_font() {
-   local name=$1
+    local name=$1
 
-   cache-get \
-      "https://github.com/${REPO}/releases/download/${TAG}/${name}.zip" \
-      "font-${TAG}-${name}.zip"
+    cache-get \
+        "https://github.com/${REPO}/releases/download/${TAG}/${name}.zip" \
+        "font-${TAG}-${name}.zip"
 }
 
 install_font() {
-   local path=$1
+    local path=$1
 
-   printf "Installing %s..." "${path##*/}"
+    printf "Installing %s..." "${path##*/}"
 
-   unzip -u -d "$INSTALL_PATH" "$path" > /dev/null
-   printf " ...done.\n"
+    unzip -u -d "$INSTALL_PATH" "$path" > /dev/null
+    printf " ...done.\n"
 }
 
 for f in "${FONTS[@]}"; do
-   dest=$(get_font "$f")
-   install_font "$dest"
+    dest=$(get_font "$f")
+    install_font "$dest"
 done
 
 echo "Clearing font cache"
