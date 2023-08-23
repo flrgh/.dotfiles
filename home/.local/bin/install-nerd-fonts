@@ -4,6 +4,7 @@ set -euo pipefail
 
 readonly INSTALL_PATH=$HOME/.local/share/fonts
 readonly REPO=ryanoasis/nerd-fonts
+
 readonly FONTS=(
     SourceCodePro
     FiraCode
@@ -32,7 +33,13 @@ install_font() {
 
     printf "Installing %s..." "${path##*/}"
 
-    unzip -u -d "$INSTALL_PATH" "$path" > /dev/null
+    unzip \
+        -u \
+        -d "$INSTALL_PATH" \
+        "$path" \
+        '*.[t|o]tf' \
+    > /dev/null
+
     printf " ...done.\n"
 }
 
