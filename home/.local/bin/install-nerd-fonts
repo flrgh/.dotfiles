@@ -12,6 +12,7 @@ readonly FONTS=(
     JetBrainsMono
     UbuntuMono
     LiberationMono
+    NerdFontsSymbolsOnly
 )
 
 TAG=$(gh-helper get-latest-release-tag "$REPO")
