@@ -9,7 +9,8 @@ import:
 # No sense enabling this since I don't use it
 ipc_socket: false
 
-env: {}
+env:
+  ALACRITTY: "1"
 
 window:
   # Window dimensions (changes require restart)
