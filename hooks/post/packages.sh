@@ -11,6 +11,17 @@ set -euo pipefail
 # and `lib-whatever` installed in order to run such-and-such" moments.
 
 PACKAGES=(
+    # fonts
+    adobe-source-code-pro-fonts
+    liberation-fonts
+
+    # things installed for Kong development
+    libpasswdqc-devel
+    libyaml-devel
+    m4
+    perl-FindBin
+    zlib-devel
+
     axel              # openresty build dep
     alacritty         # terminal emulator
     automake
@@ -45,17 +56,14 @@ PACKAGES=(
     jq
     jo                # command-line JSON object creation
     jwhois
-    libpasswdqc-devel # Kong
     libtool           # nvim build dep
     libyaml
     libyaml-devel
-    libyaml-devel     # Kong
     litecli           # nicer SQLite CLI
     lnav              # log file navigator
     lsd               # modern ls replacement
     lshw
     lsof
-    m4                # Kong
     man-db
     mkpasswd
     moreutils
@@ -72,7 +80,6 @@ PACKAGES=(
     pcre
     pcre-devel
     pcre2
-    perl-FindBin      # kong-build-tools
     pgcli             # nicer Postgres CLI
     plocate
     pre-commit        # fancy git pre-commit framework
@@ -114,7 +121,6 @@ PACKAGES=(
     zip
     zlib
     zlib-devel
-    zlib-devel        # Kong
 )
 
 sudo dnf install -y "${PACKAGES[@]}"
