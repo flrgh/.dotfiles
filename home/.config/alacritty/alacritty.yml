@@ -4,6 +4,11 @@
 import:
   - ~/.config/alacritty/alacritty.local.yml
 
+# Offer IPC using `alacritty msg`
+#
+# No sense enabling this since I don't use it
+ipc_socket: false
+
 env: {}
 
 window:
