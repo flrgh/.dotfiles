@@ -36,7 +36,7 @@ is-installed() {
 get-asset-download-url() {
     local version=$1
 
-    echo "https://github.com/${REPO}/releases/download/${version}/${NAME}"
+    echo "https://github.com/${REPO}/releases/download/${version}/${NAME}-x64"
 }
 
 install-from-asset() {

@@ -5,6 +5,7 @@ set -euo pipefail
 
 declare -rgx INEED_CLI=1
 declare -rgx INEED_ROOT="$HOME/.local/share/ineed"
+declare -rgx INEED_STATE="$HOME/.local/state/ineed"
 
 source "$INEED_ROOT/lib.sh"
 source "$INEED_ROOT/cli.sh"
@@ -35,15 +36,9 @@ main() {
         exit 1
     fi
 
-    local -r fn="${cmd}::cmd"
-    if ! declare -f "$fn" &>/dev/null; then
-        echo "Unknown command: $cmd"
-        exit 1
-    fi
-
     shift
 
-    "$fn" "$@"
+    run-command "$cmd" "$@"
 }
 
 main "$@"

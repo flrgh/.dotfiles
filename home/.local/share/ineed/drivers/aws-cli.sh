@@ -3,7 +3,7 @@
 set -euo pipefail
 
 readonly NAME=aws-cli
-
+readonly REPO=aws/aws-cli
 
 is-installed() {
     binary-exists aws
@@ -18,15 +18,16 @@ get-installed-version() {
 }
 
 get-latest-version() {
-    echo latest
+    gh-helper get-latest-tag "$REPO"
 }
 
 list-available-versions() {
-    echo latest
+    gh-helper get-tag-names "$REPO"
 }
 
 get-asset-download-url() {
-    echo https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    local version=$1
+    echo "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${version}.zip"
 }
 
 install-from-asset() {
@@ -34,7 +35,7 @@ install-from-asset() {
 
     local tmp; tmp=$(mktemp -d)
 
-    unzip -d "$tmp" "$asset"
+    unzip -d "$tmp" "$asset" >/dev/null
 
     cd "$tmp"
 
@@ -42,12 +43,4 @@ install-from-asset() {
         --update \
         --install-dir "$HOME/.local/aws-cli" \
         --bin-dir "$HOME/.local/bin"
-
-
-    echo "Installing ECS CLI"
-    curl \
-        -s \
-        -o "$HOME/.local/bin/ecs-cli" \
-        --url https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest
-    chmod -v +x "$HOME/.local/bin/ecs-cli"
 }

@@ -5,11 +5,13 @@
 
 source "$INEED_ROOT/lib.sh"
 
+
 is-command() {
     local name=${1%::cmd}
 
     function-exists "${name}::cmd"
 }
+
 
 is-driver() {
     local -r name=$1
@@ -17,11 +19,13 @@ is-driver() {
     [[ -n $name && -n ${INEED_DRIVERS_HASH[$name]} ]]
 }
 
+
 have-completion() {
     local name=${1%::cmd}
 
     function-exists "${name}::complete"
 }
+
 
 complete-from-args() {
     local oifs="$IFS"
@@ -36,6 +40,7 @@ complete-from-args() {
         COMPREPLY+=("$elem")
     done
 }
+
 
 complete-from-array() {
     local -r name=$1
@@ -55,6 +60,7 @@ complete-from-array() {
 
 }
 
+
 complete-from-drivers() {
     if [[ -n $_DRIVER ]]; then
         return
@@ -62,6 +68,7 @@ complete-from-drivers() {
 
     complete-from-args "${INEED_DRIVERS_LIST[@]}"
 }
+
 
 complete-from-commands() {
     if [[ -n ${_COMMAND:-} ]]; then
@@ -71,6 +78,7 @@ complete-from-commands() {
     complete-from-args "${INEED_CLI_COMMANDS[@]}"
 }
 
+
 get-available-versions() {
     local -r name=$1
 
@@ -79,11 +87,30 @@ get-available-versions() {
     done
 }
 
+
 get-installed-version() {
     local -r name=$1
+
+    if app-state::get "$name" version; then
+        return
+    fi
+
+    # state is not yet populated, need to refresh from the binary itself
     local v; v=$(driver-exec get-installed-version "$name")
-    normalize-version "$v"
+    v=$(normalize-version "$v")
+
+    set-installed-version "$name" "$v"
+
+    echo "$v"
 }
+
+
+set-installed-version() {
+    local -r name=$1
+    local -r version=$2
+    app-state::set "$name" version "$(normalize-version "$version")"
+}
+
 
 get-latest-version() {
     local -r name="$1"
@@ -92,7 +119,6 @@ get-latest-version() {
 
     normalize-version "$v"
 }
-
 
 
 complete-from-versions() {
@@ -120,13 +146,16 @@ list::cmd() {
     done
 }
 
+
 is-installed() {
     driver-exec is-installed "$1"
 }
 
+
 version() {
     get-installed-version "$1"
 }
+
 
 version::complete() {
     complete-from-drivers
@@ -147,6 +176,7 @@ drivers::cmd() {
     done
 }
 
+
 usage::cmd() {
     echo "Usage:"
     echo
@@ -160,11 +190,13 @@ usage::cmd() {
     done
 }
 
+
 get-latest::cmd() {
     local -r name="$1"
 
     get-latest-version "$name"
 }
+
 
 get-latest::complete() {
     complete-from-drivers
@@ -175,11 +207,13 @@ available-versions::complete() {
     complete-from-drivers
 }
 
+
 available-versions::cmd() {
     local -r name="$1"
 
     get-available-versions "$name"
 }
+
 
 need-install() {
     local -r name="$1"
@@ -193,6 +227,22 @@ need-install() {
 
     [[ $current != "$version" ]]
 }
+
+
+run-command() {
+    local -r cmd=$1
+    shift
+
+    if ! is-command "$cmd"; then
+        echo "Unknown command: $cmd"
+        exit 1
+    fi
+
+    local -r fn="${cmd}::cmd"
+
+    "$fn" "$@"
+}
+
 
 install::cmd() {
     local reinstall=0
@@ -241,7 +291,10 @@ install::cmd() {
     driver-exec install-from-asset "$name" "$fname" "$version"
 
     echo "$name" "$(driver-exec get-installed-version "$name")"
+
+    set-installed-version "$name" "$version"
 }
+
 
 install::complete() {
     for (( i = ${#COMP_WORDS[@]}; i > 0; i-- )); do
@@ -256,15 +309,18 @@ install::complete() {
     complete-from-drivers
 }
 
+
 update::cmd() {
     for d in "${INEED_DRIVERS_LIST[@]}"; do
         install::cmd "$d"
     done
 }
 
+
 _bash_completion::cmd() {
     cat "$INEED_ROOT"/completion.sh
 }
+
 
 declare -ga INEED_CLI_COMMANDS=()
 declare -gA INEED_CLI_COMMANDS_HASH=()

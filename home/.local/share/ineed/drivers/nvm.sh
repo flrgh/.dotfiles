@@ -6,7 +6,8 @@ readonly REPO=nvm-sh/nvm
 readonly NAME=nvm
 
 is-installed() {
-    function-exists "$NAME"
+    NVM_DIR=${NVM_DIR:-${HOME}/.config/nvm}
+    [[ -s "$NVM_DIR/nvm.sh" ]]
 }
 
 get-installed-version() {

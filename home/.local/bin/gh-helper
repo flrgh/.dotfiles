@@ -86,6 +86,13 @@ cmd-get-tags() {
     http "repos/$repo/tags"
 }
 
+cmd-get-tag-names() {
+    local -r repo=$1
+
+    http "repos/$repo/tags" \
+    | jq -r '.[].name'
+}
+
 cmd-get-latest-tag() {
     local -r repo=$1
     cmd-get-tags "$repo" | jq -r '.[0].name'

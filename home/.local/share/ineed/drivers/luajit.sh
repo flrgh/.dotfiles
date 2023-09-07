@@ -17,18 +17,21 @@ get-installed-version() {
     fi
 }
 
+list-available-versions() {
+    gh-helper get-tag-names "$REPO" \
+        | tr -d 'v' \
+        | sort -r -n
+}
 
 get-latest-version() {
-    gh-helper get-tags "$REPO" \
-    | jq -r '.[].name' \
-    | tr -d 'v' \
-    | sort -r -n \
-    | head -1
+    list-available-versions \
+        | sort -r -n \
+        | head -1
 }
 
 get-asset-download-url() {
     local -r version=$1
-    echo https://api.github.com/repos/openresty/luajit2/tarball/refs/tags/v"$version"
+    echo "https://api.github.com/repos/$REPO/tarball/refs/tags/v${version}"
 }
 
 install-from-asset() {
