@@ -36,4 +36,6 @@ done
 
 # cargo-binstall is insufficient for packages that must be built with
 # additional --features enabled
-cargo install nu --features dataframe
+cargo install nu \
+    --locked \
+    --features dataframe
