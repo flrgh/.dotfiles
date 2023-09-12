@@ -72,3 +72,5 @@ vnoremap.K = { ":move '<-2<CR>gv=gv", no_auto_cr = true }
 
 -- disable macro
 nmap.q = '<nop>'
+
+nnoremap.leader.g = ':G'
