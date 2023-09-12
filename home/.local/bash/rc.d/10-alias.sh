@@ -8,3 +8,5 @@ fi
 if iHave lsd; then
     alias ls="lsd -l"
 fi
+
+alias ..='cd ..'
