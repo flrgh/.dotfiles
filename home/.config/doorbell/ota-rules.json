@@ -44,5 +44,10 @@
     "comment": "open file share",
     "host": "share.pancakes2.com",
     "action": "allow"
+  },
+  {
+    "comment": "go away",
+    "org": "CARINET",
+    "action": "deny"
   }
 ]
