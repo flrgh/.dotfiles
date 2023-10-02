@@ -518,10 +518,21 @@ local plugins_by_category = {
     {
       "lukas-reineke/indent-blankline.nvim",
       event = evt.BufReadPre,
+      main = "ibl",
       opts = {
-        filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
+        indent = {
+          char = '┊',
+          tab_char = '┋',
+        },
+        exclude = {
+          filetypes = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
+          buftypes = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
+        },
         --show_trailing_blankline_indent = false,
         --show_current_context = false,
+        scope = {
+          enabled = false,
+        },
       },
     },
 
