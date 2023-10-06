@@ -1,7 +1,7 @@
 [
   {
     "comment": "stop annoying WP scanning",
-    "path": "~/wp-login[.]php$|/wp-admin/|^/wordpress",
+    "path": "~/wp-.+[.]php$|/wp-admin/|^/wordpress",
     "terminate": true,
     "action": "deny"
   },
@@ -19,10 +19,6 @@
   {
     "comment": "empty user-agent",
     "ua": "",
-    "action": "deny"
-  },
-  {
-    "country": "RU",
     "action": "deny"
   },
   {
@@ -48,6 +44,46 @@
   {
     "comment": "go away",
     "org": "CARINET",
+    "action": "deny"
+  },
+  {
+    "country": "FR",
+    "action": "deny"
+  },
+  {
+    "country": "SG",
+    "action": "deny"
+  },
+  {
+    "country": "UA",
+    "action": "deny"
+  },
+  {
+    "country": "GB",
+    "action": "deny"
+  },
+  {
+    "country": "DE",
+    "action": "deny"
+  },
+  {
+    "country": "RO",
+    "action": "deny"
+  },
+  {
+    "country": "IE",
+    "action": "deny"
+  },
+  {
+    "country": "NL",
+    "action": "deny"
+  },
+  {
+    "country": "VN",
+    "action": "deny"
+  },
+  {
+    "country": "RU",
     "action": "deny"
   }
 ]
