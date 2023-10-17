@@ -128,14 +128,6 @@ local plugins_by_filetype = {
     },
   },
 
-  jq = {
-    {
-      'vito-c/jq.vim',
-      -- see: https://github.com/vito-c/jq.vim/issues/18
-      tag = 'v1.0.2',
-    }
-  },
-
   terraform = {
     'hashivim/vim-terraform',
   },
@@ -736,6 +728,8 @@ local plugins_by_category = {
       end,
     },
 
+    -- detect jq scripts
+    'vito-c/jq.vim',
   },
 
   -- FIXME: categorize these
