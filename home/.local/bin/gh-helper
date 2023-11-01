@@ -98,6 +98,11 @@ cmd-get-latest-tag() {
     cmd-get-tags "$repo" | jq -r '.[0].name'
 }
 
+cmd-get() {
+    local -r path=$1
+    http "$path"
+}
+
 cmd-list-commands() {
     declare -F \
     | grep -o 'cmd-.*' \
