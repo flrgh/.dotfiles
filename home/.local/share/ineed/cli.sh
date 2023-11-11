@@ -282,8 +282,9 @@ install::cmd() {
 
     local base;
     printf -v base \
-      '%s.%s' \
+      '%s-%s-%s' \
       "$name" \
+      "$version" \
       "$(basename "$url")"
 
     local fname; fname=$(cache-get "$url" "$base")
