@@ -661,6 +661,7 @@ local plugins_by_category = {
     {
       "lewis6991/hover.nvim",
       event = evt.VeryLazy,
+      commit = "24369e8595736077e30b3ca5fc233f44abeccb8b",
       config = function()
         require("hover").setup({
           init = function()
@@ -671,7 +672,6 @@ local plugins_by_category = {
           preview_opts = {
             border = nil,
           },
-          -- can't use this until nvim 0.8 drops
           title = true,
         })
       end,
