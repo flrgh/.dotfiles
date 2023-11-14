@@ -151,36 +151,6 @@ local plugins_by_filetype = {
     'entrez/roku.vim',
   },
 
-  rust = {
-    {
-      "simrat39/rust-tools.nvim",
-      -- FIXME
-      enabled = false,
-      dependencies = {
-        "nvim-lspconfig",
-      },
-      build = function()
-        assert(os.execute("rustup component add clippy-preview"))
-      end,
-      config = function()
-        require("local.module").if_exists("rust-tools", function()
-          require("rust-tools").setup({
-            tools = {
-              autoSetHints = true,
-              hover_with_actions = false,
-              inlay_hints = {
-                show_parameter_hints = false,
-                parmeter_hints_prefix = "",
-                other_hints_prefix = "",
-              },
-            },
-
-          })
-        end)
-      end,
-    },
-  },
-
   nu = {
     {
       'LhKipp/nvim-nu',
