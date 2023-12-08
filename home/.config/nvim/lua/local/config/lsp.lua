@@ -140,7 +140,12 @@ local servers = {
   markdown     = "marksman",
   python       = "pyright",
   rust         = "rust_analyzer",
+
+  --[[
+    sql-language-server is completely unusable
   sql          = "sqlls",
+  ]]--
+
   teal         = "tealls",
   terraform    = "terraformls",
   yaml         = "yamlls",
