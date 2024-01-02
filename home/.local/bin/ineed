@@ -5,7 +5,7 @@ set -euo pipefail
 
 declare -rgx INEED_CLI=1
 declare -rgx INEED_ROOT="$HOME/.local/share/ineed"
-declare -rgx INEED_STATE="$HOME/.local/state/ineed"
+declare -rgx INEED_STATE="${XDG_STATE_HOME:-$HOME/.local/state}/ineed"
 
 source "$INEED_ROOT/lib.sh"
 source "$INEED_ROOT/cli.sh"
