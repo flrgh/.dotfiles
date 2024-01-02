@@ -184,11 +184,17 @@ local plugins_by_category = {
     },
 
     -- catppuccin-mocha
-    { "catppuccin/nvim", name = "catppuccin" },
+    { "catppuccin/nvim",
+      name = "catppuccin",
+      config = function()
+        cmd.colorscheme("catppuccin-mocha")
+      end,
+    },
 
     -- warm, low contrast
     -- kanagawa-dragon is pretty nice
     { "rebelot/kanagawa.nvim",
+      enabled = false,
       config = function()
         cmd.colorscheme("kanagawa")
       end,
