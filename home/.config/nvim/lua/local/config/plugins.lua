@@ -175,7 +175,7 @@ local plugins_by_category = {
 
     -- tokyonight-moon
     { "folke/tokyonight.nvim",
-      enabled = true,
+      enabled = false,
       priority = 2^16,
       lazy = false,
       config = function()
@@ -203,6 +203,7 @@ local plugins_by_category = {
     -- more bright, high contrast
     { "bluz71/vim-nightfly-colors",
       as = "nightfly",
+      enabled = false,
       config = function()
         local g = vim.g
         g.nightflyCursorColor         = true
@@ -225,7 +226,9 @@ local plugins_by_category = {
       end,
     },
 
-    "lunarvim/darkplus.nvim",
+    { "lunarvim/darkplus.nvim",
+      enabled = false,
+    },
 
     -- devicon assets
     "nvim-tree/nvim-web-devicons",
