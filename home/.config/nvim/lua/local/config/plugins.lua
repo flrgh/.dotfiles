@@ -462,6 +462,13 @@ local plugins_by_category = {
 
 
   editing = {
+    { "justinmk/vim-ipmotion",
+      config = function()
+        -- prevent `{` and `}` navigation commands from opening folds
+        vim.g.ip_skipfold = true
+      end,
+    },
+
     -- auto hlsearch stuff
     {
       'romainl/vim-cool',

@@ -93,6 +93,12 @@ function _M.setup()
       enable_autocmd = false,
     },
   }
+
+  vim.opt.foldmethod = "expr"
+  vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+  vim.opt.foldenable = false
+  vim.opt.foldnestmax = 3
+  vim.opt.foldminlines = 4
 end
 
 return _M
