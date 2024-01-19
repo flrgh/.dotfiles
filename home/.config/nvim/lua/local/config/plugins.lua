@@ -683,6 +683,22 @@ local plugins_by_category = {
         require("copilot_cmp").setup()
       end
     },
+
+    {
+      "robitx/gp.nvim",
+      enabled = function()
+        local home = os.getenv("HOME") or ""
+        return fs.file_exists(home .. "/.config/openai/apikey.txt")
+      end,
+      config = function()
+        require("gp").setup({
+          openai_api_key = {
+            "cat",
+            os.getenv("HOME") .. "/.config/openai/apikey.txt",
+          }
+        })
+      end,
+    },
   },
 
   plumbing = {
