@@ -38,7 +38,7 @@
 
 [diff]
 	noprefix = true
-	algorithm = patience
+	algorithm = histogram
 	compactionHeuristic = true
 
 [commit]
