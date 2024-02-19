@@ -1,7 +1,6 @@
 ---@class user.globals
 local globals = {}
 
-
 ---@param path string
 ---@return string expanded
 local function expand(path)

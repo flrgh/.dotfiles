@@ -84,50 +84,6 @@ local plugins_by_filetype = {
     },
   },
 
-  go = {
-    {
-      'fatih/vim-go',
-      tag = 'v1.25',
-      build = ':GoUpdateBinaries',
-      config = function()
-        local g = vim.g
-        g.go_list_type = "quickfix"
-        g.go_fmt_command = "goimports"
-        g.go_fmt_fail_silently = 1
-
-        g.go_highlight_types = 1
-        g.go_highlight_fields = 1
-        g.go_highlight_functions = 1
-        g.go_highlight_methods = 1
-        g.go_highlight_operators = 1
-        g.go_highlight_build_constraints = 1
-        g.go_highlight_structs = 1
-        g.go_highlight_generate_tags = 1
-        g.go_highlight_space_tab_error = 0
-        g.go_highlight_array_whitespace_error = 0
-        g.go_highlight_trailing_whitespace_error = 0
-        g.go_highlight_extra_types = 1
-
-        g.go_metalinter_autosave = 0
-
-        -- Automatically show type info when cursor is on an identifier
-        g.go_auto_type_info = 1
-
-        cmd [[
-          " run :GoBuild or :GoTestCompile based on the go file
-          function! s:build_go_files()
-            let l:file = expand('%')
-            if l:file =~# '^\f\+_test\.go$'
-              call go#test#Test(0, 1)
-            elseif l:file =~# '^\f\+\.go$'
-              call go#cmd#Build(0)
-            endif
-          endfunction
-        ]]
-      end,
-    },
-  },
-
   terraform = {
     'hashivim/vim-terraform',
   },
