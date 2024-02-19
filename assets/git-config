@@ -13,6 +13,8 @@
 [core]
 	autocrlf = input
 	safecrlf = true
+	excludesfile = ~/.config/git/ignore
+	editor = nvim
 
 [init]
 	templatedir = ~/.config/git/template
@@ -33,10 +35,6 @@
 
 [push]
 	autosetupremote = true
-
-[core]
-	excludesfile = ~/.config/git/ignore
-	editor = nvim
 
 [diff]
 	noprefix = true
