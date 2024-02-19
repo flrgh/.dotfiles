@@ -31,6 +31,9 @@
 [pull]
 	ff = only
 
+[push]
+	autosetupremote = true
+
 [core]
 	excludesfile = ~/.config/git/ignore
 	editor = nvim
