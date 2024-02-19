@@ -58,3 +58,6 @@
 
 [tag]
 	gpgsign = true
+
+[rerere]
+	enabled = true
