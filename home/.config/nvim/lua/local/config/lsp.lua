@@ -150,6 +150,7 @@ local servers = {
   terraform    = "terraformls",
   yaml         = "yamlls",
   typescript   = "tsserver",
+  zig          = "zls",
 }
 
 for lang, server in pairs(servers) do
