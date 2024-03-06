@@ -23,6 +23,7 @@ declare -A COMMANDS=(
     [rustup]="completions bash rustup"
     [cargo]="!rustup completions bash cargo"
     [gitsign]="completion bash"
+    [deck]="completion bash"
 )
 
 declare -A REMOTE_FILES=(
