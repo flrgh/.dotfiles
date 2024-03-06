@@ -46,3 +46,7 @@ install-from-asset() {
     cp -f "$asset" "$HOME/.local/bin/${NAME}"
     chmod +x "$HOME/.local/bin/${NAME}"
 }
+
+get-binary-name() {
+    echo marksman-linux
+}

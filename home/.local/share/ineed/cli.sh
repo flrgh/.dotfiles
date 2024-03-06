@@ -6,6 +6,10 @@
 source "$INEED_ROOT/lib.sh"
 
 
+readonly YES="✓"
+readonly NO="✗"
+
+
 is-command() {
     local name=${1%::cmd}
 
@@ -104,6 +108,37 @@ get-installed-version() {
     echo "$v"
 }
 
+get-installed-timestamp() {
+    local -r name=$1
+
+    if app-state::get "$name" installed-timestamp; then
+        return
+    fi
+
+    local bin
+
+    bin=$(driver-exec get-binary-name "$name" || echo "$name")
+    bin=$(type -f -P "$bin")
+
+    if [[ -z ${bin:-} ]]; then
+        return
+    fi
+
+    bin=$(realpath "$bin")
+
+    if [[ -n ${bin:-} && -e ${bin:-} ]]; then
+        local t; t=$(date --iso-8601=seconds --reference="$bin")
+
+        app-state::set \
+            "$name" \
+            installed-timestamp \
+            "$t"
+
+        echo "$t"
+    fi
+}
+
+
 
 set-installed-version() {
     local -r name=$1
@@ -136,13 +171,14 @@ complete-from-versions() {
 
 
 list::cmd() {
-    printf "%-32s %s\n" "name" "version"
-    printf "%-32s %s\n" "----" "-------"
+    printf "%-32s %-16s %s\n" "name" "version" "installed"
+                                              # 2023-09-30T19:18:13-07:00
+    printf "%-32s %-16s %s\n" "----" "-------" "-------------------------"
     for d in $(list-drivers); do
         local v; v=$(get-installed-version "$d")
-        if [[ -n $v ]]; then
-            printf "%-32s %s\n" "$d" "$v"
-        fi
+        local t; t=$(get-installed-timestamp "$d")
+
+        printf "%-32s %-16s %s\n" "$d" "${v:-$NO}" "${t:-$NO}"
     done
 }
 
@@ -168,9 +204,9 @@ drivers::cmd() {
     for d in "${INEED_DRIVERS_LIST[@]}"; do
         local mark
         if is-installed "$d"; then
-            mark="✓"
+            mark="$YES"
         else
-            mark="✗"
+            mark="$NO"
         fi
         printf "%-32s %s\n" "$d" "$mark"
     done
@@ -294,6 +330,7 @@ install::cmd() {
     echo "$name" "$(driver-exec get-installed-version "$name")"
 
     set-installed-version "$name" "$version"
+    app-state::set "$name" installed-timestamp "$(date --iso-8601=seconds)"
 }
 
 

@@ -44,3 +44,7 @@ install-from-asset() {
         --install-dir "$HOME/.local/aws-cli" \
         --bin-dir "$HOME/.local/bin"
 }
+
+get-binary-name() {
+  echo aws
+}

@@ -47,3 +47,7 @@ install-from-asset() {
     cp -af nvim-linux64/lib/* "$HOME/.local/lib/"
     cp -af nvim-linux64/share/* "$HOME/.local/share/"
 }
+
+get-binary-name() {
+    echo nvim
+}

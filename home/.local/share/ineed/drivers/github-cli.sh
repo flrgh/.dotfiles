@@ -35,3 +35,7 @@ install-from-asset() {
     cp -av "./gh_${version}_linux_amd64/bin" "$HOME/.local/"
     cp -av "./gh_${version}_linux_amd64/share" "$HOME/.local/"
 }
+
+get-binary-name() {
+    echo gh
+}

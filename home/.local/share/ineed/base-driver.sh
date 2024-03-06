@@ -22,8 +22,11 @@ get-latest-version() {
     _nyi
 }
 
-
 get-installed-version() {
+    _nyi
+}
+
+get-binary-name() {
     _nyi
 }
 
