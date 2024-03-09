@@ -13,7 +13,8 @@ main() {
     if [[ ! -x "$driver" ]]; then
         printf 'FATAL: driver for %s (%q) does not exist or is not executable\n' \
             "$name" \
-            "$driver"
+            "$driver" \
+        >&2
 
         exit 127
     fi
@@ -26,7 +27,9 @@ main() {
     if ! function-exists "$fn"; then
         printf 'FATAL: function "%s" is not implemented by "%s" driver\n' \
             "$fn" \
-            "$name"
+            "$name" \
+        >&2
+
         exit 127
     fi
 

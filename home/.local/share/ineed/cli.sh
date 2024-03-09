@@ -3,11 +3,14 @@
 # shellcheck source-path=SCRIPTDIR
 
 
-source "$INEED_ROOT/lib.sh"
+if [[ -z ${_INEED_CLI_SOURCED:-} ]]; then
+    source "$INEED_ROOT/lib.sh"
 
+    readonly YES="✓"
+    readonly NO="✗"
 
-readonly YES="✓"
-readonly NO="✗"
+    _INEED_CLI_SOURCED=1
+fi
 
 
 is-command() {
@@ -117,7 +120,7 @@ get-installed-timestamp() {
 
     local bin
 
-    bin=$(driver-exec get-binary-name "$name" || echo "$name")
+    bin=$(driver-exec-quiet get-binary-name "$name" || echo "$name")
     bin=$(type -f -P "$bin")
 
     if [[ -z ${bin:-} ]]; then
@@ -184,7 +187,7 @@ list::cmd() {
 
 
 is-installed() {
-    driver-exec is-installed "$1"
+    driver-exec-quiet is-installed "$1"
 }
 
 

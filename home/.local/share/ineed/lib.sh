@@ -43,6 +43,10 @@ driver-exec() {
         "$INEED_ROOT/driver-exec.sh" "$fn" "$name" "$@"
 }
 
+driver-exec-quiet() {
+    driver-exec "$@" 2&>/dev/null
+}
+
 normalize-version() {
     local version=$1
 
