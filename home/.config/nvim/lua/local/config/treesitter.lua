@@ -33,6 +33,7 @@ function _M.bootstrap()
       "lua",
       "make",
       "markdown",
+      "markdown_inline",
       "objdump",
       "passwd",
       "php",
