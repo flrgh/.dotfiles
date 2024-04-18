@@ -44,15 +44,6 @@ install-from-asset() {
 
     cd openresty-luajit2-*
 
-    sed -i -r \
-        -e "s/\"LuaJIT 2.1.0-beta3\"/\"LuaJIT $version\"/g" \
-        src/luajit.h
-
-    grep -F "$version" -q src/luajit.h || {
-        echo "ERROR: Failed patching src/luajit.sh"
-        return 1
-    }
-
     make \
         PREFIX="$PREFIX" \
         VERSION="$version"
