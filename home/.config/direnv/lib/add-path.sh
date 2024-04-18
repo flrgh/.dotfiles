@@ -24,8 +24,10 @@ add-lua-path() {
 
     path=$(realpath "$path")
 
-    add-path LUA_PATH "$path/?/init.lua" ";"
-    add-path LUA_PATH "$path/?.lua"      ";"
+    add-path LUA_PATH "$path/?/init.lua"  ";"
+    add-path LUA_PATH "$path/?/init.ljbc" ";"
+    add-path LUA_PATH "$path/?.lua"       ";"
+    add-path LUA_PATH "$path/?.ljbc"      ";"
 }
 
 add-lua-cpath() {
