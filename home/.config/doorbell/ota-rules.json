@@ -98,5 +98,8 @@
   {
     "country": "IN",
     "action": "deny"
+  },
+  {
+    "asn": 14061
   }
 ]
