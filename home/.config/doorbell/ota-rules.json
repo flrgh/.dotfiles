@@ -101,10 +101,12 @@
   },
   {
     "comment": "digital ocean ASN, I think",
-    "asn": 14061
+    "asn": 14061,
+    "action": "deny"
   },
   {
     "comment": "AMAZON-02",
-    "asn": 16509
+    "asn": 16509,
+    "action": "deny"
   }
 ]
