@@ -17,15 +17,19 @@ get-installed-version() {
 
 
 get-latest-version() {
+    list-available-versions | head -1
+}
+
+list-available-versions() {
     curl \
         -s \
         -o- \
         --url https://luarocks.github.io/luarocks/releases/ \
     | sed -n -r \
         -e 's/.*href="luarocks-([0-9.]+).tar.gz.*/\1/gp' \
-    | sort -r --version-sort \
-    | head -1
+    | sort -r --version-sort
 }
+
 
 get-asset-download-url() {
     local -r version=$1
