@@ -23,7 +23,7 @@ get-latest-version() {
         --url https://luarocks.github.io/luarocks/releases/ \
     | sed -n -r \
         -e 's/.*href="luarocks-([0-9.]+).tar.gz.*/\1/gp' \
-    | sort -n -r \
+    | sort -r --version-sort \
     | head -1
 }
 
