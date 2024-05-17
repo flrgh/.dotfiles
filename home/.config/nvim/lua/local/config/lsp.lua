@@ -16,7 +16,7 @@ local extend = vim.tbl_deep_extend
 local is_empty = vim.tbl_isempty
 local api = vim.api
 local lsp = vim.lsp
-local is_list = vim.tbl_islist
+local is_list = vim.islist
 local jump_to_location = lsp.util.jump_to_location
 local vim = vim
 
@@ -72,11 +72,11 @@ do
     maps.toggle_diagnostics = function()
       if enabled then
         vim.notify("disabling diagnostics")
-        vim.diagnostic.disable()
+        vim.diagnostic.enable(false)
         enabled = false
       else
         vim.notify("enabling diagnostics")
-        vim.diagnostic.enable()
+        vim.diagnostic.enable(true)
         enabled = true
       end
     end

@@ -15,15 +15,15 @@ local fmt = string.format
 ---@field file  string expanded value of <afile>
 
 ---@class vim.autocmd.command
----@field desc     string
----@field event    string
----@field events   string[]
----@field pattern  string
----@field buffer   number
----@field callback fun(event:vim.autocmd.event):boolean?
----@field command  string
----@field once     boolean
----@field nested   boolean
+---@field desc      string
+---@field event?    string
+---@field events?   string[]
+---@field pattern   string
+---@field buffer?   number
+---@field callback  fun(event:vim.autocmd.event):boolean?
+---@field command?  string
+---@field once?     boolean
+---@field nested?   boolean
 
 ---@param name string
 ---@param cmds vim.autocmd.command[]

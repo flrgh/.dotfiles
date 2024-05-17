@@ -3,82 +3,84 @@ if require("local.config.globals").bootstrap then
 end
 
 local g = vim.g
+local o = vim.o
 local opt = vim.opt
 
 g.mapleader = ','
 
-opt.encoding      = 'utf-8'
-opt.fileencoding  = 'utf-8'
-opt.fileencodings = 'utf-8'
-opt.bomb          = true
-opt.binary        = true
-opt.fileformat    = 'unix'
-opt.fileformats   = 'unix'
+o.encoding      = 'utf-8'
+-- always write BOM to utf-8 files
+o.bomb          = true
+o.fileformat    = 'unix'
+o.fileformats   = 'unix'
 
 -- fix backspace indent
 opt.backspace = {'indent', 'eol', 'start'}
 
 -- allow hidden buffers
-opt.hidden = true
+o.hidden = true
 
 -- search settings
-opt.hlsearch   = true
-opt.incsearch  = true
-opt.ignorecase = true
-opt.smartcase  = true
+o.hlsearch   = true
+o.incsearch  = true
+o.ignorecase = true
+o.smartcase  = true
 
-opt.splitbelow = true
-opt.splitright = true
+o.splitbelow = true
+o.splitright = true
 
-opt.diffopt = opt.diffopt + 'vertical'
+opt.diffopt:append("vertical")
 
 opt.wildignore:append {
-  '*/tmp/*',
+  '*.db',
+  '*.min.css',
+  '*.min.js',
+  '*.o',
+  '*.obj',
+  '*.pyc',
   '*.so',
+  '*.sqlite',
   '*.swp',
   '*.zip',
-  '*.pyc',
-  '*.db',
-  '*.sqlite',
-  '*.min.js',
-  '*.min.css',
+  '*/tmp/*',
 }
 
-opt.shell = '/bin/bash'
+o.shell = '/bin/bash'
 
 -- session management
-opt.backup   = false
-opt.swapfile = false
+o.backup   = false
+o.swapfile = false
 
 -- mouse
-opt.mousemodel = 'popup'
-opt.mouse      = 'nv'
+o.mousemodel = 'popup_setpos'
+o.mouse      = 'nv'
 
 -- clipboard register
-opt.clipboard  = 'unnamedplus'
+-- TODO: unset this for OSC 52 support (doesn't work right now)
+o.clipboard  = 'unnamedplus'
 
 -- visual settings
 vim.cmd [[syntax on]]
 opt.listchars     = { eol = '$' }
-opt.ruler         = true
-opt.number        = true
-opt.background    = 'dark'
-opt.termguicolors = true
-opt.gfn           = 'Monospace 10'
-opt.signcolumn    = 'yes'
+o.ruler         = true
+o.number        = true
+o.background    = 'dark'
+o.termguicolors = true
+o.gfn           = 'Monospace 10'
+o.signcolumn    = 'yes'
 
 -- no cursor blinking
 opt.gcr = 'a:blinkon0'
 
-opt.scrolloff   = 3
-opt.laststatus  = 2
-opt.title       = true
-opt.titlestring = '%F'
+o.scrolloff   = 3
+o.laststatus  = 2
+o.title       = true
+o.titlestring = '%F'
 
-opt.modeline   = true
-opt.modelines  = 10
+o.modeline   = true
+o.modelines  = 10
 
 -- no folding
-opt.foldenable = false
+o.foldenable = false
 
-opt.tagfunc = 'v:lua.vim.lsp.tagfunc'
+o.tagfunc = 'v:lua.vim.lsp.tagfunc'

@@ -392,7 +392,6 @@ local plugins_by_category = {
 
     {
       'lewis6991/gitsigns.nvim',
-      event = evt.BufReadPre,
       config = function()
         require("gitsigns").setup({
           signcolumn = true,
@@ -455,7 +454,6 @@ local plugins_by_category = {
     -- highlight indentation levels
     {
       "lukas-reineke/indent-blankline.nvim",
-      event = evt.BufReadPre,
       main = "ibl",
       opts = {
         indent = {
@@ -568,7 +566,6 @@ local plugins_by_category = {
     -- LSP stuff
     {
       'neovim/nvim-lspconfig',
-      event = evt.BufReadPre,
       dependencies = { "folke/neodev.nvim" },
       config = function()
         require('local.config.lsp')
