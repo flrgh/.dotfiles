@@ -1,175 +1,198 @@
-__RC_START=$(date "+%s.%3N")
+# shellcheck enable=deprecate-which
 
-_CLEANUP=()
+__RC_START=${EPOCHREALTIME/./}
 
-_add_cleanup() {
-    for exp in "$@"; do
-        _CLEANUP+=("$exp")
-    done
-}
+__RC_LOG_DIR="$HOME/.local/var/log"
+__RC_LOG_FILE="$__RC_LOG_DIR/bashrc.log"
 
-_cleanup_var() {
-    for var in "$@"; do
-        _add_cleanup "unset $var"
-    done
-}
-
-_cleanup_func() {
-    for f in "$@"; do
-        _add_cleanup "unset -f $f"
-    done
-}
-
-_cleanup_func _cleanup_func _add_cleanup _cleanup_var
-
-_stamp() {
-    date "+%s.%3N"
-}
-
-_cleanup_func _stamp
-
-iHave() {
-    local -r cmd=$1
-    if command -v "$cmd" &> /dev/null; then
-        return 0
-    fi
-    return 1
-}
-
-if iHave bc; then
-    _subtract() {
-        local -r v=$(bc <<< "$1 - $2")
-        printf '%.3f' "$v"
-    }
-elif iHave python; then
-    _subtract() {
-        python \
-            -c 'import sys; sys.stdout.write(str(round(float(sys.argv[1]) - float(sys.argv[2]), 3)))' \
-            "$1" "$2"
-        }
-else
-    _subtract() {
-        local l=$1
-        local r=$2
-        printf "%s" "$(( l - r ))"
-    }
-fi
-
-_log_dir="$HOME/.local/var/log"
-_log_file="$_log_dir/bashrc.log"
-
-_log_rc() {
+__rc_log() {
     local -r ctx=$1
     shift
-    local stamp
+
+    local -r ts=$EPOCHREALTIME
+    local base
+    printf -v base '[%(%F %T)T.%s] - (%s) - ' \
+        "${ts%.*}" \
+        "${ts#*.}" \
+        "$ctx"
+
     for msg in "$@"; do
-        stamp=$(date "+%F %T.%3N")
-        printf "[%s] - (%s) - %s\n" "$stamp" "$ctx" "$msg"
+        echo "${base}${msg}"
     done
 }
 
-declare -A __times
-_cleanup_var __times
+# returns 0 if and only if a function exists
+__rc_function_exists() {
+    [[ $(type -t "$1") = function ]]
+}
 
+# returns 0 if and only if a command exists and is an executable file
+# (not a function or alias)
+__rc_binary_exists() {
+    [[ -n $(type -f -p "$1") ]]
+}
+
+__rc_command_exists() {
+    local -r cmd=$1
+    command -v "$cmd" &> /dev/null
+}
+
+declare -A __RC_DURATION
+declare -A __RC_DURATION_US
+declare -A __RC_TIMER_START
 
 DEBUG_BASHRC=${DEBUG_BASHRC:-0}
 
 if (( DEBUG_BASHRC > 0 )); then
-    mkdir -p "$_log_dir"
+    mkdir -p "$__RC_LOG_DIR"
 
-    _debug_rc() {
-        if [[ ${DEBUG_BASHRC} == 1 ]]; then
-            local -r ctx="${BASH_SOURCE[2]}:${BASH_LINENO[1]} ${FUNCNAME[1]}"
-            for msg in "$@"; do
-                _log_rc "$ctx" "$msg" | tee -a "$_log_file"
-            done
-        fi
+    __rc_debug() {
+        local -r ctx="${BASH_SOURCE[2]}:${BASH_LINENO[1]} ${FUNCNAME[1]}"
+        for msg in "$@"; do
+            __rc_log "$ctx" "$msg" | tee -a "$__RC_LOG_FILE"
+        done
     }
 
-    _timer_start() {
+    __rc_timer_start() {
         local -r key=$1
-        __times[$key]=$(_stamp)
+        __RC_TIMER_START[$key]=${EPOCHREALTIME/./}
     }
 
-    _timer_stop() {
+    __rc_timer_stop() {
+        local -r now=${EPOCHREALTIME/./}
+
         local -r key=$1
-        local -r start=${__times[$key]}
-        local -r now=$(_stamp)
-        __times[$key]=$(_subtract "$now" "$start")
-    }
+        local -r start=${__RC_TIMER_START[$key]}
+        local -r duration=$(( now - start ))
 
-    _cleanup_var __time_started
+        local -r current=${__RC_DURATION_US[$key]:-0}
+        local -r total=$(( duration + current ))
+        __RC_DURATION_US[$key]=$total
+
+        # reformat from us to ms for display
+        __RC_DURATION[$key]=$(( total / 1000 )).$(( total % 1000 ))ms
+    }
 else
-    _debug_rc()    { :; }
-    _timer_start() { :; }
-    _timer_stop() { :; }
+    __rc_debug()    { :; }
+    __rc_timer_start() { :; }
+    __rc_timer_stop() { :; }
 fi
 
-_cleanup_func _timer_start _timer_stop
+__rc_add_path() {
+    local -r p=$1
 
-_source_file() {
+    if [[ -z $p ]]; then
+        __rc_debug "called with empty value"
+        return
+    fi
+
+    __rc_timer_start "__rc_add_path"
+
+    # default case is PATH, but some other styles (e.g. LUA_PATH) use different
+    # separators like `;`
+    local -r var=${2:-PATH}
+    local -r sep=${3:-:}
+
+    local -r current=${!var}
+
+    __rc_debug "VAR:     ${var@Q}" \
+               "CURRENT: ${current@Q}" \
+               "SEP:     ${sep@Q}" \
+               "NEW:     ${p@Q}"
+
+    if [[ -z $current ]]; then
+        __rc_debug "Setting \$${var} to $p"
+        declare -g -x "$var"="$p"
+
+    elif ! [[ $current =~ "${sep}"?"$p""${sep}"? ]]; then
+        __rc_debug "Prepending $p to \$${var}"
+        local new=${p}${sep}${current}
+        declare -g -x "$var"="$new"
+
+    else
+        :
+        __rc_debug "\$${var} already contains $p"
+    fi
+
+    __rc_timer_stop "__rc_add_path"
+}
+
+__rc_source_file() {
     local -r fname=$1
     local ret
+    __rc_timer_start "__rc_source_file"
+
     if [[ -f $fname || -h $fname ]] && [[ -r $fname ]]; then
-        _debug_rc "sourcing file: $fname"
-        local -r key="_source_file($fname)"
-        _timer_start "$key"
+        __rc_debug "sourcing file: $fname"
+        local -r key="__rc_source_file($fname)"
+        __rc_timer_start "$key"
 
         # shellcheck disable=SC1090
         source "$fname"
         ret=$?
 
-        _timer_stop "$key"
-        _debug_rc "sourced file $fname in ${__times[$key]}"
+        __rc_timer_stop "$key"
     else
-        _debug_rc "$fname does not exist or is not a regular file"
+        __rc_debug "$fname does not exist or is not a regular file"
         ret=1
     fi
+
+    __rc_timer_stop "__rc_source_file"
 
     return $ret
 }
 
-_source_dir() {
+__rc_source_dir() {
     local dir=$1
     if ! [[ -d $dir ]]; then
-        _debug_rc "$dir does not exist"
+        __rc_debug "$dir does not exist"
         return
     fi
 
-    local -r key="_source_dir($dir)"
-    _timer_start "$key"
+    local -r key="__rc_source_dir($dir)"
+    __rc_timer_start "$key"
 
     local files=("$dir"/*)
 
     for p in "${files[@]}"; do
-        _source_file "$p"
+        __rc_source_file "$p"
     done
 
-    _timer_stop "$key"
-
-    _debug_rc "sourced dir $dir in ${__times[$key]}"
+    __rc_timer_stop "$key"
 }
 
-_cleanup_func _source_dir
+__rc_source_dir "$HOME/.local/bash/rc.d"
 
-_source_dir "$HOME/.local/bash/rc.d"
+if [[ -d $__RC_LOG_DIR ]]; then
+    __RC_END=${EPOCHREALTIME/./}
+    __RC_TIME=$(( (__RC_END - __RC_START) / 1000 )).$(( (__RC_END - __RC_START) % 1000 ))
 
-for (( idx=${#_CLEANUP[@]}-1 ; idx>=0 ; idx-- )) ; do
-    stmt=${_CLEANUP[$idx]}
-    _debug_rc "CLEANUP: $stmt"
-    eval "$stmt"
-done
+    {
+        for __rc_key in "${!__RC_DURATION[@]}"; do
+            __rc_val=${__RC_DURATION[$__rc_key]}
+            printf '%-16s %s\n' "$__rc_val" "$__rc_key"
+        done
+    } \
+        | sort -n -k1 \
+        | while read -r line; do
+            __rc_debug "$line"
+        done
 
-__RC_END=$(date "+%s.%3N")
-if [[ -d $_log_dir ]]; then
-    _log_rc \
-        "bashrc" \
-        "startup complete in $(_subtract "$__RC_END" "$__RC_START")" \
-    >> "$_log_file"
+    if (( DEBUG_BASHRC > 0 )); then
+        __rc_debug "startup complete in ${__RC_TIME}ms"
+    else
+        __rc_log \
+            "bashrc" \
+            "startup complete in ${__RC_TIME}ms" \
+        >> "$__RC_LOG_FILE"
+    fi
 fi
 
-unset -f _debug_rc _subtract _log_rc
-unset _CLEANUP __RC_START __RC_END _log_dir _log_dir
+# shellcheck disable=SC2046
+unset -v ${!__RC_*} ${!__rc_*}
+# shellcheck disable=SC2046
+unset -f $(compgen -A function __rc_)
+
 
 # luamake is annoying and tries to add a bash alias for itself every time it runs,
 # so I need to leave this here so that it thinks the alias already exists *grumble*

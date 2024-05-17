@@ -7,41 +7,47 @@ if [[ -f $CONFIG_HOME/lua/repl.lua ]]; then
 fi
 
 if [[ -d ~/git/flrgh/lua-utils ]]; then
-    addPath "$HOME/git/flrgh/lua-utils/lib/?.lua;$HOME/git/flrgh/lua-utils/lib/?.init.lua" LUA_PATH ";"
+    __rc_add_path "$HOME/git/flrgh/lua-utils/lib/?.lua;$HOME/git/flrgh/lua-utils/lib/?.init.lua" LUA_PATH ";"
 fi
 
-LUAROCKS=$(type -f -p luarocks)
-if [[ -n $LUAROCKS ]]; then
+luarocks=$(type -f -p luarocks)
+if [[ -n $luarocks ]]; then
     rocks_path=$HOME/.config/lua/rocks_path
 
-    if [[ ! -e $rocks_path ]] || [[ $LUAROCKS -nt $rocks_path ]]; then
+    if [[ ! -e $rocks_path ]] || [[ $luarocks -nt $rocks_path ]]; then
         luarocks path --lr-path \
         | tr ';' '\n' \
         > "$rocks_path"
     fi
 
     rocks_cpath=$HOME/.config/lua/rocks_cpath
-    if [[ ! -e $rocks_cpath ]] || [[ $LUAROCKS -nt $rocks_cpath ]]; then
+    if [[ ! -e $rocks_cpath ]] || [[ $luarocks -nt $rocks_cpath ]]; then
         luarocks path --lr-cpath \
         | tr ';' '\n' \
         > "$rocks_cpath"
     fi
 
     while read -r path; do
-        addPath "$path" LUA_PATH ";"
+        __rc_add_path "$path" LUA_PATH ";"
     done < "$rocks_path"
 
     while read -r path; do
-        addPath "$path" LUA_CPATH ";"
+        __rc_add_path "$path" LUA_CPATH ";"
     done < "$rocks_cpath"
+
+    unset rocks_path rocks_cpath
 fi
+unset luarocks
 
-LUAJIT=$(type -f -p luajit)
-if [[ -n $LUAJIT ]]; then
-    _ljit_base=$(realpath "$LUAJIT")
-    _ljit_include="$HOME/.local/share/${_ljit_base##*/}"
+luajit=$(type -f -p luajit)
+if [[ -n $luajit ]]; then
+    lj_base=$(realpath "$luajit")
+    lj_include="$HOME/.local/share/${lj_base##*/}"
 
-    if [[ -d "$_ljit_include" ]]; then
-        addPath "$_ljit_include/?.lua" LUA_PATH ";"
+    if [[ -d "$lj_include" ]]; then
+        __rc_add_path "$lj_include/?.lua" LUA_PATH ";"
     fi
+
+    unset lj_base lj_include
 fi
+unset luajit

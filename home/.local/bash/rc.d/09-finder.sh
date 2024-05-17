@@ -1,8 +1,8 @@
 # options for fzf
-if iHave fzf; then
+if __rc_command_exists fzf; then
     export FZF_DEFAULT_OPTS="--info=default --height=80% --border=sharp --tabstop=4"
 
-    if iHave fd; then
+    if __rc_command_exists fd; then
         export FZF_DEFAULT_COMMAND='fd --hidden --type f --color=never'
         export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
@@ -19,7 +19,7 @@ if iHave fzf; then
     fi
 
     if [[ -f /usr/share/fzf/shell/key-bindings.bash ]]; then
-        _source_file /usr/share/fzf/shell/key-bindings.bash
+        __rc_source_file /usr/share/fzf/shell/key-bindings.bash
     fi
 fi
 
@@ -43,7 +43,7 @@ fi
 # This little function exists to handle that case so that I don't have to
 # relearn anything
 #
-if iHave fd; then
+if __rc_command_exists fd; then
     fd() {
         if (( $# == 1 )) && [[ $1 != . ]]; then
             command fd . "$1"

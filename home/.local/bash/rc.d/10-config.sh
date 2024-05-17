@@ -1,8 +1,5 @@
 # General shell options
 
-# Use vim!
-export EDITOR=vim
-
 # globbing should get files/directories that start with .
 shopt -s dotglob
 
@@ -16,14 +13,14 @@ if [[ -x /usr/bin/lesspipe ]]; then
 fi
 
 # use bat as a man pager if it exists
-if iHave bat; then
+if __rc_command_exists bat; then
     export MANPAGER="sh -c 'col -bx | bat -l man -p'"
     export MANROFFOPT="-c"
 fi
 
 # I hate this thing
-if iHave command_not_found_handle; then
-    _debug_rc "unsetting command_not_found_handle func"
+if __rc_command_exists command_not_found_handle; then
+    __rc_debug "unsetting command_not_found_handle func"
     unset -f command_not_found_handle
 fi
 

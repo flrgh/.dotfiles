@@ -1,3 +1,3 @@
 # https://github.com/golang/go/wiki/GOPATH
 export GOPATH=$HOME/.local/go
-addPath "$GOPATH/bin"
+__rc_add_path "$GOPATH/bin"

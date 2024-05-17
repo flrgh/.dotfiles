@@ -2,6 +2,6 @@
 #
 # @see https://direnv.net/docs/installation.html
 
-if iHave direnv; then
+if __rc_command_exists direnv; then
     eval "$(direnv hook bash)"
 fi

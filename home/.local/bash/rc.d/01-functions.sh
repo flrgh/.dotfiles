@@ -1,51 +1,7 @@
-addPath() {
-    local -r p=$1
-
-    if [[ -z $p ]]; then
-        _debug_rc "addPath called with empty value"
-        return
-    fi
-
-    # default case is PATH, but some other styles (e.g. LUA_PATH) use different
-    # separators like `;`
-    local -r var=${2:-PATH}
-    local -r sep=${3:-:}
-
-    local -r current=${!var}
-
-    _debug_rc "VAR: $var CURRENT: $current SEP: $sep NEW: $p"
-    if [[ -z $current ]]; then
-        _debug_rc "Setting \$${var} to $p"
-        declare -g -x "$var"="$p"
-    elif ! [[ $current =~ "${sep}"?"$p""${sep}"? ]]; then
-        _debug_rc "Prepending $p to \$${var}"
-        local new=${p}${sep}${current}
-        declare -g -x "$var"="$new"
-    else
-        _debug_rc "\$${var} already contains $p"
-    fi
-}
-
-_cleanup_func addPath
-
-iHave() {
-    local -r cmd=$1
-    command -v "$cmd" &> /dev/null
-}
-
-_cleanup_func iHave
-
-isFunction() {
-    [[ $(type -t "$1") = function ]]
-}
-
-_cleanup_func isFunction
-
-isExe() {
-    [[ -n $(type -f -p "$1") ]]
-}
-
-_cleanup_func isExe
+# This is for functions that will be available to the shell after
+# .bashrc is sourced
+#
+# Functions used only while sourcing .bashrc should go in .bashrc
 
 extract() {
     if [[ -z $1 ]]; then

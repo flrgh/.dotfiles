@@ -1,6 +1,6 @@
 if [[ -n ${WEZTERM_EXECUTABLE:-} && -n ${WEZTERM_PANE:-} ]]; then
-    _debug_rc "wezterm detected"
+    __rc_debug "wezterm detected"
 else
-    _debug_rc "disabling wezterm support"
+    __rc_debug "disabling wezterm support"
     export WEZTERM_SHELL_SKIP_ALL=1
 fi

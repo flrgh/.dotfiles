@@ -1,1 +1,1 @@
-_source_dir "$HOME/.local/bash/overrides.d"
+__rc_source_dir "$HOME/.local/bash/overrides.d"
