@@ -1,7 +1,7 @@
 #
 # Colors
 #
-export TERM='screen-256color'
+export TERM="${TERM:-screen-256color}"
 
 # colors for ls output
 # generated with:

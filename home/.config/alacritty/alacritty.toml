@@ -26,6 +26,7 @@ render_timer = false
 
 [env]
 ALACRITTY = "1"
+TERM = "alacritty"
 
 [font.normal]
 family = "LiterationMono Nerd Font"
