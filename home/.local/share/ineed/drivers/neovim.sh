@@ -5,6 +5,11 @@ set -euo pipefail
 readonly REPO=neovim/neovim
 readonly NAME=nvim
 
+readonly INSTALL_DIRS=(
+    "$HOME/.local/lib/nvim"
+    "$HOME/.local/share/nvim/runtime"
+)
+
 is-installed() {
     binary-exists "$NAME"
 }
@@ -31,6 +36,37 @@ get-asset-download-url() {
     echo "https://github.com/neovim/neovim/releases/download/v${version}/nvim-linux64.tar.gz"
 }
 
+copy-files() {
+    cp -af nvim-linux64/bin/* "$HOME/.local/bin/"
+    cp -af nvim-linux64/lib/* "$HOME/.local/lib/"
+    cp -af nvim-linux64/share/* "$HOME/.local/share/"
+}
+
+backup-dirs() {
+    for dir in "${INSTALL_DIRS[@]}"; do
+        if [[ -d $dir ]]; then
+            mv -v -f "$dir" "${dir}.bak"
+        fi
+    done
+}
+
+restore-dirs() {
+    for dir in "${INSTALL_DIRS[@]}"; do
+        if [[ -d ${dir}.bak ]]; then
+            mv -v -f "${dir}.bak" "$dir"
+        fi
+    done
+}
+
+remove-backups() {
+    for dir in "${INSTALL_DIRS[@]}"; do
+        dir=${dir}.bak
+        if [[ -d $dir ]]; then
+            rm -v -rf "$dir"
+        fi
+    done
+}
+
 install-from-asset() {
     local -r asset=$1
     local -r version=$2
@@ -41,11 +77,16 @@ install-from-asset() {
     fi
 
     cd "$(mktemp -d)"
-
     tar xzf "$asset"
-    cp -af nvim-linux64/bin/* "$HOME/.local/bin/"
-    cp -af nvim-linux64/lib/* "$HOME/.local/lib/"
-    cp -af nvim-linux64/share/* "$HOME/.local/share/"
+
+    backup-dirs
+    if copy-files; then
+        remove-backups
+    else
+        restore-dirs
+        echo "failed installing neovim!!!!"
+        exit 1
+    fi
 }
 
 get-binary-name() {
