@@ -79,6 +79,18 @@ do
     end
   end
 
+  do
+    maps.toggle_inlay_hints = function()
+      if vim.lsp.inlay_hint.is_enabled() then
+        vim.notify("disabling inlay hints")
+        vim.lsp.inlay_hint.enable(false)
+      else
+        vim.notify("enabling inlay hints")
+        vim.lsp.inlay_hint.enable(true)
+      end
+    end
+  end
+
   ---@param buf    number
   function on_attach(_, buf)
     -- set up key bindings
@@ -102,6 +114,7 @@ do
       km.buf.nnoremap.leader.pd   = maps.prev_diagnostic
       km.buf.nnoremap.leader.sd   = maps.show_diagnostic
       km.buf.nnoremap.leader.td   = maps.toggle_diagnostics
+      km.buf.nnoremap.leader.ti   = maps.toggle_inlay_hints
 
       km.buf.nnoremap.leader.rn   = maps.rename
     end
