@@ -141,9 +141,37 @@ local plugins_by_category = {
 
     -- catppuccin-mocha
     { "catppuccin/nvim",
+      enabled = false,
       name = "catppuccin",
       config = function()
         cmd.colorscheme("catppuccin-mocha")
+      end,
+    },
+
+    { "marko-cerovac/material.nvim",
+      config = function()
+        --[[
+          "darker"
+          "lighter"
+          "oceanic"
+          "palenight"
+          "deep ocean"
+        ]]--
+        vim.g.material_style = "oceanic"
+
+        require('material').setup({
+          plugins = {
+            "gitsigns",
+            "indent-blankline",
+            "lspsaga",
+            "nvim-cmp",
+            "nvim-web-devicons",
+            "telescope",
+            "which-key",
+            "nvim-notify",
+          },
+        })
+        cmd.colorscheme("material")
       end,
     },
 
