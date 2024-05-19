@@ -258,8 +258,9 @@ local plugins_by_category = {
     {
       "nvim-lualine/lualine.nvim",
       event = evt.VeryLazy,
+      dependencies = { "nvim-tree/nvim-web-devicons" },
       config = function()
-        require("local.config.plugins.lualine").setup()
+        require "local.config.plugins.lualine"
       end,
     },
 
