@@ -2,6 +2,8 @@ if require("local.config.globals").bootstrap then
   return
 end
 
+local mod = require "local.module"
+
 local km = require 'local.keymap'
 
 local nnoremap = km.nnoremap
@@ -24,11 +26,17 @@ noremap.ctrl.l = '<C-w>l'
 noremap.ctrl.h = '<C-w>h'
 
 -- buffer nav
-nnoremap.ctrl.PageUp   = {':bprev', silent = true }
-nnoremap.ctrl.PageDown = {':bnext', silent = true }
+if mod.exists("barbar") then
+  nnoremap.ctrl.PageUp   = ':BufferPrevious'
+  nnoremap.ctrl.PageDown = ':BufferNext'
 
--- close buffer
-nnoremap.leader.w = ':Bwipeout'
+  -- close buffer
+  nnoremap.leader.w = ':BufferWipeout'
+
+else
+  nnoremap.ctrl.PageUp   = {':bprev', silent = true }
+  nnoremap.ctrl.PageDown = {':bnext', silent = true }
+end
 
 -- open current line in github browser
 nnoremap.leader.o = ':.GBrowse'

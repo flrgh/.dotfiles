@@ -223,6 +223,10 @@ local plugins_by_category = {
     -- tabline for neovim
     {
       'romgrk/barbar.nvim',
+      dependencies = {
+        "nvim-tree/nvim-web-devicons",
+        "lewis6991/gitsigns.nvim",
+      },
       setup = function()
         require("barbar").setup({
           icons = {
