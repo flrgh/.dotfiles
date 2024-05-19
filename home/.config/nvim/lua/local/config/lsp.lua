@@ -68,16 +68,13 @@ do
   end
 
   do
-    local enabled = true
     maps.toggle_diagnostics = function()
-      if enabled then
+      if vim.diagnostic.is_enabled() then
         vim.notify("disabling diagnostics")
         vim.diagnostic.enable(false)
-        enabled = false
       else
         vim.notify("enabling diagnostics")
         vim.diagnostic.enable(true)
-        enabled = true
       end
     end
   end
