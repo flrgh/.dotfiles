@@ -25,7 +25,7 @@ get-latest-version() {
     gh-helper get-releases "$REPO" \
     | jq -r '.[].tag_name' \
     | grep -vE 'stable|nightly' \
-    | sort -r \
+    | sort --version-sort --reverse \
     | head -1 \
     | sed -r -e 's/#v//'
 }
