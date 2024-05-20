@@ -1,4 +1,4 @@
-local km = require "local.keymap"
+﻿local km = require "local.keymap"
 local evt = require "local.event"
 local g = require "local.config.globals"
 local fs = require "local.fs"
@@ -295,24 +295,39 @@ local plugins_by_category = {
       cmd = { "TagbarToggle" },
     },
 
+    {
+      "folke/noice.nvim",
+      event = evt.VeryLazy,
+      --enabled = function() return false end,
+      dependencies = {
+        "MunifTanjim/nui.nvim",
+        "rcarriga/nvim-notify",
+      },
+      config = function()
+        require "local.config.plugins.noice"
+      end,
+    },
+
+    { "rcarriga/nvim-notify",
+      init = function()
+        local notify = require "notify"
+        notify.setup({
+          timeout = 1000,
+          stages = "static",
+        })
+
+        vim.notify = notify
+      end,
+    },
+
     -- better vim.ui
     {
       "stevearc/dressing.nvim",
-      init = function()
-        local select = vim.ui.select
-        local input = vim.ui.input
-
-        vim.ui.select = function(...)
-          require("lazy").load({ plugins = { "dressing.nvim" } })
-          vim.ui.select = select
-          return select(...)
-        end
-
-        vim.ui.input = function(...)
-          require("lazy").load({ plugins = { "dressing.nvim" } })
-          vim.ui.input = input
-          return input(...)
-        end
+      enabled = true,
+      config = function()
+        require("dressing").setup({
+          enabled = true,
+        })
       end,
     },
   },
@@ -338,6 +353,8 @@ local plugins_by_category = {
         -- fuzzy-find with ripgrep
         km.nnoremap.leader.rg = {':Rg',      silent = true }
 
+        km.nnoremap.leader.pf = { ':Files ~/.local/share/nvim/lazy', silent = true }
+
         vim.g.fzf_preview_window = {
           "right,50%,<70(down,70%)",
           "ctrl-/"
@@ -350,7 +367,7 @@ local plugins_by_category = {
           }
         }
       end,
-      cmd = { "GFiles", "Buffers", "Rg" },
+      cmd = { "GFiles", "Buffers", "Rg", "Files" },
     },
   },
 

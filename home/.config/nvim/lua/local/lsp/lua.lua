@@ -225,6 +225,8 @@ local plugin_libs = {
   "neodev",
   "nvim-treesitter",
   "telescope",
+  "lualine",
+  "nvim-notify",
 }
 
 ---@param settings local.lsp.settings
@@ -243,8 +245,8 @@ local function lua_libs(settings)
   if settings.include_vim then
     insert(libs, expand("$VIMRUNTIME/lua"))
 
-    if mod.exists("neodev.lua_ls") then
-      local lua_ls = require "neodev.lua_ls"
+    if mod.exists("neodev.luals") then
+      local lua_ls = require "neodev.luals"
 
       if type(lua_ls.library) == "function" then
         append(libs, lua_ls.library({
@@ -362,7 +364,6 @@ local path = lua_path(settings, library)
 local conf = {
   cmd = { 'lua-language-server' },
   settings = {
-    ---@type sumneko.setting
     Lua = {
       runtime = {
         fileEncoding = "utf8",
@@ -397,7 +398,7 @@ local conf = {
 
       hover = {
         enable = true,
-        enumsLimit = 5,
+        enumsLimit = 10,
         previewFields = 20,
         viewNumber = true,
         viewString = true,
@@ -462,10 +463,67 @@ local conf = {
 
         },
 
-        ignoredFiles = "Opened",
-        libraryFiles = "Opened",
+        ignoredFiles = "Disable",
+        libraryFiles = "Disable",
         workspaceDelay = 3000,
         workspaceRate = 80,
+
+        neededFileStatus = {
+          ["ambiguity-1"]            = "Opened",
+          ["assign-type-mismatch"]   = "Opened",
+          ["await-in-sync"]          = "None",
+          ["cast-local-type"]        = "Opened",
+          ["cast-type-mismatch"]     = "Opened",
+          ["circle-doc-class"]       = "Opened",
+          ["close-non-object"]       = "Opened",
+          ["code-after-break"]       = "Opened",
+          ["codestyle-check"]        = "None",
+          ["count-down-loop"]        = "Opened",
+          deprecated                 = "Opened",
+          ["different-requires"]     = "Opened",
+          ["discard-returns"]        = "Opened",
+          ["doc-field-no-class"]     = "Opened",
+          ["duplicate-doc-alias"]    = "Opened",
+          ["duplicate-doc-field"]    = "Opened",
+          ["duplicate-doc-param"]    = "Opened",
+          ["duplicate-index"]        = "Opened",
+          ["duplicate-set-field"]    = "Opened",
+          ["empty-block"]            = "Opened",
+          ["global-in-nil-env"]      = "Opened",
+          ["lowercase-global"]       = "None",
+          ["missing-parameter"]      = "Opened",
+          ["missing-return"]         = "Opened",
+          ["missing-return-value"]   = "Opened",
+          ["need-check-nil"]         = "Opened",
+          ["newfield-call"]          = "Opened",
+          ["newline-call"]           = "Opened",
+          ["no-unknown"]             = "None",
+          ["not-yieldable"]          = "None",
+          ["param-type-mismatch"]    = "Opened",
+          ["redefined-local"]        = "Opened",
+          ["redundant-parameter"]    = "Opened",
+          ["redundant-return"]       = "Opened",
+          ["redundant-return-value"] = "Opened",
+          ["redundant-value"]        = "Opened",
+          ["return-type-mismatch"]   = "Opened",
+          ["spell-check"]            = "None",
+          ["trailing-space"]         = "Opened",
+          ["unbalanced-assignments"] = "Opened",
+          ["undefined-doc-class"]    = "Opened",
+          ["undefined-doc-name"]     = "Opened",
+          ["undefined-doc-param"]    = "Opened",
+          ["undefined-env-child"]    = "Opened",
+          ["undefined-field"]        = "Opened",
+          ["undefined-global"]       = "Opened",
+          ["unknown-cast-variable"]  = "Opened",
+          ["unknown-diag-code"]      = "Opened",
+          ["unknown-operator"]       = "Opened",
+          ["unreachable-code"]       = "Opened",
+          ["unused-function"]        = "Opened",
+          ["unused-label"]           = "Opened",
+          ["unused-local"]           = "Opened",
+          ["unused-vararg"]          = "Opened",
+        }
 
       },
 

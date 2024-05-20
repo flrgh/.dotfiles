@@ -5,7 +5,7 @@ local _M = {
 }
 
 local fn = vim.fn
-local loop = vim.loop
+local loop = vim.uv
 local expand = fn.expand
 local getcwd = fn.getcwd
 local json_decode = vim.json.decode

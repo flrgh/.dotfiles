@@ -34,7 +34,6 @@ vim.lsp.handlers["textDocument/definition"] = function(_, result)
   end
 end
 
-
 local on_attach
 do
   ---@type table<string, function|string>
@@ -81,11 +80,17 @@ do
 
   do
     maps.toggle_inlay_hints = function()
+      ---@type notify.Options
+      local opts = {
+        timeout = 1,
+        hide_from_history = true,
+      }
+
       if vim.lsp.inlay_hint.is_enabled() then
-        vim.notify("disabling inlay hints")
+        vim.notify("disabling inlay hints", nil, opts)
         vim.lsp.inlay_hint.enable(false)
       else
-        vim.notify("enabling inlay hints")
+        vim.notify("enabling inlay hints", nil, opts)
         vim.lsp.inlay_hint.enable(true)
       end
     end
@@ -164,6 +169,7 @@ local servers = {
 }
 
 for lang, server in pairs(servers) do
+  ---@type lspconfig.Config
   local conf = {
     log_level = 2,
     on_attach = on_attach,
@@ -182,6 +188,8 @@ for lang, server in pairs(servers) do
   end)
 
   if setup then
+    conf.workspace = require("local.config.globals").workspace
+    conf.root_dir = function() return conf.workspace end
     conf.cmd = conf.cmd
       or lspconfig[server]
       and lspconfig[server].document_config
