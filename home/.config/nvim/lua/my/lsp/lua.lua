@@ -227,6 +227,7 @@ local plugin_libs = {
   "telescope",
   "lualine",
   "nvim-notify",
+  "LuaSnip",
 }
 
 ---@param settings my.lsp.settings
