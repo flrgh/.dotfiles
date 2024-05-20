@@ -24,6 +24,14 @@ end
 -- version of a plugin
 -- local LATEST_STABLE = ""
 
+---@param name string
+---@return function
+local function file_config(name)
+  return function()
+    require("my.plugins." .. name)
+  end
+end
+
 
 ---@type table<string, LazySpec[]>
 local plugins_by_filetype = {
@@ -227,45 +235,14 @@ local plugins_by_category = {
         "nvim-tree/nvim-web-devicons",
         "lewis6991/gitsigns.nvim",
       },
-      setup = function()
-        require("barbar").setup({
-          icons = {
-            separator = {
-              left = '▎',
-            },
-            inactive = {
-              separator = {
-                left =  '▎',
-              },
-            },
-            pinned = {
-              button = '車',
-            },
-            button = '',
-            modified = {
-              button= '●',
-            },
-
-          },
-          animation = false,
-          auto_hide = false,
-          closable = true,
-          clickable = true,
-          maximum_padding = 4,
-          maximum_length = 30,
-          semantic_letters = true,
-          no_name_title = nil,
-        })
-      end,
+      config = file_config("barbar"),
     },
 
     {
       "nvim-lualine/lualine.nvim",
       event = evt.VeryLazy,
       dependencies = { "nvim-tree/nvim-web-devicons" },
-      config = function()
-        require "my.plugins.lualine"
-      end,
+      config = file_config("lualine"),
     },
 
     {
@@ -303,9 +280,7 @@ local plugins_by_category = {
         "MunifTanjim/nui.nvim",
         "rcarriga/nvim-notify",
       },
-      config = function()
-        require "my.plugins.noice"
-      end,
+      config = file_config("noice"),
     },
 
     { "rcarriga/nvim-notify",
@@ -402,9 +377,7 @@ local plugins_by_category = {
       event = evt.VeryLazy,
       dependencies = { 'nvim-lua/plenary.nvim' },
       branch = "0.1.x",
-      config = function()
-        require("my.plugins.telescope").setup()
-      end,
+      config = file_config("telescope"),
     },
 
     {
@@ -414,9 +387,7 @@ local plugins_by_category = {
       dependencies = {
         'nvim-telescope/telescope.nvim',
       },
-      config = function()
-        require("my.plugins.telescope").setup_fzf_native()
-      end,
+      config = file_config("telescope-fzf-native"),
     },
 
     {
@@ -586,9 +557,7 @@ local plugins_by_category = {
         'L3MON4D3/LuaSnip',
         'saadparwaiz1/cmp_luasnip',
       },
-      config = function()
-        require("my.plugins.cmp").setup()
-      end,
+      config = file_config("cmp"),
     },
 
     {

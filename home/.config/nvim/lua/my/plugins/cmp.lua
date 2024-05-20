@@ -1,15 +1,13 @@
-local _M = {}
-
 local mod = require 'my.utils.module'
 
 if not mod.exists('cmp') then
-  return { setup = function() end }
+  return
 end
 
 local cmp = require 'cmp'
-
 local km = require 'my.keymap'
 local g = require "my.config.globals"
+
 
 ---@return table<any, cmp.Mapping>
 local function mapping()
@@ -173,22 +171,18 @@ local function defaults(extend)
   return cfg
 end
 
-function _M.setup()
-  -- Set completeopt to have a better completion experience
-  vim.opt.completeopt = { "menu", "menuone", "noselect" }
+-- Set completeopt to have a better completion experience
+vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
-  -- Don't show the dumb matching stuff.
-  vim.opt.shortmess:append "c"
+-- Don't show the dumb matching stuff.
+vim.opt.shortmess:append "c"
 
-  cmp.setup(defaults())
+cmp.setup(defaults())
 
-  cmp.setup.cmdline(':', {
-    mapping = cmp.mapping.preset.cmdline(),
-    sources = cmp.config.sources({
-      { name = 'path' },
-      { name = 'cmdline' },
-    })
+cmp.setup.cmdline(':', {
+  mapping = cmp.mapping.preset.cmdline(),
+  sources = cmp.config.sources({
+    { name = 'path' },
+    { name = 'cmdline' },
   })
-end
-
-return _M
+})
