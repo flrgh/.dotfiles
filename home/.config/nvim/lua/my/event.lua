@@ -1,9 +1,9 @@
 --- vim event constants
 ---
----@type table<string, local.vim.event>
+---@type table<string, my.vim.event>
 local e = {}
 
----@alias local.vim.event string
+---@alias my.vim.event string
 
 setmetatable(e, {
   __index = function(_, key)

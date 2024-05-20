@@ -1,7 +1,7 @@
-﻿local km = require "local.keymap"
-local evt = require "local.event"
-local g = require "local.config.globals"
-local fs = require "local.fs"
+﻿local km = require "my.keymap"
+local evt = require "my.event"
+local g = require "my.config.globals"
+local fs = require "my.utils.fs"
 
 local cmd = vim.cmd
 
@@ -264,7 +264,7 @@ local plugins_by_category = {
       event = evt.VeryLazy,
       dependencies = { "nvim-tree/nvim-web-devicons" },
       config = function()
-        require "local.config.plugins.lualine"
+        require "my.plugins.lualine"
       end,
     },
 
@@ -304,7 +304,7 @@ local plugins_by_category = {
         "rcarriga/nvim-notify",
       },
       config = function()
-        require "local.config.plugins.noice"
+        require "my.plugins.noice"
       end,
     },
 
@@ -377,11 +377,11 @@ local plugins_by_category = {
       'nvim-treesitter/nvim-treesitter',
       event = evt.VeryLazy,
       build = function()
-        require('local.config.treesitter').bootstrap()
+        require('my.config.treesitter').bootstrap()
         cmd 'TSUpdateSync'
       end,
       config = function()
-        require('local.config.treesitter').setup()
+        require('my.config.treesitter').setup()
       end,
     },
     {
@@ -403,7 +403,7 @@ local plugins_by_category = {
       dependencies = { 'nvim-lua/plenary.nvim' },
       branch = "0.1.x",
       config = function()
-        require("local.config.plugins.telescope").setup()
+        require("my.plugins.telescope").setup()
       end,
     },
 
@@ -415,7 +415,7 @@ local plugins_by_category = {
         'nvim-telescope/telescope.nvim',
       },
       config = function()
-        require("local.config.plugins.telescope").setup_fzf_native()
+        require("my.plugins.telescope").setup_fzf_native()
       end,
     },
 
@@ -555,7 +555,7 @@ local plugins_by_category = {
       'L3MON4D3/LuaSnip',
       lazy = true,
       config = function()
-        require("local.config.plugins.luasnip").setup()
+        require("my.plugins.luasnip").setup()
       end,
       dependencies = {
         {
@@ -587,7 +587,7 @@ local plugins_by_category = {
         'saadparwaiz1/cmp_luasnip',
       },
       config = function()
-        require("local.config.plugins.cmp").setup()
+        require("my.plugins.cmp").setup()
       end,
     },
 
@@ -618,7 +618,7 @@ local plugins_by_category = {
       'neovim/nvim-lspconfig',
       dependencies = { "folke/neodev.nvim" },
       config = function()
-        require('local.config.lsp')
+        require('my.config.lsp')
         cmd 'LspStart'
       end,
     },

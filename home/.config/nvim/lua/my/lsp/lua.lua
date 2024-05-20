@@ -1,10 +1,10 @@
-if require("local.config.globals").bootstrap then
+if require("my.config.globals").bootstrap then
   return
 end
 
-local fs = require 'local.fs'
-local mod = require 'local.module'
-local globals = require "local.config.globals"
+local fs = require 'my.utils.fs'
+local mod = require 'my.utils.module'
+local globals = require "my.config.globals"
 
 local expand = vim.fn.expand
 local endswith   = vim.endswith
@@ -13,7 +13,7 @@ local runtime_paths = vim.api.nvim_list_runtime_paths
 local dir_exists = fs.dir_exists
 local find = string.find
 
-local WORKSPACE = fs.normalize(require("local.config.globals").workspace)
+local WORKSPACE = fs.normalize(require("my.config.globals").workspace)
 
 local LUA_PATH = os.getenv("LUA_PATH") or package.path
 
@@ -70,7 +70,7 @@ do
 end
 
 
----@class local.lsp.settings
+---@class my.lsp.settings
 ---@field include_vim boolean
 ---@field third_party string[]
 ---@field ignore string[]
@@ -182,7 +182,7 @@ local function dedupe(paths, skip_realpath)
 end
 
 
----@return local.lsp.settings
+---@return my.lsp.settings
 local function load_user_settings()
   local settings = DEFAULT_SETTINGS
 
@@ -229,7 +229,7 @@ local plugin_libs = {
   "nvim-notify",
 }
 
----@param settings local.lsp.settings
+---@param settings my.lsp.settings
 local function lua_libs(settings)
   local libs = {}
 
@@ -288,7 +288,7 @@ local function add_lua_path(paths, dir)
   end
 end
 
----@param settings local.lsp.settings
+---@param settings my.lsp.settings
 ---@param libs table<string, boolean>
 ---@return string[]
 local function lua_path(settings, libs)
@@ -373,8 +373,8 @@ local conf = {
         unicodeName = true,
         version = 'LuaJIT',
         special = {
-          ["local.module.reload"] = "require",
-          ["local.module.if_exists"] = "require",
+          ["my.utils.module.reload"] = "require",
+          ["my.utils.module.if_exists"] = "require",
         },
 
       },

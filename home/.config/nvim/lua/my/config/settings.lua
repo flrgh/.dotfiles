@@ -1,4 +1,4 @@
-if require("local.config.globals").bootstrap then
+if require("my.config.globals").bootstrap then
   return
 end
 

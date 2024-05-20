@@ -13,8 +13,8 @@ local function expand(path)
 end
 
 local function detect_workspace()
-  local mod = require "local.module"
-  local fs = require 'local.fs'
+  local mod = require "my.utils.module"
+  local fs = require 'my.utils.fs'
   local ws
 
   if mod.exists("lspconfig") then

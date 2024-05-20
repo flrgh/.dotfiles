@@ -1,6 +1,6 @@
 local _M = {}
 
-local mod = require "local.module"
+local mod = require "my.utils.module"
 
 local ls
 local types
@@ -52,7 +52,7 @@ function _M.setup()
     end
   end
 
-  local km = require("local.module").reload("local.keymap")
+  local km = require("my.utils.module").reload("my.keymap")
   km.imap.ctrl.k = { expand, silent = true }
   km.smap.ctrl.k = { expand, silent = true }
 
@@ -63,7 +63,7 @@ function _M.setup()
   km.smap.ctrl.l = { list, silent = true }
 
   km.nnoremap[km.Leader .. km.Leader .. "s"] = function()
-    mod.reload("local.config.plugins.luasnip").snippets()
+    mod.reload("my.plugins.luasnip").snippets()
     vim.notify("snippets reloaded!")
   end
 end

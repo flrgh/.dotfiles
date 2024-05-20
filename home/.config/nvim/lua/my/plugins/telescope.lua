@@ -1,6 +1,6 @@
 local _M = {}
 
-local mod = require "local.module"
+local mod = require "my.utils.module"
 
 function _M.setup_fzf_native()
   if not mod.exists("telescope") then
@@ -26,7 +26,7 @@ function _M.setup_fzf_native()
 end
 
 function _M.setup()
-  local km = require('local.keymap')
+  local km = require('my.keymap')
   local actions = require "telescope.actions"
 
   -- turn on line numbers for previewers

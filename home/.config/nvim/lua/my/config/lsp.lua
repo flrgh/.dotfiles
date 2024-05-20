@@ -3,7 +3,7 @@ if #vim.api.nvim_list_uis() == 0 then
   return
 end
 
-local mod = require 'local.module'
+local mod = require 'my.utils.module'
 
 if not mod.exists('lspconfig') then
   return
@@ -100,7 +100,7 @@ do
   function on_attach(_, buf)
     -- set up key bindings
     do
-      local km = require('local.keymap')
+      local km = require('my.keymap')
 
       -- superceded by vim.lsp.tagfunc
       --km.nnoremap.ctrl[']'] = km.lsp.definition
@@ -175,7 +175,7 @@ for lang, server in pairs(servers) do
     on_attach = on_attach,
   }
 
-  local mod_name = "local.lsp." .. lang
+  local mod_name = "my.lsp." .. lang
   local setup = true
   mod.if_exists(mod_name, function(m)
     if type(m) == "table" then
@@ -188,7 +188,7 @@ for lang, server in pairs(servers) do
   end)
 
   if setup then
-    conf.workspace = require("local.config.globals").workspace
+    conf.workspace = require("my.config.globals").workspace
     conf.root_dir = function() return conf.workspace end
     conf.cmd = conf.cmd
       or lspconfig[server]

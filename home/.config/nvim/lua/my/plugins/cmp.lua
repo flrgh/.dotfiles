@@ -1,6 +1,6 @@
 local _M = {}
 
-local mod = require 'local.module'
+local mod = require 'my.utils.module'
 
 if not mod.exists('cmp') then
   return { setup = function() end }
@@ -8,8 +8,8 @@ end
 
 local cmp = require 'cmp'
 
-local km = require 'local.keymap'
-local g = require "local.config.globals"
+local km = require 'my.keymap'
+local g = require "my.config.globals"
 
 ---@return table<any, cmp.Mapping>
 local function mapping()
@@ -167,7 +167,7 @@ local function defaults(extend)
     cfg = extend(cfg)
 
   elseif typ == "table" then
-    cfg = vim.tbl_deep_extend({ "force" }, cfg, extend)
+    cfg = vim.tbl_deep_extend("force", cfg, extend)
   end
 
   return cfg

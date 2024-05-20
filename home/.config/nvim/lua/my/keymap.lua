@@ -75,7 +75,7 @@ local mt = {
 }
 
 ---@param t string
----@return local.keymap.set_key
+---@return my.keymap.set_key
 local function template(t)
   return function(key)
     return t:format(key)
@@ -86,11 +86,11 @@ local wrap_ctrl = template('<C-%s>')
 local wrap_fn = template('<%s>')
 local add_leader = template('<Leader>%s')
 
----@alias local.keymap.set_key fun(s:string):string
+---@alias my.keymap.set_key fun(s:string):string
 
----@alias local.keymap.mode '"n"'|'"v"'|'"x"'|'""'
+---@alias my.keymap.mode '"n"'|'"v"'|'"x"'|'""'
 
----@class local.keymap.opts : table
+---@class my.keymap.opts : table
 ---@field noremap boolean
 ---@field silent  boolean
 ---@field nowait  boolean
@@ -98,22 +98,22 @@ local add_leader = template('<Leader>%s')
 ---@field expr    boolean
 ---@field unique  boolean
 
----@class local.keymap.action.table : local.keymap.opts
+---@class my.keymap.action.table : my.keymap.opts
 ---@field [1] string # the RHS of the key map
 
----@alias local.keymap.action string|local.keymap.action.table
+---@alias my.keymap.action string|my.keymap.action.table
 
----@alias local.keymap.binding table<string, local.keymap.action>
+---@alias my.keymap.binding table<string, my.keymap.action>
 
----@class local.keymap : table
----@field ctrl     local.keymap.binding
----@field fn       local.keymap.binding
----@field leader   local.keymap.binding
----@field mode     local.keymap.mode
----@field opts     local.keymap.opts
----@field set_key? local.keymap.set_key
+---@class my.keymap : table
+---@field ctrl     my.keymap.binding
+---@field fn       my.keymap.binding
+---@field leader   my.keymap.binding
+---@field mode     my.keymap.mode
+---@field opts     my.keymap.opts
+---@field set_key? my.keymap.set_key
 
----@return local.keymap
+---@return my.keymap
 local function make_map(mode, opts)
   local buf = opts.buf
   opts.buf = nil

@@ -2,7 +2,7 @@
 -- Author: shadmansaleh
 -- Credit: glepnir
 
-local mod = require "local.module"
+local mod = require "my.utils.module"
 
 local expand                    = vim.fn.expand
 local empty                     = vim.fn.empty

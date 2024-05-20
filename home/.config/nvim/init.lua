@@ -1,10 +1,10 @@
-local mod = require "local.module"
+local mod = require "my.utils.module"
 
 local reload = mod.reload
 -- these only have first party dependencies, so they can be hot-reloaded
-reload 'local.config.globals'
-reload 'local.augroup'
-reload 'local.config.settings'
-reload 'local.config.plugins'
-reload 'local.config.mappings'
-reload 'local.config.commands'
+reload 'my.config.globals'
+reload 'my.augroup'
+reload 'my.config.settings'
+reload 'my.plugins'
+reload 'my.config.mappings'
+reload 'my.config.commands'

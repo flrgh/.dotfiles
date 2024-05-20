@@ -1,5 +1,5 @@
 ---Lua Module Utils.
----@module 'local.module'
+---@module "my.utils.module"
 local _M = {}
 
 local pcall = pcall

@@ -1,10 +1,10 @@
-if require("local.config.globals").bootstrap then
+if require("my.config.globals").bootstrap then
   return
 end
 
-local mod = require "local.module"
+local mod = require "my.utils.module"
 
-local km = require 'local.keymap'
+local km = require 'my.keymap'
 
 local nnoremap = km.nnoremap
 local map      = km.map

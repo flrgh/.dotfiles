@@ -1,5 +1,5 @@
 --- filesystem utility functions
----@module 'local.fs'
+---@module "my.utils.fs"
 local _M = {
   _VERSION = '0.1'
 }
