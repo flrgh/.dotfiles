@@ -16,6 +16,7 @@ __rc_log() {
         "${ts#*.}" \
         "$ctx"
 
+    local msg
     for msg in "$@"; do
         echo "${base}${msg}"
     done
@@ -48,6 +49,7 @@ if (( DEBUG_BASHRC > 0 )); then
 
     __rc_debug() {
         local -r ctx="${BASH_SOURCE[2]}:${BASH_LINENO[1]} ${FUNCNAME[1]}"
+        local msg
         for msg in "$@"; do
             __rc_log "$ctx" "$msg" | tee -a "$__RC_LOG_FILE"
         done
@@ -154,8 +156,9 @@ __rc_source_dir() {
 
     local files=("$dir"/*)
 
-    for p in "${files[@]}"; do
-        __rc_source_file "$p"
+    local f
+    for f in "${files[@]}"; do
+        __rc_source_file "$f"
     done
 
     __rc_timer_stop "$key"
@@ -189,9 +192,15 @@ if [[ -d $__RC_LOG_DIR ]]; then
 fi
 
 # shellcheck disable=SC2046
-unset -v ${!__RC_*} ${!__rc_*}
+unset -v "${!__RC_@}" "${!__rc_@}"
 # shellcheck disable=SC2046
 unset -f $(compgen -A function __rc_)
+
+# apparently ${!<varname>*} doesn't expand array vars (?!),
+# so we'll unset these manually
+unset -v __RC_DURATION
+unset -v __RC_DURATION_US
+unset -v __RC_TIMER_START
 
 
 # luamake is annoying and tries to add a bash alias for itself every time it runs,
