@@ -9,8 +9,7 @@ local opt = vim.opt
 g.mapleader = ','
 
 o.encoding      = 'utf-8'
--- always write BOM to utf-8 files
-o.bomb          = true
+o.bomb = false
 o.fileformat    = 'unix'
 o.fileformats   = 'unix'
 
