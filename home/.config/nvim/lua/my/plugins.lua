@@ -507,6 +507,9 @@ local plugins_by_category = {
       'junegunn/vim-easy-align',
       event = evt.VimEnter,
       config = function()
+        -- perform alignment in comments and strings
+        vim.g.easy_align_ignore_groups = '[]'
+
         -- Start interactive EasyAlign in visual mode (e.g. vipga)
         km.xmap.ga = '<Plug>(EasyAlign)'
         -- Start interactive EasyAlign for a motion/text object (e.g. gaip)
