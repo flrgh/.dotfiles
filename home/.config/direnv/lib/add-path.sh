@@ -25,8 +25,8 @@ add-lua-path() {
     path=$(realpath "$path")
 
     add-path LUA_PATH "$path/?/init.lua"  ";"
-    add-path LUA_PATH "$path/?/init.ljbc" ";"
     add-path LUA_PATH "$path/?.lua"       ";"
+    add-path LUA_PATH "$path/?/init.ljbc" ";"
     add-path LUA_PATH "$path/?.ljbc"      ";"
 }
 
@@ -65,11 +65,14 @@ layout_openresty() {
     export KONG_OPENRESTY_PATH="$dir"
     export KONG_TEST_OPENRESTY_PATH="$KONG_OPENRESTY_PATH"
 
-    add-lua-paths "$dir"/lualib
-
     for lj in "$dir"/luajit/share/luajit-*; do
-        add-lua-paths "$lj"
+        add-lua-path "$lj"
     done
+
+    add-lua-cpath "$dir"/luajit/lib
+
+    add-lua-paths "$dir"/lualib
+    add-lua-paths "$dir"/site/lualib
 }
 
 layout_luarocks() {
