@@ -12,27 +12,145 @@ local insert = table.insert
 local runtime_paths = vim.api.nvim_list_runtime_paths
 local dir_exists = fs.dir_exists
 local find = string.find
-
-local WORKSPACE = fs.normalize(require("my.config.globals").workspace)
-
-local LUA_PATH = os.getenv("LUA_PATH") or package.path
-
 local EMPTY = {}
 
----@type string
-local USER_SETTINGS = expand("~/.config/lua/lsp.lua")
 
----@type string
-local ANNOTATIONS = globals.git_user_root .. "/lua-type-annotations"
+---@param t string[]
+---@param extra string|string[]
+local function extend(t, extra)
+  if type(extra) == "table" then
+    for _, v in ipairs(extra) do
+      insert(t, v)
+    end
+  else
+    insert(t, extra)
+  end
+end
 
----@type string
-local LUA_LS = expand("~/.local/libexec/lua-language-server/meta/3rd")
+local WORKSPACE = fs.normalize(globals.workspace)
+
+---@type string[]
+local LUA_PATH_ENTRIES = {}
+do
+  local lua_path = os.getenv("LUA_PATH") or package.path
+  ---@diagnostic disable-next-line
+  lua_path:gsub("[^;]+", function(path)
+    path = fs.normalize(path)
+    local dir = path:gsub("%?%.lua$", ""):gsub("%?/init%.lua$", "")
+
+    if path ~= "" and
+       path ~= "/" and
+       dir ~= WORKSPACE
+    then
+      insert(LUA_PATH_ENTRIES, path)
+    end
+  end)
+end
+
+
 
 --- annotations from https://github.com/LuaCATS
----@type string
-local LUA_CATS = expand("~/git/LuaCATS")
+local LUA_CATS = globals.git_root .. "/LuaCATS"
 
-local NVIM_LUA = globals.dotfiles.config_nvim_lua
+local LUA_TYPE_ANNOTATIONS = globals.git_user_root .. "/lua-type-annotations"
+
+---@type my.lsp.settings
+local SETTINGS_COMMON = {
+  libraries = {
+    LUA_TYPE_ANNOTATIONS .. "/Penlight",
+    LUA_TYPE_ANNOTATIONS .. "/LuaFileSystem",
+    LUA_TYPE_ANNOTATIONS .. "/luasocket",
+    globals.git_user_root .. "/lua-utils/lib",
+  },
+}
+
+---@type my.lsp.settings
+local SETTINGS_RESTY = {
+  libraries = {
+    LUA_CATS .. "/openresty/library",
+    globals.git_user_root .. "/resty-community-typedefs/library",
+  },
+}
+
+---@type my.lsp.settings
+local SETTINGS_NVIM = {
+  libraries = {
+    globals.dotfiles.config_nvim_lua,
+    globals.nvim.runtime_lua,
+  },
+}
+
+---@type my.lsp.settings
+local SETTINGS_KONG = {
+  libraries = {
+    LUA_TYPE_ANNOTATIONS .. "/kong",
+  },
+  ignore = {
+    -- kong-build-tools
+    ".kbt",
+
+    -- busted test files
+    "*_spec.lua",
+
+    -- kong migration files
+    "migrations/[0-9]*.lua",
+    "migrations/**/[0-9]*.lua",
+
+    -- local openresty build dir
+    ".resty",
+
+    --"spec/helpers.lua",
+  },
+}
+
+
+---@type table<string, my.lsp.settings>
+local WORKSPACES = {
+  [".dotfiles"] = {
+    nvim = true,
+    plugins = {
+      "LuaSnip",
+      "hover.nvim",
+      "lazy.nvim",
+      "lspkind-nvim",
+      "lspsaga.nvim",
+      "lualine",
+      "lualine.nvim",
+      "neodev",
+      "nvim-cmp",
+      "nvim-lspconfig",
+      "nvim-notify",
+      "nvim-treesitter",
+      "telescope",
+    },
+  },
+
+  doorbell = {
+    resty = true,
+  },
+
+  kong = {
+    resty = true,
+    kong  = true,
+  },
+
+  ["kong-ee"] = {
+    resty = true,
+    kong  = true,
+  },
+
+  ngx = {
+    resty = true,
+  },
+
+  nginx = {
+    resty = true,
+  },
+
+  resty = {
+    resty = true,
+  },
+}
 
 local get_plugin_lua_dir
 do
@@ -71,19 +189,17 @@ end
 
 
 ---@class my.lsp.settings
----@field include_vim boolean
----@field third_party string[]
----@field ignore string[]
----@field paths string[]
----@field libraries string[]
+---@field ignore? string[]
+---@field libraries? string[]
+---@field plugins? string[]
+---@field nvim? boolean
+---@field kong? boolean
+---@field resty? boolean
 local DEFAULT_SETTINGS = {
-  -- Make the server aware of Neovim runtime files
-  include_vim = false,
-
   libraries = {},
-  paths = {},
-  third_party = {},
   ignore = {},
+  plugins = {},
+  nvim = false,
 }
 
 ---@param p string
@@ -93,53 +209,6 @@ local function normalize(p, skip_realpath)
     return fs.normalize(p)
   else
     return fs.realpath(p)
-  end
-end
-
----@param p string
----@return string[]
-local function expand_paths(p)
-  p = p:gsub("$TYPES", ANNOTATIONS)
-
-  if p:find("$LUA_LS", nil, true) then
-    p = p:gsub("$LUA_LS", LUA_LS)
-    p = p .. "/library"
-  end
-
-  if p:find("$LUA_CATS", nil, true) then
-    p = p:gsub("$LUA_CATS", LUA_CATS)
-    p = p .. "/library"
-  end
-
-  p = p:gsub("$DOTFILES_CONFIG_NVIM_LUA", NVIM_LUA)
-
-
-  return expand(p, nil, true)
-end
-
-local _runtime_dirs
-
----@return string[]
-local function runtime_lua_dirs()
-  if _runtime_dirs then return _runtime_dirs end
-  _runtime_dirs = {}
-
-  for _, dir in ipairs(runtime_paths()) do
-    if dir_exists(dir .. "/lua") then
-      insert(_runtime_dirs, dir .. "/lua")
-    end
-  end
-
-  return _runtime_dirs
-end
-
-local function append(a, b)
-  if type(b) == "table" then
-    for _, v in ipairs(b) do
-      insert(a, v)
-    end
-  else
-    insert(a, b)
   end
 end
 
@@ -181,95 +250,69 @@ local function dedupe(paths, skip_realpath)
   return new
 end
 
+---@param current my.lsp.settings
+---@param extra my.lsp.settings
+local function merge_settings(current, extra)
+  imerge(current.libraries, extra.libraries)
+  imerge(current.ignore, extra.ignore)
+
+  current.nvim  = current.nvim or extra.nvim
+  current.resty = current.resty or extra.resty
+  current.kong  = current.kong or extra.kong
+end
 
 ---@return my.lsp.settings
-local function load_user_settings()
+local function workspace_settings()
   local settings = DEFAULT_SETTINGS
-
-  local user
-  if fs.file_exists(USER_SETTINGS) then
-    user = dofile(USER_SETTINGS)
-  end
 
   local base = fs.basename(WORKSPACE)
 
-  for ws, conf in pairs(user.workspaces or {}) do
+  for ws, conf in pairs(WORKSPACES) do
     if ws == base or
        ws == "*" or
        find(base, ws, nil, true)
     then
-      imerge(settings.libraries, conf.libraries)
-      imerge(settings.paths, conf.paths)
-      imerge(settings.ignore, conf.ignore)
-      if conf.include_vim then
-        settings.include_vim = true
+      merge_settings(settings, conf)
+
+      if conf.nvim then
+        merge_settings(settings, SETTINGS_NVIM)
+      end
+
+      if conf.resty then
+        merge_settings(settings, SETTINGS_RESTY)
+      end
+
+      if conf.kong then
+        merge_settings(settings, SETTINGS_KONG)
       end
     end
-  end
-
-  if base == ".dotfiles" or base == "dotfiles" then
-    settings.include_vim = true
   end
 
   return settings
 end
 
-local plugin_libs = {
-  "nvim-cmp",
-  "lazy.nvim",
-  "nvim-lspconfig",
-  "lspsaga.nvim",
-  "hover.nvim",
-  "lualine.nvim",
-  "lspkind-nvim",
-  "neodev",
-  "nvim-treesitter",
-  "telescope",
-  "lualine",
-  "nvim-notify",
-  "LuaSnip",
-}
-
 ---@param settings my.lsp.settings
 local function lua_libs(settings)
   local libs = {}
 
-  for _, item in ipairs(settings.libraries or EMPTY) do
-    for _, elem in ipairs(expand_paths(item)) do
-      elem = fs.normalize(elem)
-      if elem ~= WORKSPACE then
-        insert(libs, elem)
-      end
+  for _, path in ipairs(settings.libraries or EMPTY) do
+    path = fs.normalize(path)
+    if path ~= WORKSPACE then
+      insert(libs, path)
     end
   end
 
-  if settings.include_vim then
-    insert(libs, expand("$VIMRUNTIME/lua"))
+  extend(libs, SETTINGS_COMMON.libraries)
 
-    if mod.exists("neodev.luals") then
-      local lua_ls = require "neodev.luals"
-
-      if type(lua_ls.library) == "function" then
-        append(libs, lua_ls.library({
-          library = {
-            types = true,
-          }
-        }))
-
-      else
-        vim.notify("function `neodev.lua_ls.library()` is missing")
-      end
-
+  if settings.nvim then
+    if mod.exists("neodev.config") then
+      local nconf = require "neodev.config"
+      insert(libs, nconf.root() .. "/types/stable")
     else
-      vim.notify("module `neodev.lua_ls` is missing")
+      vim.notify("module `neodev.config` is missing")
     end
 
-    if ANNOTATIONS and dir_exists(ANNOTATIONS) then
-      insert(libs, ANNOTATIONS .. "/luv")
-      insert(libs, ANNOTATIONS .. "/neovim")
-    end
-
-    for _, name in ipairs(plugin_libs) do
+    for _, name in ipairs(settings.plugins or EMPTY) do
       local lib = get_plugin_lua_dir(name)
       if lib then
         insert(libs, lib)
@@ -289,10 +332,9 @@ local function add_lua_path(paths, dir)
   end
 end
 
----@param settings my.lsp.settings
 ---@param libs table<string, boolean>
 ---@return string[]
-local function lua_path(settings, libs)
+local function lua_path(libs)
   local paths = {}
 
   -- something changed in lua-language-server 2.5.0 with regards to locating
@@ -308,19 +350,6 @@ local function lua_path(settings, libs)
   -- ...but `?.lua` and `?/init.lua` work, so let's use them instead
   insert(paths, "?.lua")
   insert(paths, "?/init.lua")
-
-  for _, extra in ipairs(settings.paths or EMPTY) do
-    for _, elem in ipairs(expand_paths(extra)) do
-      add_lua_path(paths, elem)
-    end
-  end
-
-  if settings.include_vim then
-    add_lua_path(paths, expand("$VIMRUNTIME/lua"))
-    for _, p in ipairs(runtime_lua_dirs()) do
-      add_lua_path(paths, p)
-    end
-  end
 
   for _, lib in ipairs(libs) do
     -- add $path
@@ -342,25 +371,14 @@ local function lua_path(settings, libs)
     end
   end
 
-  ---@diagnostic disable-next-line
-  LUA_PATH:gsub("[^;]+", function(path)
-    path = fs.normalize(path)
-    local dir = path:gsub("%?%.lua$", ""):gsub("%?/init%.lua$", "")
-
-    if path ~= "" and
-       path ~= "/" and
-       dir ~= WORKSPACE
-    then
-      insert(paths, path)
-    end
-  end)
+  extend(paths, LUA_PATH_ENTRIES)
 
   return dedupe(paths, true)
 end
 
-local settings = load_user_settings()
+local settings = workspace_settings()
 local library = lua_libs(settings)
-local path = lua_path(settings, library)
+local path = lua_path(library)
 
 local conf = {
   cmd = { 'lua-language-server' },

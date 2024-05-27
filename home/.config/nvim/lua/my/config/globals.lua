@@ -1,6 +1,8 @@
 ---@class user.globals
 local globals = {}
 
+local getenv = os.getenv
+
 ---@param path string
 ---@return string expanded
 local function expand(path)
@@ -43,7 +45,7 @@ end
 ---@type boolean
 globals.lsp_debug = false
 do
-  local env = os.getenv("NVIM_LSP_DEBUG")
+  local env = getenv("NVIM_LSP_DEBUG")
   if env and env ~= "0" then
     globals.lsp_debug = true
 
@@ -72,21 +74,22 @@ end
 ---@type boolean
 globals.debug = false
 do
-  local env = os.getenv("NVIM_DEBUG")
+  local env = getenv("NVIM_DEBUG")
   if env and env ~= "0" then
     globals.debug = true
   end
 end
 
 
+globals.home = getenv("HOME") or expand("~")
+
 --- My github username
 ---@type string
 globals.github_username = "flrgh"
 
-
 --- Path to ~/git
 ---@type string
-globals.git_root = expand("~/git")
+globals.git_root = globals.home .. "/git"
 
 
 --- Path to ~/git/{{github_username}}
@@ -116,8 +119,36 @@ do
   }
 end
 
+do
+  local app_name = getenv("NVIM_APPNAME") or "nvim"
+  local share = getenv("XDG_DATA_HOME") or (globals.home .. "/.local/share")
+  local config = getenv("XDG_CONFIG_HOME") or (globals.home .. "/.local/config")
+
+  ---@class user.globals.nvim
+  globals.nvim = {
+    -- $NVIM_APPNAME (default "nvim")
+    app_name = app_name,
+
+    -- ~/.local/config/nvim
+    config      = config .. "/" .. app_name,
+
+    -- ~/.local/share/nvim
+    share       = share .. "/" .. app_name,
+
+    -- ~/.local/share/nvim/runtime
+    runtime     = share .. "/" .. app_name .. "/runtime",
+
+    -- ~/.local/share/nvim/runtime/lua
+    runtime_lua = share .. "/" .. app_name .. "/runtime/lua",
+
+    -- ~/.local/share/nvim/lazy
+    lazy = share .. "/" .. app_name .. "/lazy",
+  }
+end
+
+
 ---@type boolean
 globals.bootstrap = (_G.___BOOTSTRAP and true)
-                    or os.getenv("NVIM_BOOTSTRAP") == "1"
+                    or getenv("NVIM_BOOTSTRAP") == "1"
 
 return globals
