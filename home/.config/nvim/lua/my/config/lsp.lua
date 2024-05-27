@@ -82,7 +82,6 @@ do
     maps.toggle_inlay_hints = function()
       ---@type notify.Options
       local opts = {
-        timeout = 1,
         hide_from_history = true,
       }
 

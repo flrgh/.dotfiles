@@ -290,7 +290,7 @@ local plugins_by_category = {
       init = function()
         local notify = require "notify"
         notify.setup({
-          timeout = 1000,
+          timeout = 750,
           stages = "static",
         })
 
