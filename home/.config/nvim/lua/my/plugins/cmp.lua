@@ -4,6 +4,13 @@ if not mod.exists('cmp') then
   return
 end
 
+local lspkind
+if mod.exists("lspkind") then
+  lspkind = require "lspkind"
+  lspkind.init({})
+end
+
+---@module 'cmp'
 local cmp = require 'cmp'
 local km = require 'my.keymap'
 local g = require "my.config.globals"
@@ -13,106 +20,120 @@ local Tab = km.Tab
 local Shift = km.Shift
 local Enter = km.Enter
 
----@return table<any, cmp.Mapping>
-local function mapping()
-  return cmp.mapping.preset.insert {
-    -- replace ctrl+n/ctrl+p with ctrl+j/ctrl+k
-    [Ctrl.j] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
-    [Ctrl.k] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
-    [Ctrl.n] = cmp.config.disable,
-    [Ctrl.p] = cmp.config.disable,
+---@type cmp.ConfigSchema
+local config = {}
+
+do
+  config.mapping = {
+    [Ctrl.n] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+    [Ctrl.p] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
 
     -- explicitly invoke completion
-    [Ctrl.Space] = cmp.mapping.complete,
+    [Ctrl.Space] = cmp.mapping.complete(),
 
     [Ctrl.e] = cmp.mapping.abort(),
 
-    [Enter] = cmp.mapping.confirm {
-      behavior = cmp.ConfirmBehavior.Replace,
-      select = false,
-    },
-
-    [Tab] = function(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      else
-        fallback()
-      end
-    end,
-    [Shift.Tab] = function(fallback)
-      if cmp.visible() then
-        cmp.select_prev_item()
-      else
-        fallback()
-      end
-    end,
-  }
-end
-
-
----@param entry cmp.Entry
----@param ctx cmp.Context
----@return boolean
-local function entry_filter(entry, ctx)
-  -- 1. filter out rust snippets
-  if entry.completion_item.kind == 15 and -- snippet
-    entry.source.name == "nvim_lsp" and
-    ctx.filetype == "rust"
-  then
-    return false
-  end
-
-
-  return true
-end
-
-local function sources()
-  local get_cwd
-  do
-    local ws = g.workspace or os.getenv("PWD")
-    if ws then
-      get_cwd = function() return ws end
-    end
-  end
-
-  local src = {
-    { name = 'nvim_lua' },
-    { name = 'nvim_lsp' },
-    { name = 'nvim_lsp_signature_help' },
-    { name = 'treesitter' },
-    { name = 'buffer', priority = 50 },
-    { name = 'path', option = { get_cwd = get_cwd } },
-    { name = 'calc' },
-    { name = 'emoji' },
-    { name = 'copilot', priority = 50 },
-  }
-
-  for i = 1, #src do
-    src[i].priority = src[i].priority or 100
-    src[i].entry_filter = entry_filter
-  end
-
-  return cmp.config.sources(src)
-end
-
-local function snippet()
-  if mod.exists("luasnip") then
-    return {
-      expand = function(opts)
-        require("luasnip").lsp_expand(opts.body)
+    -- https://github.com/hrsh7th/nvim-cmp/wiki/Example-mappings#safely-select-entries-with-cr
+    [Enter] = cmp.mapping({
+      i = function(fallback)
+        if cmp.visible() and cmp.get_active_entry() then
+          cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false })
+        else
+          fallback()
+        end
       end,
-    }
-  end
+      s = cmp.mapping.confirm({ select = true }),
+    }),
+
+    [Tab] = cmp.config.disable,
+    [Shift.Tab] = cmp.config.disable,
+  }
 end
 
----@return cmp.FormattingConfig|nil
-local function formatting(_)
-  if not mod.exists("lspkind") then
-    return
+do
+  local get_cwd
+  local ws = g.workspace or os.getenv("PWD")
+  if ws then
+    get_cwd = function() return ws end
   end
 
-  local lspkind = require "lspkind"
-  return {
+  -- https://github.com/hrsh7th/nvim-cmp/wiki/List-of-sources
+  local sources = {
+    -- use nvim lua API as a source
+    -- https://github.com/hrsh7th/cmp-nvim-lua
+    { name = "nvim_lua" },
+
+    -- Complete from LSP
+    -- https://github.com/hrsh7th/cmp-nvim-lsp
+    { name = "nvim_lsp" },
+
+    -- LSP, displays function signature
+    -- https://github.com/hrsh7th/cmp-nvim-lsp-signature-help
+    { name = "nvim_lsp_signature_help" },
+
+    -- Complete from Treesitter nodes
+    -- https://github.com/ray-x/cmp-treesitter
+    { name = "treesitter" },
+
+    -- Complete from text/words in the current buffer
+    --
+    -- TODO: maybe disable for large buffers
+    --
+    -- https://github.com/hrsh7th/cmp-buffer
+    { name = "buffer", priority = 50 },
+
+    -- Complete paths
+    --
+    -- Our custom `get_cwd` function causes it to complete from the workspace
+    -- root instead of the parent directory of the current file.
+    --
+    -- https://github.com/hrsh7th/cmp-path
+    { name = "path", option = { get_cwd = get_cwd } },
+
+    -- Evalutes const mathematical expressions
+    -- https://github.com/hrsh7th/cmp-calc
+    { name = "calc" },
+
+    -- Emoji
+    -- https://github.com/hrsh7th/cmp-emoji
+    { name = "emoji" },
+
+    { name = "copilot", priority = 50 },
+  }
+
+  ---@param entry cmp.Entry
+  ---@param ctx cmp.Context
+  ---@return boolean
+  local function entry_filter(entry, ctx)
+    -- 1. filter out rust snippets
+    if entry.completion_item.kind == 15 and -- snippet
+      entry.source.name == "nvim_lsp" and
+      ctx.filetype == "rust"
+    then
+      return false
+    end
+
+    return true
+  end
+
+  for i = 1, #sources do
+    sources[i].priority = sources[i].priority or 100
+    sources[i].entry_filter = entry_filter
+  end
+
+  config.sources = cmp.config.sources(sources)
+end
+
+if mod.exists("luasnip") then
+  config.snippet = {
+    expand = function(opts)
+      require("luasnip").lsp_expand(opts.body)
+    end,
+  }
+end
+
+if lspkind then
+  config.formatting = {
     format = lspkind.cmp_format({
       with_text = true,
       mode = 'symbol_text',
@@ -127,53 +148,17 @@ local function formatting(_)
   }
 end
 
----@return cmp.ExperimentalConfig
-local function experimental()
-  ---@type cmp.ExperimentalConfig
-  return {
-    native_menu = false,
-    ghost_text = true,
-  }
-end
+config.experimental = {
+  native_menu = false,
+  ghost_text  = true,
+}
 
-local function window()
-  ---@type cmp.WindowConfig
-  local w = {}
-  w.completion = cmp.config.window.bordered()
-  w.documentation = cmp.config.window.bordered()
-  return w
-end
+config.window = {
+  completion    = cmp.config.window.bordered(),
+  documentation = cmp.config.window.bordered(),
+}
 
-
-local function sorting()
-  return require("cmp.config.default")().sorting
-end
-
-
----@param extend? cmp.ConfigSchema|fun(cfg: cmp.ConfigSchema):cmp.ConfigSchema
----@return cmp.ConfigSchema
-local function defaults(extend)
-  ---@type cmp.ConfigSchema
-  local cfg = {}
-
-  cfg.mapping      = mapping()
-  cfg.sources      = sources()
-  cfg.snippet      = snippet()
-  cfg.formatting   = formatting()
-  cfg.experimental = experimental()
-  cfg.window       = window()
-  cfg.sorting      = sorting()
-
-  local typ = type(extend)
-  if typ == "function" then
-    cfg = extend(cfg)
-
-  elseif typ == "table" then
-    cfg = vim.tbl_deep_extend("force", cfg, extend)
-  end
-
-  return cfg
-end
+config.sorting = require("cmp.config.default")().sorting
 
 -- Set completeopt to have a better completion experience
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
@@ -181,12 +166,13 @@ vim.opt.completeopt = { "menu", "menuone", "noselect" }
 -- Don't show the dumb matching stuff.
 vim.opt.shortmess:append "c"
 
-cmp.setup(defaults())
+cmp.setup(config)
 
 cmp.setup.cmdline(':', {
   mapping = cmp.mapping.preset.cmdline(),
   sources = cmp.config.sources({
     { name = 'path' },
     { name = 'cmdline' },
-  })
+  }),
+  matching = { disallow_symbol_nonprefix_matching = false },
 })

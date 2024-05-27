@@ -543,7 +543,6 @@ local plugins_by_category = {
 
     {
       'hrsh7th/nvim-cmp',
-      event = evt.InsertEnter,
       dependencies = {
         'hrsh7th/cmp-buffer',
         'hrsh7th/cmp-calc',
