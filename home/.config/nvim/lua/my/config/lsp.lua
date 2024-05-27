@@ -39,7 +39,7 @@ do
   ---@type table<string, function|string>
   local maps = {
     rename              = lsp.buf.rename,
-    references         = lsp.buf.references,
+    references          = lsp.buf.references,
     code_action         = lsp.buf.code_action,
     declaration         = lsp.buf.declaration,
     definition          = lsp.buf.definition,
@@ -102,34 +102,31 @@ do
     do
       local km = require('my.keymap')
 
-      -- superceded by vim.lsp.tagfunc
-      --km.nnoremap.ctrl[']'] = km.lsp.definition
+      km.buf.nnoremap.gD          = { maps.declaration, "Go to declaration" }
+      km.buf.nnoremap.gd          = { maps.type_definition, "Go to type definition" }
+      km.buf.nnoremap.gi          = { maps.implementation, "Go to implementation" }
 
-      km.buf.nnoremap.gD          = maps.declaration
-      km.buf.nnoremap.gd          = maps.type_definition
-      km.buf.nnoremap.gi          = maps.implementation
+      km.buf.nnoremap.K           = { maps.hover, "Hover info" }
 
-      km.buf.nnoremap.K           = maps.hover
-      --km.buf.nnoremap.ctrl.K      = maps.signature_help
+      local Leader = km.Leader
+      km.buf.nnoremap[Leader.ca]   = { maps.code_action, "Code action" }
+      km.buf.vnoremap[Leader.ca]   = { maps.range_code_action, "Code action (ranged)" }
 
-      km.buf.nnoremap.leader.ca   = maps.code_action
-      km.buf.vnoremap.leader.ca   = maps.range_code_action
+      km.buf.nnoremap[Leader.nd]   = { maps.next_diagnostic, "Next diagnostic" }
+      km.buf.nnoremap[Leader.pd]   = { maps.prev_diagnostic, "Previous diagnostic" }
+      km.buf.nnoremap[Leader.sd]   = { maps.show_diagnostic, "Show diagnistics" }
+      km.buf.nnoremap[Leader.td]   = { maps.toggle_diagnostics, "Toggle diagnistics" }
+      km.buf.nnoremap[Leader.ti]   = { maps.toggle_inlay_hints, "Toggle inlay hints" }
 
-      km.buf.nnoremap.leader.nd   = maps.next_diagnostic
-      km.buf.nnoremap.leader.pd   = maps.prev_diagnostic
-      km.buf.nnoremap.leader.sd   = maps.show_diagnostic
-      km.buf.nnoremap.leader.td   = maps.toggle_diagnostics
-      km.buf.nnoremap.leader.ti   = maps.toggle_inlay_hints
-
-      km.buf.nnoremap.leader.rn   = maps.rename
+      km.buf.nnoremap[Leader.rn]   = { maps.rename, "Rename variable" }
     end
 
     vim.diagnostic.config({
       virtual_text = false,
     })
 
-    api.nvim_buf_set_option(buf, 'tagfunc', 'v:lua.vim.lsp.tagfunc')
-    api.nvim_buf_set_option(buf, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+    api.nvim_set_option_value('tagfunc', 'v:lua.vim.lsp.tagfunc', { buf = buf })
+    api.nvim_set_option_value('omnifunc', 'v:lua.vim.lsp.omnifunc', { buf = buf })
   end
 end
 

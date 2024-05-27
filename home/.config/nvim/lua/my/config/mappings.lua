@@ -3,82 +3,77 @@ if require("my.config.globals").bootstrap then
 end
 
 local mod = require "my.utils.module"
-
-local km = require 'my.keymap'
+local km = require "my.keymap"
 
 local nnoremap = km.nnoremap
 local map      = km.map
 local noremap  = km.noremap
 local vmap     = km.vmap
 local vnoremap = km.vnoremap
-local nmap     = km.nmap
+
+local Ctrl = km.Ctrl
+local Leader = km.Leader
 
 -- split nav
-nnoremap.ctrl.J = '<C-W><C-J>'
-nnoremap.ctrl.K = '<C-W><C-K>'
-nnoremap.ctrl.L = '<C-W><C-L>'
-nnoremap.ctrl.H = '<C-W><C-H>'
+nnoremap[Ctrl.J] = "<C-W><C-J>"
+nnoremap[Ctrl.K] = "<C-W><C-K>"
+nnoremap[Ctrl.L] = "<C-W><C-L>"
+nnoremap[Ctrl.H] = "<C-W><C-H>"
 
 -- window nav
-noremap.ctrl.j = '<C-w>j'
-noremap.ctrl.k = '<C-w>k'
-noremap.ctrl.l = '<C-w>l'
-noremap.ctrl.h = '<C-w>h'
+noremap[Ctrl.j] = "<C-w>j"
+noremap[Ctrl.k] = "<C-w>k"
+noremap[Ctrl.l] = "<C-w>l"
+noremap[Ctrl.h] = "<C-w>h"
 
 -- buffer nav
 if mod.exists("barbar") then
-  nnoremap.ctrl.PageUp   = ':BufferPrevious'
-  nnoremap.ctrl.PageDown = ':BufferNext'
+  nnoremap[Ctrl.PageUp]   = { ":BufferPrevious", "Previous buffer" }
+  nnoremap[Ctrl.PageDown] = { ":BufferNext", "Next buffer" }
 
   -- close buffer
-  nnoremap.leader.w = ':BufferWipeout'
+  nnoremap[Leader.w] = { ":BufferWipeout", "Close buffer" }
 
 else
-  nnoremap.ctrl.PageUp   = {':bprev', silent = true }
-  nnoremap.ctrl.PageDown = {':bnext', silent = true }
+  nnoremap[Ctrl.PageUp]   = { ":bprev", "Previous buffer", silent = true }
+  nnoremap[Ctrl.PageDown] = { ":bnext", "Next buffer", silent = true }
 end
 
--- open current line in github browser
-nnoremap.leader.o = ':.GBrowse'
+nnoremap[Leader.o] = { ":.GBrowse", "Open current line in github browser" }
 
--- set working directory from current file
-nnoremap.leader['.'] = ':lcd %:p:h'
+nnoremap[Leader["."]] = { ":lcd %:p:h", "Set working directory from current file" }
 
--- copy the current file path to the clipboard (unnamedplus register)
-nnoremap.leader.cf = ':let @+=expand("%:p")'
+nnoremap[Leader.cf] = {
+  ':let @+=expand("%:p")',
+  "Copy the current file path to the clipboard (unnamedplus register)"
+}
 
-noremap.YY       = '"+y<CR>'
-noremap.leader.p = '+gP<CR>'
+noremap.YY        = '"+y<CR>'
+noremap[Leader.p] = '+gP<CR>'
 
 -- maintain Visual Mode after shifting > and <
-vmap['<'] = '<gv'
-vmap['>'] = '>gv'
+vmap["<"] = "<gv"
+vmap[">"] = ">gv"
 
 -- quickfix nav
-map.leader.qp      = ':cprevious'
-map.leader.qn      = ':cnext'
-nnoremap.leader.qq = ':cclose'
+map[Leader.qp]      = { ":cprevious", "QuickFix Previous" }
+map[Leader.qn]      = { ":cnext", "QuickFix Next" }
+nnoremap[Leader.qq] = { ":cclose", "QuickFix close" }
 
--- Change directory to that of the current file
-nnoremap.leader.cd = ':cd %:p:h'
+nnoremap[Leader.cd] = { ":cd %:p:h", "Change directory to that of the current file" }
 
--- edit vimrc
-nnoremap.leader.ve = ':edit $MYVIMRC'
+nnoremap[Leader.ve] = { ":edit $MYVIMRC", "Edit vimrc/init.lua file" }
 
--- Clean search (highlight)
-nnoremap.leader['<space>'] = {':noh', silent = true }
+nnoremap[Leader["<space>"]] = {":noh", "Clean search (highlight)", silent = true }
 
 -- Search mappings: These will make it so that going to the next one in a
 -- search will center on the line it's found in.
-nnoremap.n = 'nzzzv'
-nnoremap.N = 'Nzzzv'
+nnoremap.n = "nzzzv"
+nnoremap.N = "Nzzzv"
 
 -- Shift + J/K moves selected lines down/up in visual mode
 -- https://old.reddit.com/r/neovim/comments/rfrgq5/is_it_possible_to_do_something_like_his_on/hog28q3/
-vnoremap.J = { ":move '>+1<CR>gv=gv", no_auto_cr = true }
-vnoremap.K = { ":move '<-2<CR>gv=gv", no_auto_cr = true }
+vnoremap.J = { ":move '>+1<CR>gv=gv", 'Move selection up one line',   no_auto_cr = true }
+vnoremap.K = { ":move '<-2<CR>gv=gv", 'Move selection down one line', no_auto_cr = true }
 
--- disable macro
-nmap.q = '<nop>'
-
-nnoremap.leader.g = ':G'
+nnoremap[Leader.g] = { ":G", "fuGITive" }

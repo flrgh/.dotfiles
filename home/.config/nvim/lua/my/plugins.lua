@@ -3,6 +3,9 @@ local evt = require "my.event"
 local g = require "my.config.globals"
 local fs = require "my.utils.fs"
 
+local Leader = km.Leader
+local Ctrl = km.Ctrl
+
 local cmd = vim.cmd
 
 
@@ -266,7 +269,7 @@ local plugins_by_category = {
       -- 2. lazy.nvim doesn't load the plugin until TagbarToggle is invoked
       lazy = true,
       init = function()
-        km.nmap.fn.F4 = { ':TagbarToggle', silent = true }
+        km.nmap[km.F4] = { ':TagbarToggle', "Toggle Tag Bar", silent = true }
         vim.g.tagbar_autofocus = 1
       end,
       cmd = { "TagbarToggle" },
@@ -321,14 +324,11 @@ local plugins_by_category = {
         'junegunn/fzf',
       },
       init = function()
-        -- fuzzy-find git-files
-        km.nnoremap.ctrl.p    = {':GFiles',  silent = true }
-        -- fuzzy-find buffers
-        km.nnoremap.leader.b  = {':Buffers', silent = true }
-        -- fuzzy-find with ripgrep
-        km.nnoremap.leader.rg = {':Rg',      silent = true }
-
-        km.nnoremap.leader.pf = { ':Files ~/.local/share/nvim/lazy', silent = true }
+        km.nnoremap[Ctrl.p]    = {':GFiles',  'Fuzzy-find git-files',    silent = true }
+        km.nnoremap[Leader.b]  = {':Buffers', 'Fuzzy-find buffers',      silent = true }
+        km.nnoremap[Leader.rg] = {':Rg',      'Fuzzy-find with ripgrep', silent = true }
+        km.nnoremap[Leader.pf] = { ':Files ~/.local/share/nvim/lazy',
+                                   'Fuzzy-find nvim plugin files',       silent = true }
 
         vim.g.fzf_preview_window = {
           "right,50%,<70(down,70%)",
@@ -511,9 +511,9 @@ local plugins_by_category = {
         vim.g.easy_align_ignore_groups = '[]'
 
         -- Start interactive EasyAlign in visual mode (e.g. vipga)
-        km.xmap.ga = '<Plug>(EasyAlign)'
+        km.xmap.ga = { '<Plug>(EasyAlign)', 'Easy Align' }
         -- Start interactive EasyAlign for a motion/text object (e.g. gaip)
-        km.nmap.ga = '<Plug>(EasyAlign)'
+        km.nmap.ga = { '<Plug>(EasyAlign)', 'Easy Align' }
       end,
     },
 

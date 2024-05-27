@@ -8,34 +8,38 @@ local cmp = require 'cmp'
 local km = require 'my.keymap'
 local g = require "my.config.globals"
 
+local Ctrl = km.Ctrl
+local Tab = km.Tab
+local Shift = km.Shift
+local Enter = km.Enter
 
 ---@return table<any, cmp.Mapping>
 local function mapping()
   return cmp.mapping.preset.insert {
     -- replace ctrl+n/ctrl+p with ctrl+j/ctrl+k
-    [km.Ctrl.j] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
-    [km.Ctrl.k] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
-    [km.Ctrl.n] = cmp.config.disable,
-    [km.Ctrl.p] = cmp.config.disable,
+    [Ctrl.j] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+    [Ctrl.k] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+    [Ctrl.n] = cmp.config.disable,
+    [Ctrl.p] = cmp.config.disable,
 
     -- explicitly invoke completion
-    [km.Ctrl.Space] = cmp.mapping.complete,
+    [Ctrl.Space] = cmp.mapping.complete,
 
-    [km.Ctrl.e] = cmp.mapping.abort(),
+    [Ctrl.e] = cmp.mapping.abort(),
 
-    [km.Enter] = cmp.mapping.confirm {
+    [Enter] = cmp.mapping.confirm {
       behavior = cmp.ConfirmBehavior.Replace,
       select = false,
     },
 
-    [km.Tab] = function(fallback)
+    [Tab] = function(fallback)
       if cmp.visible() then
         cmp.select_next_item()
       else
         fallback()
       end
     end,
-    [km.S_Tab] = function(fallback)
+    [Shift.Tab] = function(fallback)
       if cmp.visible() then
         cmp.select_prev_item()
       else

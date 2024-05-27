@@ -3,6 +3,50 @@ local startswith = vim.startswith
 local endswith   = vim.endswith
 local nvim_buf_set_keymap = vim.api.nvim_buf_set_keymap
 local nvim_set_keymap = vim.api.nvim_set_keymap
+local fmt = string.format
+
+local _M = {}
+
+local CR = "<CR>"
+
+_M.CR       = CR
+_M.Return   = CR
+_M.Enter    = CR
+
+_M.Delete = "<Del>"
+_M.End    = "<End>"
+_M.Escape = "<Esc>"
+_M.Help   = "<Help>"
+_M.Home   = "<Home>"
+_M.Insert = "<Insert>"
+_M.Undo   = "<Undo>"
+
+_M.NOP      = "<NOP>"
+_M.EOL      = "<EOL>"
+
+_M.F1       = "<F1>"
+_M.F2       = "<F2>"
+_M.F3       = "<F3>"
+_M.F4       = "<F4>"
+_M.F5       = "<F5>"
+_M.F6       = "<F6>"
+_M.F7       = "<F7>"
+_M.F8       = "<F8>"
+_M.F9       = "<F9>"
+_M.F10      = "<F10>"
+_M.F11      = "<F11>"
+_M.F12      = "<F12>"
+
+_M.PageUp   = "<PageUp>"
+_M.PageDown = "<PageDown>"
+
+_M.Tab      = "<Tab>"
+_M.Space    = "<Space>"
+
+_M.Up       = "<Up>"
+_M.Down     = "<Down>"
+_M.Left     = "<Left>"
+_M.Right    = "<Right>"
 
 ---@param a table
 ---@param b table
@@ -17,6 +61,11 @@ local function extend(a, b)
   return vim.tbl_deep_extend("force", a, b)
 end
 
+---@param mode string
+---@param key string
+---@param action string
+---@param opts? vim.api.keyset.keymap
+---@param buf? boolean
 local function create_keymap(mode, key, action, opts, buf)
   if buf then
     return nvim_buf_set_keymap(0, mode, key, action, opts)
@@ -25,14 +74,31 @@ local function create_keymap(mode, key, action, opts, buf)
   end
 end
 
+local EMPTY = {}
+
+---@param v any
+---@return boolean
+local function is_callable(v)
+  local typ = type(v)
+
+  if typ == "function" then
+    return true
+
+  elseif typ == "string" then
+    return false
+
+  elseif v == nil then
+    return false
+  end
+
+  return type(getmetatable(v) or EMPTY).__call == "function"
+end
+
+
 local mt = {
   __newindex = function(self, key, v)
     if v == nil then
       return
-    end
-
-    if self.set_key then
-      key = self.set_key(key)
     end
 
     local action = v
@@ -44,20 +110,26 @@ local mt = {
       opts = v
     end
 
-
     opts = opts or {}
 
-    if type(action) == "function" then
+    if action == nil then
+      return
+    end
+
+    opts.desc = opts.desc or opts[2]
+    opts[2] = nil
+
+    if is_callable(action) then
       opts = vim.deepcopy(opts)
       opts.callback = action
       action = ""
     end
 
     if not opts.no_auto_cr then
-      -- auto-append <CR> to commands
+      -- auto-append Enter/<CR> to commands
       if startswith(action, ':') then
-        if not endswith(action:upper(), '<CR>') then
-          action = action .. '<CR>'
+        if not endswith(action:upper(), CR) then
+          action = action .. CR
         end
       end
     end
@@ -74,32 +146,17 @@ local mt = {
   end
 }
 
----@param t string
----@return my.keymap.set_key
-local function template(t)
-  return function(key)
-    return t:format(key)
-  end
-end
 
-local wrap_ctrl = template('<C-%s>')
-local wrap_fn = template('<%s>')
-local add_leader = template('<Leader>%s')
+---@alias my.keymap.mode "n"|"v"|"x"|""
 
----@alias my.keymap.set_key fun(s:string):string
-
----@alias my.keymap.mode '"n"'|'"v"'|'"x"'|'""'
-
----@class my.keymap.opts : table
----@field noremap boolean
----@field silent  boolean
----@field nowait  boolean
----@field script  boolean
----@field expr    boolean
----@field unique  boolean
+---@class my.keymap.opts : vim.api.keyset.keymap
+---
+---@field buf?        boolean
+---@field no_auto_cr? boolean
 
 ---@class my.keymap.action.table : my.keymap.opts
----@field [1] string # the RHS of the key map
+---@field [1] string|function # the RHS of the key map
+---@field [2] string|nil      # shorthand for desc = ...
 
 ---@alias my.keymap.action string|my.keymap.action.table
 
@@ -111,9 +168,11 @@ local add_leader = template('<Leader>%s')
 ---@field leader   my.keymap.binding
 ---@field mode     my.keymap.mode
 ---@field opts     my.keymap.opts
----@field set_key? my.keymap.set_key
 
----@return my.keymap
+
+---@param mode string
+---@param opts my.keymap.opts
+---@return my.keymap.binding
 local function make_map(mode, opts)
   local buf = opts.buf
   opts.buf = nil
@@ -121,50 +180,21 @@ local function make_map(mode, opts)
     mode = mode,
     opts = opts,
     buf  = buf,
-
-    ctrl = setmetatable(
-      {
-        mode    = mode,
-        opts    = opts,
-        set_key = wrap_ctrl,
-        buf     = buf,
-      },
-      mt
-    ),
-
-    fn = setmetatable(
-      {
-        mode    = mode,
-        opts    = opts,
-        set_key = wrap_fn,
-        buf     = buf,
-      },
-      mt
-    ),
-
-    leader = setmetatable(
-      {
-        mode    = mode,
-        opts    = opts,
-        set_key = add_leader,
-        buf     = buf,
-      },
-      mt
-    ),
   }, mt)
 end
 
-local map      = make_map('',  { noremap = false })
-local vmap     = make_map('v', { noremap = false })
-local nmap     = make_map('n', { noremap = false })
-local noremap  = make_map('',  { noremap = true })
-local vnoremap = make_map('v', { noremap = true })
-local nnoremap = make_map('n', { noremap = true })
-local xmap     = make_map('x', { noremap = false })
-local imap     = make_map('i', { noremap = false })
-local smap     = make_map('s', { noremap = false })
+_M.map      = make_map('',  { noremap = false })
+_M.vmap     = make_map('v', { noremap = false })
+_M.nmap     = make_map('n', { noremap = false })
+_M.noremap  = make_map('',  { noremap = true })
+_M.vnoremap = make_map('v', { noremap = true })
+_M.nnoremap = make_map('n', { noremap = true })
+_M.xmap     = make_map('x', { noremap = false })
+_M.imap     = make_map('i', { noremap = false })
+_M.smap     = make_map('s', { noremap = false })
 
-local buf = {
+-- for setting buffer-specific mappings
+_M.buf = {
   map      = make_map('',  { buf = true, noremap = false }),
   vmap     = make_map('v', { buf = true, noremap = false }),
   nmap     = make_map('n', { buf = true, noremap = false }),
@@ -176,35 +206,50 @@ local buf = {
   smap     = make_map('s', { buf = true, noremap = false }),
 }
 
+--- Generate a Ctrl+<key> key binding
+---
+--- Example:
+--- ```lua
+--- print(Ctrl.t) -- > `<C-t>`
+--- ```
+---
 ---@type table<string, string>
-local ctrl = setmetatable({}, {
+_M.Ctrl = setmetatable({}, {
   __index = function(_, k)
-    return wrap_ctrl(k)
+    assert(type(k) == "string" or type(k) == "number")
+    return fmt("<C-%s>", k)
   end,
 })
 
-return {
-  map  = map,
-  nmap = nmap,
-  vmap = vmap,
-  xmap = xmap,
-  imap = imap,
-  smap = smap,
-
-  noremap  = noremap,
-  nnoremap = nnoremap,
-  vnoremap = vnoremap,
-
-  buf = buf,
-
-  setup = function(fn)
-    fn(map, nmap, vmap, noremap, nnoremap, vnoremap, xmap)
+--- Generate a Shift+<key> key binding
+---
+--- Example:
+--- ```lua
+--- print(Shift.Tab) -- > `<S-Tab>`
+--- ```
+---
+---@type table<string, string>
+_M.Shift = setmetatable({}, {
+  __index = function(_, k)
+    assert(type(k) == "string" or type(k) == "number")
+    return fmt("<S-%s>", k)
   end,
+})
 
 
-  Ctrl  = ctrl,
-  Enter = '<CR>',
-  Tab   = '<Tab>',
-  S_Tab = '<S-Tab>',
-  Leader = '<leader>',
-}
+--- Generate a Leader-prefixed string
+---
+--- Example:
+--- ```lua
+--- print(Leader.t) -- > `<Leader>t`
+--- ```
+---
+---@type table<string, string>
+_M.Leader = setmetatable({}, {
+  __index = function(_, k)
+    assert(type(k) == "string" or type(k) == "number")
+    return fmt("<Leader>%s", k)
+  end,
+})
+
+return _M

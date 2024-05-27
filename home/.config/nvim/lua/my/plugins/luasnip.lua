@@ -52,20 +52,24 @@ function _M.setup()
     end
   end
 
-  local km = require("my.utils.module").reload("my.keymap")
-  km.imap.ctrl.k = { expand, silent = true }
-  km.smap.ctrl.k = { expand, silent = true }
+  require("my.utils.module").reload("my.keymap")
+  local km = require "my.keymap"
+  km.imap[km.Ctrl.k] = { expand, "Expand snippet", silent = true }
+  km.smap[km.Ctrl.k] = { expand, "Expand snippet", silent = true }
 
-  km.imap.ctrl.j = { back, silent = true }
-  km.smap.ctrl.j = { back, silent = true }
+  km.imap[km.Ctrl.j] = { back, "Move back", silent = true }
+  km.smap[km.Ctrl.j] = { back, "Move back", silent = true }
 
-  km.imap.ctrl.l = { list, silent = true }
-  km.smap.ctrl.l = { list, silent = true }
+  km.imap[km.Ctrl.l] = { list, silent = true }
+  km.smap[km.Ctrl.l] = { list, silent = true }
 
-  km.nnoremap[km.Leader .. km.Leader .. "s"] = function()
-    mod.reload("my.plugins.luasnip").snippets()
-    vim.notify("snippets reloaded!")
-  end
+  km.nnoremap[km.Leader[km.Leader.s]] = {
+    function()
+      mod.reload("my.plugins.luasnip").snippets()
+      vim.notify("snippets reloaded!")
+    end,
+    'Reload LuaSnip snippets',
+  }
 end
 
 function _M.snippets()
