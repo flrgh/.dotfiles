@@ -136,13 +136,20 @@ dump-path-var() {
 complete -W "${!__PATH_VARS[*]}" dump-path-var
 
 dump-var() {
-    local -r name=$1
-    if [[ -z $name ]]; then
+    local -r nargs=$#
+    if (( nargs == 0 )); then
         for v in $(compgen -v); do
             dump-var "$v"
         done
         return
+    elif (( nargs > 1 )); then
+        for v in "$@"; do
+            dump-var "$v"
+        done
+        return
     fi
+
+    local -r name=$1
 
     if ! is-set "$name"; then
         echo "$name is unset"
