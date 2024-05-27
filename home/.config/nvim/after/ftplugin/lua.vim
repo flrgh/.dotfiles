@@ -7,3 +7,4 @@ setlocal softtabstop=2
 iabbrev loacl local
 iabbrev laocl local
 iabbrev lcoal local
+iabbrev locla local
