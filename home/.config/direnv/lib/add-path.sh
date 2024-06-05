@@ -22,7 +22,7 @@ add-path() {
 add-lua-path() {
     local path="$1"
 
-    path=$(realpath "$path")
+    path=$(realpath -m "$path")
 
     add-path LUA_PATH "$path/?/init.lua"  ";"
     add-path LUA_PATH "$path/?.lua"       ";"
@@ -33,7 +33,7 @@ add-lua-path() {
 add-lua-cpath() {
     local path="$1"
 
-    path=$(realpath "$path")
+    path=$(realpath -m "$path")
 
     add-path LUA_CPATH "$path/?.so" ";"
 }
@@ -50,7 +50,7 @@ layout_openresty() {
     local dir="${1?OpenResty dir is required}"
     if [[ ! -d "$dir" ]]; then
         echo "ERROR: OpenResty not found at $dir"
-        return 1
+        return
     fi
 
     echo "Using OpenResty at $dir"
@@ -79,9 +79,8 @@ layout_luarocks() {
     local dir="${1?LuaRocks dir is required}"
     if [[ ! -d "$dir" ]]; then
         echo "ERROR: LuaRocks dir not found!"
-        return 1
+        return
     fi
-
 
     echo "Using LuaRocks at $dir"
 
