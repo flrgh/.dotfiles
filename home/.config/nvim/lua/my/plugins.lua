@@ -39,22 +39,6 @@ end
 ---@type table<string, LazySpec[]>
 local plugins_by_filetype = {
   lua = {
-    {
-      'danymat/neogen',
-      config = function()
-        require("neogen").setup {
-          enabled = true
-        }
-      end,
-    },
-
-    {
-      "euclidianAce/BetterLua.vim",
-      init = function()
-        vim.g.lua_inspect_events = ""
-      end,
-    },
-
     -- lua manual in vimdoc
     "wsdjeg/luarefvim",
 
