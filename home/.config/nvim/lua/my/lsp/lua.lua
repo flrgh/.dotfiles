@@ -255,6 +255,7 @@ end
 local function merge_settings(current, extra)
   imerge(current.libraries, extra.libraries)
   imerge(current.ignore, extra.ignore)
+  imerge(current.plugins, extra.plugins)
 
   current.nvim  = current.nvim or extra.nvim
   current.resty = current.resty or extra.resty
