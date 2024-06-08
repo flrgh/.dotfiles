@@ -119,6 +119,42 @@ __rc_add_path() {
     __rc_timer_stop "__rc_add_path"
 }
 
+__rc_prompt_command_array=0
+# as of bash 5.1, PROMPT_COMMAND can be an array, _but_ this was not supported
+# by direnv until 2.34.0
+if (( BASH_VERSINFO[0] > 5 )) || (( BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 1 )); then
+    if __rc_command_exists direnv; then
+        __rc_direnv_version=$(direnv --version)
+        __rc_direnv_major=${__rc_direnv_version%%.*}
+        __rc_direnv_minor=${__rc_direnv_version#[0-9]*.}
+        __rc_direnv_minor=${__rc_direnv_minor%%.*}
+
+        if (( __rc_direnv_major > 2 )) || (( __rc_direnv_major == 2 && __rc_direnv_minor >= 34 )); then
+            __rc_prompt_command_array=1
+        fi
+    else
+        __rc_prompt_command_array=1
+    fi
+fi
+
+if (( __rc_prompt_command_array == 1 )); then
+    declare -a PROMPT_COMMAND=()
+else
+    unset PROMPT_COMMAND
+fi
+
+__rc_add_prompt_command() {
+    local -r cmd=${1?command required}
+
+    if (( __rc_prompt_command_array == 1 )); then
+        # prepend for consistency with `__rc_add_path`
+        PROMPT_COMMAND=("$cmd" "${PROMPT_COMMAND[@]}")
+
+    else
+        __rc_add_path "$cmd" "PROMPT_COMMAND" ";"
+    fi
+}
+
 __rc_source_file() {
     local -r fname=$1
     local ret
