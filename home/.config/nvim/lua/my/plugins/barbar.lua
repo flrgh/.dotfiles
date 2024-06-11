@@ -9,13 +9,17 @@
       },
     },
     pinned = {
-      button = '車',
+      button = '📌',
     },
-    button = '',
+    button = '❌',
     modified = {
       button= '●',
     },
-
+    filetype = {
+      enabled = true,
+    },
+    preset = "default",
+    separator_at_end = true,
   },
   animation = false,
   auto_hide = false,
@@ -25,4 +29,6 @@
   maximum_length = 30,
   semantic_letters = true,
   no_name_title = nil,
+  insert_at_end = true,
+  insert_at_start = false,
 })
