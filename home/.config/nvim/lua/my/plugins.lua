@@ -300,36 +300,7 @@ local plugins_by_category = {
       'moll/vim-bbye',
       event = evt.VimEnter,
     },
-
-    -- FZF
-    {
-      'junegunn/fzf.vim',
-      dependencies = {
-        'junegunn/fzf',
-      },
-      init = function()
-        km.nnoremap[Ctrl.p]    = {':GFiles',  'Fuzzy-find git-files',    silent = true }
-        km.nnoremap[Leader.b]  = {':Buffers', 'Fuzzy-find buffers',      silent = true }
-        km.nnoremap[Leader.rg] = {':Rg',      'Fuzzy-find with ripgrep', silent = true }
-        km.nnoremap[Leader.pf] = { ':Files ~/.local/share/nvim/lazy',
-                                   'Fuzzy-find nvim plugin files',       silent = true }
-
-        vim.g.fzf_preview_window = {
-          "right,50%,<70(down,70%)",
-          "ctrl-/"
-        }
-
-        vim.g.fzf_layout = {
-          window = {
-            width = 0.9,
-            height = 0.8
-          }
-        }
-      end,
-      cmd = { "GFiles", "Buffers", "Rg", "Files" },
-    },
   },
-
 
   treesitter = {
     {
@@ -362,6 +333,7 @@ local plugins_by_category = {
       dependencies = { 'nvim-lua/plenary.nvim' },
       branch = "0.1.x",
       config = file_config("telescope"),
+      keys = { Ctrl.p },
     },
 
     {
