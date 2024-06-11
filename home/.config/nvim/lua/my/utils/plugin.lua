@@ -26,4 +26,13 @@ function _M.installed(name)
   return _M.get(name) ~= nil
 end
 
+---@return LazyPlugin[]
+function _M.list()
+  if not lazy then
+    return {}
+  end
+
+  return lazy.plugins()
+end
+
 return _M

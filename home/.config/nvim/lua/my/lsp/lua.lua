@@ -5,12 +5,10 @@ end
 local fs = require 'my.utils.fs'
 local mod = require 'my.utils.module'
 local globals = require "my.config.globals"
+local plugin = require "my.utils.plugin"
 
-local expand = vim.fn.expand
 local endswith   = vim.endswith
 local insert = table.insert
-local runtime_paths = vim.api.nvim_list_runtime_paths
-local dir_exists = fs.dir_exists
 local find = string.find
 local EMPTY = {}
 
@@ -159,8 +157,7 @@ do
   local function enumerate_plugin_directories()
     dirs = {}
 
-    local plugins = require("lazy").plugins()
-    for _, p in ipairs(plugins) do
+    for _, p in ipairs(plugin.list()) do
       local name = p.name
       local lua_dir = p.dir .. "/lua"
       dirs[name] = lua_dir
