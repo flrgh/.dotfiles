@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -eu
+
+readonly pkg=${1?package name required}
+
+ihave() {
+    local cmd=$1
+    command -v "$cmd" &>/dev/null
+}
+
+if ihave dnf; then
+    dnf \
+        --quiet \
+        --cacheonly \
+        repoquery \
+        --requires \
+        --resolve \
+        --queryformat '%{name}' \
+        "$pkg"
+
+# rpm is faster than dnf but does not seem to be able to resolve everything
+# to package names
+elif ihave rpm; then
+    rpm \
+        --query \
+        --requires \
+        "$pkg"
+else
+    echo "no rpm or dnf present--what do I do?"
+    exit 1
+fi
