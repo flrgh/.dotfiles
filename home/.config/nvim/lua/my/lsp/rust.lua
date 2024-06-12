@@ -7,14 +7,25 @@ end
 local function disable(t)
   t = t or {}
   t.enable = false
+  return t
 end
 
 return {
   init = function()
     return {
-      -- https://github.com/rust-lang/rust-analyzer/blob/master/docs/user/generated_config.adoc
       settings = {
+        -- https://rust-analyzer.github.io/manual.html#configuration
         ["rust-analyzer"] = {
+          assist = {
+            expressionFillDefault = true,
+          },
+
+          cargo = {
+            features     = "all",
+            autoreload   = true,
+            buildScripts = enable(),
+          },
+
           checkOnSave = true,
           check = {
             command = "clippy",
@@ -25,31 +36,67 @@ return {
               "warnings",
             },
           },
+
           completion = {
             autoimport = enable(),
-            autoself = enable(),
+            autoself   = enable(),
+            postfix    = enable(),
           },
+
+          diagnostics = {
+            styleLints = enable(),
+          },
+
           hover = {
-            actions = {
-              enable = true,
-              debug = enable(),
-              references = enable(),
-              memoryLayout = disable(),
+            actions = enable({
+              debug           = enable(),
+              gotoTypeDef     = enable(),
+              implementations = enable(),
+              run             = enable(),
+              references      = enable(),
+            }),
+
+            documentation = enable({
+              keywords = enable(),
+            }),
+
+            memoryLayout = disable(),
+
+            show = {
+              enumVariants    = 5,
+              fields          = 5,
+              traitAssocItems = 5,
             },
           },
+
+          imports = {
+            preferPrelude = true,
+          },
+
           inlayHints = {
             bindingModeHints = enable(),
+            chainingHints    = enable(),
+            typeHints = enable(),
           },
+
           interpret = {
             tests = true,
           },
-          cargo = {
-            features = "all",
 
-            autoreload = true,
+          lens = enable({
+            debug           = enable(),
+            implementations = enable(),
+            references      = {
+              enumVariant = enable(),
+              method      = enable(),
+              trait       = enable(),
+            },
+            run           = enable(),
+          }),
 
-            buildScripts = enable(),
-          },
+          procMacro = enable({
+            attributes = enable(),
+          }),
         },
       },
     }
