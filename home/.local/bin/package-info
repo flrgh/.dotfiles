@@ -4,19 +4,18 @@ set -eu
 
 readonly package=$1
 
-ihave() {
-    local cmd=$1
-    command -v "$cmd" &>/dev/null
-}
+# shellcheck source=home/.local/lib/bash/std.bash
+. "$HOME"/.local/lib/bash/std.bash
 
-if ihave rpm; then
-		rpm --query --info "$package"
 
-elif ihave dpkg-query; then
-		dpkg-query \
-			--show \
-			--showformat='Package: ${Package}\nVersion: ${Version}\nDepends: ${Depends}\nMaintainer: ${Maintainer}\nStatus: ${db:Status-Status}\n' \
-			"$package"
+if command-exists rpm; then
+    rpm --query --info "$package"
+
+elif command-exists dpkg-query; then
+    dpkg-query \
+        --show \
+        --showformat='Package: ${Package}\nVersion: ${Version}\nDepends: ${Depends}\nMaintainer: ${Maintainer}\nStatus: ${db:Status-Status}\n' \
+        "$package"
 
 else
     echo "no rpm or dpkg present--what do I do?"

@@ -4,12 +4,10 @@ set -eu
 
 readonly pkg=${1?package name required}
 
-ihave() {
-    local cmd=$1
-    command -v "$cmd" &>/dev/null
-}
+# shellcheck source=home/.local/lib/bash/std.bash
+. "$HOME"/.local/lib/bash/std.bash
 
-if ihave dnf; then
+if command-exists dnf; then
     dnf \
         --quiet \
         --cacheonly \
@@ -21,7 +19,7 @@ if ihave dnf; then
 
 # rpm is faster than dnf but does not seem to be able to resolve everything
 # to package names
-elif ihave rpm; then
+elif command-exists rpm; then
     rpm \
         --query \
         --requires \

@@ -4,10 +4,8 @@ set -eu
 
 file=$1
 
-ihave() {
-    local cmd=$1
-    command -v "$cmd" &>/dev/null
-}
+# shellcheck source=home/.local/lib/bash/std.bash
+. "$HOME"/.local/lib/bash/std.bash
 
 # if we were passed a command, attempt to lookup the full path to the binary
 if ! [[ $file =~ / ]]; then
@@ -17,10 +15,12 @@ if ! [[ $file =~ / ]]; then
     fi
 fi
 
-if ihave rpm; then
+if command-exists rpm; then
     rpm -q --whatprovides "$file"
-elif ihave dpkg; then
+
+elif command-exists dpkg; then
     dpkg -S "$file"
+
 else
     echo "no rpm or dpkg present--what do I do?"
     exit 1

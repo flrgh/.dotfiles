@@ -1,18 +1,16 @@
 #!/usr/bin/env bash
 
-
 set -eu
 
-ihave() {
-    local cmd=$1
-    command -v "$cmd" &>/dev/null
-}
+# shellcheck source=home/.local/lib/bash/std.bash
+. "$HOME"/.local/lib/bash/std.bash
 
-if ihave rpm; then
+if command-exists rpm; then
     rpm \
         -qa \
         --queryformat '%-40{NAME} %{VERSION}\n'
-elif ihave dpkg-query; then
+
+elif command-exists dpkg-query; then
     dpkg-query \
         --no-pager \
         --show \

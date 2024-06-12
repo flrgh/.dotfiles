@@ -4,15 +4,15 @@ set -eu
 
 readonly package=$1
 
-ihave() {
-    local cmd=$1
-    command -v "$cmd" &>/dev/null
-}
+# shellcheck source=home/.local/lib/bash/std.bash
+. "$HOME"/.local/lib/bash/std.bash
 
-if ihave rpm; then
+if command-exists rpm; then
     rpm -ql "$package"
-elif ihave dpkg; then
+
+elif command-exists dpkg; then
     dpkg -L "$package"
+
 else
     echo "no rpm or dpkg present--what do I do?"
     exit 1
