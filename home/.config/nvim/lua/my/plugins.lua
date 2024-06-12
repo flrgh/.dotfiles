@@ -3,7 +3,6 @@ local evt = require "my.event"
 local g = require "my.config.globals"
 local fs = require "my.utils.fs"
 
-local Leader = km.Leader
 local Ctrl = km.Ctrl
 
 local cmd = vim.cmd
@@ -34,7 +33,6 @@ local function file_config(name)
     require("my.plugins." .. name)
   end
 end
-
 
 ---@type table<string, LazySpec[]>
 local plugins_by_filetype = {

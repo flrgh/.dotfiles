@@ -1,3 +1,7 @@
 return {
-  cmd = { "clangd", "--log=verbose" },
+  init = function()
+    return {
+      cmd = { "clangd", "--log=verbose" },
+    }
+  end,
 }

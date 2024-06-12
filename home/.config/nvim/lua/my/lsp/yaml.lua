@@ -1,12 +1,16 @@
 return {
-  settings = {
-    yaml = {
-      keyOrdering = false,
-    },
-    redhat = {
-      telemetry = {
-        enabled = false,
-      },
-    },
-  }
+  init = function()
+    return {
+      settings = {
+        yaml = {
+          keyOrdering = false,
+        },
+        redhat = {
+          telemetry = {
+            enabled = false,
+          },
+        },
+      }
+    }
+  end,
 }

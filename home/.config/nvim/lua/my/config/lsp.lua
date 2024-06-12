@@ -9,6 +9,8 @@ if not mod.exists('lspconfig') then
   return
 end
 
+local evt = require "my.event"
+
 local lspconfig = require "lspconfig"
 
 local executable = vim.fn.executable
@@ -20,6 +22,9 @@ local is_list = vim.islist
 local jump_to_location = lsp.util.jump_to_location
 local vim = vim
 
+local function root_dir()
+  return require("my.config.globals").workspace
+end
 
 vim.lsp.handlers["textDocument/definition"] = function(_, result)
   if not result or is_empty(result) then
@@ -50,10 +55,7 @@ do
     show_diagnostic     = vim.diagnostic.open_float,
   }
 
-  if mod.exists("hover") then
-    maps.hover = require("hover").hover
-
-  elseif mod.exists("lspsaga") then
+  if mod.exists("lspsaga") then
     local cmd = function(s)
       return ("<cmd>Lspsaga %s<CR>"):format(s)
     end
@@ -64,6 +66,10 @@ do
     maps.show_diagnostic = cmd("show_line_diagnostics")
     maps.next_diagnostic = cmd("diagnostic_jump_next")
     maps.prev_diagnostic = cmd("diagnostic_jump_prev")
+  end
+
+  if mod.exists("hover") then
+    maps.hover = require("hover").hover
   end
 
   do
@@ -157,43 +163,60 @@ local servers = {
   sql          = "sqlls",
   ]]--
 
-  teal         = "tealls",
   terraform    = "terraformls",
   yaml         = "yamlls",
   typescript   = "tsserver",
   zig          = "zls",
 }
 
+---@class my.lsp.hook
+---
+---@field init fun():lspconfig.Config
+---@field setup fun():table
+
+---@type table<string, my.lsp.hook>
+local hooks = {}
+
 for lang, server in pairs(servers) do
   ---@type lspconfig.Config
   local conf = {
     log_level = 2,
     on_attach = on_attach,
+    root_dir  = root_dir,
   }
 
   local mod_name = "my.lsp." .. lang
-  local setup = true
   mod.if_exists(mod_name, function(m)
-    if type(m) == "table" then
-      conf = extend("force", conf, m)
-
-    elseif type(m) == "function" then
-      setup = false
-      m(conf)
+    if type(m.init) == "function" then
+      conf = extend("force", conf, m.init())
     end
+
+    hooks[server] = m
   end)
 
-  if setup then
-    conf.workspace = require("my.config.globals").workspace
-    conf.root_dir = function() return conf.workspace end
-    conf.cmd = conf.cmd
-      or lspconfig[server]
-      and lspconfig[server].document_config
-      and lspconfig[server].document_config.default_config
-      and lspconfig[server].document_config.default_config.cmd
+  conf.cmd = conf.cmd
+    or lspconfig[server]
+    and lspconfig[server].document_config
+    and lspconfig[server].document_config.default_config
+    and lspconfig[server].document_config.default_config.cmd
 
-    if conf.cmd and executable(conf.cmd[1]) == 1 then
-      lspconfig[server].setup(conf)
-    end
+  if conf.cmd and executable(conf.cmd[1]) == 1 then
+    lspconfig[server].setup(conf)
   end
 end
+
+vim.api.nvim_create_autocmd(evt.LspAttach, {
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    local hook = hooks[client.name]
+
+    if hook and type(hook.setup) == "function" then
+      local new = extend("force", client.settings, hook.setup())
+      if not vim.deep_equal(client.settings, new) then
+        client.settings = new
+        client.config.settings = new
+        client.notify("workspace/didChangeConfiguration", new)
+      end
+    end
+  end,
+})

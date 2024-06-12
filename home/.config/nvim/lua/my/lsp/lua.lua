@@ -2,8 +2,8 @@ if require("my.config.globals").bootstrap then
   return
 end
 
-local fs = require 'my.utils.fs'
-local mod = require 'my.utils.module'
+local fs = require "my.utils.fs"
+local mod = require "my.utils.module"
 local globals = require "my.config.globals"
 local plugin = require "my.utils.plugin"
 
@@ -11,19 +11,6 @@ local endswith   = vim.endswith
 local insert = table.insert
 local find = string.find
 local EMPTY = {}
-
-
----@param t string[]
----@param extra string|string[]
-local function extend(t, extra)
-  if type(extra) == "table" then
-    for _, v in ipairs(extra) do
-      insert(t, v)
-    end
-  else
-    insert(t, extra)
-  end
-end
 
 local WORKSPACE = fs.normalize(globals.workspace)
 
@@ -44,8 +31,6 @@ do
     end
   end)
 end
-
-
 
 --- annotations from https://github.com/LuaCATS
 local LUA_CATS = globals.git_root .. "/LuaCATS"
@@ -121,6 +106,9 @@ local WORKSPACES = {
       "nvim-treesitter",
       "telescope",
     },
+    ignore = {
+      "lspconfig/server_configurations"
+    },
   },
 
   doorbell = {
@@ -149,6 +137,18 @@ local WORKSPACES = {
     resty = true,
   },
 }
+
+---@param t string[]
+---@param extra string|string[]
+local function extend(t, extra)
+  if type(extra) == "table" then
+    for _, v in ipairs(extra) do
+      insert(t, v)
+    end
+  else
+    insert(t, extra)
+  end
+end
 
 local get_plugin_lua_dir
 do
@@ -374,201 +374,235 @@ local function lua_path(libs)
   return dedupe(paths, true)
 end
 
-local settings = workspace_settings()
-local library = lua_libs(settings)
-local path = lua_path(library)
+local Disable = "Disable"
+local Replace = "Replace"
+local Fallback = "Fallback"
+local Opened = "Opened"
 
-local conf = {
-  cmd = { 'lua-language-server' },
-  settings = {
+local function init()
+  return {
+    cmd = { 'lua-language-server' },
+    settings = {
+      Lua = {
+        runtime = {
+          version           = "LuaJIT",
+          builtin           = "enable",
+          fileEncoding      = "utf8",
+          nonstandardSymbol = {},
+          pathStrict        = false,
+          unicodeName       = false,
+          path              = lua_path({}),
+          plugin            = nil,
+          pluginArgs        = nil,
+          special = {
+            ["my.utils.module.reload"] = "require",
+            ["my.utils.module.if_exists"] = "require",
+          },
+        },
+
+        completion = {
+          enable           = true,
+          autoRequire      = false,
+          callSnippet      = Disable,
+          displayContext   = 0, -- disabled
+          keywordSnippet   = Disable,
+          postfix          = "@",
+          requireSeparator = ".",
+          showParams       = true,
+          showWord         = Fallback,
+          workspaceWord    = false,
+        },
+
+        signatureHelp = {
+          enable = true,
+        },
+
+        hover = {
+          enable        = true,
+          enumsLimit    = 10,
+          expandAlias   = true,
+          previewFields = 20,
+          viewNumber    = true,
+          viewString    = true,
+          viewStringMax = 1000,
+        },
+
+        hint = {
+          enable     = true,
+          paramName  = "All",
+          paramType  = true,
+          setType    = true,
+          arrayIndex = "Enable",
+          await      = false,
+          semicolon  = Disable,
+        },
+
+        IntelliSense = {
+          -- https://github.com/sumneko/lua-language-server/issues/872
+          traceLocalSet    = true,
+          traceReturn      = true,
+          traceBeSetted    = true,
+          traceFieldInject = true,
+        },
+
+        format = {
+          enable = false,
+        },
+
+        diagnostics = {
+          enable = true,
+          disable = {
+            'lowercase-global',
+            'need-check-nil',
+          },
+
+          globals = {
+            'vim',
+
+            -- openresty/kong globals
+            'ngx',
+            'kong',
+
+            -- busted globals
+            'after_each',
+            'before_each',
+            'describe',
+            'expose',
+            'finally',
+            'insulate',
+            'it',
+            'lazy_setup',
+            'lazy_teardown',
+            'mock',
+            'pending',
+            'pending',
+            'randomize',
+            'setup',
+            'spec',
+            'spy',
+            'strict_setup',
+            'strict_teardown',
+            'stub',
+            'teardown',
+            'test',
+
+          },
+
+          ignoredFiles = Disable,
+          libraryFiles = Disable,
+          workspaceDelay = 3000,
+          workspaceRate = 80,
+          workspaceEvent = "OnSave",
+
+          groupFileStatus = nil,
+
+          unusedLocalExclude = {
+            "self",
+          },
+
+          neededFileStatus = {
+            ["ambiguity-1"]            = Opened,
+            ["assign-type-mismatch"]   = Opened,
+            ["await-in-sync"]          = "None!",
+            ["cast-local-type"]        = Opened,
+            ["cast-type-mismatch"]     = Opened,
+            ["circle-doc-class"]       = Opened,
+            ["close-non-object"]       = Opened,
+            ["code-after-break"]       = Opened,
+            ["codestyle-check"]        = "None!",
+            ["count-down-loop"]        = Opened,
+            deprecated                 = Opened,
+            ["different-requires"]     = Opened,
+            ["discard-returns"]        = Opened,
+            ["doc-field-no-class"]     = Opened,
+            ["duplicate-doc-alias"]    = Opened,
+            ["duplicate-doc-field"]    = Opened,
+            ["duplicate-doc-param"]    = Opened,
+            ["duplicate-index"]        = Opened,
+            ["duplicate-set-field"]    = Opened,
+            ["empty-block"]            = Opened,
+            ["global-in-nil-env"]      = Opened,
+            ["lowercase-global"]       = "None!",
+            ["missing-parameter"]      = Opened,
+            ["missing-return"]         = Opened,
+            ["missing-return-value"]   = Opened,
+            ["need-check-nil"]         = Opened,
+            ["newfield-call"]          = Opened,
+            ["newline-call"]           = Opened,
+            ["no-unknown"]             = "None!",
+            ["not-yieldable"]          = "None!",
+            ["param-type-mismatch"]    = Opened,
+            ["redefined-local"]        = Opened,
+            ["redundant-parameter"]    = Opened,
+            ["redundant-return"]       = Opened,
+            ["redundant-return-value"] = Opened,
+            ["redundant-value"]        = Opened,
+            ["return-type-mismatch"]   = Opened,
+            ["spell-check"]            = "None!",
+            ["trailing-space"]         = Opened,
+            ["unbalanced-assignments"] = Opened,
+            ["undefined-doc-class"]    = Opened,
+            ["undefined-doc-name"]     = Opened,
+            ["undefined-doc-param"]    = Opened,
+            ["undefined-env-child"]    = Opened,
+            ["undefined-field"]        = Opened,
+            ["undefined-global"]       = Opened,
+            ["unknown-cast-variable"]  = Opened,
+            ["unknown-diag-code"]      = Opened,
+            ["unknown-operator"]       = Opened,
+            ["unreachable-code"]       = Opened,
+            ["unused-function"]        = Opened,
+            ["unused-label"]           = Opened,
+            ["unused-local"]           = Opened,
+            ["unused-vararg"]          = Opened,
+          }
+        },
+
+        workspace = {
+          checkThirdParty  = Disable,
+          ignoreSubmodules = false,
+          library          = nil,
+          useGitIgnore     = true,
+          userThirdParty   = nil,
+        },
+
+        semantic = {
+          annotation = true,
+          enable     = true,
+          keyword    = true,
+          variable   = true,
+        },
+
+        type = {
+          castNumberToInteger = true,
+          weakUnionCheck      = true,
+          weakNilCheck        = true,
+        },
+      },
+    }
+  }
+
+end
+
+local function setup()
+  local ws = workspace_settings()
+  local library = lua_libs(ws)
+
+  return {
     Lua = {
       runtime = {
-        fileEncoding = "utf8",
-        nonstandardSymbol = {},
-        path = path,
-        pathStrict = false,
-        unicodeName = true,
-        version = 'LuaJIT',
-        special = {
-          ["my.utils.module.reload"] = "require",
-          ["my.utils.module.if_exists"] = "require",
-        },
-
-      },
-
-      completion = {
-        enable = true,
-        autoRequire = false,
-        callSnippet = "Disable",
-        displayContext = 0,
-        keywordSnippet = "Replace",
-        postfix = "@",
-        requireSeparator = ".",
-        showParams = true,
-        showWord = "Fallback",
-        workspaceWord = true,
-      },
-
-      signatureHelp = {
-        enable = true,
-      },
-
-      hover = {
-        enable = true,
-        enumsLimit = 10,
-        previewFields = 20,
-        viewNumber = true,
-        viewString = true,
-        viewStringMax = 1000,
-        expandAlias = true,
-
-      },
-
-      hint = {
-        enable = true,
-        paramName = "All",
-        paramType = true,
-        setType = true,
-        arrayIndex = "Enable",
-        await = false,
-      },
-
-      IntelliSense = {
-        -- https://github.com/sumneko/lua-language-server/issues/872
-        traceLocalSet    = true,
-        traceReturn      = true,
-        traceBeSetted    = true,
-        traceFieldInject = true,
-      },
-
-      diagnostics = {
-        enable = true,
-        disable = {
-          'lowercase-global',
-          'need-check-nil',
-        },
-
-        globals = {
-          'vim',
-
-          -- openresty/kong globals
-          'ngx',
-          'kong',
-
-          -- busted globals
-          'after_each',
-          'before_each',
-          'describe',
-          'expose',
-          'finally',
-          'insulate',
-          'it',
-          'lazy_setup',
-          'lazy_teardown',
-          'mock',
-          'pending',
-          'pending',
-          'randomize',
-          'setup',
-          'spec',
-          'spy',
-          'strict_setup',
-          'strict_teardown',
-          'stub',
-          'teardown',
-          'test',
-
-        },
-
-        ignoredFiles = "Disable",
-        libraryFiles = "Disable",
-        workspaceDelay = 3000,
-        workspaceRate = 80,
-
-        neededFileStatus = {
-          ["ambiguity-1"]            = "Opened",
-          ["assign-type-mismatch"]   = "Opened",
-          ["await-in-sync"]          = "None",
-          ["cast-local-type"]        = "Opened",
-          ["cast-type-mismatch"]     = "Opened",
-          ["circle-doc-class"]       = "Opened",
-          ["close-non-object"]       = "Opened",
-          ["code-after-break"]       = "Opened",
-          ["codestyle-check"]        = "None",
-          ["count-down-loop"]        = "Opened",
-          deprecated                 = "Opened",
-          ["different-requires"]     = "Opened",
-          ["discard-returns"]        = "Opened",
-          ["doc-field-no-class"]     = "Opened",
-          ["duplicate-doc-alias"]    = "Opened",
-          ["duplicate-doc-field"]    = "Opened",
-          ["duplicate-doc-param"]    = "Opened",
-          ["duplicate-index"]        = "Opened",
-          ["duplicate-set-field"]    = "Opened",
-          ["empty-block"]            = "Opened",
-          ["global-in-nil-env"]      = "Opened",
-          ["lowercase-global"]       = "None",
-          ["missing-parameter"]      = "Opened",
-          ["missing-return"]         = "Opened",
-          ["missing-return-value"]   = "Opened",
-          ["need-check-nil"]         = "Opened",
-          ["newfield-call"]          = "Opened",
-          ["newline-call"]           = "Opened",
-          ["no-unknown"]             = "None",
-          ["not-yieldable"]          = "None",
-          ["param-type-mismatch"]    = "Opened",
-          ["redefined-local"]        = "Opened",
-          ["redundant-parameter"]    = "Opened",
-          ["redundant-return"]       = "Opened",
-          ["redundant-return-value"] = "Opened",
-          ["redundant-value"]        = "Opened",
-          ["return-type-mismatch"]   = "Opened",
-          ["spell-check"]            = "None",
-          ["trailing-space"]         = "Opened",
-          ["unbalanced-assignments"] = "Opened",
-          ["undefined-doc-class"]    = "Opened",
-          ["undefined-doc-name"]     = "Opened",
-          ["undefined-doc-param"]    = "Opened",
-          ["undefined-env-child"]    = "Opened",
-          ["undefined-field"]        = "Opened",
-          ["undefined-global"]       = "Opened",
-          ["unknown-cast-variable"]  = "Opened",
-          ["unknown-diag-code"]      = "Opened",
-          ["unknown-operator"]       = "Opened",
-          ["unreachable-code"]       = "Opened",
-          ["unused-function"]        = "Opened",
-          ["unused-label"]           = "Opened",
-          ["unused-local"]           = "Opened",
-          ["unused-vararg"]          = "Opened",
-        }
-
+        path = lua_path(library),
       },
 
       workspace = {
-        checkThirdParty = false,
-        ignoreDir = settings.ignore,
-        ignoreSubmodules = false,
+        ignoreDir = ws.ignore,
         library = library,
-        useGitIgnore = true,
-        userThirdParty = settings.third_party,
-      },
-
-      semantic = {
-        annotation = true,
-        enable = true,
-        variable = true,
-      },
-
-      telemetry = {
-        enable = true,
-      },
-
-      type = {
-        castNumberToInteger = true,
-        weakUnionCheck = true,
-      },
-    },
+      }
+    }
   }
-}
+end
 
-return conf
+return {
+  setup = setup,
+  init = init,
+}

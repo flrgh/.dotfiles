@@ -1118,4 +1118,9 @@ e.VeryLazy = "VeryLazy"
 --- Useful to update the startuptime on your dashboard.
 e.LazyVimStarted = "LazyVimStarted"
 
+e.LspAttach = "LspAttach"
+e.LspDetach = "LspDetach"
+e.LspNotify = "LspNotify"
+e.LspProgress = "LspProgress"
+
 return e
