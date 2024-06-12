@@ -77,3 +77,6 @@ vnoremap.J = { ":move '>+1<CR>gv=gv", 'Move selection up one line',   no_auto_cr
 vnoremap.K = { ":move '<-2<CR>gv=gv", 'Move selection down one line', no_auto_cr = true }
 
 nnoremap[Leader.g] = { ":G", "fuGITive" }
+
+-- unbind q from macro things
+nnoremap.q = km.NOP
