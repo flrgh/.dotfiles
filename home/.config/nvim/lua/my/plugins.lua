@@ -554,8 +554,9 @@ local plugins_by_category = {
       branch = "main",
       config = function()
         require("lspsaga").setup({
+          -- display scope breadcrumbs in the winbar
           symbol_in_winbar = {
-            enable = true, -- I only work on nvim 0.8
+            enable = true,
           },
           lightbulb = {
             -- this causes some visual defects, so it's disabled
