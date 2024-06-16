@@ -4,6 +4,7 @@ if #vim.api.nvim_list_uis() == 0 then
 end
 
 local mod = require 'my.utils.module'
+local plugin = require "my.utils.plugin"
 
 if not mod.exists('lspconfig') then
   return
@@ -43,16 +44,16 @@ local on_attach
 do
   ---@type table<string, function|string>
   local maps = {
-    rename              = lsp.buf.rename,
-    references          = lsp.buf.references,
     code_action         = lsp.buf.code_action,
     declaration         = lsp.buf.declaration,
     definition          = lsp.buf.definition,
-    type_definition     = lsp.buf.type_definition,
-    signature_help      = lsp.buf.signature_help,
     hover               = lsp.buf.hover,
     implementation      = lsp.buf.implementation,
+    references          = lsp.buf.references,
+    rename              = lsp.buf.rename,
     show_diagnostic     = vim.diagnostic.open_float,
+    signature_help      = lsp.buf.signature_help,
+    type_definition     = lsp.buf.type_definition,
   }
 
   if mod.exists("lspsaga") then
@@ -61,15 +62,28 @@ do
     end
 
     maps.hover = cmd("hover_doc")
-    maps.code_action = cmd("code_action")
-    maps.range_code_action = cmd("range_code_action")
+    maps.references = cmd("finder")
     maps.show_diagnostic = cmd("show_line_diagnostics")
     maps.next_diagnostic = cmd("diagnostic_jump_next")
     maps.prev_diagnostic = cmd("diagnostic_jump_prev")
   end
 
   if mod.exists("hover") then
-    maps.hover = require("hover").hover
+    -- I like this better than lspsaga's hover_doc
+    local hover = require("hover").hover
+    local api = vim.api
+
+    -- 1. press the key once to show the doc window
+    -- 2. press the key a second time to change focus to the window
+    -- https://github.com/lewis6991/hover.nvim/issues/49
+    maps.hover = function()
+      local hover_win = vim.b.hover_preview
+      if hover_win and api.nvim_win_is_valid(hover_win) then
+        api.nvim_set_current_win(hover_win)
+      else
+        return hover()
+      end
+    end
   end
 
   do
@@ -101,8 +115,9 @@ do
     end
   end
 
+  ---@param client vim.lsp.Client
   ---@param buf    number
-  function on_attach(_, buf)
+  function on_attach(client, buf)
     -- set up key bindings
     do
       local km = require('my.keymap')
@@ -124,6 +139,8 @@ do
       km.buf.nnoremap[Leader.ti]   = { maps.toggle_inlay_hints, "Toggle inlay hints" }
 
       km.buf.nnoremap[Leader.rn]   = { maps.rename, "Rename variable" }
+
+      km.buf.nnoremap[Leader.vr]   = { maps.references, "[V]iew [R]eferences" }
     end
 
     vim.diagnostic.config({
@@ -140,9 +157,9 @@ local caps
 do
   caps = lsp.protocol.make_client_capabilities()
 
-  mod.if_exists('cmp_nvim_lsp', function(cmp_nvim_lsp)
-    caps = cmp_nvim_lsp.default_capabilities(caps)
-  end)
+  if mod.exists("cmp_nvim_lsp") then
+    caps = require("cmp_nvim_lsp").default_capabilities(caps)
+  end
 end
 
 
@@ -169,6 +186,27 @@ local servers = {
   zig          = "zls",
 }
 
+if plugin.installed("rustaceanvim") then
+  servers.rust = nil
+
+  local rv = {
+    server = {
+      on_attach = on_attach,
+    },
+    default_settings = {},
+  }
+
+  if mod.exists("my.lsp.rust") then
+    local rust = require "my.lsp.rust"
+    if type(rust.init) == "function" then
+      local conf = rust.init()
+      rv.default_settings = conf.settings
+    end
+  end
+
+  vim.g.rustaceanvim = extend("force", vim.g.rustaceanvim or {}, rv)
+end
+
 ---@class my.lsp.hook
 ---
 ---@field init fun():lspconfig.Config
@@ -181,7 +219,7 @@ for lang, server in pairs(servers) do
   ---@type lspconfig.Config
   local conf = {
     log_level = 2,
-    on_attach = on_attach,
+    --on_attach = on_attach,
     root_dir  = root_dir,
   }
 
@@ -201,13 +239,18 @@ for lang, server in pairs(servers) do
     and lspconfig[server].document_config.default_config.cmd
 
   if conf.cmd and executable(conf.cmd[1]) == 1 then
+    --lspconfig[server].init_options = extend("force", lspconfig[server].init_options or {}, { usePlaceHolders = true })
     lspconfig[server].setup(conf)
   end
 end
 
 vim.api.nvim_create_autocmd(evt.LspAttach, {
-  callback = function(args)
-    local client = vim.lsp.get_client_by_id(args.data.client_id)
+  desc  = "Setup LSP things whenever a new client is attached to the buffer",
+  callback = function(e)
+    local client = vim.lsp.get_client_by_id(e.data.client_id)
+
+    on_attach(client, e.buf)
+
     local hook = hooks[client.name]
 
     if hook and type(hook.setup) == "function" then
