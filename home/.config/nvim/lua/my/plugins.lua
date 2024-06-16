@@ -582,11 +582,15 @@ local plugins_by_category = {
             require("hover.providers.lsp")
             require("hover.providers.man")
             require("hover.providers.gh")
+            require("hover.providers.dictionary")
           end,
           preview_opts = {
             border = nil,
           },
           title = true,
+          mouse_providers = {
+            "LSP",
+          },
         })
       end,
     },
