@@ -50,6 +50,7 @@
   "plenary.nvim": { "branch": "master", "commit": "a3e3bc82a3f95c5ed0d7201546d5d2c19b20d683" },
   "popup.nvim": { "branch": "master", "commit": "b7404d35d5d3548a82149238289fa71f7f6de4ac" },
   "roku.vim": { "branch": "master", "commit": "aada2c12a22e80e1b5c5a1bd873a758ffa46f434" },
+  "schemastore.nvim": { "branch": "main", "commit": "35f36c50b9f1e1e916d0e3f004cb48dffd2bf737" },
   "tabular": { "branch": "master", "commit": "339091ac4dd1f17e225fe7d57b48aff55f99b23a" },
   "tagbar": { "branch": "master", "commit": "0815b5455c792a610d28ff3e7981642c9cf05d62" },
   "telescope-fzf-native.nvim": { "branch": "main", "commit": "9ef21b2e6bb6ebeaf349a0781745549bbb870d27" },

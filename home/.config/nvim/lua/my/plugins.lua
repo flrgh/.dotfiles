@@ -632,6 +632,8 @@ local plugins_by_category = {
         })
       end,
     },
+
+    "b0o/schemastore.nvim",
   },
 
   plumbing = {
