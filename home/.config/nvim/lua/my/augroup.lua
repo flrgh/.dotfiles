@@ -59,8 +59,10 @@ do
         -- first time always sets `modified`, so this forcibly sets it and
         -- then resets `nomodified`
         if not bo.fileencoding or bo.fileencoding == "" then
-          bo.fileencoding = "utf-8"
-          bo.modified = false
+          if bo.modifiable then
+            bo.fileencoding = "utf-8"
+            bo.modified = false
+          end
         end
 
         -- when run with -R, set `nomodifiable`
