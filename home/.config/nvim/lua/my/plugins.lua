@@ -664,6 +664,8 @@ local plugins_by_category = {
 
     -- detect jq scripts
     'vito-c/jq.vim',
+
+    "Glench/Vim-Jinja2-Syntax",
   },
 
   -- FIXME: categorize these

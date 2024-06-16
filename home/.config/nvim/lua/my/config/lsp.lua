@@ -169,6 +169,7 @@ local servers = {
   clangd       = "clangd",
   dockerfile   = "dockerls",
   go           = "gopls",
+  jinja        = "jinja_lsp",
   json         = "jsonls",
   lua          = "lua_ls",
   markdown     = "marksman",
@@ -233,13 +234,12 @@ for lang, server in pairs(servers) do
   end)
 
   conf.cmd = conf.cmd
-    or lspconfig[server]
+    or (lspconfig[server]
     and lspconfig[server].document_config
     and lspconfig[server].document_config.default_config
-    and lspconfig[server].document_config.default_config.cmd
+    and lspconfig[server].document_config.default_config.cmd)
 
   if conf.cmd and executable(conf.cmd[1]) == 1 then
-    --lspconfig[server].init_options = extend("force", lspconfig[server].init_options or {}, { usePlaceHolders = true })
     lspconfig[server].setup(conf)
   end
 end
