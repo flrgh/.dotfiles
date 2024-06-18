@@ -2,16 +2,50 @@
 
 set -euo pipefail
 
-COUNT=0
-INTERVAL=${INTERVAL:-3}
-FAILED=0
-MAX=${MAX:-100}
+declare INTERVAL=${INTERVAL:-3}
+declare -i MAX=${MAX:-100}
+
+usage() {
+    printf '%s [-m|--max n] [-i|--interval n] CMD [ARG...]\n' "$0"
+}
+
+while true; do
+    case $1 in
+        -m|--max)
+            MAX=$2
+            shift 2
+            ;;
+
+        -i|--interval)
+            INTERVAL=$2
+            shift 2
+            ;;
+
+        -h|--help)
+            usage
+            exit 0
+            ;;
+
+        --)
+            shift 1
+            break
+            ;;
+
+        *)
+            break
+            ;;
+    esac
+done
+
+declare -i COUNT=0
+declare -i EC=0
 
 while true; do
     COUNT=$(( COUNT + 1 ))
 
     clear
     echo "Try #$COUNT"
+    echo "Command: '$*'"
     echo
 
     if "$@"; then
@@ -19,10 +53,10 @@ while true; do
         echo "Success!"
 
     else
+        EC=$?
         echo
-        echo "Failure!"
-        FAILED=1
-        break
+        echo "Command failed with exit code $EC after $COUNT attempts"
+        exit $EC
     fi
 
     if (( COUNT >= MAX )); then
@@ -32,8 +66,4 @@ while true; do
     sleep "$INTERVAL"
 done
 
-if (( FAILED == 1 )); then
-    echo "Command failed after $FAILED attempts"
-else
-    echo "Command did not fail within $COUNT tries"
-fi
+echo "Command did not fail within $COUNT tries"
