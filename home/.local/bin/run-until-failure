@@ -44,7 +44,7 @@ while true; do
     COUNT=$(( COUNT + 1 ))
 
     clear
-    echo "Try #$COUNT"
+    echo "Try $COUNT/$MAX"
     echo "Command: '$*'"
     echo
 
