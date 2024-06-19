@@ -7,27 +7,41 @@ local mod = require "my.utils.module"
 local globals = require "my.config.globals"
 local plugin = require "my.utils.plugin"
 
-local endswith   = vim.endswith
+local endswith = vim.endswith
 local insert = table.insert
 local find = string.find
+local deepcopy = vim.deepcopy
+local tbl_deep_extend = vim.tbl_deep_extend
+local deep_equal = vim.deep_equal
+
 local EMPTY = {}
 
 local WORKSPACE = fs.normalize(globals.workspace)
+local WORKSPACE_BASE = fs.basename(WORKSPACE)
 
 ---@type string[]
 local LUA_PATH_ENTRIES = {}
 do
-  local lua_path = os.getenv("LUA_PATH") or package.path
+  local lua_path = os.getenv("LUA_PATH") or package.path or ""
+
+  local seen = {}
+
   ---@diagnostic disable-next-line
   lua_path:gsub("[^;]+", function(path)
-    path = fs.normalize(path)
-    local dir = path:gsub("%?%.lua$", ""):gsub("%?/init%.lua$", "")
+    local dir = path:gsub("%?%.lua$", "")
+                    :gsub("%?/init%.lua$", "")
+                    :gsub("%?%.ljbc$", "")
+                    :gsub("%?/init.ljbc", "")
 
-    if path ~= "" and
-       path ~= "/" and
-       dir ~= WORKSPACE
+    dir = fs.normalize(dir)
+
+    if path ~= ""
+       and path ~= "/"
+       and dir ~= WORKSPACE
+       and not seen[dir]
     then
-      insert(LUA_PATH_ENTRIES, path)
+      seen[dir] = dir
+      insert(LUA_PATH_ENTRIES, dir)
     end
   end)
 end
@@ -40,16 +54,18 @@ local LUA_TYPE_ANNOTATIONS = globals.git_user_root .. "/lua-type-annotations"
 ---@type my.lsp.settings
 local SETTINGS_COMMON = {
   libraries = {
+    globals.git_user_root .. "/lua-utils/lib",
+  },
+  definitions = {
     LUA_TYPE_ANNOTATIONS .. "/Penlight",
     LUA_TYPE_ANNOTATIONS .. "/LuaFileSystem",
     LUA_TYPE_ANNOTATIONS .. "/luasocket",
-    globals.git_user_root .. "/lua-utils/lib",
   },
 }
 
 ---@type my.lsp.settings
 local SETTINGS_RESTY = {
-  libraries = {
+  definitions = {
     LUA_CATS .. "/openresty/library",
     globals.git_user_root .. "/resty-community-typedefs/library",
   },
@@ -65,7 +81,7 @@ local SETTINGS_NVIM = {
 
 ---@type my.lsp.settings
 local SETTINGS_KONG = {
-  libraries = {
+  definitions = {
     LUA_TYPE_ANNOTATIONS .. "/kong",
   },
   ignore = {
@@ -113,6 +129,9 @@ local WORKSPACES = {
 
   doorbell = {
     resty = true,
+    definitions = {
+      globals.git_user_root .. "/lua-resty-pushover/lib",
+    },
   },
 
   kong = {
@@ -135,6 +154,11 @@ local WORKSPACES = {
 
   resty = {
     resty = true,
+  },
+
+  ["lua-language-server"] = {
+    luarc = true,
+    override_all = true,
   },
 }
 
@@ -188,15 +212,25 @@ end
 ---@class my.lsp.settings
 ---@field ignore? string[]
 ---@field libraries? string[]
+---@field definitions? string[]
 ---@field plugins? string[]
 ---@field nvim? boolean
 ---@field kong? boolean
 ---@field resty? boolean
+---@field luarc? boolean
+---@field luarc_settings? table
+---@field override_all? boolean
+---@field luarocks? boolean
 local DEFAULT_SETTINGS = {
   libraries = {},
   ignore = {},
   plugins = {},
+  definitions = {},
   nvim = false,
+  luarc = false,
+  luarc_settings = nil,
+  override_all = nil,
+  luarocks = nil,
 }
 
 ---@param p string
@@ -249,40 +283,54 @@ end
 
 ---@param current my.lsp.settings
 ---@param extra my.lsp.settings
-local function merge_settings(current, extra)
+---@param dir string
+local function merge_settings(current, extra, dir)
   imerge(current.libraries, extra.libraries)
+  imerge(current.definitions, extra.definitions)
   imerge(current.ignore, extra.ignore)
   imerge(current.plugins, extra.plugins)
 
   current.nvim  = current.nvim or extra.nvim
   current.resty = current.resty or extra.resty
   current.kong  = current.kong or extra.kong
+  current.luarocks  = current.luarocks or extra.luarocks
+
+  if extra.luarc then
+    current.luarc = extra.luarc
+    local fname = fs.join(dir, ".luarc.json")
+    current.luarc_settings = fs.load_json_file(fname)
+  end
+
+  if extra.nvim then
+    merge_settings(current, SETTINGS_NVIM, dir)
+  end
+
+  if extra.resty then
+    merge_settings(current, SETTINGS_RESTY, dir)
+  end
+
+  if extra.kong then
+    merge_settings(current, SETTINGS_KONG, dir)
+  end
 end
 
+---@param dir? string
 ---@return my.lsp.settings
-local function workspace_settings()
+local function workspace_settings(dir)
   local settings = DEFAULT_SETTINGS
 
-  local base = fs.basename(WORKSPACE)
+  dir = dir or WORKSPACE
+
+  local base = fs.basename(dir)
 
   for ws, conf in pairs(WORKSPACES) do
-    if ws == base or
-       ws == "*" or
-       find(base, ws, nil, true)
+    if ws == base
+       or find(base, ws, nil, true)
+       or ws == WORKSPACE_BASE
     then
-      merge_settings(settings, conf)
-
-      if conf.nvim then
-        merge_settings(settings, SETTINGS_NVIM)
-      end
-
-      if conf.resty then
-        merge_settings(settings, SETTINGS_RESTY)
-      end
-
-      if conf.kong then
-        merge_settings(settings, SETTINGS_KONG)
-      end
+      settings = deepcopy(settings)
+      merge_settings(settings, conf, dir)
+      break
     end
   end
 
@@ -290,7 +338,8 @@ local function workspace_settings()
 end
 
 ---@param settings my.lsp.settings
-local function lua_libs(settings)
+---@return string[]
+local function workspace_libraries(settings)
   local libs = {}
 
   for _, path in ipairs(settings.libraries or EMPTY) do
@@ -300,7 +349,15 @@ local function lua_libs(settings)
     end
   end
 
+  for _, path in ipairs(settings.definitions or EMPTY) do
+    path = fs.normalize(path)
+    if path ~= WORKSPACE then
+      insert(libs, path)
+    end
+  end
+
   extend(libs, SETTINGS_COMMON.libraries)
+  extend(libs, SETTINGS_COMMON.definitions)
 
   if settings.nvim then
     if mod.exists("neodev.config") then
@@ -318,6 +375,19 @@ local function lua_libs(settings)
     end
   end
 
+  if settings.luarocks then
+    -- luarocks config deploy_lua_dir
+    local res = vim.system({ "luarocks", "config", "deploy_lua_dir" },
+                           { text = true }
+                          ):wait()
+
+    local stdout = res and res.stdout and #res.stdout > 0 and res.stdout
+    if stdout then
+      stdout = vim.trim(stdout)
+      insert(libs, stdout)
+    end
+  end
+
   return dedupe(libs)
 end
 
@@ -330,9 +400,9 @@ local function add_lua_path(paths, dir)
   end
 end
 
----@param libs table<string, boolean>
+---@param settings my.lsp.settings
 ---@return string[]
-local function lua_path(libs)
+local function runtime_paths(settings)
   local paths = {}
 
   -- something changed in lua-language-server 2.5.0 with regards to locating
@@ -349,7 +419,8 @@ local function lua_path(libs)
   insert(paths, "?.lua")
   insert(paths, "?/init.lua")
 
-  for _, lib in ipairs(libs) do
+  for _, lib in ipairs(settings.libraries or EMPTY) do
+    lib = fs.normalize(lib)
     -- add $path
     add_lua_path(paths, lib)
 
@@ -369,7 +440,9 @@ local function lua_path(libs)
     end
   end
 
-  extend(paths, LUA_PATH_ENTRIES)
+  for _, dir in ipairs(LUA_PATH_ENTRIES) do
+    add_lua_path(paths, dir)
+  end
 
   return dedupe(paths, true)
 end
@@ -379,7 +452,18 @@ local Replace = "Replace"
 local Fallback = "Fallback"
 local Opened = "Opened"
 
+---@return lspconfig.Config
 local function init()
+  local ws = workspace_settings()
+  if ws.luarc_settings then
+    return {
+      cmd = { 'lua-language-server' },
+      settings = {
+        Lua = ws.luarc_settings,
+      },
+    }
+  end
+
   return {
     cmd = { 'lua-language-server' },
     settings = {
@@ -391,7 +475,7 @@ local function init()
           nonstandardSymbol = {},
           pathStrict        = false,
           unicodeName       = false,
-          path              = lua_path({}),
+          path              = runtime_paths({}),
           plugin            = nil,
           pluginArgs        = nil,
           special = {
@@ -584,14 +668,23 @@ local function init()
 
 end
 
-local function setup()
-  local ws = workspace_settings()
-  local library = lua_libs(ws)
+---@param client vim.lsp.Client
+---@param buf integer
+local function on_attach(client, buf)
+  local ws = workspace_settings(client and client.config and client.config.root_dir)
+  local settings = {
+    Lua = nil,
+  }
 
-  return {
-    Lua = {
+  if ws.luarc_settings then
+    settings.Lua = ws.luarc_settings
+
+  else
+    local library = workspace_libraries(ws)
+
+    settings.Lua = {
       runtime = {
-        path = lua_path(library),
+        path = runtime_paths(library),
       },
 
       workspace = {
@@ -599,10 +692,19 @@ local function setup()
         library = library,
       }
     }
-  }
+  end
+
+  local defaults = (ws.override_all and {}) or client.settings
+  local new = tbl_deep_extend("force", defaults, settings)
+
+  if not deep_equal(client.settings, new) then
+    vim.notify("Updating LuaLS settings...")
+    client.settings = new
+    client.notify("workspace/didChangeConfiguration", new)
+  end
 end
 
 return {
-  setup = setup,
+  on_attach = on_attach,
   init = init,
 }

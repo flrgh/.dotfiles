@@ -211,17 +211,23 @@ end
 ---@class my.lsp.hook
 ---
 ---@field init fun():lspconfig.Config
----@field setup fun():table
+---@field on_attach fun(client:vim.lsp.Client, buf:integer)
 
 ---@type table<string, my.lsp.hook>
 local hooks = {}
 
-for lang, server in pairs(servers) do
+
+---@param lang string
+---@param name string
+local function setup_server(lang, name)
+  local server = lspconfig[name]
+  if not server then
+    vim.notify("unknown LSP server: " .. name, vim.log.levels.WARN)
+  end
+
   ---@type lspconfig.Config
   local conf = {
     log_level = 2,
-    --on_attach = on_attach,
-    root_dir  = root_dir,
   }
 
   local mod_name = "my.lsp." .. lang
@@ -230,36 +236,84 @@ for lang, server in pairs(servers) do
       conf = extend("force", conf, m.init())
     end
 
-    hooks[server] = m
+    hooks[name] = m
   end)
 
-  conf.cmd = conf.cmd
-    or (lspconfig[server]
-    and lspconfig[server].document_config
-    and lspconfig[server].document_config.default_config
-    and lspconfig[server].document_config.default_config.cmd)
+  local cmd = conf.cmd
+    or (server.document_config
+    and server.document_config.default_config
+    and server.document_config.default_config.cmd)
 
-  if conf.cmd and executable(conf.cmd[1]) == 1 then
-    lspconfig[server].setup(conf)
+  if cmd and executable(cmd[1]) == 1 then
+    server.setup(conf)
   end
 end
 
+for lang, server in pairs(servers) do
+  setup_server(lang, server)
+end
+
+local group = vim.api.nvim_create_augroup("UserLSP", { clear = true })
+
 vim.api.nvim_create_autocmd(evt.LspAttach, {
   desc  = "Setup LSP things whenever a new client is attached to the buffer",
+  group = group,
   callback = function(e)
     local client = vim.lsp.get_client_by_id(e.data.client_id)
-
     on_attach(client, e.buf)
 
     local hook = hooks[client.name]
 
-    if hook and type(hook.setup) == "function" then
-      local new = extend("force", client.settings, hook.setup())
-      if not vim.deep_equal(client.settings, new) then
-        client.settings = new
-        client.config.settings = new
-        client.notify("workspace/didChangeConfiguration", new)
-      end
+    if hook and type(hook.on_attach) == "function" then
+      hook.on_attach(client, e.buf)
     end
   end,
 })
+
+vim.api.nvim_create_user_command(
+  "LspSettings",
+  function(args)
+    if args.fargs and #args.fargs == 1 then
+      local name = args.fargs[1]
+
+      for _, client in ipairs(lsp.get_clients()) do
+        if client.name == name then
+          vim.print(client.settings)
+          return
+        end
+      end
+
+      vim.notify("LSP client '" .. name .. "' not found")
+      return
+    end
+
+    local result = {}
+    for i, client in ipairs(lsp.get_clients()) do
+      result[i] = {
+        name     = client.name,
+        settings = client.settings,
+      }
+    end
+
+    if #result > 1 then
+      vim.print(result)
+
+    elseif #result == 1 then
+      vim.print(result[1])
+
+    else
+      vim.notify("No active LSP clients")
+    end
+  end,
+  {
+    desc = "Show settings for active LSP clients",
+    nargs = "?",
+    complete = function()
+      local names = {}
+      for i, client in ipairs(lsp.get_clients()) do
+        names[i] = client.name
+      end
+      return names
+    end,
+  }
+)
