@@ -7,7 +7,8 @@ if [[ -f $CONFIG_HOME/lua/repl.lua ]]; then
 fi
 
 if [[ -d ~/git/flrgh/lua-utils ]]; then
-    __rc_add_path "$HOME/git/flrgh/lua-utils/lib/?.lua;$HOME/git/flrgh/lua-utils/lib/?.init.lua" LUA_PATH ";"
+    __rc_add_path "$HOME/git/flrgh/lua-utils/lib/?/init.lua" LUA_PATH ";"
+    __rc_add_path "$HOME/git/flrgh/lua-utils/lib/?.lua"      LUA_PATH ";"
 fi
 
 luarocks=$(type -f -p luarocks)
