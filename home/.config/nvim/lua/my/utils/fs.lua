@@ -21,6 +21,7 @@ local concat = table.concat
 local assert = assert
 local byte = string.byte
 local gsub = string.gsub
+local deepcopy = vim.deepcopy
 
 local type = type
 local tostring = tostring
@@ -281,5 +282,52 @@ function _M.join(...)
   return concat(parts, "/")
 end
 
+do
+  ---@class my.util.fs.cache.entry
+  ---
+  ---@field mtime { nsec: integer, sec: integer }
+  ---@field inode integer
+  ---@field content any
+
+  ---@type table<string, my.util.fs.cache.entry>
+  local cache = {}
+
+  --- This is like `read_json_file()`, but the result is cached.
+  ---
+  ---@param fname string
+  ---@return any      content
+  ---@return string?  error
+  ---@return boolean? cached
+  function _M.load_json_file(fname)
+    fname = _M.normalize(fname)
+
+    local st = fs_stat(fname)
+    if not st then
+      return nil, "could not stat() file", nil
+    end
+
+    local entry = cache[fname]
+    if entry
+      and entry.inode      == st.ino
+      and entry.mtime.sec  == st.mtime.sec
+      and entry.mtime.nsec == st.mtime.nsec
+    then
+      return entry.content, nil, true
+    end
+
+    local json, err = _M.read_json_file(fname)
+    if err then
+      return nil, err
+    end
+
+    cache[fname] = {
+      content = json,
+      mtime   = deepcopy(st.mtime),
+      inode   = st.ino,
+    }
+
+    return json, nil, false
+  end
+end
 
 return _M
