@@ -223,7 +223,7 @@ add_command("LuaDebug",
       local settings = client and client.settings and client.settings.Lua
       local function tlen(t)
         if type(t) == "table" then
-          return require("table.nkeys")(t)
+          return vim.tbl_count(t)
         end
         return 0
       end
