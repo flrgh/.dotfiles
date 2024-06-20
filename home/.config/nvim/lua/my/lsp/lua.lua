@@ -2,6 +2,8 @@ if require("my.config.globals").bootstrap then
   return
 end
 
+local _M = {}
+
 local fs = require "my.utils.fs"
 local mod = require "my.utils.module"
 local globals = require "my.config.globals"
@@ -17,7 +19,6 @@ local deep_equal = vim.deep_equal
 local EMPTY = {}
 
 local WORKSPACE = fs.normalize(globals.workspace)
-local WORKSPACE_BASE = fs.basename(WORKSPACE)
 
 ---@type string[]
 local LUA_PATH_ENTRIES = {}
@@ -77,6 +78,24 @@ local SETTINGS_NVIM = {
     globals.dotfiles.config_nvim_lua,
     globals.nvim.runtime_lua,
   },
+  plugins = {
+    "LuaSnip",
+    "hover.nvim",
+    "lazy.nvim",
+    "lspkind-nvim",
+    "lspsaga.nvim",
+    "lualine",
+    "lualine.nvim",
+    "neodev",
+    "nvim-cmp",
+    "nvim-lspconfig",
+    "nvim-notify",
+    "nvim-treesitter",
+    "telescope",
+  },
+  ignore = {
+    "lspconfig/server_configurations"
+  },
 }
 
 ---@type my.lsp.settings
@@ -103,64 +122,113 @@ local SETTINGS_KONG = {
 }
 
 
----@type table<string, my.lsp.settings>
+---@class my.lsp.workspace.matcher
+---
+---@field dir?       string
+---@field path_match? string
+---@field settings   my.lsp.settings
+
+---@type my.lsp.workspace.matcher[]
 local WORKSPACES = {
-  [".dotfiles"] = {
-    nvim = true,
-    plugins = {
-      "LuaSnip",
-      "hover.nvim",
-      "lazy.nvim",
-      "lspkind-nvim",
-      "lspsaga.nvim",
-      "lualine",
-      "lualine.nvim",
-      "neodev",
-      "nvim-cmp",
-      "nvim-lspconfig",
-      "nvim-notify",
-      "nvim-treesitter",
-      "telescope",
-    },
-    ignore = {
-      "lspconfig/server_configurations"
+  {
+    dir = ".dotfiles",
+    settings = {
+      nvim = true,
     },
   },
 
-  doorbell = {
-    resty = true,
-    definitions = {
-      globals.git_user_root .. "/lua-resty-pushover/lib",
+  {
+    path_match = ".dotfiles",
+    settings = {
+      nvim = true,
     },
   },
 
-  kong = {
-    resty = true,
-    kong  = true,
+  {
+    dir = "doorbell",
+    settings = {
+      resty = true,
+      definitions = {
+        globals.git_user_root .. "/lua-resty-pushover/lib",
+      },
+    },
   },
 
-  ["kong-ee"] = {
-    resty = true,
-    kong  = true,
+  {
+    dir = "kong",
+    settings = {
+      resty = true,
+      kong = true,
+    },
   },
 
-  ngx = {
-    resty = true,
+  {
+    dir = "kong-ee",
+    settings = {
+      resty = true,
+      kong = true,
+    },
   },
 
-  nginx = {
-    resty = true,
+  {
+    path_match = "ngx",
+    settings = {
+      resty = true,
+    },
   },
 
-  resty = {
-    resty = true,
+  {
+    path_match = "nginx",
+    settings = {
+      resty = true,
+    },
   },
 
-  ["lua-language-server"] = {
-    luarc = true,
-    override_all = true,
+  {
+    path_match = "resty",
+    settings = {
+      resty = true,
+    },
+  },
+
+  {
+    dir = "lua-language-server",
+    settings = {
+      luarc = true,
+      override_all = true,
+    },
+  },
+
+  {
+    path_match = "nvim",
+    settings = {
+      nvim = true,
+    },
+  },
+
+  {
+    path_match = "neovim",
+    settings = {
+      nvim = true,
+    },
   },
 }
+
+-- prioritize exact directory matches
+table.sort(WORKSPACES, function(a, b)
+  if a.dir then
+    if b.dir then
+      return #a.dir > #b.dir
+    end
+
+    return true
+
+  elseif b.dir then
+    return false
+  end
+
+  return #a.path_match > #b.path_match
+end)
 
 ---@param t string[]
 ---@param extra string|string[]
@@ -210,17 +278,17 @@ end
 
 
 ---@class my.lsp.settings
----@field ignore? string[]
----@field libraries? string[]
----@field definitions? string[]
----@field plugins? string[]
----@field nvim? boolean
----@field kong? boolean
----@field resty? boolean
----@field luarc? boolean
----@field luarc_settings? table
----@field override_all? boolean
----@field luarocks? boolean
+---@field ignore?           string[]
+---@field libraries?        string[]
+---@field definitions?      string[]
+---@field plugins?          string[]
+---@field nvim?             boolean
+---@field kong?             boolean
+---@field resty?            boolean
+---@field luarc?            boolean
+---@field luarc_settings?   table
+---@field override_all?     boolean
+---@field luarocks?         boolean
 local DEFAULT_SETTINGS = {
   libraries = {},
   ignore = {},
@@ -314,27 +382,39 @@ local function merge_settings(current, extra, dir)
   end
 end
 
+---@param subject string
+---@param match   string
+---@return boolean
+local function is_substr(subject, match)
+  return type(subject) == "string"
+     and type(match) == "string"
+     and find(subject, match, nil, true)
+end
+
+
 ---@param dir? string
 ---@return my.lsp.settings
+---@return my.lsp.workspace.matcher? matched
 local function workspace_settings(dir)
   local settings = DEFAULT_SETTINGS
+  local matched
 
   dir = dir or WORKSPACE
 
-  local base = fs.basename(dir)
+  local basename = assert(fs.basename(dir))
 
-  for ws, conf in pairs(WORKSPACES) do
-    if ws == base
-       or find(base, ws, nil, true)
-       or ws == WORKSPACE_BASE
+  for _, ws in ipairs(WORKSPACES) do
+    if ws.dir == basename
+       or is_substr(dir, ws.path_match)
     then
       settings = deepcopy(settings)
-      merge_settings(settings, conf, dir)
+      matched = ws
+      merge_settings(settings, ws.settings, dir)
       break
     end
   end
 
-  return settings
+  return settings, matched
 end
 
 ---@param settings my.lsp.settings
@@ -453,8 +533,10 @@ local Fallback = "Fallback"
 local Opened = "Opened"
 
 ---@return lspconfig.Config
-local function init()
-  local ws = workspace_settings()
+function _M.init()
+  local ws, matched = workspace_settings()
+  _M.workspace = matched
+
   if ws.luarc_settings then
     return {
       cmd = { 'lua-language-server' },
@@ -670,8 +752,10 @@ end
 
 ---@param client vim.lsp.Client
 ---@param buf integer
-local function on_attach(client, buf)
-  local ws = workspace_settings(client and client.config and client.config.root_dir)
+function _M.on_attach(client, buf)
+  local ws, matched = workspace_settings(client and client.config and client.config.root_dir)
+  _M.workspace = matched
+
   local settings = {
     Lua = nil,
   }
@@ -704,7 +788,4 @@ local function on_attach(client, buf)
   end
 end
 
-return {
-  on_attach = on_attach,
-  init = init,
-}
+return _M

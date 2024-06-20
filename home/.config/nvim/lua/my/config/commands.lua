@@ -221,8 +221,40 @@ add_command("LuaDebug",
     do
       local client = vim.lsp.get_clients({ name = "lua_ls" })[1]
       local settings = client and client.settings and client.settings.Lua
+      local function tlen(t)
+        if type(t) == "table" then
+          return require("table.nkeys")(t)
+        end
+        return 0
+      end
+
       if settings then
         buf:put("LSP:\n")
+
+        local ws = require("my.lsp.lua").workspace
+        if ws then
+          buf:put("  workspace:\n")
+          if ws.dir then
+            buf:putf("    dirname: %s\n", ws.dir)
+          end
+
+          if ws.path_match then
+            buf:putf("    path_match: %s\n", ws.path_match)
+          end
+
+          buf:putf("    resty: %s\n", ws.settings.resty or false)
+          buf:putf("    kong: %s\n", ws.settings.kong or false)
+          buf:putf("    nvim: %s\n", ws.settings.nvim or false)
+          buf:putf("    luarc: %s\n", ws.settings.luarc or false)
+          buf:putf("    luarocks: %s\n", ws.settings.luarocks or false)
+          buf:putf("    override_all: %s\n", ws.settings.override_all or false)
+
+          buf:putf("    libraries: %s\n", tlen(ws.settings.libraries))
+          buf:putf("    definitions: %s\n", tlen(ws.settings.definitions))
+          buf:putf("    ignore: %s\n", tlen(ws.settings.ignore))
+          buf:putf("    plugins: %s\n", tlen(ws.settings.plugins))
+        end
+
         buf:putf("  root_dir: %s\n", client.root_dir)
         buf:putf("  runtime.version: %s\n", settings.runtime.version)
 
