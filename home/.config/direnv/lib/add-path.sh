@@ -1,22 +1,38 @@
 # it's like direnv's path_add function, but it supports custom separators
+#
+# unlike the one in my .bashrc, it always prepends the input path to the
+# destination var instead of just checking if it's already present
+# (TODO: maybe my .bashrc should use this?)
 add-path() {
     local -r var="$1"
     local -r path="$2"
     local -r sep="${3:-;}"
 
-    declare -a path_array
-    IFS="${sep}" read -ra path_array <<<"${!var-}"
+    if [[ -z "${!var:-}" ]]; then
+        export "$var=$path"
+        return
+    fi
 
-    local new="$path"
+    local -a old
+    IFS="${sep}" read -ra old <<<"${!var-}"
 
-    for p in "${path_array[@]}"; do
+    local -a new=()
+
+    for p in "${old[@]}"; do
         if [[ "$p" == "$path" ]]; then
             continue
         fi
-        new="${new}${sep}${p}"
+        new+=("$p")
     done
 
-    export "$var=$new"
+    # https://stackoverflow.com/a/17841619
+    printf \
+        -v "$var" \
+        "%s" \
+        "$path" "${new[@]/#/$sep}"
+
+    # required for direnv
+    export "$var=${!var}"
 }
 
 add-lua-path() {
