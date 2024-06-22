@@ -49,23 +49,12 @@ do
   if env and env ~= "0" then
     globals.lsp_debug = true
 
-    -- vim.log.levels.TRACE will show even more info but has not been all that
     local level = vim.log.levels[env] or vim.log.levels.DEBUG
-
     vim.lsp.set_log_level(level)
 
-    -- omit the metatable from vim.inspect outoupt
-    local inspect = vim.inspect
-    local METATABLE = inspect.METATABLE
-    local opts = {
-      process = function(item, path)
-        if path[#path] ~= METATABLE then return item end
-      end
-    }
-
-    require("vim.lsp.log").set_format_func(function(item)
-      return inspect(item, opts)
-    end)
+    local logger = require "my.lsp.logger"
+    logger.init()
+    vim.lsp.log.set_format_func(logger.log)
   end
 end
 
