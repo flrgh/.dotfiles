@@ -119,6 +119,16 @@ km.nnoremap[km.Leader.pf] = {
   silent = true,
 }
 
+km.nnoremap[km.Leader.vf] = {
+  function()
+    require("telescope.builtin").find_files({
+      cwd = "~/.local/share/nvim/runtime/",
+    })
+  end,
+  "Find neovim runtime files",
+  silent = true,
+}
+
 km.nnoremap[km.Leader.b] = {
   ":Telescope buffers",
   "Search buffers",
