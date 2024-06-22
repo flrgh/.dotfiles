@@ -5,16 +5,39 @@ set -eu
 # shellcheck source=home/.local/lib/bash/std.bash
 . "$HOME"/.local/lib/bash/std.bash
 
+NAME_ONLY=${NAME_ONLY:-0}
+
+if (( NAME_ONLY == 0 )); then
+    for arg in "$@"; do
+        if [[ $arg == '--name-only' ]]; then
+            NAME_ONLY=1
+        fi
+    done
+fi
+
+
 if command-exists rpm; then
+    format='%-40{NAME} %{VERSION}\n'
+
+    if (( NAME_ONLY == 1 )); then
+        format='%{NAME}\n'
+    fi
+
     rpm \
         -qa \
-        --queryformat '%-40{NAME} %{VERSION}\n'
+        --queryformat "$format"
 
 elif command-exists dpkg-query; then
+    format='${Package;-40} ${Version}\n'
+
+    if (( NAME_ONLY == 1 )); then
+        format='${Package}\n'
+    fi
+
     dpkg-query \
         --no-pager \
         --show \
-        --showformat '${Package;-40} ${Version}\n'
+        --showformat "$format"
 else
     echo "no rpm or dpkg present--what do I do?"
     exit 1
