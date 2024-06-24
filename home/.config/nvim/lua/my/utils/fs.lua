@@ -17,16 +17,18 @@ local fs_close = loop.fs_close
 local fs_realpath = loop.fs_realpath
 local fs_write = loop.fs_write
 local fs_rename = loop.fs_rename
+local fs_lstat = loop.fs_lstat
 local concat = table.concat
 local assert = assert
 local byte = string.byte
 local gsub = string.gsub
 local deepcopy = vim.deepcopy
-
+local find = string.find
 local type = type
 local tostring = tostring
 local tonumber = tonumber
 
+local SLASH = byte("/")
 
 ---@param n integer
 ---@return integer
@@ -59,6 +61,24 @@ function _M.exists(path)
   return st and st.type and true or false
 end
 
+---@param  path   string
+---@return string? filetype
+---@return string? linktype
+function _M.type(path)
+  local st = fs_stat(path)
+  if not st then
+    return
+  end
+
+  local ft = st.type
+
+  if ft == "link" then
+    local lst = fs_lstat(path)
+    return ft, lst and lst.type
+  end
+
+  return ft
+end
 
 --- Read a file's contents to a string.
 ---@param  fname   string
@@ -150,7 +170,6 @@ do
     end
   end
 
-  local SLASH = byte("/")
 
   --- normalize a path string
   ---
@@ -328,6 +347,19 @@ do
 
     return json, nil, false
   end
+end
+
+---@param dir string
+---@param fname string
+function _M.is_child(dir, fname)
+  if byte(dir, -1) == SLASH then
+    dir = dir:gsub("/+$", "")
+  end
+
+  local from, to = find(fname, dir)
+
+  return from == 1
+     and byte(fname, to + 1) == SLASH
 end
 
 return _M

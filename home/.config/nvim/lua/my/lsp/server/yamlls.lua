@@ -2,7 +2,7 @@ return {
   init = function()
     local schemaStore, schemas
 
-    local mod = require "my.utils.module"
+    local mod = require "my.utils.luamod"
     if mod.exists("schemastore") then
       local ss = require "schemastore"
 

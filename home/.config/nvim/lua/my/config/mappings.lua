@@ -2,7 +2,7 @@ if require("my.config.globals").bootstrap then
   return
 end
 
-local mod = require "my.utils.module"
+local mod = require "my.utils.luamod"
 local km = require "my.keymap"
 
 local nnoremap = km.nnoremap

@@ -1,5 +1,4 @@
----Lua Module Utils.
----@module "my.utils.module"
+--- Lua Module Utils.
 local _M = {}
 
 local pcall = pcall
@@ -38,6 +37,10 @@ function _M.if_exists(name, cb)
   else
     error("Failed loading module (" .. name .. "): " .. mod)
   end
+end
+
+function _M.resolver()
+  return require("my.utils.luamod.resolver").new()
 end
 
 return _M

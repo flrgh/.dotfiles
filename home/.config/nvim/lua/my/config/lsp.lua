@@ -3,8 +3,10 @@ if #vim.api.nvim_list_uis() == 0 then
   return
 end
 
-local mod = require 'my.utils.module'
+local mod = require 'my.utils.luamod'
 local plugin = require "my.utils.plugin"
+local fs = require "my.utils.fs"
+local WS = require "my.workspace"
 
 if not mod.exists('lspconfig') then
   return
@@ -166,7 +168,7 @@ end
 local servers = {
   awk          = "awk_ls",
   bash         = "bashls",
-  clangd       = "clangd",
+  clang        = "clangd",
   dockerfile   = "dockerls",
   go           = "gopls",
   jinja        = "jinja_lsp",
@@ -197,8 +199,8 @@ if plugin.installed("rustaceanvim") then
     default_settings = {},
   }
 
-  if mod.exists("my.lsp.rust") then
-    local rust = require "my.lsp.rust"
+  if mod.exists("my.lsp.server.rust_analyzer") then
+    local rust = require "my.lsp.server.rust_analyzer"
     if type(rust.init) == "function" then
       local conf = rust.init()
       rv.default_settings = conf.settings
@@ -230,7 +232,7 @@ local function setup_server(lang, name)
     log_level = 2,
   }
 
-  local mod_name = "my.lsp." .. lang
+  local mod_name = "my.lsp.server." .. name
   mod.if_exists(mod_name, function(m)
     if type(m.init) == "function" then
       conf = extend("force", conf, m.init())
@@ -265,7 +267,9 @@ vim.api.nvim_create_autocmd(evt.LspAttach, {
     local hook = hooks[client.name]
 
     if hook and type(hook.on_attach) == "function" then
-      hook.on_attach(client, e.buf)
+      vim.schedule(function()
+        hook.on_attach(client, e.buf)
+      end)
     end
   end,
 })
@@ -273,12 +277,21 @@ vim.api.nvim_create_autocmd(evt.LspAttach, {
 vim.api.nvim_create_user_command(
   "LspSettings",
   function(args)
+    ---@param client vim.lsp.Client
+    local function info(client)
+      return {
+        name = client.name,
+        settings = client.settings or vim.NIL,
+        workspace_folders = client.workspace_folders or vim.NIL,
+      }
+    end
+
     if args.fargs and #args.fargs == 1 then
       local name = args.fargs[1]
 
       for _, client in ipairs(lsp.get_clients()) do
         if client.name == name then
-          vim.print(client.settings)
+          vim.print(info(client).settings)
           return
         end
       end
@@ -289,10 +302,7 @@ vim.api.nvim_create_user_command(
 
     local result = {}
     for i, client in ipairs(lsp.get_clients()) do
-      result[i] = {
-        name     = client.name,
-        settings = client.settings,
-      }
+      result[i] = info(client)
     end
 
     if #result > 1 then
@@ -317,3 +327,130 @@ vim.api.nvim_create_user_command(
     end,
   }
 )
+
+---@param defs string[]
+local function resolve_type_defs(defs)
+end
+
+vim.api.nvim_create_user_command(
+  "LspCapabilities",
+  function(args)
+    ---@param client vim.lsp.Client
+    local function get_caps(client)
+      return {
+        name = client.name,
+        client = client.capabilities,
+        server = client.server_capabilities,
+      }
+    end
+
+    local buf = require("string.buffer").new()
+
+    ---@param t table|any
+    ---@param label string
+    ---@param lvl? integer
+    local function display(t, label, lvl)
+      local typ = type(t)
+      lvl = lvl or 0
+      if typ == "table" then
+        display("...", label, lvl)
+        for k, v in pairs(t) do
+          display(v, tostring(k), lvl + 1)
+        end
+
+      else
+        buf:putf("%s%s => %q\n", string.rep("  ", lvl), label, t)
+      end
+    end
+
+    local function render(info)
+      buf:putf("%s\n", info.name)
+      display(info.client, "client")
+      display(info.server, "server")
+    end
+
+    if args.fargs and #args.fargs == 1 then
+      local name = args.fargs[1]
+
+      for _, client in ipairs(lsp.get_clients()) do
+        if client.name == name then
+          render(get_caps(client))
+          vim.print(buf:get())
+          return
+        end
+      end
+
+      vim.notify("LSP client '" .. name .. "' not found")
+      return
+    end
+
+    local result = {}
+    for i, client in ipairs(lsp.get_clients()) do
+      result[i] = get_caps(client)
+    end
+
+    if #result > 1 then
+      for _, info in ipairs(result) do
+        render(info)
+      end
+      vim.print(buf:get())
+
+    elseif #result == 1 then
+      render(result[1])
+      vim.print(buf:get())
+
+    else
+      vim.notify("No active LSP clients")
+    end
+  end,
+  {
+    desc = "Show capabilities for active LSP clients",
+    nargs = "?",
+    complete = function()
+      local names = {}
+      for i, client in ipairs(lsp.get_clients()) do
+        names[i] = client.name
+      end
+      return names
+    end,
+  }
+)
+
+vim.api.nvim_create_autocmd('DiagnosticChanged', {
+  callback = function(args)
+    if not args.file then
+      return
+
+    elseif not fs.is_child(WS.dir, args.file) then
+      return
+    end
+
+    local diagnostics = args.data.diagnostics
+    local items = {}
+    for _, elem in ipairs(diagnostics) do
+      if elem.code == "undefined-doc-name"
+        and elem.source
+        and elem.source:find("Lua")
+      then
+        table.insert(items, elem)
+      end
+    end
+    if #items > 0 then
+      local names = {}
+      local seen = {}
+      vim.schedule(function()
+        for _, item in ipairs(items) do
+          local name = vim.api.nvim_buf_get_text(item.bufnr, item.lnum, item.col, item.end_lnum, item.end_col, { })
+          name = name and name[1]
+          if name and not seen[name] then
+            seen[name] = true
+            table.insert(names, name)
+          end
+        end
+        if #names > 0 then
+          require("my.lsp.server.lua_ls").find_type_defs(names)
+        end
+      end)
+    end
+  end,
+})

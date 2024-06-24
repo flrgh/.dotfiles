@@ -231,7 +231,7 @@ add_command("LuaDebug",
       if settings then
         buf:put("LSP:\n")
 
-        local ws = require("my.lsp.lua").workspace
+        local ws = require("my.lsp.server.lua_ls").workspace
         if ws then
           buf:put("  workspace:\n")
           if ws.dir then

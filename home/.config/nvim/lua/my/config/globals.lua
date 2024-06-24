@@ -2,6 +2,7 @@
 local globals = {}
 
 local getenv = os.getenv
+local vim = vim
 
 ---@param path string
 ---@return string expanded
@@ -15,8 +16,8 @@ local function expand(path)
 end
 
 local function detect_workspace()
-  local mod = require "my.utils.module"
-  local fs = require 'my.utils.fs'
+  local mod = require "my.utils.luamod"
+  local fs = require "my.utils.fs"
   local ws
 
   if mod.exists("lspconfig") then
@@ -39,7 +40,6 @@ globals.workspace = detect_workspace()
 if globals.workspace then
   vim.fn.setenv("NVIM_WORKSPACE", globals.workspace)
 end
-
 
 --- LSP debug enabled (based on `NVIM_LSP_DEBUG=1`)
 ---@type boolean
@@ -104,7 +104,6 @@ do
     --- Path to ~/.config/nvim/lua _within_ my dotfiles repo
     ---@type string
     config_nvim_lua = config_nvim .. "/lua",
-
   }
 end
 
@@ -112,6 +111,7 @@ do
   local app_name = getenv("NVIM_APPNAME") or "nvim"
   local share = getenv("XDG_DATA_HOME") or (globals.home .. "/.local/share")
   local config = getenv("XDG_CONFIG_HOME") or (globals.home .. "/.local/config")
+  local state = getenv("XDG_STATE_HOME") or (globals.home .. "/.local/state")
 
   ---@class user.globals.nvim
   globals.nvim = {
@@ -123,6 +123,9 @@ do
 
     -- ~/.local/share/nvim
     share       = share .. "/" .. app_name,
+
+    -- ~/.local/state/nvim
+    state       = state .. "/" .. app_name,
 
     -- ~/.local/share/nvim/runtime
     runtime     = share .. "/" .. app_name .. "/runtime",
