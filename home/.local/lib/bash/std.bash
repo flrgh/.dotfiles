@@ -55,3 +55,16 @@ array-join() {
     array-join-var result "$@"
     printf '%s\n' "$result"
 }
+
+array-contains() {
+    local -r search=${1:-?need a value to search for}
+    shift
+
+    for arg in "$@"; do
+        if [[ $arg == "$search" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
