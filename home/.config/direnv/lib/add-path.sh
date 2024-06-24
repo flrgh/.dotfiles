@@ -1,3 +1,5 @@
+source "$MY_BASH_STDLIB"
+
 # it's like direnv's path_add function, but it supports custom separators
 #
 # unlike the one in my .bashrc, it always prepends the input path to the
@@ -16,7 +18,7 @@ add-path() {
     local -a old
     IFS="${sep}" read -ra old <<<"${!var-}"
 
-    local -a new=()
+    local -a new=("$path")
 
     for p in "${old[@]}"; do
         if [[ "$p" == "$path" ]]; then
@@ -25,11 +27,7 @@ add-path() {
         new+=("$p")
     done
 
-    # https://stackoverflow.com/a/17841619
-    printf \
-        -v "$var" \
-        "%s" \
-        "$path" "${new[@]/#/$sep}"
+    array-join-var "$var" "$sep" "${new[@]}"
 
     # required for direnv
     export "$var=${!var}"
