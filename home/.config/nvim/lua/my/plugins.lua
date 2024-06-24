@@ -381,10 +381,6 @@ local plugins_by_category = {
             virt_text_pos = 'eol',
             delay = 500,
           },
-
-          yadm = {
-            enable = false,
-          }
         })
       end,
     },
