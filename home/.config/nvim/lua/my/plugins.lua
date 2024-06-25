@@ -129,8 +129,30 @@ local plugins_by_filetype = {
         vim.g.nvim_markdown_preview_theme = "github"
       end,
       build = function()
-        assert(os.execute(os.getenv("HOME") .. "/.local/libexec/install/tools/install-pandoc"))
-        assert(os.execute("npm install -g live-server"))
+        local opts = { text = true }
+        local pandoc = vim.system(
+          { g.home .. "/.local/libexec/install/tools/install-pandoc" },
+          opts
+        )
+
+        local server = vim.system(
+          { "npm", "install", "-g", "live-server" },
+          opts
+        )
+
+        local result = pandoc:wait()
+        if result.code ~= 0 then
+          error("failed installing pandoc:\n"
+              .. "stdout: " .. (result.stdout or "") .. "\n"
+              .. "stderr: " .. (result.stderr or ""))
+        end
+
+        result = server:wait()
+        if result.code ~= 0 then
+          error("failed installing live-server:\n"
+              .. "stdout: " .. (result.stdout or "") .. "\n"
+              .. "stderr: " .. (result.stderr or ""))
+        end
       end,
     },
   },
