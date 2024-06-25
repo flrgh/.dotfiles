@@ -1,12 +1,15 @@
 local _M = {}
 
+local plugin = require "my.utils.plugin"
 local mod = require "my.utils.luamod"
 
+---@module "luasnip"
 local ls
+---@module "luasnip.util.types"
 local types
 
 function _M.setup()
-  if not mod.exists("luasnip") then
+  if not plugin.installed("LuaSnip") then
     return
   end
 

@@ -1,4 +1,5 @@
 local require = require
+
 require "my.config.globals"
 require "my.workspace"
 require "my.augroup"

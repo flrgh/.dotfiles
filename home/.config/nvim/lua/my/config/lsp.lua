@@ -8,7 +8,7 @@ local plugin = require "my.utils.plugin"
 local fs = require "my.utils.fs"
 local WS = require "my.workspace"
 
-if not mod.exists('lspconfig') then
+if not mod.exists("lspconfig") then
   return
 end
 
@@ -155,6 +155,7 @@ do
 end
 
 
+---@type lsp.ClientCapabilities
 local caps
 do
   caps = lsp.protocol.make_client_capabilities()
@@ -230,6 +231,7 @@ local function setup_server(lang, name)
   ---@type lspconfig.Config
   local conf = {
     log_level = 2,
+    capabilities = caps,
   }
 
   local mod_name = "my.lsp.server." .. name
@@ -327,10 +329,6 @@ vim.api.nvim_create_user_command(
     end,
   }
 )
-
----@param defs string[]
-local function resolve_type_defs(defs)
-end
 
 vim.api.nvim_create_user_command(
   "LspCapabilities",

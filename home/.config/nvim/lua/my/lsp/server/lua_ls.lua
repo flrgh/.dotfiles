@@ -130,14 +130,14 @@ local SETTINGS_NVIM = {
   plugins = {
 --    "LuaSnip",
 --    "hover.nvim",
--- "lazy.nvim",
+    "lazy.nvim",
 --    "lspkind-nvim",
 --    "lspsaga.nvim",
 --    "lualine",
 --    "lualine.nvim",
 --    "neodev",
--- "nvim-cmp",
---    "nvim-lspconfig",
+    "nvim-cmp",
+    "nvim-lspconfig",
 --    "nvim-notify",
 --    "nvim-treesitter",
 --    "telescope",
@@ -1077,7 +1077,7 @@ function _M.find_type_defs(names)
   }
 
   if WS.meta.nvim then
-    table.insert(cmd, globals.nvim.lazy)
+    table.insert(cmd, globals.nvim.plugins)
   end
 
   for _, lib in ipairs(LUA_PATH_ENTRIES) do

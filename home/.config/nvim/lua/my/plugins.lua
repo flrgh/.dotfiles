@@ -4,17 +4,78 @@ local g = require "my.config.globals"
 local fs = require "my.utils.fs"
 
 local Ctrl = km.Ctrl
+local Leader = km.Leader
 
 local cmd = vim.cmd
 
 
+-- https://lazy.folke.io/configuration
+---@type LazyConfig
 local conf = {
   lockfile = fs.join(g.dotfiles.config_nvim, "plugins.lock.json"),
-  colorscheme = { "tokyonight", "catppuccin", "kanagawa" },
+  root = g.nvim.plugins,
+
+  defaults = {
+  },
+
+  pkg = {
+    -- we'll see...
+    enabled = false,
+  },
+
+  install = {
+    -- install missing plugins on startup
+    missing = true,
+  },
+
+  change_detection = {
+    enabled = false,
+  },
+
+  performance = {
+    cache = {
+      enabled = true,
+    },
+
+    reset_packpath = true,
+
+    rtp = {
+      reset = true,
+      disabled_plugins = {
+        "gzip",
+        "netrwPlugin",
+        "rplugin",
+        "spellfile",
+        "tarPlugin",
+        "tutor",
+        "zipPlugin",
+      },
+    },
+  },
+
+  profiling = {
+    loader  = g.debug,
+    require = g.debug,
+  },
 }
 
----@param plugin string|table
----@return table
+do
+  local lazypath = conf.root .. "/lazy.nvim"
+  if not fs.exists(lazypath) then
+   vim.fn.system({
+     "git",
+     "clone",
+     "--filter=blob:none",
+     "--single-branch",
+     "https://github.com/folke/lazy.nvim.git",
+     lazypath,
+   })
+  end
+  vim.opt.runtimepath:prepend(lazypath)
+end
+
+---@param plugin string|table|LazySpec
+---@return LazyPluginSpec
 local function hydrate(plugin)
   if type(plugin) == "string" then
     plugin = { plugin }
@@ -39,21 +100,18 @@ local plugins_by_filetype = {
   lua = {
     -- lua manual in vimdoc
     "wsdjeg/luarefvim",
-
-    -- lua neovim support
-    "folke/neodev.nvim",
   },
 
   teal = {
-    'teal-language/vim-teal',
+    "teal-language/vim-teal",
   },
 
   -- lang: markdown
   markdown = {
-    'godlygeek/tabular',
+    "godlygeek/tabular",
 
     {
-      'plasticboy/vim-markdown',
+      "plasticboy/vim-markdown",
       init = function()
           -- disable header folding
           vim.g.vim_markdown_folding_disabled = 1
@@ -66,45 +124,45 @@ local plugins_by_filetype = {
     {
       -- iamcco/markdown-preview.nvim was another good choice here, but
       -- it has more dependencies and is a little more of a chore to install
-      'davidgranstrom/nvim-markdown-preview',
+      "davidgranstrom/nvim-markdown-preview",
       init = function()
-        vim.g.nvim_markdown_preview_theme = 'github'
+        vim.g.nvim_markdown_preview_theme = "github"
       end,
       build = function()
-        assert(os.execute(os.getenv('HOME') .. '/.local/libexec/install/tools/install-pandoc'))
-        assert(os.execute('npm install -g live-server'))
+        assert(os.execute(os.getenv("HOME") .. "/.local/libexec/install/tools/install-pandoc"))
+        assert(os.execute("npm install -g live-server"))
       end,
     },
   },
 
   terraform = {
-    'hashivim/vim-terraform',
+    "hashivim/vim-terraform",
   },
 
   php = {
-    'StanAngeloff/php.vim',
+    "StanAngeloff/php.vim",
   },
 
   bats = {
     -- syntax for .bats files
-    'aliou/bats.vim',
+    "aliou/bats.vim",
   },
 
   sh = {
     -- running shfmt commands on the buffer
-    'z0mbix/vim-shfmt',
+    "z0mbix/vim-shfmt",
   },
 
   -- roku / brightscript support
   brs = {
-    'entrez/roku.vim',
+    "entrez/roku.vim",
   },
 
   nu = {
     {
-      'LhKipp/nvim-nu',
+      "LhKipp/nvim-nu",
       build = function()
-        cmd 'TSInstall nu'
+        cmd "TSInstall nu"
       end,
       config = function()
         require("nu").setup {
@@ -142,6 +200,8 @@ local plugins_by_category = {
     },
 
     { "marko-cerovac/material.nvim",
+      lazy = false,
+      priority = 2^16,
       config = function()
         --[[
           "darker"
@@ -152,7 +212,7 @@ local plugins_by_category = {
         ]]--
         vim.g.material_style = "oceanic"
 
-        require('material').setup({
+        require("material").setup({
           plugins = {
             "gitsigns",
             "indent-blankline",
@@ -208,14 +268,20 @@ local plugins_by_category = {
     },
 
     -- devicon assets
-    "nvim-tree/nvim-web-devicons",
+    {
+      "nvim-tree/nvim-web-devicons",
+      lazy = true,
+    },
 
     -- Nerd Fonts helper
-    'lambdalisue/nerdfont.vim',
+    {
+      "lambdalisue/nerdfont.vim",
+      lazy = true,
+    },
 
     -- tabline for neovim
     {
-      'romgrk/barbar.nvim',
+      "romgrk/barbar.nvim",
       dependencies = {
         "nvim-tree/nvim-web-devicons",
         "lewis6991/gitsigns.nvim",
@@ -229,29 +295,18 @@ local plugins_by_category = {
       dependencies = { "nvim-tree/nvim-web-devicons" },
       config = file_config("lualine"),
     },
-
-    {
-      -- TODO: is this still needed?
-      'nvim-lua/popup.nvim',
-      dependencies = {
-        'nvim-lua/plenary.nvim',
-      },
-    },
-
   },
-
-
 
   ui = {
     -- load tags in side pane
     {
-      'majutsushi/tagbar',
+      "majutsushi/tagbar",
       -- methodology:
       -- 1. init() creates a keyboard shortcut (<F4>) for TagbarToggle
       -- 2. lazy.nvim doesn't load the plugin until TagbarToggle is invoked
       lazy = true,
       init = function()
-        km.nmap[km.F4] = { ':TagbarToggle', "Toggle Tag Bar", silent = true }
+        km.nmap[km.F4] = { ":TagbarToggle", "Toggle Tag Bar", silent = true }
         vim.g.tagbar_autofocus = 1
       end,
       cmd = { "TagbarToggle" },
@@ -260,7 +315,6 @@ local plugins_by_category = {
     {
       "folke/noice.nvim",
       event = evt.VeryLazy,
-      --enabled = function() return false end,
       dependencies = {
         "MunifTanjim/nui.nvim",
         "rcarriga/nvim-notify",
@@ -283,7 +337,7 @@ local plugins_by_category = {
     -- better vim.ui
     {
       "stevearc/dressing.nvim",
-      enabled = true,
+      event = evt.VeryLazy,
       config = function()
         require("dressing").setup({
           enabled = true,
@@ -295,30 +349,30 @@ local plugins_by_category = {
   functions = {
     -- Buffer management
     {
-      'moll/vim-bbye',
+      "moll/vim-bbye",
       event = evt.VimEnter,
     },
   },
 
   treesitter = {
     {
-      'nvim-treesitter/nvim-treesitter',
+      "nvim-treesitter/nvim-treesitter",
       event = evt.VeryLazy,
       build = function()
-        require('my.config.treesitter').bootstrap()
-        cmd 'TSUpdateSync'
+        require("my.config.treesitter").bootstrap()
+        cmd "TSUpdateSync"
       end,
       config = function()
-        require('my.config.treesitter').setup()
+        require("my.config.treesitter").setup()
       end,
     },
     {
-      'nvim-treesitter/nvim-treesitter-textobjects',
+      "nvim-treesitter/nvim-treesitter-textobjects",
       event = evt.VeryLazy,
       dependencies = { "nvim-treesitter" },
     },
     {
-      'nvim-treesitter/playground',
+      "nvim-treesitter/playground",
       cmd = { "TSPlaygroundToggle" },
       dependencies = { "nvim-treesitter" },
     },
@@ -326,29 +380,24 @@ local plugins_by_category = {
 
   telescope = {
     {
-      'nvim-telescope/telescope.nvim',
+      "nvim-telescope/telescope.nvim",
       event = evt.VeryLazy,
-      dependencies = { 'nvim-lua/plenary.nvim' },
+      dependencies = {
+        "nvim-lua/plenary.nvim",
+        {
+          "nvim-telescope/telescope-fzf-native.nvim",
+          build = "make",
+        },
+        "nvim-telescope/telescope-symbols.nvim",
+      },
       branch = "0.1.x",
       config = file_config("telescope"),
-      keys = { Ctrl.p },
-    },
-
-    {
-      'nvim-telescope/telescope-fzf-native.nvim',
-      event = evt.VeryLazy,
-      build = 'make',
-      dependencies = {
-        'nvim-telescope/telescope.nvim',
-      },
-      config = file_config("telescope-fzf-native"),
-    },
-
-    {
-      'nvim-telescope/telescope-symbols.nvim',
-      event = evt.VeryLazy,
-      dependencies = {
-        'nvim-telescope/telescope.nvim',
+      keys = {
+        Ctrl.p,
+        Leader.pf,
+        Leader.rg,
+        Leader.vf,
+        Leader.b,
       },
     },
   },
@@ -356,17 +405,18 @@ local plugins_by_category = {
   -- git[hub] integration
   git = {
     {
-      'tpope/vim-fugitive',
+      "tpope/vim-fugitive",
       event = evt.VeryLazy,
       dependencies = {
-        'tpope/vim-rhubarb',
+        "tpope/vim-rhubarb",
       },
     },
 
-    'rhysd/conflict-marker.vim',
+    "rhysd/conflict-marker.vim",
 
     {
-      'lewis6991/gitsigns.nvim',
+      "lewis6991/gitsigns.nvim",
+      lazy = true,
       config = function()
         require("gitsigns").setup({
           signcolumn = true,
@@ -378,7 +428,7 @@ local plugins_by_category = {
           current_line_blame = true,
           current_line_blame_opts = {
             virt_text = true,
-            virt_text_pos = 'eol',
+            virt_text_pos = "eol",
             delay = 500,
           },
         })
@@ -397,25 +447,25 @@ local plugins_by_category = {
 
     -- auto hlsearch stuff
     {
-      'romainl/vim-cool',
+      "romainl/vim-cool",
       event = evt.VeryLazy,
     },
 
     -- adds some common readline key bindings to insert and command mode
     {
-      'tpope/vim-rsi',
+      "tpope/vim-rsi",
       event = evt.VimEnter,
     },
 
     -- auto-insert function/block delimiters
     {
-      'tpope/vim-endwise',
+      "tpope/vim-endwise",
       event = evt.InsertEnter,
     },
 
     -- hilight trailing whitespace
     {
-      'ntpeters/vim-better-whitespace',
+      "ntpeters/vim-better-whitespace",
       init = function()
         vim.g.better_whitespace_enabled = 1
         vim.g.strip_whitespace_on_save = 0
@@ -428,8 +478,8 @@ local plugins_by_category = {
       main = "ibl",
       opts = {
         indent = {
-          char = '┊',
-          tab_char = '┋',
+          char = "┊",
+          tab_char = "┋",
         },
         exclude = {
           filetypes = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
@@ -454,30 +504,32 @@ local plugins_by_category = {
 
     -- align!
     {
-      'junegunn/vim-easy-align',
+      "junegunn/vim-easy-align",
       event = evt.VimEnter,
       config = function()
         -- perform alignment in comments and strings
-        vim.g.easy_align_ignore_groups = '[]'
+        vim.g.easy_align_ignore_groups = "[]"
 
         -- Start interactive EasyAlign in visual mode (e.g. vipga)
-        km.xmap.ga = { '<Plug>(EasyAlign)', 'Easy Align' }
+        km.xmap.ga = { "<Plug>(EasyAlign)", "Easy Align" }
         -- Start interactive EasyAlign for a motion/text object (e.g. gaip)
-        km.nmap.ga = { '<Plug>(EasyAlign)', 'Easy Align' }
+        km.nmap.ga = { "<Plug>(EasyAlign)", "Easy Align" }
       end,
     },
 
     {
-      'numToStr/Comment.nvim',
+      "numToStr/Comment.nvim",
       event = evt.VeryLazy,
       config = function()
-        require('Comment').setup()
+        require("Comment").setup()
       end
     },
 
     {
-      'L3MON4D3/LuaSnip',
+      "L3MON4D3/LuaSnip",
       lazy = true,
+      version = "v2.*",
+      build = "make install_jsregexp",
       config = function()
         require("my.plugins.luasnip").setup()
       end,
@@ -492,31 +544,31 @@ local plugins_by_category = {
     },
 
     {
-      'hrsh7th/nvim-cmp',
+      "hrsh7th/nvim-cmp",
       dependencies = {
-        'hrsh7th/cmp-buffer',
-        'hrsh7th/cmp-calc',
-        'hrsh7th/cmp-emoji',
-        'hrsh7th/cmp-nvim-lsp',
-        'hrsh7th/cmp-nvim-lua',
-        'hrsh7th/cmp-path',
-        'hrsh7th/cmp-cmdline',
-        'ray-x/cmp-treesitter',
-        'hrsh7th/cmp-nvim-lsp-signature-help',
+        "hrsh7th/cmp-buffer",
+        "hrsh7th/cmp-calc",
+        "hrsh7th/cmp-emoji",
+        "hrsh7th/cmp-nvim-lsp",
+        "hrsh7th/cmp-nvim-lua",
+        "hrsh7th/cmp-path",
+        "hrsh7th/cmp-cmdline",
+        "ray-x/cmp-treesitter",
+        "hrsh7th/cmp-nvim-lsp-signature-help",
 
-        'onsails/lspkind-nvim',
+        "onsails/lspkind-nvim",
 
-        'L3MON4D3/LuaSnip',
-        'saadparwaiz1/cmp_luasnip',
+        "L3MON4D3/LuaSnip",
+        "saadparwaiz1/cmp_luasnip",
       },
       config = file_config("cmp"),
     },
 
     {
-      'mhartington/formatter.nvim',
+      "mhartington/formatter.nvim",
       ft = { "json" },
       config = function()
-        require('formatter').setup({
+        require("formatter").setup({
           filetype = {
             json = {
               function()
@@ -536,11 +588,15 @@ local plugins_by_category = {
   lsp = {
     -- LSP stuff
     {
-      'neovim/nvim-lspconfig',
-      dependencies = { "folke/neodev.nvim" },
+      "neovim/nvim-lspconfig",
+      event = evt.VeryLazy,
+      dependencies = {
+        "b0o/schemastore.nvim",
+        "folke/neodev.nvim"
+      },
       config = function()
-        require('my.config.lsp')
-        cmd 'LspStart'
+        require("my.config.lsp")
+        cmd "LspStart"
       end,
     },
 
@@ -628,8 +684,6 @@ local plugins_by_category = {
         })
       end,
     },
-
-    "b0o/schemastore.nvim",
   },
 
   plumbing = {
@@ -642,26 +696,29 @@ local plugins_by_category = {
     {
       "dstein64/vim-startuptime",
       cmd = "StartupTime",
+      init = function()
+        vim.g.startuptime_tries = 10
+      end,
     },
   },
 
   filetype = {
     -- support .editorconfig files
-    'gpanders/editorconfig.nvim',
+    "gpanders/editorconfig.nvim",
 
     -- direnv support and syntax hilighting
-    'direnv/direnv.vim',
+    "direnv/direnv.vim",
 
     -- etlua template syntax support
     {
-      'VaiN474/vim-etlua',
+      "VaiN474/vim-etlua",
       init = function()
         cmd [[au BufRead,BufNewFile *.etlua set filetype=etlua]]
       end,
     },
 
     -- detect jq scripts
-    'vito-c/jq.vim',
+    "vito-c/jq.vim",
 
     "Glench/Vim-Jinja2-Syntax",
   },
@@ -669,7 +726,7 @@ local plugins_by_category = {
   -- FIXME: categorize these
   ["*"] = {
     {
-      'folke/which-key.nvim',
+      "folke/which-key.nvim",
       event = evt.VimEnter,
       config = function()
         vim.o.timeout = true
@@ -678,13 +735,14 @@ local plugins_by_category = {
       end,
     },
 
-    'aserowy/tmux.nvim',
+    "aserowy/tmux.nvim",
   },
 
 }
 
----@type LazySpec[]
+---@type LazyPluginSpec[]
 local plugins = {}
+local idx = 0
 
 do
   for ft, list in pairs(plugins_by_filetype) do
@@ -692,7 +750,8 @@ do
       plugin = hydrate(plugin)
 
       plugin.ft = ft
-      table.insert(plugins, plugin)
+      idx = idx + 1
+      plugins[idx] = plugin
     end
   end
 end
@@ -701,25 +760,10 @@ do
   for _, list in pairs(plugins_by_category) do
     for _, plugin in ipairs(list) do
       plugin = hydrate(plugin)
-      table.insert(plugins, plugin)
+      idx = idx + 1
+      plugins[idx] = plugin
     end
   end
-end
-
-
-do
-  local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-  if not vim.loop.fs_stat(lazypath) then
-   vim.fn.system({
-     "git",
-     "clone",
-     "--filter=blob:none",
-     "--single-branch",
-     "https://github.com/folke/lazy.nvim.git",
-     lazypath,
-   })
-  end
-  vim.opt.runtimepath:prepend(lazypath)
 end
 
 require("lazy").setup(plugins, conf)

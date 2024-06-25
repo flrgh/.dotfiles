@@ -63,9 +63,9 @@ local fh
 
 function _M.init()
   fname = os.getenv("NVIM_LSP_DEBUG_LOG") or "my.lsp.log"
+  _M.fname = fname
   fh = assert(io.open(fname, "a+"))
 end
-
 
 function _M.log(item)
   assert(fh, "log file not opened")
@@ -156,7 +156,7 @@ function _M.log(item)
   end
 
   if not ignore(item) then
-    fh:write(vim.json.encode(item) .. "\n")
+    fh:write(json_encode(item) .. "\n")
     fh:flush()
   end
 

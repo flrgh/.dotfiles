@@ -55,6 +55,9 @@ do
     local logger = require "my.lsp.logger"
     logger.init()
     vim.lsp.log.set_format_func(logger.log)
+    vim.schedule(function()
+      vim.notify("LSP debugging enabled. Log file:\n" .. logger.fname)
+    end)
   end
 end
 
@@ -66,6 +69,9 @@ do
   local env = getenv("NVIM_DEBUG")
   if env and env ~= "0" then
     globals.debug = true
+    vim.schedule(function()
+      vim.notify("Neovim debug enabled via `NVIM_DEBUG` var")
+    end)
   end
 end
 
@@ -133,8 +139,9 @@ do
     -- ~/.local/share/nvim/runtime/lua
     runtime_lua = share .. "/" .. app_name .. "/runtime/lua",
 
+    -- plugin install path
     -- ~/.local/share/nvim/lazy
-    lazy = share .. "/" .. app_name .. "/lazy",
+    plugins = share .. "/" .. app_name .. "/lazy",
   }
 end
 
