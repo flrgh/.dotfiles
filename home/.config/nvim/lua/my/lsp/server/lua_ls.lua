@@ -41,6 +41,7 @@ local fs = require "my.utils.fs"
 local luamod = require "my.utils.luamod"
 local globals = require "my.config.globals"
 local plugin = require "my.utils.plugin"
+local sw = require "my.utils.stopwatch"
 local WS = require "my.workspace"
 
 local resolver = luamod.resolver()
@@ -320,6 +321,19 @@ do
   end
 end
 
+---@param settings my.lsp.settings
+---@return boolean loaded
+local function load_luarc_settings(settings)
+  if WS.meta.luarc then
+    settings.luarc = true
+    local fname = fs.join(WS.dir, ".luarc.json")
+    settings.luarc_settings = fs.load_json_file(fname)
+    return true
+  end
+
+  return false
+end
+
 
 ---@class my.lsp.settings
 ---@field ignore?           string[]
@@ -329,12 +343,14 @@ end
 ---@field luarc_settings?   my.lsp.LuaLS
 ---@field override_all?     boolean
 ---@field luarocks?         boolean
+---@field luarc?            boolean
 local DEFAULT_SETTINGS = {
   libraries = {},
   ignore = {},
   plugins = {},
   definitions = {},
   luarc = false,
+  luarc_settings = nil,
   override_all = nil,
   luarocks = nil,
 }
@@ -400,10 +416,7 @@ end
 local function get_merged_settings()
   local settings = deepcopy(DEFAULT_SETTINGS)
 
-  if WS.meta.luarc then
-    settings.luarc = true
-    local fname = fs.join(WS.dir, ".luarc.json")
-    settings.luarc_settings = fs.load_json_file(fname)
+  if load_luarc_settings(settings) then
     return settings
   end
 
@@ -634,37 +647,45 @@ local function find_requires()
       return
     end
 
-    if resolver then
-      local res = resolver:find_module(modname)
-      if res then
-        table.insert(found, res)
-
-      else
-        table.insert(missing, modname)
-      end
-
+    if not resolver then
       return
+    end
+
+    local mod = resolver:find_module(modname)
+    if mod then
+      table.insert(found, mod)
+
+    else
+      table.insert(missing, modname)
     end
   end
 
   local mods = 0
 
   local function resolve()
+    local resolved = sw.new("lua-ls.find-requires.resolve", 1000)
+
     while true do
-      vim.wait(10, have_items)
-      while n > 0 do
-        ---@type string
-        local item = req[n]
-        n = n - 1
-        resolve_req(item)
+      if n > 0 then
+        while n > 0 do
+          ---@type string
+          local item = req[n]
+          n = n - 1
+          resolve_req(item)
+        end
       end
 
       if done then
         break
       end
+
+      if n < 1 then
+        vim.wait(50, have_items, nil, true)
+      end
     end
 
     requires = found
+    resolved()
   end
 
   local scheduled = false
@@ -683,6 +704,8 @@ local function find_requires()
     end
   end
 
+  local rg_done = sw.new("lua-ls.find-requires.ripgrep", 500)
+
   vim.system(cmd,
     {
       text = true,
@@ -700,6 +723,7 @@ local function find_requires()
     },
     function(_out)
       done = true
+      rg_done()
     end
   )
 end
@@ -1004,13 +1028,14 @@ function _M.on_attach(client, buf)
     return
   end
 
-  client_attached[client.id] = true
+  local attach_done = sw.new("lua-lsp.on-attach", 1000)
 
-  local start = vim.uv.now()
+  client_attached[client.id] = true
 
   local ws = get_merged_settings()
 
   if ws.luarc_settings then
+    attach_done()
     return
   end
 
@@ -1039,20 +1064,17 @@ function _M.on_attach(client, buf)
       return requires ~= nil
     end
 
-    if vim.wait(5000, have_requires, 10) then
+    if vim.wait(5000, have_requires, 100) then
       update_settings_from_requires(new.Lua, requires)
     end
 
     _M.settings = new
 
-    vim.defer_fn(find_requires, 1)
-
     if not deep_equal(client.settings, new) then
       update_settings(new.Lua, client)
     end
 
-    local duration = vim.uv.now() - start
-    vim.notify(("loaded lua things in %s ms"):format(duration))
+    attach_done()
   end,
     0
   )

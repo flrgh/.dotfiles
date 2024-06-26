@@ -1,6 +1,8 @@
 local _M = {}
 
 local fs = require "my.utils.fs"
+local sw = require "my.utils.stopwatch"
+local globals = require "my.config.globals"
 
 local insert = table.insert
 local find = string.find
@@ -8,6 +10,8 @@ local sub = string.sub
 local gsub = string.gsub
 local pairs = pairs
 local file_exists = fs.file_exists
+
+local function noop() end
 
 --- shallow table merge
 local function merge(a, b)
@@ -57,6 +61,11 @@ function resolver:find_module(name, debug)
     return result
   end
 
+  local done = noop
+  if globals.debug then
+    done = sw.new("luamod.resolve(" .. name .. ")", 50)
+  end
+
   local slashed = gsub(name, "%.", "/")
 
   local fs_cache = self.fs_cache
@@ -97,11 +106,13 @@ function resolver:find_module(name, debug)
 
         mod_cache[name] = entry
 
+        done()
         return entry
       end
     end
   end
 
+  done()
   return nil, tried
 end
 

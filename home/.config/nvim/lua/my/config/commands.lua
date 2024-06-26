@@ -174,7 +174,11 @@ add_command("LuaDebug",
 
       local out = output({luarocks, "config", "--json"})
       if out and out ~= "" then
-        rocks = vim.json.decode(out)
+        local ok
+        ok, rocks = pcall(vim.json.decode, out)
+        if not ok then
+          buf:put("WARNING: could not parse `luarocks config --json`\n")
+        end
       end
 
       if rocks then
