@@ -122,26 +122,21 @@ local SETTINGS_RESTY = {
   },
 }
 
+local SETTINGS_DOTFILES = {
+  libraries = {
+    globals.dotfiles.config_nvim_lua,
+  },
+  plugins = {
+    "lazy.nvim",
+    "nvim-cmp",
+    "nvim-lspconfig",
+  },
+}
+
 ---@type my.lsp.settings
 local SETTINGS_NVIM = {
   libraries = {
-    globals.dotfiles.config_nvim_lua,
     globals.nvim.runtime_lua,
-  },
-  plugins = {
---    "LuaSnip",
---    "hover.nvim",
-    "lazy.nvim",
---    "lspkind-nvim",
---    "lspsaga.nvim",
---    "lualine",
---    "lualine.nvim",
---    "neodev",
-    "nvim-cmp",
-    "nvim-lspconfig",
---    "nvim-notify",
---    "nvim-treesitter",
---    "telescope",
   },
   ignore = {
     "lspconfig/server_configurations"
@@ -422,6 +417,10 @@ local function get_merged_settings()
 
   merge_settings(settings, SETTINGS_COMMON)
 
+  if WS.meta.dotfiles then
+    merge_settings(settings, SETTINGS_DOTFILES)
+  end
+
   if WS.meta.nvim then
     merge_settings(settings, SETTINGS_NVIM)
 
@@ -576,7 +575,7 @@ local function find_requires()
   local ws = get_merged_settings()
 
   meta = { source = SRC_TYPE_DEFS }
-  for _, dir in ipairs(ws.definitions or {}) do
+  for _, dir in ipairs(ws.definitions or EMPTY) do
     resolver:add_dir(dir, meta)
   end
 
