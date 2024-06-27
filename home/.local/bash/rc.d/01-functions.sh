@@ -85,15 +85,16 @@ dump-array() {
 complete -A arrayvar dump-array
 
 unset -v __PATH_VARS
-declare -g -A __PATH_VARS=()
-__PATH_VARS[PATH]=':'
-__PATH_VARS[CDPATH]=':'
-__PATH_VARS[MANPATH]=':'
-__PATH_VARS[LUA_PATH]=';'
-__PATH_VARS[LUA_CPATH]=';'
-__PATH_VARS[MODULEPATH]=':'
-__PATH_VARS[BASH_LOADABLES_PATH]=':'
-__PATH_VARS[XDG_DATA_DIRS]=':'
+declare -g -A __PATH_VARS=(
+    [PATH]=':'
+    [CDPATH]=':'
+    [MANPATH]=':'
+    [LUA_PATH]=';'
+    [LUA_CPATH]=';'
+    [MODULEPATH]=':'
+    [BASH_LOADABLES_PATH]=':'
+    [XDG_DATA_DIRS]=':'
+)
 
 is-path-var() {
     local -r var=${1?var name is required}

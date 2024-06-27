@@ -44,6 +44,10 @@ declare -A __RC_TIMER_START
 
 DEBUG_BASHRC=${DEBUG_BASHRC:-0}
 
+__rc_warn() {
+    __rc_log "WARN" "$@"
+}
+
 if (( DEBUG_BASHRC > 0 )); then
     mkdir -p "$__RC_LOG_DIR"
 
@@ -80,41 +84,244 @@ else
     __rc_timer_stop() { :; }
 fi
 
-__rc_add_path() {
-    local -r p=$1
+declare -A __RC_PATH_SEPARATORS=()
 
-    if [[ -z $p ]]; then
+__rc_set_path_separator() {
+    local -r var=${1?var name require}
+    local -r sep=${2?separator required}
+
+    __RC_PATH_SEPARATORS["$var"]="$sep"
+}
+
+__rc_set_path_separator PATH      ":"
+__rc_set_path_separator MANPATH   ":"
+__rc_set_path_separator LUA_PATH  ";"
+__rc_set_path_separator LUA_CPATH ";"
+
+__rc_add_path() {
+    local -r insert=0
+    local -r append=1
+    local -r prepend=2
+
+    local -i mode=$insert
+    local after
+    local before
+
+    local sep
+
+    local args=()
+
+    while (( $# > 0 )); do
+        local elem=$1
+        shift 1
+
+        case $elem in
+            --prepend)
+                mode=$prepend
+                ;;
+
+            --append)
+                mode=$append
+                ;;
+
+            --before)
+                if [[ -z $1 ]]; then
+                    __rc_warn "__rc_add_path(): --before requires an argument"
+                    return 1
+                fi
+                before="$1"
+                shift
+                ;;
+
+            --after)
+                if [[ -z $1 ]]; then
+                    __rc_warn "__rc_add_path(): --after requires an argument"
+                    return 1
+                fi
+                after="$1"
+                shift
+                ;;
+
+            --sep)
+                if [[ -z $1 ]]; then
+                    __rc_warn "__rc_add_path(): --sep requires an argument"
+                    return 1
+                fi
+                sep="$1"
+                shift
+                ;;
+
+            *)
+                args+=("$elem")
+                ;;
+        esac
+    done
+
+    if [[ -n $before || -n $after ]] && (( mode != insert )); then
+        __rc_warn "cannot use --before|--after with --append|--prepend"
+        return 1
+    fi
+
+    set -- "${args[@]}"
+
+    local -r path=$1
+    local -r var=${2:-PATH}
+
+    if [[ -z $path ]]; then
         __rc_debug "called with empty value"
         return
     fi
 
-    __rc_timer_start "__rc_add_path"
+    if [[ -z $sep ]]; then
+        sep="${__RC_PATH_SEPARATORS["$var"]}"
 
-    # default case is PATH, but some other styles (e.g. LUA_PATH) use different
-    # separators like `;`
-    local -r var=${2:-PATH}
-    local -r sep=${3:-:}
+        if [[ -z $sep ]]; then
+            __rc_debug "using default path separator (':') for $path"
+            sep=":"
+        fi
+    fi
+
+    # don't insert anything into $PATH before ~/.local/bin by default
+    if (( mode == insert )) \
+        && [[ -n $before && -n $after ]] \
+        && [[ $var == PATH && $path != "$HOME/.local/bin" ]]
+    then
+        after="$HOME/.local/bin"
+    fi
+
+    if [[ -n $after && $after == "$path" ]] \
+        || [[ -n $before && $before == "$path" ]]
+    then
+        __rc_warn "--after|--before used with the same value as the input path ($path)"
+        return 1
+    fi
+
+    __rc_timer_start "__rc_add_path"
 
     local -r current=${!var}
 
-    __rc_debug "VAR:     ${var@Q}" \
-               "CURRENT: ${current@Q}" \
-               "SEP:     ${sep@Q}" \
-               "NEW:     ${p@Q}"
-
     if [[ -z $current ]]; then
-        __rc_debug "Setting \$${var} to $p"
-        declare -g -x "$var"="$p"
+        __rc_debug "Setting \$${var} to $path"
+        declare -g -x "$var"="$path"
+        __rc_timer_stop "__rc_add_path"
+        return
+    fi
 
-    elif ! [[ $current =~ "${sep}"?"$p""${sep}"? ]]; then
-        __rc_debug "Prepending $p to \$${var}"
-        local new=${p}${sep}${current}
-        declare -g -x "$var"="$new"
+    local -a old
+    IFS="${sep}" read -ra old <<<"$current"
+
+    set -- "${old[@]}"
+
+    local -i len=${#old[@]}
+    local -i path_offset=-1
+    local -i after_offset=-1
+    local -i before_offset=-1
+
+    for i in "${!old[@]}"; do
+        local elem=${old[$i]}
+
+        # assume no duplicates
+
+        if [[ $elem == "$path" ]]; then
+            path_offset=$i
+
+        elif [[ -n $after && $elem == "$after" ]]; then
+            after_offset=$i
+
+        elif [[ -n $before && $elem == "$before" ]]; then
+            before_offset=$i
+        fi
+    done
+
+    if (( path_offset > -1 && mode == insert && after_offset < 0 && before_offset < 0 )); then
+        __rc_debug "\$${var} already contained $path, no changes"
+        # no changes, but ensure the var is exported
+        declare -g -x "${var}=${current}"
+        __rc_timer_stop "__rc_add_path"
+        return
+    fi
+
+    local -a new=()
+
+    if [[ -n $after ]]; then
+        for (( i = 0; i < len; i++ )); do
+            if (( i == path_offset && i < after_offset )); then
+                continue
+            fi
+
+            new+=( "${old[$i]}" )
+
+            if (( i == after_offset && path_offset < after_offset )); then
+                __rc_debug "Inserting $path into \$${var} after $after"
+                new+=("$path")
+            fi
+        done
+
+        # --after appends if $after and $path are not found
+        if (( after_offset < 0 && path_offset < 0 )); then
+            __rc_debug "Appending $path to \$${var}"
+            new+=("$path")
+        fi
+
+    elif [[ -n $before ]]; then
+        # --before prepends if $path and $before are not found
+        if (( before_offset < 0 && path_offset < 0 )); then
+            __rc_debug "Prepending $path to \$${var}"
+            new+=("$path")
+        fi
+
+        for (( i = 0; i < len; i++ )); do
+            if (( i == path_offset && path_offset > before_offset )); then
+                continue
+
+            elif (( i == before_offset && ( path_offset < 0 || path_offset > i ) )); then
+                __rc_debug "Inserting $path into \$${var} before $before"
+                new+=("$path")
+            fi
+
+            new+=( "${old[$i]}" )
+        done
+
+    elif (( mode == prepend )); then
+        __rc_debug "Prepending $path to \$${var}"
+        new+=("$path")
+
+        for elem in "$@"; do
+            if [[ $elem == "$path" ]]; then
+                continue
+            fi
+            new+=("$elem")
+        done
+
+    elif (( mode == append )); then
+        __rc_debug "Appending $path to \$${var}"
+
+        for elem in "$@"; do
+            if [[ $elem == "$path" ]]; then
+                continue
+            fi
+            new+=("$elem")
+        done
+
+        new+=("$path")
+
+    elif (( mode == insert )); then
+        __rc_debug "Prepending $path to \$${var}"
+        new=("$path" "${old[@]}")
 
     else
-        :
-        __rc_debug "\$${var} already contains $p"
+        echo "unreachable!"
+        exit 1
     fi
+
+    set -- "${new[@]}"
+    local first=$1
+    shift
+
+    local value
+    printf -v value '%s' "$first" "${@/#/$sep}"
+
+    declare -g -x "${var}=${value}"
 
     __rc_timer_stop "__rc_add_path"
 }
@@ -151,7 +358,7 @@ __rc_add_prompt_command() {
         PROMPT_COMMAND=("$cmd" "${PROMPT_COMMAND[@]}")
 
     else
-        __rc_add_path "$cmd" "PROMPT_COMMAND" ";"
+        __rc_add_path "$cmd" "PROMPT_COMMAND" --sep ";"
     fi
 }
 
