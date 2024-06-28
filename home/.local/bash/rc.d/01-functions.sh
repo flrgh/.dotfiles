@@ -177,3 +177,13 @@ dump-var() {
 }
 
 complete -A variable dump-var
+
+dump-prefix() {
+    for arg in "$@"; do
+        for v in $(compgen -v "$arg"); do
+            dump-var "$v"
+        done
+    done
+}
+
+complete -A variable dump-prefix
