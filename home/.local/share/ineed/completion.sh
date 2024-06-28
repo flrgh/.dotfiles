@@ -2,7 +2,18 @@
 
 __ineed_completions() {
     local cur prev words cword
-    _init_completion || return
+
+    if ((
+            BASH_COMPLETION_VERSINFO[0] > 2
+            || ( BASH_COMPLETION_VERSINFO[0] >= 2
+                 && BASH_COMPLETION_VERSINFO[1] >= 12 )
+        ))
+    then
+        _comp_initialize || return
+
+    else
+        _init_completion || return
+    fi
 
     local -r INEED_ROOT="$HOME/.local/share/ineed"
 
