@@ -7,6 +7,9 @@ shopt -s dotglob
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
+# don't search $PATH when sourcing a filename
+shopt -u sourcepath
+
 # make less more friendly for non-text input files, see lesspipe(1)
 if [[ -x /usr/bin/lesspipe ]]; then
     eval "$(SHELL=/bin/sh lesspipe)"
