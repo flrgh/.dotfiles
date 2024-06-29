@@ -5,6 +5,7 @@ end
 local g = vim.g
 local o = vim.o
 local opt = vim.opt
+local cmd = vim.cmd
 
 g.mapleader = ','
 
@@ -88,3 +89,9 @@ g.loaded_node_provider = 0
 g.loaded_perl_provider = 0
 g.loaded_python3_provider = 0
 g.loaded_ruby_provider = 0
+
+-- correct my various mispellings of `local`
+cmd.iabbrev("loacl", "local")
+cmd.iabbrev("laocl", "local")
+cmd.iabbrev("lcoal", "local")
+cmd.iabbrev("locla", "local")
