@@ -39,7 +39,7 @@ else
     cargo install cargo-binstall
 fi
 
-for p in "${PACKAGES[@]}"; do
-    cargo binstall --no-confirm "$p" \
-    || cargo install "$p"
-done
+cargo binstall \
+    --no-confirm \
+    --continue-on-failure \
+    "${PACKAGES[@]}"
