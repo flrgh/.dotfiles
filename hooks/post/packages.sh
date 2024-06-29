@@ -123,3 +123,9 @@ PACKAGES=(
 )
 
 sudo dnf install -y "${PACKAGES[@]}"
+
+REMOVE=(
+    bash-completion
+)
+
+sudo dnf remove -y "${REMOVE[@]}"
