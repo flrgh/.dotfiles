@@ -25,7 +25,6 @@ PACKAGES=(
     axel              # openresty build dep
     alacritty         # terminal emulator
     automake
-    bash-completion
     bc                # maths
     bear              # database generator for clang
     bind-utils        # DNS cli tools
