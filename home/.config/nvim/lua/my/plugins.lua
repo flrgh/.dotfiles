@@ -711,9 +711,6 @@ local plugins_by_category = {
   plumbing = {
     "folke/lazy.nvim",
 
-    -- filetype detection optimization
-    "nathom/filetype.nvim",
-
     -- startup time profiling
     {
       "dstein64/vim-startuptime",
