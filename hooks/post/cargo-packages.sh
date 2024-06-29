@@ -27,7 +27,17 @@ if [[ -e ~/.config/github/helper-access-token ]]; then
     export GITHUB_TOKEN
 fi
 
-cargo install cargo-binstall
+if command -v cargo-binstall &>/dev/null; then
+    echo "checking for updates to cargo-binstall"
+    cargo binstall \
+        --no-confirm \
+        --only-signed \
+        cargo-binstall
+
+else
+    echo "installing cargo-binstall from source"
+    cargo install cargo-binstall
+fi
 
 for p in "${PACKAGES[@]}"; do
     cargo binstall --no-confirm "$p" \
