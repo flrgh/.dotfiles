@@ -398,6 +398,11 @@ local plugins_by_category = {
       cmd = { "TSPlaygroundToggle" },
       dependencies = { "nvim-treesitter" },
     },
+    {
+      "nvim-treesitter/nvim-treesitter-context",
+      lazy = true,
+      cmd = { "TSContextEnable", "TSContextDisable", "TSContextToggle" },
+    },
   },
 
   telescope = {
