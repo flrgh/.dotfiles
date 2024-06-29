@@ -1,8 +1,10 @@
 local _M  = {}
-local plugin = require "my.utils.plugin"
 
 function _M.bootstrap()
   require('nvim-treesitter.configs').setup {
+    ---@diagnostic disable-next-line
+    modules = nil,
+
     ensure_installed = {
       "bash",
       "c",
@@ -65,13 +67,28 @@ function _M.bootstrap()
 end
 
 function _M.setup()
+  local fs = require "my.utils.fs"
+
   require('nvim-treesitter.configs').setup {
+    ---@diagnostic disable-next-line
+    modules = nil,
+
     ensure_installed = {},
     ignore_install = {},
     sync_install = false,
     auto_install = false,
     highlight = {
       enable = true,
+      -- disable for files >= 100K
+      disable = function(_lang, buf)
+        local max = 1024 * 100
+        local fname = fs.buffer_filename(buf)
+        if fname and fs.size(fname) > max then
+          return false
+        end
+
+        return true
+      end,
     },
     incremental_selection = {
       enable = true,
@@ -102,8 +119,10 @@ function _M.setup()
   vim.opt.foldnestmax = 3
   vim.opt.foldminlines = 4
 
+  local plugin = require "my.utils.plugin"
+
   if plugin.installed("nvim-treesitter-context") then
-    require("treesitter-context").setup{
+    require("treesitter-context").setup {
        -- Enable this plugin (Can be enabled/disabled later via commands)
       enable = true,
       -- How many lines the window should span. Values <= 0 mean no limit.

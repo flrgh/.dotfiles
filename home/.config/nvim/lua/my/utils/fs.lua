@@ -4,6 +4,7 @@ local _M = {
   _VERSION = '0.1'
 }
 
+local vim = vim
 local fn = vim.fn
 local loop = vim.uv
 local expand = fn.expand
@@ -80,6 +81,28 @@ function _M.type(path)
   return ft
 end
 
+---@param path string
+function _M.stat(path)
+  local st = fs_stat(path)
+  if not st then
+    return
+  end
+
+  if st.type == "link" then
+    return fs_lstat(path)
+  end
+
+  return st
+end
+
+--- Get the size of a file
+---@param  path   string
+---@return integer size
+function _M.size(path)
+  local st = _M.stat(path)
+  return (st and st.size) or -1
+end
+
 --- Read a file's contents to a string.
 ---@param  fname   string
 ---@return string? content
@@ -120,8 +143,12 @@ function _M.read_json_file(fname)
   return json_decode(raw)
 end
 
+---@param buf? integer
 ---@return string
-function _M.buffer_filename()
+function _M.buffer_filename(buf)
+  if buf then
+    return vim.api.nvim_buf_get_name(buf)
+  end
   return expand("%:p", true)
 end
 
