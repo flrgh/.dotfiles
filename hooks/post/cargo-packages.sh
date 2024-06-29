@@ -2,6 +2,29 @@
 
 set -euo pipefail
 
+export CARGO_HOME=${CARGO_HOME:-$HOME/.local/cargo}
+export RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.local/rustup}
+
+mkdir -p "$CARGO_HOME" "$RUSTUP_HOME"
+
+# I am an island; don't use system rustup/cargo
+if [[ ! -x $CARGO_HOME/bin/cargo ]]; then
+    if [[ ! -x $CARGO_HOME/bin/rustup ]]; then
+        echo "rustup not found, installing..."
+
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+            | sh -s -- \
+                -y \
+                --no-modify-path \
+                --default-host x86_64-unknown-linux-gnu
+    fi
+
+    echo "cargo not found, installing..."
+    "$CARGO_HOME"/bin/rustup component add cargo
+fi
+
+export PATH="$CARGO_HOME/bin:$PATH"
+
 readonly PACKAGES=(
     alacritty      # terminal emulator
     btm            # nifty system monitor (top => btm)
