@@ -77,6 +77,7 @@ function _M.setup()
     ignore_install = {},
     sync_install = false,
     auto_install = false,
+
     highlight = {
       enable = true,
       -- disable for files >= 100K
@@ -84,10 +85,10 @@ function _M.setup()
         local max = 1024 * 100
         local fname = fs.buffer_filename(buf)
         if fname and fs.size(fname) > max then
-          return false
+          return true
         end
 
-        return true
+        return false
       end,
     },
     incremental_selection = {

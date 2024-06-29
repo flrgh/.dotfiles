@@ -59,7 +59,6 @@ o.mouse      = 'nv'
 o.clipboard  = 'unnamedplus'
 
 -- visual settings
-vim.cmd [[syntax on]]
 opt.listchars     = { eol = '$' }
 o.ruler         = true
 o.number        = true
