@@ -202,6 +202,10 @@ end
 
 function resolver:purge_cache()
   self.module_cache = {}
+  self:purge_fs_cache()
+end
+
+function resolver:purge_fs_cache()
   self.fs_cache = {}
 end
 

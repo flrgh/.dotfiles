@@ -684,6 +684,7 @@ local function find_requires()
     end
 
     requires = found
+    resolver:purge_fs_cache()
     resolved()
   end
 
