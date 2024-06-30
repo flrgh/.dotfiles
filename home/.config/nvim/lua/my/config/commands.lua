@@ -283,3 +283,98 @@ add_command("LuaDebug",
     desc = "Show Lua/editor debug information",
   }
 )
+
+add_command("ShowEditorSettings",
+  function()
+    local o = vim.opt_local
+    local get_info = vim.api.nvim_get_option_info2
+    local opts = { scope = "local" }
+
+    local scripts = vim.fn.getscriptinfo()
+    do
+      for i, s in ipairs(scripts) do
+        assert(i == s.sid)
+      end
+    end
+
+    local index = {
+      file = {
+        "filetype",
+        "fileencoding",
+        "fileformat",
+        "bomb",
+      },
+
+      indent = {
+        "autoindent",
+        "tabstop",
+        "softtabstop",
+        "shiftwidth",
+        "expandtab",
+        "indentexpr",
+        "indentkeys",
+      },
+
+      wrap = {
+        "textwidth",
+        "wrap",
+        "wrapmargin",
+        "wrapscan",
+      },
+
+      format = {
+        "formatexpr",
+        "formatoptions",
+        "formatprg",
+        "formatlistpat",
+      },
+
+      comment = {
+        "comments",
+        "commentstring",
+      },
+
+      "iskeyword",
+    }
+
+    ---@param name string
+    local function summarize(name)
+      local value = o[name]:get()
+
+      local meta = get_info(name, opts)
+      if not meta.was_set then
+        return value
+      end
+
+      local out = {
+        value = value,
+        default = meta.default,
+        set_by = meta.last_set_sid
+                 and scripts[meta.last_set_sid]
+                 and scripts[meta.last_set_sid].name,
+      }
+
+      return out
+    end
+
+    local function get(t)
+      local out = {}
+
+      for k, v in pairs(t) do
+        if type(v) == "table" then
+          out[k] = get(v)
+
+        else
+          out[v] = summarize(v)
+        end
+      end
+
+      return out
+    end
+
+    vim.print(get(index))
+  end,
+  {
+    desc = "Show common editor settings (indent, format, etc)",
+  }
+)

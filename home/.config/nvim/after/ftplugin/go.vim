@@ -1,5 +1,3 @@
-autocmd BufNewFile,BufRead *.go setlocal noexpandtab tabstop=4 shiftwidth=4 softtabstop=4
-
 augroup completion_preview_close
   autocmd!
   if v:version > 703 || v:version == 703 && has('patch598')
