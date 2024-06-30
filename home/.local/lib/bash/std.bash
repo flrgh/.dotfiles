@@ -1,70 +1,12 @@
-#!/usr/bin/env bash
+BASH_USER_LIB=${BASH_USER_LIB:-$HOME/.local/lib/bash}
 
 # my bash standard library
 
-# check if a function exists
-function-exists() {
-    builtin declare -f "$1" &>/dev/null
-}
+# shellcheck source=home/.local/lib/bash/common.bash
+source "$BASH_USER_LIB"/common.bash
 
-# check if a binary exists
-binary-exists() {
-    builtin type -f -t "$1" &>/dev/null
-}
+# shellcheck source=home/.local/lib/bash/var.bash
+source "$BASH_USER_LIB"/var.bash
 
-# check if a command exists (can be a function, alias, or binary)
-command-exists() {
-    builtin type -t "$1" &>/dev/null
-}
-
-# join array elements by some delimiter and save the resulting
-# string to a variable
-#
-# example:
-#
-# ```bash
-#   items=(a b c d e)
-#   array-join-var result '|' "${items[@]}"
-#   echo "$result"
-# ```
-array-join-var() {
-    local var=$1
-    local delim=${2-}
-    local first=${3-}
-
-    if shift 3; then
-        printf -v "$var" '%s' "$first" "${@/#/$delim}"
-    fi
-}
-
-# join array elements by some delimiter and print the resulting
-# string to stdout, with a trailing newline
-#
-# example:
-#
-# ```bash
-#   items=(a b c d e)
-#   array-join '|' "${items[@]}"
-# ```
-array-join() {
-    if (( $# < 1 )); then
-        return 1
-    fi
-
-    local result
-    array-join-var result "$@"
-    printf '%s\n' "$result"
-}
-
-array-contains() {
-    local -r search=${1:-?need a value to search for}
-    shift
-
-    for arg in "$@"; do
-        if [[ $arg == "$search" ]]; then
-            return 0
-        fi
-    done
-
-    return 1
-}
+# shellcheck source=home/.local/lib/bash/array.bash
+source "$BASH_USER_LIB"/array.bash

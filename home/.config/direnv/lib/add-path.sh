@@ -1,4 +1,5 @@
-source "$MY_BASH_STDLIB"
+# shellcheck source=home/.local/lib/bash/array.bash
+source "$BASH_USER_LIB"/array.bash
 
 # it's like direnv's path_add function, but it supports custom separators
 #
