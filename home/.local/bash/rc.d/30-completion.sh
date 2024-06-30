@@ -4,7 +4,7 @@
 
 export BASH_COMPLETION_USER_DIR="$HOME/.local/share/bash-completion"
 export BASH_COMPLETION_COMPAT_DIR="$HOME/.local/etc/bash_completion.d"
-export BASH_COMPLETION_COMPAT_IGNORE='*'
+unset BASH_COMPLETION_COMPAT_IGNORE
 
 if [[ -f $BASH_COMPLETION_USER_DIR/bash_completion ]]; then
     __rc_source_file "$BASH_COMPLETION_USER_DIR"/bash_completion
