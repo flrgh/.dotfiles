@@ -80,3 +80,8 @@ nnoremap[Leader.g] = { ":G", "fuGITive" }
 
 -- unbind q from macro things
 nnoremap.q = km.NOP
+
+nnoremap["_$"] = {
+  require("my.editor").strip_whitespace,
+  "Strip trailing whitespace from all lines in the current buffer",
+}

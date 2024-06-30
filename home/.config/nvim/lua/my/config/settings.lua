@@ -14,6 +14,8 @@ o.bomb = false
 o.fileformat    = 'unix'
 o.fileformats   = 'unix'
 
+o.autoread = true
+
 -- fix backspace indent
 opt.backspace = {'indent', 'eol', 'start'}
 

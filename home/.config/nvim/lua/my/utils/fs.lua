@@ -389,4 +389,32 @@ function _M.is_child(dir, fname)
      and byte(fname, to + 1) == SLASH
 end
 
+
+---@param path string
+---@return string
+function _M.abbreviate(path)
+  if not path then return "" end
+  local g = require "my.config.globals"
+
+  local replace = {
+    { g.nvim.runtime_lua, "{ nvim.runtime.lua }" },
+    { g.nvim.plugins,     "{ nvim.plugins }" },
+    { g.nvim.runtime,     "{ nvim.runtime }" },
+    { g.nvim.config,      "{ nvim.userconfig }" },
+    { g.workspace,        "{ workspace }" },
+    { g.home,             "~" },
+  }
+
+  for _, item in ipairs(replace) do
+    local from, to = path:find(item[1], nil, true)
+    if from then
+      path = path:sub(1, from - 1)
+          .. item[2]
+          .. path:sub(to + 1)
+    end
+  end
+
+  return path
+end
+
 return _M
