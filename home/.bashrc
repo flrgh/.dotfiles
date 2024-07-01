@@ -354,8 +354,18 @@ __rc_add_prompt_command() {
     local -r cmd=${1?command required}
 
     if (( __rc_prompt_command_array == 1 )); then
+        local -a new=()
+
+        local elem
+        for elem in "${PROMPT_COMMAND[@]}"; do
+            if [[ $elem == "$cmd" ]]; then
+                continue
+            fi
+            new+=("$elem")
+        done
+
         # prepend for consistency with `__rc_add_path`
-        PROMPT_COMMAND=("$cmd" "${PROMPT_COMMAND[@]}")
+        PROMPT_COMMAND=("$cmd" "${new[@]}")
 
     else
         __rc_add_path "$cmd" "PROMPT_COMMAND" --sep ";"
