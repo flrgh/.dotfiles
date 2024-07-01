@@ -1,13 +1,25 @@
 #!/bin/bash
 
 LOG=$HOME/.local/var/log/fake-gnome-terminal.log
-
-while [[ $1 != -- ]]; do
-    shift
-done
-shift
-
 echo "Running $@" >> "$LOG"
+
+args=()
+found=0
+while (( $# > 0 )); do
+    arg=$1
+    shift
+
+    if [[ $arg = '--' ]]; then
+        found=1
+        break
+    fi
+
+    args+=("$arg")
+done
+
+if (( found == 0 )); then
+    set -- "${args[@]}"
+fi
 
 exec alacritty \
     --class "$1,$1" \
