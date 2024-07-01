@@ -68,25 +68,25 @@ fi
 #         embed a terminal control sequence into the prompt
 #  \]     end a sequence of non-printing characters
 
-_begin="\["
-_end="\]"
-_cyan="${_begin}\e[0;36m${_end}"
-_reset="${_begin}\e[m${_end}"
-_blue="${_begin}\e[0;34m${_end}"
-_yellow="${_begin}\e[0;33m${_end}"
-_red="${_begin}\e[0;31m${_end}"
-_user="\u"
-_user="\u"
-_host="\h"
-_pwd="\w"
-_PS1_USER_AT_HOST="${_cyan}@${_host}${_reset}"
-_PS1_PWD="${_blue}${_pwd}${_reset}"
-_PS1_PROMPT="\\$"
-_PS1_BASE="${_PS1_USER_AT_HOST} ${_PS1_PWD}"
-_PS1_DEFAULT="${_PS1_BASE} ${_PS1_PROMPT} "
+source "$BASH_USER_LIB"/ansi.bash
+
+__cyan=; ansi-style -v __cyan --reset --cyan
+__blue=; ansi-style -v __blue --reset --blue
+__alert=; ansi-style -v __alert --reset --bold --color bright-red
+__reset=; ansi-style -v __reset --reset
+
+__host='\h'
+_PS1_USER_AT_HOST="${__cyan}@${__host}${__reset}"
+
+__pwd='\w'
+_PS1_PWD="${__blue}${__pwd}${__reset}"
+
+__prompt="\\$"
+__ps1_base="${_PS1_USER_AT_HOST} ${_PS1_PWD}"
+__ps1_default="${__ps1_base} ${__prompt} "
 
 __reset_prompt() {
-    export PS1="$_PS1_DEFAULT"
+    export PS1="$__ps1_default"
 }
 
 __reset_prompt
@@ -94,19 +94,28 @@ __reset_prompt
 __append_prompt() {
     local -r extra="${1:-}"
 
-    export PS1="${_PS1_BASE} ${extra} ${_PS1_PROMPT} "
+    export PS1="${__ps1_base} ${extra} ${__prompt} "
 }
+
+__need_reset=0
 
 __last_status() {
     local ec=$?
 
     if (( ec != 0 )); then
         # uh oh red alert!!!!
-        __append_prompt "(${_red}${ec}${_reset})"
-    else
-        # back to happy times
-        __reset_prompt
+        __need_reset=1
+        __append_prompt "(${__alert}${ec}${__reset})"
+        return
     fi
+
+    if (( __need_reset == 0 )); then
+        return
+    fi
+
+    # back to happy times
+    __reset_prompt
+    __need_reset=0
 }
 
-__rc_add_prompt_command __last_status
+__rc_add_prompt_command "__last_status"
