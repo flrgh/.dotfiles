@@ -86,13 +86,21 @@ complete -A arrayvar dump-array
 
 unset -v __PATH_VARS
 declare -g -A __PATH_VARS=(
-    [PATH]=':'
-    [CDPATH]=':'
-    [MANPATH]=':'
-    [LUA_PATH]=';'
-    [LUA_CPATH]=';'
-    [MODULEPATH]=':'
+    [BASHOPTS]=':'
     [BASH_LOADABLES_PATH]=':'
+    [CDPATH]=':'
+    [FIGNORE]=':'
+    [EXECIGNORE]=':'
+    [GLOBIGNORE]=':'
+    [HISTCONTROL]=':'
+    [HISTIGNORE]=':'
+    [LUA_CPATH]=';'
+    [LUA_PATH]=';'
+    [MAILPATH]=':'
+    [MANPATH]=':'
+    [MODULEPATH]=':'
+    [PATH]=':'
+    [SHELLOPTS]=':'
     [XDG_DATA_DIRS]=':'
 )
 

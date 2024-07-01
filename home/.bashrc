@@ -96,10 +96,16 @@ __rc_set_path_separator() {
     __RC_PATH_SEPARATORS["$var"]="$sep"
 }
 
-__rc_set_path_separator PATH      ":"
-__rc_set_path_separator MANPATH   ":"
-__rc_set_path_separator LUA_PATH  ";"
-__rc_set_path_separator LUA_CPATH ";"
+__rc_set_path_separator PATH       ":"
+__rc_set_path_separator MANPATH    ":"
+__rc_set_path_separator CDPATH     ":"
+__rc_set_path_separator LUA_PATH   ";"
+__rc_set_path_separator LUA_CPATH  ";"
+
+__rc_set_path_separator EXECIGNORE ":"
+__rc_set_path_separator FIGNORE    ":"
+__rc_set_path_separator GLOBIGNORE ":"
+__rc_set_path_separator HISTIGNORE ":"
 
 __rc_add_path() {
     local -r insert=0
