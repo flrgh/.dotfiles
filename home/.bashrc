@@ -1,5 +1,8 @@
 # shellcheck enable=deprecate-which
 
+# must be turned on early
+shopt -s extglob
+
 __RC_START=${EPOCHREALTIME/./}
 
 __RC_LOG_DIR="$HOME/.local/var/log"
