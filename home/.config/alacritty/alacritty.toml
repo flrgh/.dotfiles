@@ -1,4 +1,4 @@
-import = ["/home/michaelm/.config/alacritty/alacritty.local.yml", "/home/michaelm/.config/alacritty/catppuccin-mocha.toml"]
+import = ["~.config/alacritty/alacritty.local.toml", "~/.config/alacritty/catppuccin-mocha.toml"]
 ipc_socket = false
 live_config_reload = true
 working_directory = "None"
@@ -27,6 +27,9 @@ render_timer = false
 [env]
 ALACRITTY = "1"
 TERM = "alacritty"
+
+[font]
+builtin_box_drawing = true
 
 [font.normal]
 family = "LiterationMono Nerd Font"
@@ -102,8 +105,11 @@ multiplier = 3
 save_to_clipboard = false
 semantic_escape_chars = ",│`|:\"' ()[]{}<>"
 
+[terminal]
+osc52 = "OnlyCopy"
+
 [window]
-decorations = "none"
+decorations = "None"
 decorations_theme_variant = "None"
 dynamic_padding = false
 dynamic_title = true
