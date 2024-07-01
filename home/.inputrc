@@ -1,6 +1,24 @@
 $ include /etc/inputrc
 
 "\C-w": backward-kill-word
+"\C-h": backward-delete-char
+"\C-d": delete-char
+"\C-k": kill-line
+"\C-u": unix-line-discard
+
+"\C-a": beginning-of-line
+"\C-e": end-of-line
+"\C-b": backward-char
+"\C-f": forward-char
+
+"\C-p": previous-history
+"\C-n": next-history
+
+"\C-j": accept-line
+
+"\C-l": clear-screen
+
+"\C-i": complete
 
 # Mark symlinked directories
 set mark-symlinked-directories On
