@@ -70,10 +70,12 @@ fi
 
 source "$BASH_USER_LIB"/ansi.bash
 
-__cyan=; ansi-style -v __cyan --reset --cyan
-__blue=; ansi-style -v __blue --reset --blue
-__alert=; ansi-style -v __alert --reset --bold --color bright-red
-__reset=; ansi-style -v __reset --reset
+__args=(--prompt --reset)
+
+__cyan=;  ansi-style "${__args[@]}" -v __cyan  --cyan
+__blue=;  ansi-style "${__args[@]}" -v __blue  --blue
+__alert=; ansi-style "${__args[@]}" -v __alert --bold --color bright-red
+__reset=; ansi-style "${__args[@]}" -v __reset
 
 __host='\h'
 _PS1_USER_AT_HOST="${__cyan}@${__host}${__reset}"

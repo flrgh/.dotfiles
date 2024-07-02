@@ -39,6 +39,12 @@ source "$BASH_USER_LIB"/array.bash
 declare -g ANSI_ESC=$'\e'
 declare -g ANSI_CSI="${ANSI_ESC}["
 
+declare -g ANSI_ESC_PROMPT="\e"
+declare -g ANSI_CSI_PROMPT="${ANSI_ESC_PROMPT}["
+declare -g _prompt_pre="\["
+declare -g _prompt_suf="\]"
+
+
 declare -g ANSI_SGR_FUNCNAME=m
 declare -g ANSI_SGR_SEPARATOR=";"
 
@@ -143,6 +149,7 @@ ansi-style() {
     local destvar
     local prefix suffix
     local color
+    local prompt=0
 
     # reset
     if [[ -n ${destvar:-} ]]; then
@@ -154,13 +161,13 @@ ansi-style() {
         shift
 
         case "$opt" in
+            --prompt) prompt=1 ;;
+
+            --reset) reset=1 ;;
+
             -v)
                 destvar=${1:?variable name required}
                 shift
-                ;;
-
-            --reset)
-                reset=1
                 ;;
 
             --bg)
@@ -253,10 +260,17 @@ ansi-style() {
     local __ansi_joined
     array-join-var __ansi_joined "$ANSI_SGR_SEPARATOR" "${elems[@]}"
 
+    local csi=$ANSI_CSI
+    if (( prompt == 1 )); then
+        csi=$ANSI_CSI_PROMPT
+        prefix=$_prompt_pre
+        suffix=$_prompt_suf
+    fi
+
     local __ansi_result
     printf -v __ansi_result '%s%s%s%s%s' \
         "${prefix:-}" \
-        "$ANSI_CSI" \
+        "$csi" \
         "$__ansi_joined" \
         "$ANSI_SGR_FUNCNAME" \
         "${suffix:-}"
