@@ -26,7 +26,9 @@ edit-config '.auths //= {} | .auths["https://index.docker.io/v1/"] //= {}'
 edit-config '.experimental = "enabled"'
 edit-config '.psFormat = "table {{.Names}}\t{{.Image}}\t{{.Networks}}\t{{.Status}}\t{{.Command}}"'
 
-if command -v docker-credential-secretservice &>/dev/null; then
+if command -v docker-credential-secretservice &>/dev/null \
+    && docker-credential-secretservice list &>/dev/null
+then
     echo "Enabling secretservice credential provider"
     edit-config '.credsStore = "secretservice"'
 else
