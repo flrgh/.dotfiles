@@ -86,28 +86,24 @@ _PS1_PWD="${__blue}${__pwd}${__reset}"
 __prompt="\\$"
 __ps1_base="${_PS1_USER_AT_HOST} ${_PS1_PWD}"
 __ps1_default="${__ps1_base} ${__prompt} "
-
-__reset_prompt() {
-    export PS1="$__ps1_default"
-}
-
-__reset_prompt
-
-__append_prompt() {
-    local -r extra="${1:-}"
-
-    export PS1="${__ps1_base} ${extra} ${__prompt} "
-}
+export PS1="$__ps1_default"
 
 __need_reset=0
+__last_cmd=0
+__cmd="\#"
 
 __last_status() {
     local ec=$?
 
-    if (( ec != 0 )); then
+    # check if the command counter has incremented
+    local cmd=${__cmd@P}
+    local new=$(( cmd > __last_cmd ? 1 : 0 ))
+    __last_cmd=$cmd
+
+    if (( ec != 0 && new == 1 )); then
         # uh oh red alert!!!!
         __need_reset=1
-        __append_prompt "(${__alert}${ec}${__reset})"
+        export PS1="${__ps1_base} (${__alert}${ec}${__reset}) ${__prompt} "
         return
     fi
 
@@ -116,7 +112,7 @@ __last_status() {
     fi
 
     # back to happy times
-    __reset_prompt
+    export PS1="$__ps1_default"
     __need_reset=0
 }
 
