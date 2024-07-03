@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+command -v yq &>/dev/null || {
+    echo "FATAL: yq not found"
+    exit 127
+}
+
+INFILE=$1
+
+if [[ -z $INFILE || $INFILE == '-' ]]; then
+    INFILE=/dev/stdin
+fi
+
+exec yq -o json < "$INFILE"
