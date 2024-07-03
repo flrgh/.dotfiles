@@ -3,6 +3,9 @@
 #
 # Functions used only while sourcing .bashrc should go in .bashrc
 
+__rc_source_file "$BASH_USER_LIB"/var.bash
+__rc_source_file "$BASH_USER_LIB"/array.bash
+
 :q() {
     echo "hey you're not in vim anymore, but I can exit the shell for you..."
     sleep 0.75 && exit
@@ -39,35 +42,26 @@ extract() {
 }
 
 strip-whitespace() {
-    local -r name=${1?var name required}
-    local -n ref=$1
+    local -n ref=${1:?var name required}
 
-    local before=${!name}
-    local after=$before
+    if shopt -q -p extglob; then
+        ref=${ref##+([[:space:]])}
+        ref=${ref%%+([[:space:]])}
+        return
+    fi
+
+    local before=$ref
 
     while true; do
-        after=${after##[[:space:]]}
-        after=${after%%[[:space:]]}
+        ref=${ref##[[:space:]]}
+        ref=${ref%%[[:space:]]}
 
-        if [[ $after == "$before" ]]; then
+        if [[ $ref == "$before" ]]; then
             break
         fi
 
-        before=$after
+        before=$ref
     done
-
-    ref=$after
-}
-
-is-array() {
-    local -r name=$1
-    local -rn ref=$1
-
-    local -r dec=${ref@A}
-
-    local -r pat="declare -(a|A)"
-
-    [[ $dec =~ $pat ]]
 }
 
 dump-array() {
@@ -84,8 +78,8 @@ dump-array() {
 
 complete -A arrayvar dump-array
 
-unset -v __PATH_VARS
-declare -g -A __PATH_VARS=(
+unset -v __DELIMITED_VARS
+declare -g -A __DELIMITED_VARS=(
     [BASHOPTS]=':'
     [BASH_LOADABLES_PATH]=':'
     [CDPATH]=':'
@@ -104,10 +98,10 @@ declare -g -A __PATH_VARS=(
     [XDG_DATA_DIRS]=':'
 )
 
-is-path-var() {
+__is_delimited_string() {
     local -r var=${1?var name is required}
 
-    test -n "${__PATH_VARS[$var]:-}"
+    test -n "${__DELIMITED_VARS[$var]:-}"
 }
 
 is-set() {
@@ -116,13 +110,13 @@ is-set() {
     declare -p "$var" &>/dev/null
 }
 
-dump-path-var() {
+__dump_delimited_var() {
     local -r name=$1
 
     if [[ -z ${name:-} ]]; then
-        for var in "${!__PATH_VARS[@]}"; do
+        for var in "${!__DELIMITED_VARS[@]}"; do
             if is-set "$var"; then
-                dump-path-var "$var"
+                __dump_delimited_var "$var"
             fi
         done
 
@@ -130,7 +124,7 @@ dump-path-var() {
     fi
 
     local -r default=':'
-    local sep=${__PATH_VARS[$name]:-"${default}"}
+    local sep=${__DELIMITED_VARS[$name]:-"${default}"}
 
     local -a arr
     mapfile -t -d "$sep" arr <<< "${!name}"
@@ -147,7 +141,74 @@ dump-path-var() {
     done
 }
 
-complete -W "${!__PATH_VARS[*]}" dump-path-var
+__print_attributes() {
+    local -r name=$1
+
+    local -a attrs=()
+
+    if (( VAR_INFO["is_array"] )); then
+        attrs+=("array")
+    fi
+
+    if (( VAR_INFO["is_assoc_array"] )); then
+        attrs+=("associative-array")
+    fi
+
+    if (( VAR_INFO["is_integer"] )); then
+        attrs+=("integer")
+    fi
+
+    if (( VAR_INFO["is_nameref"] )); then
+        attrs+=("nameref")
+    fi
+
+    if (( VAR_INFO["is_exported"] )); then
+        attrs+=("exported")
+    fi
+
+    if (( VAR_INFO["is_readonly"] )); then
+        attrs+=("read-only")
+    fi
+
+    if (( VAR_INFO["is_lowercase"] )); then
+        attrs+=("lower-case")
+    fi
+
+    if (( VAR_INFO["is_uppercase"] )); then
+        attrs+=("upper-case")
+    fi
+
+    if (( VAR_INFO["is_trace"] )); then
+        attrs+=("trace")
+    fi
+
+    if (( ${#attrs[@]} > 0 )); then
+        printf '%s attributes: ' "$name"
+        array-join ', ' "${attrs[@]}"
+    fi
+}
+
+__print_nameref_target() {
+    printf '%s' "$1"
+
+    if ! __parse_decl "$1"; then
+        printf '\n'
+        return 0
+    fi
+
+    if [[ $VAR_FLAGS != *n* ]]; then
+        printf '\n'
+        return 0
+    fi
+
+    if [[ -z "${VAR_VALUE:-}" ]]; then
+        printf '\n'
+        return 0
+    fi
+
+    printf ' -> '
+    __print_nameref_target "$VAR_VALUE"
+}
 
 dump-var() {
     local -r nargs=$#
@@ -164,17 +225,40 @@ dump-var() {
     fi
 
     local -r name=$1
+    if ! var-info "$name"; then
+        if (( VAR_INFO["is_valid"] )); then
+            printf '%s is undeclared\n' "$name"
+            return
+        fi
 
-    if ! is-set "$name"; then
-        echo "$name is unset"
+        printf '"%s" is not a valid identifier\n' "$name"
+        return
+    fi
 
-    elif is-array "$name"; then
-        echo "$name is an array"
+    if (( ! VAR_INFO["is_set"] )); then
+        printf '%s is unset\n' "$name"
+        __print_attributes "$name"
+        return
+    fi
+
+    __print_attributes "$name"
+
+    if (( VAR_INFO["is_array"] )); then
         dump-array "$name"
 
-    elif is-path-var "$name"; then
-        echo "$name is PATH or a PATH-like env var"
-        dump-path-var "$name"
+    elif (( VAR_INFO["is_assoc_array"] )); then
+        dump-array "$name"
+
+    elif __is_delimited_string "$name"; then
+        local delim=${__DELIMITED_VARS[$name]}
+        echo "$name is a string delimited by '$delim'"
+        __dump_delimited_var "$name"
+
+    elif (( VAR_INFO["is_nameref"] )); then
+        __print_nameref_target "$name"
+        printf '\n'
+        dump-var "${VAR_INFO["nameref_target"]}"
+        return
 
     else
         local -rn value=$name
@@ -194,4 +278,21 @@ dump-prefix() {
     done
 }
 
+dump-exported() {
+    for v in $(compgen -e); do
+        dump-var "$v"
+    done
+}
+
+
 complete -A variable dump-prefix
+
+dump-matching() {
+    local -r pat=${1?pattern or substring required}
+
+    for var in $(compgen -v); do
+        if [[ $var = *${pat}* ]]; then
+            dump-var "$var"
+        fi
+    done
+}

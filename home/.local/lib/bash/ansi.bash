@@ -1,6 +1,8 @@
-# ansi escape code constants and helpers
-
 BASH_USER_LIB=${BASH_USER_LIB-$HOME/.local/lib/bash}
+source "$BASH_USER_LIB"/__init.bash
+(( BASH_USER_LIB_SOURCED[ansi]++ == 0 )) || return 0
+
+# ansi escape code constants and helpers
 
 # shellcheck source=home/.local/lib/bash/array.bash
 source "$BASH_USER_LIB"/array.bash

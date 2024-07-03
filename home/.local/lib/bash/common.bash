@@ -1,4 +1,6 @@
 BASH_USER_LIB=${BASH_USER_LIB:-$HOME/.local/lib/bash}
+source "$BASH_USER_LIB"/__init.bash
+(( BASH_USER_LIB_SOURCED[common]++ == 0 )) || return 0
 
 # check if a function exists
 function-exists() {

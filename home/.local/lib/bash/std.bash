@@ -1,4 +1,6 @@
-BASH_USER_LIB=${BASH_USER_LIB:-$HOME/.local/lib/bash}
+declare -g BASH_USER_LIB=${BASH_USER_LIB:-$HOME/.local/lib/bash}
+source "$BASH_USER_LIB"/__init.bash
+(( BASH_USER_LIB_SOURCED[std]++ == 0 )) || return 0
 
 # my bash standard library
 

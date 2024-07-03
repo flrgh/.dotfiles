@@ -1,5 +1,12 @@
 # shellcheck enable=deprecate-which
 
+__RC_DOTFILES="$HOME/git/flrgh/.dotfiles"
+if [[ ! -d $__RC_DOTFILES ]]; then
+    echo "couldn't locate dotfiles directory ($__RC_DOTFILES)"
+    echo "exiting ~/.bashrc early"
+    return
+fi
+
 # must be turned on early
 shopt -s extglob
 
