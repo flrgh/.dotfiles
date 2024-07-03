@@ -334,7 +334,12 @@ add_command("ShowEditorSettings",
         "commentstring",
       },
 
-      "iskeyword",
+      patterns = {
+        "iskeyword",
+        "isident",
+        "isfname",
+        "isprint",
+      },
     }
 
     ---@param name string
