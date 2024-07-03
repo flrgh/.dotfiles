@@ -204,12 +204,15 @@ local plugins_by_category = {
 
     -- tokyonight-moon
     { "folke/tokyonight.nvim",
-      enabled = false,
+      --cond = false,
       priority = 2^16,
       lazy = false,
       config = function()
         require("tokyonight").setup()
       end,
+      dependencies = {
+        "echasnovski/mini.hipatterns",
+      },
     },
 
     -- catppuccin-mocha
