@@ -282,37 +282,14 @@ local function extend(t, extra)
   end
 end
 
-local get_plugin_lua_dir
-do
-  local dirs
-
-  local function enumerate_plugin_directories()
-    dirs = {}
-
-    for _, p in ipairs(plugin.list()) do
-      local name = p.name
-      local lua_dir = p.dir .. "/lua"
-      dirs[name] = lua_dir
-
-      -- normalized, for convenience
-      name = name:gsub("[%-_.]*nvim[%-_.]*", "")
-      if name ~= "" then
-        dirs[name] = lua_dir
-
-        name = name:lower()
-        dirs[name] = lua_dir
-
-        name = name:gsub("[%-._]", "")
-        dirs[name] = lua_dir
-      end
-    end
-  end
-
-  ---@param name string
-  ---@return string|nil
-  function get_plugin_lua_dir(name)
-    if not dirs then enumerate_plugin_directories() end
-    return dirs[name]
+---@param name string
+---@return string|nil
+local function get_plugin_lua_dir(name)
+  local p = plugin.get(name)
+  if not p then return end
+  local lua_dir = p.dir .. "/lua"
+  if fs.dir_exists(lua_dir) then
+    return lua_dir
   end
 end
 
@@ -328,7 +305,6 @@ local function load_luarc_settings(settings)
 
   return false
 end
-
 
 ---@class my.lsp.settings
 ---@field ignore?           string[]
@@ -437,6 +413,12 @@ local function get_merged_settings()
         insert(settings.libraries, lib)
       end
     end
+
+    -- lua files for neovim plugins typically live at <repo>/lua
+    local lua_dir = WS.dir .. "/lua"
+    if fs.dir_exists(lua_dir) then
+      insert(settings.libraries, lua_dir)
+    end
   end
 
   if WS.meta.resty then
@@ -477,10 +459,14 @@ end
 
 ---@param paths string[]
 ---@param dir string
-local function add_lua_path(paths, dir)
-  if dir then
-    insert(paths, dir .. '/?.lua')
-    insert(paths, dir .. '/?/init.lua')
+---@param seen table<string, true>
+local function add_lua_path(paths, dir, seen)
+  if not dir or dir == "" then return end
+
+  if not seen[dir] then
+    seen[dir] = true
+    insert(paths, dir .. "/?.lua")
+    insert(paths, dir .. "/?/init.lua")
   end
 end
 
@@ -488,6 +474,7 @@ end
 ---@return string[]
 local function runtime_paths(settings)
   local paths = {}
+  local seen = {}
 
   -- something changed in lua-language-server 2.5.0 with regards to locating
   -- `require`-ed filenames from package.path. These no longer work:
@@ -506,29 +493,29 @@ local function runtime_paths(settings)
   for _, lib in ipairs(settings.libraries or EMPTY) do
     lib = fs.normalize(lib)
     -- add $path
-    add_lua_path(paths, lib)
+    add_lua_path(paths, lib, seen)
 
     -- add $path/lua
     if not endswith(lib, '/lua') and fs.dir_exists(lib .. '/lua') then
-      add_lua_path(paths, lib .. '/lua')
+      add_lua_path(paths, lib .. '/lua', seen)
     end
 
     -- add $path/src
     if not endswith(lib, '/src') and fs.dir_exists(lib .. '/src') then
-      add_lua_path(paths, lib .. '/src')
+      add_lua_path(paths, lib .. '/src', seen)
     end
 
     -- add $path/lib
     if not endswith(lib, '/lib') and fs.dir_exists(lib .. '/lib') then
-      add_lua_path(paths, lib .. '/lib')
+      add_lua_path(paths, lib .. '/lib', seen)
     end
   end
 
   for _, dir in ipairs(LUA_PATH_ENTRIES) do
-    add_lua_path(paths, dir)
+    add_lua_path(paths, dir, seen)
   end
 
-  return dedupe(paths, true)
+  return paths
 end
 
 local Disable = "Disable"
@@ -826,7 +813,7 @@ function _M.init()
         nonstandardSymbol = {},
         pathStrict        = true,
         unicodeName       = false,
-        path              = runtime_paths({}),
+        path              = runtime_paths(settings),
         plugin            = nil,
         pluginArgs        = nil,
         special = {
@@ -1048,7 +1035,7 @@ function _M.on_attach(client, buf)
 
     settings.Lua = {
       runtime = {
-        path = runtime_paths(library),
+        path = runtime_paths(ws),
       },
 
       workspace = {
