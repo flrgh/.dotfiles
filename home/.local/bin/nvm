@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# fallback for when I want to run nvm from a non-shell script
+
+export NVM_DIR="${NVM_DIR:-$HOME/.config/nvm}"
+
+if ! type -t nvm &>/dev/null; then
+    source "$NVM_DIR/nvm.sh"
+    nvm alias default lts/hydrodgen
+fi
+
+nvm "$@"

@@ -10,8 +10,7 @@ if [[ -d $NVM_DIR ]]; then
             nvm alias default lts/hydrodgen
             nvm "$@"
         }
-
-        export nvm
+        export -f nvm
     fi
 
     # sourcing $NVM_DIR/nvm.sh does this for us, but it's slow
