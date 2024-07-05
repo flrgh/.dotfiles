@@ -23,6 +23,7 @@ ARGS=(
     .
     --type symlink
     --hidden
+    --no-ignore
     --absolute-path
     --one-file-system
     --full-path
@@ -44,15 +45,24 @@ readonly IGNORE=(
     "GoLand-*"
     "aws-cli/v*"
     "luarocks/rocks-*"
+    .config/nvm
     .cpan/build
     .git
+    .local/cargo
+    .local/libexec/lua-language-server
     .local/share/Steam
-    .local/share/gnome-shell
-    .local/share/nvim
+    .local/share/Trash
+    .local/share/bash-completion/completions
+    .local/share/lua/5.1
+    .local/share/man/man1
     .local/share/virtualenv
+    .local/state/nvim
+    .local/var/log/lua-lsp
     JetBrains
     REAPER/Data
     cargo/registry
+    #chromium/AutofillStates
+    #chromium/Default
     flatpak
     go/misc
     go/pkg
@@ -61,10 +71,10 @@ readonly IGNORE=(
     google-chrome/Default
     lib/luarocks
     lib/perl5/share/perl5
+    libreoffice
     logs
-    lua-language-server/3rd
-    lua-language-server/meta/3rd
     node_modules
+    nvm/test
     pulse-sms/Cache
     rustup/toolchains
     site-packages
@@ -75,55 +85,18 @@ for p in "${IGNORE[@]}"; do
     ARGS+=(--exclude "**/$p/")
 done
 
-
-remove_dangling() {
-    local -r link="$1"
-
-    if [[ ! -L "$link" ]]; then
-        printf "weird, %q does not exist or is not a symlink" \
-            "$link"
-        return
-    fi
-
-    local target
-
-    target=$(readlink \
-        --canonicalize-missing \
-        --no-newline \
-        "$link"
-    )
-
-    if [[ -z "${target:-}" ]]; then
-        printf "weird, readlink returned an empty string for %q" "$link"
-        return
-    fi
-
-    if [[ $target = "$FILES_D"/* ]] || [[ $target = *dotfiles* ]]; then
-
-        if [[ ! -e $target ]]; then
-            printf "Danging symlink %q => %q\n" \
-                "$link" \
-                "$target"
-
-            rm -v "$link"
-        fi
-    fi
-}
-
-clean_symlinks() {
-    while read -r link; do
-        remove_dangling "$link"
-    done
-}
-
+EXEC=(
+    --batch-size 20
+    --exec-batch "$REPO_ROOT"/bin/remove-dangling-symlinks "$REPO_ROOT"
+)
 
 # $HOME itself (no recurse)
 fd "${ARGS[@]}" \
     --max-depth 1 \
     --search-path "$INSTALL_PATH" \
-| clean_symlinks
+    "${EXEC[@]}"
 
 # $HOME sub-paths (with recurse)
 fd "${ARGS[@]}" \
     "${PATHS[@]}" \
-| clean_symlinks
+    "${EXEC[@]}"

@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+readonly TARGET=${1:?target directory required}
+shift
+
+is_absolute() {
+    [[ $1 = /* ]]
+}
+
+if ! is_absolute "$TARGET"; then
+    printf "ERROR: target directory must be absolute\n"
+    exit 1
+fi
+
+if [[ ! -d "$TARGET" ]]; then
+    printf "ERROR: target directory must exist and be a directory\n"
+    exit 1
+fi
+
+LINKS=()
+
+for link in "$@"; do
+    if ! is_absolute "$link"; then
+        printf "non-absolute link path: %s\n" "$link"
+        continue
+    fi
+
+    if [[ $link = "$TARGET"/* ]]; then
+        printf "uh oh, we shouldn't be evaluating this: %s\n" "$link"
+        continue
+    fi
+
+    if [[ ! -L "$link" ]]; then
+        printf "weird, %q does not exist or is not a symlink" "$link"
+        continue
+    fi
+
+    LINKS+=("$link")
+done
+
+if (( ${#LINKS[@]} == 0 )); then
+    exit 0
+fi
+
+mapfile -d '' -t TARGETS < \
+    <(realpath \
+        --canonicalize-missing \
+        --physical \
+        --zero \
+        "${LINKS[@]}"
+    )
+
+if (( ${#LINKS[@]} != ${#TARGETS[@]} )); then
+    printf 'Something is screwy, #LINKS = %s / #TARGETS = %s\n' \
+        "${#LINKS[@]}" "${#TARGETS[@]}"
+    exit 1
+fi
+
+for (( i = 1; i < ${#LINKS[@]}; i++ )); do
+    link=${LINKS[$i]}
+    target=${TARGETS[$i]}
+
+
+    if [[ -z "${target:-}" ]]; then
+        printf "weird, readlink returned an empty string for %q" "$link"
+        continue
+    fi
+
+    if [[ $target = "$TARGET"/* && ! -e $target ]]; then
+        printf "Danging symlink %q => %q\n" \
+            "$link" \
+            "$target"
+
+        rm -v "$link"
+    fi
+done
