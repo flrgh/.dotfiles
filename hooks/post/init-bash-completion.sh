@@ -24,6 +24,7 @@ declare -A COMMANDS=(
     [cargo]="!rustup completions bash cargo"
     [gitsign]="completion bash"
     [deck]="completion bash"
+    [gh-helper]="generate-bash-completion"
 )
 
 declare -A REMOTE_FILES=(
