@@ -2,6 +2,8 @@ if require("my.config.globals").bootstrap then
   return
 end
 
+local event = require "my.event"
+
 local create_augroup = vim.api.nvim_create_augroup
 local create_autocmd = vim.api.nvim_create_autocmd
 
@@ -18,7 +20,7 @@ local fmt = string.format
 ---@field desc      string
 ---@field event?    string
 ---@field events?   string[]
----@field pattern   string
+---@field pattern   string|string[]
 ---@field buffer?   number
 ---@field callback  fun(event:vim.autocmd.event):boolean?
 ---@field command?  string
@@ -50,7 +52,7 @@ do
   create("user-nomodified", {
     {
       desc = "Manage fileencoding + modifiable + modified",
-      events = {"BufNewFile", "BufRead"},
+      events = {event.BufNewFile, event.BufRead},
       pattern = "*",
       callback = function()
         local bo = vim.bo
@@ -74,7 +76,7 @@ do
 
     {
       desc = "Set nomodified+nomodifiable when reading from stdin",
-      event = "StdinReadPost",
+      event = event.StdinReadPost,
       pattern = "*",
       callback = function()
         vim.bo.modifiable = false

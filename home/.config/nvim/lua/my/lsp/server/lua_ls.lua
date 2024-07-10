@@ -4,6 +4,8 @@ end
 
 local _M = {}
 
+local vim = vim
+
 ---@class my.lsp.LuaLS.runtime
 ---@field version?           string
 ---@field builtin?           string
@@ -252,7 +254,7 @@ local function update_settings(settings, client)
     for _, tree in ipairs(resolver.paths) do
       if tree.dir ~= "" and not wfs[tree.dir] then
         wfs[tree.dir] = true
-        table.insert(client.workspace_folders, {
+        insert(client.workspace_folders, {
           name = tree.dir,
           uri = vim.uri_from_fname(tree.dir),
         })
@@ -523,43 +525,11 @@ local Replace = "Replace"
 local Fallback = "Fallback"
 local Opened = "Opened"
 
----@type my.lua.resolver.module[]
-local requires
-
-local function find_requires()
-  if WS.meta.luarc then
-    return
-  end
-
-  local cmd = {
-    "rg",
-    "--one-file-system",
-    "--hidden",
-    "--no-heading",
-    "--no-line-number",
-    "--no-filename",
-    "-g", "*.lua",
-    "-e", [[require[ \(]*['"\[=]+([a-zA-Z0-9._/-]+)['"\]=]+[ \)]*]],
-    "-r", "$1",
-    "-o",
-  }
-
-  local req = {}
-  local seen = {}
-  local n = 0
-
-  ---@type my.lua.resolver.module[]
-  local found = {}
-
-  local done = false
-
-  local function have_items()
-    return n > 0
-  end
-
+---@param ws? my.lsp.settings
+local function update_resolver(ws)
   local meta
 
-  local ws = get_merged_settings()
+  ws = ws or get_merged_settings()
 
   meta = { source = SRC_TYPE_DEFS }
   for _, dir in ipairs(ws.definitions or EMPTY) do
@@ -604,115 +574,6 @@ local function find_requires()
   for _, dir in ipairs(LUA_PATH_ENTRIES) do
     resolver:add_dir(dir, meta)
   end
-
-  local missing = {}
-  local skip = {
-    ["table.new"] = true,
-    ["table.clone"] = true,
-    ["table.nkeys"] = true,
-    ["table.isarray"] = true,
-    ["table.isempty"] = true,
-    ["table.clear"] = true,
-    ["string.buffer"] = true,
-    ["cjson"] = true,
-    ["cjson.safe"] = true,
-    ["math"] = true,
-    ["bit"] = true,
-    ["ffi"] = true,
-    ["require"] = true,
-  }
-
-  local skipped = 0
-
-  ---@param modname string
-  local function resolve_req(modname)
-    if not paths then return end
-
-    if skip[modname] or modname:sub(-1) == "." then
-      skipped = skipped + 1
-      return
-    end
-
-    if not resolver then
-      return
-    end
-
-    local mod = resolver:find_module(modname)
-    if mod then
-      table.insert(found, mod)
-
-    else
-      table.insert(missing, modname)
-    end
-  end
-
-  local mods = 0
-
-  local function resolve()
-    local resolved = sw.new("lua-ls.find-requires.resolve", 1000)
-
-    while true do
-      if n > 0 then
-        while n > 0 do
-          ---@type string
-          local item = req[n]
-          n = n - 1
-          resolve_req(item)
-        end
-      end
-
-      if done then
-        break
-      end
-
-      if n < 1 then
-        vim.wait(50, have_items, nil, true)
-      end
-    end
-
-    requires = found
-    resolver:purge_fs_cache()
-    resolved()
-  end
-
-  local scheduled = false
-
-  local function add_req(line)
-    if not seen[line] then
-      mods = mods + 1
-      seen[line] = true
-      n = n + 1
-      req[n] = line
-
-      if not scheduled then
-        scheduled = true
-        vim.defer_fn(resolve, 0)
-      end
-    end
-  end
-
-  local rg_done = sw.new("lua-ls.find-requires.ripgrep", 500)
-
-  vim.system(cmd,
-    {
-      text = true,
-      stdout = function(err, data)
-        if err then
-          vim.notify("Error: " .. err)
-          return
-        end
-
-        if data then
-          data:gsub("[^\r\n]+", add_req)
-        end
-      end,
-      timeout = 1000 * 5,
-    },
-    function(_out)
-      done = true
-      rg_done()
-    end
-  )
 end
 
 ---@param settings my.lsp.LuaLS
@@ -784,13 +645,39 @@ local function update_settings_from_requires(settings, found)
   end
 end
 
+local init_autocmd
+do
+  local event = require "my.event"
+  function init_autocmd()
+    local group = vim.api.nvim_create_augroup("user-lua", { clear = true })
+    vim.api.nvim_create_autocmd({
+        event.BufNew,
+        event.BufNewFile,
+        event.BufAdd,
+        event.BufRead,
+        event.BufWinEnter,
+        event.TextChanged,
+        event.TextChangedI
+      }, {
+        group    = group,
+        pattern  = "*.lua",
+        desc     = "Lua buffer event handler",
+        callback = _M.on_buf_event,
+      }
+    )
+  end
+end
+
 ---@return lspconfig.Config
 function _M.init()
-  if WS.meta.lua then
-    vim.defer_fn(find_requires, 1)
-  end
-
   local settings = get_merged_settings()
+
+  if WS.meta.lua then
+    init_autocmd()
+    vim.defer_fn(function()
+      update_resolver(settings)
+    end, 0)
+  end
 
   ---@type lspconfig.Config
   local conf = {
@@ -1047,14 +934,6 @@ function _M.on_attach(client, buf)
     local defaults = (ws.override_all and {}) or client.settings
     local new = tbl_deep_extend("force", defaults, settings)
 
-    local function have_requires()
-      return requires ~= nil
-    end
-
-    if vim.wait(5000, have_requires, 100) then
-      update_settings_from_requires(new.Lua, requires)
-    end
-
     _M.settings = new
 
     if not deep_equal(client.settings, new) then
@@ -1086,17 +965,17 @@ function _M.find_type_defs(names)
   }
 
   if WS.meta.nvim then
-    table.insert(cmd, globals.nvim.plugins)
+    insert(cmd, globals.nvim.plugins)
   end
 
   for _, lib in ipairs(LUA_PATH_ENTRIES) do
-    table.insert(cmd, lib)
+    insert(cmd, lib)
   end
 
   vim.system(cmd, { text = true }, function(out)
     local results = {}
     local _ = out.stdout:gsub("[^\r\n]+", function(line)
-      table.insert(results, line)
+      insert(results, line)
     end)
 
     local stderr = out.stderr
@@ -1113,6 +992,217 @@ function _M.find_type_defs(names)
       update_settings(settings)
     end
   end)
+end
+
+_M.busy = {}
+
+---@type { buf:integer, event:string, file:string }[]
+local events = {}
+
+local get_module_requires
+do
+  ---@type vim.treesitter.Query
+  local query
+  local get_parser = vim.treesitter.get_parser
+  local parse_query = vim.treesitter.query.parse
+  local get_node_text = vim.treesitter.get_node_text
+
+  local query_text = [[
+  (function_call
+      name: (identifier) @func (#eq? @func "require")
+      arguments: (arguments
+        (string
+          content: (string_content) @mod
+      )
+    )
+  )
+  ]]
+
+  local query_opts = { all = true }
+
+
+  ---@param buf integer
+  ---@return string[]?
+  function get_module_requires(buf)
+    local lang = get_parser(buf, "lua")
+
+    local syn = lang:parse()
+    local root = syn[1]:root()
+
+    query = query or assert(parse_query("lua", query_text))
+
+    local result = {}
+    local ok, iter = pcall(query.iter_matches, query, root, 0, 0, -1, query_opts)
+    if not ok then
+       vim.notify(vim.inspect({
+            message = "error getting text from buffer",
+            buf     = buf,
+            file    = vim.api.nvim_buf_get_name(buf),
+            error   = iter,
+          }), vim.log.levels.WARN)
+      return result
+    end
+
+
+    local pattern, match, metadata
+    while true do
+      ok, pattern, match, metadata = pcall(iter, pattern, match, metadata)
+
+      if not ok then
+         vim.notify(vim.inspect({
+              message = "error getting text from buffer",
+              buf     = buf,
+              file    = vim.api.nvim_buf_get_name(buf),
+              error   = pattern,
+            }), vim.log.levels.WARN)
+        return result
+      end
+
+      if not pattern or not match then break end
+
+      local res = {}
+      assert(#match == 2)
+
+      for id, nodes in pairs(match) do
+        local name = query.captures[id]
+
+        assert(#nodes == 1)
+        local ok, text = pcall(get_node_text, nodes[1], buf)
+        if ok then
+          res[name] = text
+        else
+          vim.notify(vim.inspect({
+            message = "error getting text from buffer",
+            buf     = buf,
+            file    = vim.api.nvim_buf_get_name(buf),
+            error   = text,
+          }), vim.log.levels.WARN)
+        end
+      end
+
+      if res.func == "require" then
+        insert(result, res.mod)
+      end
+    end
+
+    return result
+  end
+end
+
+local scheduled = false
+
+local function buf_update_handler()
+  scheduled = false
+
+  local modnames = {}
+  local seen = {}
+
+  local n = #events
+
+  while n > 0 do
+    local e = events[n]
+    events[n] = nil
+    n = n - 1
+
+    local buf = e.buf
+    for _, mod in ipairs(get_module_requires(buf) or EMPTY) do
+      if not seen[mod] then
+        seen[mod] = true
+        insert(modnames, mod)
+      end
+    end
+
+    _M.busy[buf] = nil
+  end
+
+  if not resolver then
+    return
+  end
+
+  ---@type my.lua.resolver.module[]
+  local found = {}
+  local missing = {}
+
+  local skip = {
+    ["table.new"] = true,
+    ["table.clone"] = true,
+    ["table.nkeys"] = true,
+    ["table.isarray"] = true,
+    ["table.isempty"] = true,
+    ["table.clear"] = true,
+    ["string.buffer"] = true,
+    ["cjson"] = true,
+    ["cjson.safe"] = true,
+    ["math"] = true,
+    ["bit"] = true,
+    ["ffi"] = true,
+    ["require"] = true,
+  }
+
+  for _, modname in ipairs(modnames) do
+    if not skip[modname] then
+      local mod = resolver:find_module(modname)
+      if mod then
+        insert(found, mod)
+
+      else
+        insert(missing, modname)
+      end
+    end
+  end
+
+  if #found == 0 then
+    return
+  end
+
+  local settings = _M.settings
+  update_settings_from_requires(settings.Lua, found)
+
+  local client = vim.lsp.get_clients({ name = "lua_ls" })[1]
+  if not client then
+    return
+  end
+
+  if not deep_equal(client.settings, settings) then
+    update_settings(settings.Lua, client)
+  end
+end
+
+local next_run = 0
+
+local function schedule_handler()
+  if scheduled then
+    return
+  end
+
+  scheduled = true
+
+  local now = vim.uv.now()
+  local delay = math.max(1, next_run - now)
+  next_run = now + 1000
+
+  vim.defer_fn(buf_update_handler, delay)
+end
+
+---@param e { buf:integer, event:string, file:string }
+function _M.on_buf_event(e)
+  local buf = e.buf
+
+  if not buf
+    or not resolver
+    or _M.busy[buf]
+    or not WS.meta.lua
+    or not vim.api.nvim_buf_is_loaded(buf)
+    or not vim.bo[buf].buflisted
+    or vim.bo[buf].buftype == "scratch"
+    or vim.bo[buf].bufhidden == "hide"
+  then
+    return
+  end
+
+  _M.busy[buf] = true
+  insert(events, e)
+  schedule_handler()
 end
 
 return _M
