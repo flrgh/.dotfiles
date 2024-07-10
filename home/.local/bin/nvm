@@ -4,9 +4,13 @@
 
 export NVM_DIR="${NVM_DIR:-$HOME/.config/nvm}"
 
-if ! type -t nvm &>/dev/null; then
+if [[ $(type -t nvm 2>/dev/null) != "function" ]]; then
     source "$NVM_DIR/nvm.sh"
-    nvm alias default lts/hydrodgen
+fi
+
+if [[ $(type -t nvm 2>/dev/null) != "function" ]]; then
+    echo "i dunno what to do"
+    exit 1
 fi
 
 nvm "$@"
