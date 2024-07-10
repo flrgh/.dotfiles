@@ -178,10 +178,16 @@ add_command("LuaDebug",
         ok, rocks = pcall(vim.json.decode, out)
         if not ok then
           buf:put("WARNING: could not parse `luarocks config --json`\n")
+          rocks = nil
+
+        elseif type(rocks) ~= "table" then
+          buf:put("WARNING: `luarocks config --json` returned a non-table\n")
+          rocks = nil
         end
       end
 
       if rocks then
+        rocks.variables = rocks.variables or {}
         replace_path(rocks.deploy_lua_dir, "luarocks.modules")
         replace_path(rocks.variables.LUA_DIR, "luarocks.LUA_DIR")
 
