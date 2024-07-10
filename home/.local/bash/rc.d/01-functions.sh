@@ -69,8 +69,18 @@ dump-array() {
     local -rn ref=$1
 
     local i
+    local -i width=32
+    local key len
+
     for i in "${!ref[@]}"; do
-        printf '%-32s => %q\n' \
+        key="${name}[$i]"
+        len=${#key}
+        width=$(( len > width ? len : width ))
+    done
+
+    local fmt="%-${width}s => %s\n"
+    for i in "${!ref[@]}"; do
+        printf "$fmt" \
                 "${name}[$i]" \
                 "${ref[$i]}"
     done
@@ -183,8 +193,11 @@ __print_attributes() {
     fi
 
     if (( ${#attrs[@]} > 0 )); then
-        printf '%s attributes: ' "$name"
-        array-join ', ' "${attrs[@]}"
+        local attrs
+        array-join-var attrs ', ' "${attrs[@]}"
+        printf '%-32s => %s\n' \
+            "$name (attributes)" \
+            "$attrs"
     fi
 }
 
@@ -218,7 +231,13 @@ dump-var() {
         done
         return
     elif (( nargs > 1 )); then
+        local -i c=0
+
         for v in "$@"; do
+            if (( c++ > 0 )); then
+                printf -- '---\n'
+            fi
+
             dump-var "$v"
         done
         return
@@ -244,14 +263,18 @@ dump-var() {
     __print_attributes "$name"
 
     if (( VAR_INFO["is_array"] )); then
+        printf '%-32s\n' "$name items:"
         dump-array "$name"
 
     elif (( VAR_INFO["is_assoc_array"] )); then
+        printf '%-32s\n' "$name items:"
         dump-array "$name"
 
     elif __is_delimited_string "$name"; then
         local delim=${__DELIMITED_VARS[$name]}
-        echo "$name is a string delimited by '$delim'"
+        printf '%-32s => "%s"\n' \
+            "$name (delim)" \
+            "$delim"
         __dump_delimited_var "$name"
 
     elif (( VAR_INFO["is_nameref"] )); then
@@ -263,7 +286,7 @@ dump-var() {
     else
         local -rn value=$name
         printf "%-32s => %q\n" \
-            "$name" \
+            "${name} (value)" \
             "${value}"
     fi
 }
