@@ -111,6 +111,7 @@ PACKAGES=(
     valgrind-devel
     util-linux
     vim-common
+    wabt              # WebAssembly Binary Toolkit: https://github.com/WebAssembly/wabt
     wget
     which
     wireshark
