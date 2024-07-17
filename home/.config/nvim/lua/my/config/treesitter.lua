@@ -37,6 +37,7 @@ function _M.bootstrap()
       "make",
       "markdown",
       "markdown_inline",
+      "nginx",
       "objdump",
       "passwd",
       "php",
