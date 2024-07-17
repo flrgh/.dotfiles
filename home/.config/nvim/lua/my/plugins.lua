@@ -382,7 +382,8 @@ local plugins_by_category = {
   treesitter = {
     {
       "nvim-treesitter/nvim-treesitter",
-      event = evt.VeryLazy,
+      -- FIXME: figure out how to make this work with my lua module search autocommand
+      -- event = evt.VeryLazy,
       build = function()
         require("my.config.treesitter").bootstrap()
         cmd "TSUpdateSync"
