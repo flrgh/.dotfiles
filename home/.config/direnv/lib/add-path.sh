@@ -111,6 +111,6 @@ layout_luarocks() {
     echo "Using LuaRocks at $dir"
 
     PATH_add "$dir/bin"
-    add-lua-path "$dir/share/lua/5.1"
+    add-luajit-path "$dir/share/lua/5.1"
     add-lua-cpath "$dir/lib/lua/5.1"
 }
