@@ -523,7 +523,8 @@ end
 local Disable = "Disable"
 local Replace = "Replace"
 local Fallback = "Fallback"
-local Opened = "Opened"
+local Opened = "Opened!"
+local None = "None!"
 
 ---@param ws? my.lsp.settings
 local function update_resolver(ws)
@@ -693,22 +694,6 @@ function _M.init()
   else
     ---@type my.lsp.LuaLS
     conf.settings.Lua = {
-      runtime = {
-        version           = "LuaJIT",
-        builtin           = "enable",
-        fileEncoding      = "utf8",
-        nonstandardSymbol = {},
-        pathStrict        = true,
-        unicodeName       = false,
-        path              = runtime_paths(settings),
-        plugin            = nil,
-        pluginArgs        = nil,
-        special = {
-          ["my.utils.luamod.reload"] = "require",
-          ["my.utils.luamod.if_exists"] = "require",
-        },
-      },
-
       completion = {
         enable           = true,
         autoRequire      = false,
@@ -722,48 +707,9 @@ function _M.init()
         workspaceWord    = false,
       },
 
-      signatureHelp = {
-        enable = true,
-      },
-
-      hover = {
-        enable        = true,
-        enumsLimit    = 10,
-        expandAlias   = true,
-        previewFields = 20,
-        viewNumber    = true,
-        viewString    = true,
-        viewStringMax = 1000,
-      },
-
-      hint = {
-        enable     = true,
-        paramName  = "All",
-        paramType  = true,
-        setType    = true,
-        arrayIndex = "Enable",
-        await      = false,
-        semicolon  = Disable,
-      },
-
-      IntelliSense = {
-        -- https://github.com/sumneko/lua-language-server/issues/872
-        traceLocalSet    = true,
-        traceReturn      = true,
-        traceBeSetted    = true,
-        traceFieldInject = true,
-      },
-
-      format = {
-        enable = false,
-      },
-
       diagnostics = {
         enable = true,
-        disable = {
-          'lowercase-global',
-          'need-check-nil',
-        },
+        disable = nil,
 
         globals = {
           'vim',
@@ -800,79 +746,158 @@ function _M.init()
         ignoredFiles = Disable,
         libraryFiles = Disable,
         workspaceDelay = 3000,
-        workspaceRate = 80,
+        workspaceRate = 100,
         workspaceEvent = "OnSave",
-
-        groupFileStatus = nil,
 
         unusedLocalExclude = {
           "self",
         },
 
         neededFileStatus = {
-          ["ambiguity-1"]            = Opened,
-          ["assign-type-mismatch"]   = Opened,
-          ["await-in-sync"]          = "None!",
-          ["cast-local-type"]        = Opened,
-          ["cast-type-mismatch"]     = Opened,
-          ["circle-doc-class"]       = Opened,
-          ["close-non-object"]       = Opened,
-          ["code-after-break"]       = Opened,
-          ["codestyle-check"]        = "None!",
-          ["count-down-loop"]        = Opened,
-          deprecated                 = Opened,
-          ["different-requires"]     = Opened,
-          ["discard-returns"]        = Opened,
-          ["doc-field-no-class"]     = Opened,
-          ["duplicate-doc-alias"]    = Opened,
-          ["duplicate-doc-field"]    = Opened,
-          ["duplicate-doc-param"]    = Opened,
+          -- group: ambiguity
+          ["ambiguity-1"]        = Opened,
+          ["count-down-loop"]    = None,
+          ["different-requires"] = None,
+          ["newline-call"]       = None,
+          ["newfield-call"]      = None,
+
+          -- group: await
+          ["await-in-sync"] = None,
+          ["not-yieldable"] = None,
+
+          -- group: codestyle
+          ["codestyle-check"]  = None,
+          ["name-style-check"] = None,
+          ["spell-check"]      = None,
+
+          -- group: conventions
+          ["global-element"] = Opened,
+
+          -- group: duplicate
           ["duplicate-index"]        = Opened,
           ["duplicate-set-field"]    = Opened,
-          ["empty-block"]            = Opened,
-          ["global-in-nil-env"]      = Opened,
-          ["lowercase-global"]       = "None!",
+
+          -- group: global
+          ["global-in-nil-env"]      = None,
+          ["lowercase-global"]       = None,
+          ["undefined-env-child"]    = None,
+          ["undefined-global"]       = Opened,
+
+          -- group: luadoc
+          ["cast-type-mismatch"]       = Opened,
+          ["circle-doc-class"]         = None,
+          ["doc-field-no-class"]       = Opened,
+          ["duplicate-doc-alias"]      = Opened,
+          ["duplicate-doc-field"]      = Opened,
+          ["duplicate-doc-param"]      = Opened,
+          ["incomplete-signature-doc"] = Opened,
+          ["missing-global-doc"]       = None,
+          ["missing-local-export-doc"] = None,
+          ["undefined-doc-class"]      = Opened,
+          ["undefined-doc-name"]       = Opened,
+          ["undefined-doc-param"]      = Opened,
+          ["unknown-cast-variable"]    = Opened,
+          ["unknown-diag-code"]        = Opened,
+          ["unknown-operator"]         = Opened,
+
+          -- group: redefined
+          ["redefined-local"]        = Opened,
+
+          -- group: strict
+          ["close-non-object"]       = None,
+          ["deprecated"]             = Opened,
+          ["discard-returns"]        = None,
+
+          -- group: strong
+          ["no-unknown"] = None,
+
+          -- group: type-check
+          ["assign-type-mismatch"] = Opened,
+          ["cast-local-type"]      = Opened,
+          ["cast-type-mismatch"]   = Opened,
+          ["inject-field"]         = Opened,
+          ["need-check-nil"]       = Opened,
+          ["param-type-mismatch"]  = Opened,
+          ["return-type-mismatch"] = Opened,
+          ["undefined-field"]      = Opened,
+
+          -- group: unbalanced
+          ["missing-fields"]         = Opened,
           ["missing-parameter"]      = Opened,
           ["missing-return"]         = Opened,
           ["missing-return-value"]   = Opened,
-          ["need-check-nil"]         = Opened,
-          ["newfield-call"]          = Opened,
-          ["newline-call"]           = Opened,
-          ["no-unknown"]             = "None!",
-          ["not-yieldable"]          = "None!",
-          ["param-type-mismatch"]    = Opened,
-          ["redefined-local"]        = Opened,
           ["redundant-parameter"]    = Opened,
-          ["redundant-return"]       = Opened,
           ["redundant-return-value"] = Opened,
           ["redundant-value"]        = Opened,
-          ["return-type-mismatch"]   = Opened,
-          ["spell-check"]            = "None!",
-          ["trailing-space"]         = Opened,
           ["unbalanced-assignments"] = Opened,
-          ["undefined-doc-class"]    = Opened,
-          ["undefined-doc-name"]     = Opened,
-          ["undefined-doc-param"]    = Opened,
-          ["undefined-env-child"]    = Opened,
-          ["undefined-field"]        = Opened,
-          ["undefined-global"]       = Opened,
-          ["unknown-cast-variable"]  = Opened,
-          ["unknown-diag-code"]      = Opened,
-          ["unknown-operator"]       = Opened,
-          ["unreachable-code"]       = Opened,
-          ["unused-function"]        = Opened,
-          ["unused-label"]           = Opened,
-          ["unused-local"]           = Opened,
-          ["unused-vararg"]          = Opened,
+
+          -- group: unused
+          ["code-after-break"] = Opened,
+          ["empty-block"]      = None,
+          ["redundant-return"] = None,
+          ["trailing-space"]   = None,
+          ["unreachable-code"] = Opened,
+          ["unused-function"]  = Opened,
+          ["unused-label"]     = Opened,
+          ["unused-local"]     = Opened,
+          ["unused-vararg"]    = Opened,
         }
       },
 
-      workspace = {
-        checkThirdParty  = Disable,
-        ignoreSubmodules = true,
-        library          = {},
-        useGitIgnore     = true,
-        userThirdParty   = nil,
+      doc = {
+        packageName = nil,
+        privateName = nil,
+        protectedName = nil,
+      },
+
+      format = {
+        defaultConfig = nil,
+        enable = false,
+      },
+
+      hint = {
+        enable     = true,
+        paramName  = "All",
+        paramType  = true,
+        setType    = true,
+        arrayIndex = "Enable",
+        await      = false,
+        semicolon  = Disable,
+      },
+
+      hover = {
+        enable        = true,
+        enumsLimit    = 10,
+        expandAlias   = true,
+        previewFields = 20,
+        viewNumber    = true,
+        viewString    = true,
+        viewStringMax = 1000,
+      },
+
+      IntelliSense = {
+        -- https://github.com/sumneko/lua-language-server/issues/872
+        traceLocalSet    = true,
+        traceReturn      = true,
+        traceBeSetted    = true,
+        traceFieldInject = true,
+      },
+
+      runtime = {
+        builtin           = "enable",
+        fileEncoding      = "utf8",
+        meta              = nil,
+        nonstandardSymbol = nil,
+        path              = runtime_paths(settings),
+        pathStrict        = true,
+        plugin            = nil,
+        pluginArgs        = nil,
+        special = {
+          ["my.utils.luamod.reload"] = "require",
+          ["my.utils.luamod.if_exists"] = "require",
+        },
+        unicodeName       = false,
+        version           = "LuaJIT",
       },
 
       semantic = {
@@ -882,12 +907,45 @@ function _M.init()
         variable   = true,
       },
 
+      signatureHelp = {
+        enable = false,
+      },
+
+      spell = {
+        dict = nil,
+      },
+
       type = {
         castNumberToInteger = true,
         weakUnionCheck      = true,
         weakNilCheck        = true,
       },
+
+      window = {
+        progressBar = true,
+        statusBar   = true,
+      },
+
+      workspace = {
+        checkThirdParty  = Disable,
+        ignoreDir        = nil,
+        ignoreSubmodules = true,
+        library          = nil,
+        maxPreload       = nil,
+        preloadFileSize  = nil,
+        useGitIgnore     = true,
+        userThirdParty   = nil,
+      },
     }
+
+    -- explicitly disable diagnostics set to `None`
+    -- idk if this has any real effect
+    conf.settings.Lua.diagnostics.disable = {}
+    for name, val in pairs(conf.settings.Lua.diagnostics.neededFileStatus) do
+      if val == None then
+        insert(conf.settings.Lua.diagnostics.disable, name)
+      end
+    end
   end
 
   _M.settings = conf.settings
