@@ -2,7 +2,9 @@
 
 set -euo pipefail
 
-source "$HOME/.config/github/helper-access-token"
+if [[ -z ${GITHUB_TOKEN:-} || -z ${GITHUB_USER:-} ]]; then
+    source "$HOME/.config/github/helper-access-token"
+fi
 
 readonly BASE_URL=https://api.github.com/
 
