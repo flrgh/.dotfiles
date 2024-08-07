@@ -18,7 +18,10 @@ if __rc_command_exists fzf; then
         #export FZF_ALT_C_COMMAND='fd --type d . --color=never'
     fi
 
-    if [[ -f /usr/share/fzf/shell/key-bindings.bash ]]; then
+    if [[ -e "$HOME/.local/share/fzf/shell/integration.bash" ]]; then
+        __rc_source_file "$HOME/.local/share/fzf/shell/integration.bash"
+
+    elif [[ -f /usr/share/fzf/shell/key-bindings.bash ]]; then
         __rc_source_file /usr/share/fzf/shell/key-bindings.bash
     fi
 fi
