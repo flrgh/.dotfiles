@@ -4,6 +4,7 @@ set -euo pipefail
 
 export CARGO_HOME=${CARGO_HOME:-$HOME/.local/cargo}
 export RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.local/rustup}
+export PATH="$CARGO_HOME/bin:$PATH"
 
 mkdir -p "$CARGO_HOME" "$RUSTUP_HOME"
 
@@ -20,10 +21,10 @@ if [[ ! -x $CARGO_HOME/bin/cargo ]]; then
     fi
 
     echo "cargo not found, installing..."
-    "$CARGO_HOME"/bin/rustup component add cargo
+    rustup component add cargo
 fi
 
-export PATH="$CARGO_HOME/bin:$PATH"
+rustup update
 
 readonly PACKAGES=(
     alacritty      # terminal emulator
