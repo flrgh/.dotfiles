@@ -16,7 +16,7 @@ get-installed-version() {
 }
 
 get-latest-version() {
-    local version; version=$(gh-helper get-latest-release-name "$REPO")
+    local version; version=$(gh-helper get-latest-tag "$REPO")
     echo "${version#v}"
 }
 
