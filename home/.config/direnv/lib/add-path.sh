@@ -37,7 +37,7 @@ add-path() {
 add-lua-path() {
     local path="$1"
 
-    path=$(realpath -m "$path")
+    #path=$(realpath -m "$path")
 
     add-path LUA_PATH "$path/?/init.lua"  ";"
     add-path LUA_PATH "$path/?.lua"       ";"
@@ -46,7 +46,7 @@ add-lua-path() {
 add-luajit-path() {
     local path="$1"
 
-    path=$(realpath -m "$path")
+    #path=$(realpath -m "$path")
 
     # prepend .ljbc files first so that plain .lua files will override them
     add-path LUA_PATH "$path/?/init.ljbc" ";"
@@ -59,7 +59,7 @@ add-luajit-path() {
 add-lua-cpath() {
     local path="$1"
 
-    path=$(realpath -m "$path")
+    #path=$(realpath -m "$path")
 
     add-path LUA_CPATH "$path/?.so" ";"
 }
