@@ -708,7 +708,7 @@ function _M.init()
       },
 
       diagnostics = {
-        enable = true,
+        enable = false,
         disable = nil,
 
         globals = {
@@ -922,8 +922,8 @@ function _M.init()
       },
 
       window = {
-        progressBar = true,
-        statusBar   = true,
+        progressBar = false,
+        statusBar   = false,
       },
 
       workspace = {
