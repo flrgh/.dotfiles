@@ -16,7 +16,8 @@ if command -v http &>/dev/null; then
             --auth "${GITHUB_USER}:${GITHUB_TOKEN}" \
             --follow \
             --check-status \
-            "${BASE_URL}$1"
+            "${BASE_URL}$1" \
+            "X-GitHub-Api-Version: 2022-11-28"
     }
 else
     http() {
@@ -25,6 +26,7 @@ else
             --fail \
             --user "${GITHUB_USER}:${GITHUB_TOKEN}" \
             --header "Accept: application/vnd.github.v3+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
             --url "${BASE_URL}$1"
     }
 fi
@@ -52,11 +54,24 @@ cmd-get-latest-release() {
     cmd-get-release "$repo" latest
 }
 
-
 cmd-get-releases() {
     local -r repo=$1
 
     http "repos/$repo/releases"
+}
+
+cmd-get-stable-releases() {
+    local -r repo=$1
+    cmd-get-releases "$repo" \
+    | jq \
+        'map(select(.prerelease | not ) | select(.draft | not ) )
+        | sort_by(.tag_name)'
+}
+
+cmd-get-latest-stable-release() {
+    local -r repo=$1
+    cmd-get-stable-releases "$repo" \
+    | jq -r '.[-1]'
 }
 
 cmd-get-release-names() {

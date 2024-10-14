@@ -20,11 +20,13 @@ get-installed-version() {
 }
 
 get-latest-version() {
-    gh-helper get-latest-tag "$REPO"
+    gh-helper get-latest-stable-release "$REPO" \
+        | jq -r '.tag_name'
 }
 
 list-available-versions() {
-    gh-helper get-release-names "$REPO"
+    gh-helper get-stable-releases "$REPO" \
+        | jq -r '.[].tag_name'
 }
 
 get-asset-download-url() {
