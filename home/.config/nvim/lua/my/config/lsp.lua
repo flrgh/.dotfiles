@@ -186,7 +186,7 @@ local servers = {
 
   terraform    = "terraformls",
   yaml         = "yamlls",
-  typescript   = "tsserver",
+  typescript   = "ts_ls",
   zig          = "zls",
 }
 
