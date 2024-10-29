@@ -198,6 +198,7 @@ end
 ---@param tree? my.lua.resolver.path
 ---@return boolean changed
 local function update_workspace_library(settings, path, tree)
+  settings.workspace.library = settings.workspace.library or {}
   local libs = settings.workspace.library
   local nlibs = #libs
 
