@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-nvm install node
-nvm install-latest-npm
+nvm install --lts --latest-npm
+nvm use --lts
 
 readonly PACKAGES=(
     # language servers
