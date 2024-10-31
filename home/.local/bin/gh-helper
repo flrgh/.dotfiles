@@ -71,7 +71,7 @@ cmd-get-stable-releases() {
 cmd-get-latest-stable-release() {
     local -r repo=$1
     cmd-get-stable-releases "$repo" \
-    | jq -r '.[-1]'
+    | jq -r 'sort_by(.created_at) | .[-1]'
 }
 
 cmd-get-release-names() {

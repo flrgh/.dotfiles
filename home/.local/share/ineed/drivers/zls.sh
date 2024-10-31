@@ -23,7 +23,7 @@ get-latest-version() {
 get-asset-download-url() {
     local -r version=$1
 
-    echo "https://github.com/${REPO}/releases/download/${version}/zls-x86_64-linux.tar.gz"
+    echo "https://github.com/${REPO}/releases/download/${version}/zls-x86_64-linux.tar.xz"
 }
 
 install-from-asset() {
@@ -32,14 +32,19 @@ install-from-asset() {
 
     cd "$(mktemp -d)"
 
-    tar xzf "$asset"
+    tar xf "$asset"
     ls -la
 
     cp -L \
-        ./bin/zls \
+        ./zls \
         "$HOME/.local/bin/$NAME"
 
     chmod +x "$HOME/.local/bin/$NAME"
 
     "$NAME" --version
+}
+
+list-available-versions() {
+    gh-helper get-stable-releases "$REPO" \
+    | jq -r 'sort_by(.created_at) | .[].tag_name'
 }
