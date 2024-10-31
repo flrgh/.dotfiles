@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 luarocks install tl
-luarocks install --dev teal-language-server
+luarocks install teal-language-server
