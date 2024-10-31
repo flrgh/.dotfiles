@@ -40,6 +40,7 @@ PACKAGES=(
     file
     fzf
     gcc
+    gcc-c++
     git
     git-extras
     golang
