@@ -28,6 +28,7 @@ rustup update
 
 readonly PACKAGES=(
     alacritty      # terminal emulator
+    bindgen-cli
     btm            # nifty system monitor (top => btm)
     cargo-bloat
     cargo-cache

@@ -25,6 +25,7 @@ declare -A COMMANDS=(
     [gitsign]="completion bash"
     [deck]="completion bash"
     [gh-helper]="generate-bash-completion"
+    [bindgen]="--generate-shell-completions bash"
 )
 
 declare -A REMOTE_FILES=(
