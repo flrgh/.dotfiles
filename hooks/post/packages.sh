@@ -38,6 +38,8 @@ PACKAGES=(
     etckeeper         # /etc as a git repo
     fd-find           # fast file finder
     file
+    fontconfig
+    fontconfig-devel  # currently required to build alacritty
     fzf
     gcc
     gcc-c++
