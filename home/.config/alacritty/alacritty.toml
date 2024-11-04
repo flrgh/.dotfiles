@@ -1,4 +1,5 @@
-import = ["~.config/alacritty/alacritty.local.toml", "~/.config/alacritty/catppuccin-mocha.toml"]
+[general]
+import = ["~/.config/alacritty/alacritty.local.toml", "~/.config/alacritty/catppuccin-mocha.toml"]
 ipc_socket = false
 live_config_reload = true
 working_directory = "None"
