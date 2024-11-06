@@ -24,7 +24,24 @@ if [[ ! -x $CARGO_HOME/bin/cargo ]]; then
     rustup component add cargo
 fi
 
+# housekeeping
+rustup self update
+rustup self upgrade-data
 rustup update
+
+# install commonly needed targets
+readonly TARGETS=(
+    #aarch64-apple-darwin
+    #aarch64-unknown-linux-gnu
+    #aarch64-unknown-linux-musl
+    wasm32-unknown-unknown
+    #wasm32-wasi
+    wasm32-wasip1
+    #x86_64-apple-darwin
+    x86_64-unknown-linux-gnu
+    #x86_64-unknown-linux-musl
+)
+rustup target add "${TARGETS[@]}"
 
 readonly PACKAGES=(
     alacritty      # terminal emulator
