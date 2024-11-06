@@ -136,7 +136,12 @@ def runit(hook, path):
 
 def run_hooks(hooks, path):
     hookdir = REPO_ROOT / "hooks"/ hooks
-    for hook in hookdir.iterdir():
+
+    # hook order (by filename) is significant
+    hooks = [hook for hook in hookdir.iterdir()]
+    hooks.sort()
+
+    for hook in hooks:
         runit(hook, path)
 
 
