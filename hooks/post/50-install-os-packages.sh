@@ -29,6 +29,8 @@ PACKAGES=(
     bear              # database generator for clang
     bind-utils        # DNS cli tools
     cargo             # rustlang package manager
+    clang
+    clang-tools-extra # provides clangd
     cmake
     ctags
     curl
