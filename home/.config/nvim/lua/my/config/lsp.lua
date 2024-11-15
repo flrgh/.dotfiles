@@ -65,7 +65,11 @@ do
 
     maps.hover = cmd("hover_doc")
     maps.references = cmd("finder")
-    maps.show_diagnostic = cmd("show_line_diagnostics")
+
+    -- FIXME: re-enable this
+    -- https://github.com/nvimdev/lspsaga.nvim/issues/1502
+    -- maps.show_diagnostic = cmd("show_line_diagnostics")
+
     maps.next_diagnostic = cmd("diagnostic_jump_next")
     maps.prev_diagnostic = cmd("diagnostic_jump_prev")
   end
