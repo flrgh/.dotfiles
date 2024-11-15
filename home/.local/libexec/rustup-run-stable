@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+readonly BIN=${0##*/}
+
+exec rustup run stable "$BIN" "$@"
