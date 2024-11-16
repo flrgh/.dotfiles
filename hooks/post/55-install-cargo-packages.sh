@@ -23,6 +23,7 @@ readonly PACKAGES=(
     ripgrep
     stylua
     wasm-pack
+    wasmtime-cli
     worker-build   # for cloudflare workers
 )
 
