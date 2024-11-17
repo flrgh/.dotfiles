@@ -62,6 +62,10 @@ local function log_server_stderr(prefix, cmd, event, chunk)
   local entry
 
   if prefix == "rpc" then
+    if event == "stderr" then
+      chunk = chunk:gsub("[\r\n]+$", "")
+    end
+
     entry = {
       command = cmd,
       event = event,
