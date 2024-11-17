@@ -52,12 +52,7 @@ do
     local level = vim.log.levels[env] or vim.log.levels.DEBUG
     vim.lsp.set_log_level(level)
 
-    local logger = require "my.lsp.logger"
-    logger.init()
-    vim.lsp.log.set_format_func(logger.log)
-    vim.schedule(function()
-      vim.notify("LSP debugging enabled. Log file:\n" .. logger.fname)
-    end)
+    require("my.lsp.logger").init()
   end
 end
 

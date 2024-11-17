@@ -77,7 +77,6 @@ do
   if mod.exists("hover") then
     -- I like this better than lspsaga's hover_doc
     local hover = require("hover").hover
-    local api = vim.api
 
     -- 1. press the key once to show the doc window
     -- 2. press the key a second time to change focus to the window

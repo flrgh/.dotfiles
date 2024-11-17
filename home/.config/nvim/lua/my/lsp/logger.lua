@@ -1,9 +1,14 @@
 local _M = {}
 
 local vim = vim
-local deepcopy = vim.deepcopy
+local api = vim.api
 local type = type
 local json_encode = vim.json.encode
+local NULL = vim.NIL
+local evt = require "my.event"
+
+---@type luv_work_ctx_t
+local queue
 
 local format
 do
@@ -18,6 +23,10 @@ do
   }
 
   function format(item)
+    local typ = type(item)
+    if typ == "number" or typ == "string" or typ == "boolean" then
+      return tostring(item)
+    end
     return inspect(item, opts)
   end
 end
@@ -25,11 +34,11 @@ end
 local time
 do
   local update_time = vim.uv.update_time
-  local now = vim.uv.now
+  local hrtime = vim.uv.hrtime
 
   function time()
     update_time()
-    return now()
+    return hrtime() / 1e9
   end
 end
 
@@ -43,124 +52,178 @@ do
   }
 
   function ignore(item)
-    return (item.method and ignored[item.method])
+    return ignored[item]
+        or (item.method and ignored[item.method])
         or (item.request and item.request.method and ignored[item.request.method])
   end
 end
 
-local client_reqs = {}
-local server_reqs = {}
+local function log_server_stderr(prefix, cmd, event, chunk)
+  local entry
 
-local sending = false
-local receiving = false
+  if prefix == "rpc" then
+    entry = {
+      command = cmd,
+      event = event,
+      data = chunk,
+    }
 
----@type string
-local fname
+  else
+    return
+  end
 
----@type file*
-local fh
+  if ignore(entry) then
+    return
+  end
 
-
-function _M.init()
-  fname = os.getenv("NVIM_LSP_DEBUG_LOG") or "my.lsp.log"
-  _M.fname = fname
-  fh = assert(io.open(fname, "a+"))
+  queue:queue(_M.fname, json_encode(entry))
 end
 
-function _M.log(item)
-  assert(fh, "log file not opened")
 
-  if not sending and not receiving then
-    sending   = item == "rpc.send"
-    receiving = item == "rpc.receive"
-    return format(item)
+local function wrap(handler)
+  return function(...)
+    log_server_stderr(...)
+    return handler(...)
+  end
+end
+
+_M.fname = "my.lsp.log"
+
+function _M.init()
+  _M.fname = os.getenv("NVIM_LSP_DEBUG_LOG") or _M.fname
+
+  queue = assert(vim.uv.new_work(
+    function(fname, entry)
+      assert(require("my.utils.fs").append_file(fname, entry .. "\n"))
+    end,
+    function() end
+  ))
+
+  -- monkey-patch log functions so that we can access the whole log entry
+  do
+    local log = require "vim.lsp.log"
+    log.debug = wrap(log.debug)
+    log.error = wrap(log.error)
+    log.info = wrap(log.info)
+    log.trace = wrap(log.trace)
+    log.warn = wrap(log.warn)
+
+    log.set_format_func(format)
   end
 
-  local evt = sending and "send" or "recv"
-  sending = false
-  receiving = false
+  local rpc = require "vim.lsp.client"
+  local _request = rpc._request
 
-  if type(item) ~= "table" then
-    return format(item)
-  end
+  ---@type table<integer, table<integer, my.lsp.logger.entry>>
+  local in_flight = {}
 
-  if ignore(item) then
-    return format(item)
-  end
-
-  item = deepcopy(item)
-  item.event = evt
-
-  local id = item.id or -1
-
-  local client_response = evt == "send"
-                      and item.result
-                      and true
-                       or false
-
-  local client_request = evt == "send"
-                     and not client_response
-
-  local server_request = evt == "recv"
-                     and item.params
-                     and true
-                      or false
-
-  local server_response = evt == "recv"
-                      and not server_request
-
-
-  if client_response then
-    local req = server_reqs[id]
-    server_reqs[id] = nil
-
-    if req then
-      item.request = req
-      req.latency = time() - req.received
+  rpc._request = function(self, method, params, handler, bufnr)
+    if ignore(method) then
+      return _request(self, method, params, handler, bufnr)
     end
 
-  elseif client_request then
-    client_reqs[id] = {
-      id = id,
-      method = item.method,
-      sent = time(),
+    handler = handler or assert(
+      self:_resolve_handler(method),
+      string.format('not found: %q request handler for client %q.', method, self.name)
+    )
+
+    local client_id = self.id
+    in_flight[client_id] = in_flight[client_id] or {}
+
+    local sent = time()
+    ---@class my.lsp.logger.entry
+    local entry = {
+      request = {
+        ---@type integer
+        id = nil,
+        ---@type string
+        method = method,
+        ---@type table?
+        params = params,
+      },
+      sent = sent,
+      ---@type number?
+      duration = nil,
+      ---@type string|table|nil
+      error = nil,
+      ---@type table?
+      response = nil,
+      client = {
+        ---@type integer
+        id = client_id,
+        ---@type string
+        name = self.name,
+      },
+      ---@type "init"|"complete"|"cancel"|"sent"|"error"
+      status = "init",
     }
 
-    if item.method == "$/cancelRequest" then
-      local req_id = item.params and item.params.id
-      if req_id  then
-        local req = client_reqs[req_id]
-        if req then
-          req.sent_cancel = time()
-          req.canceled_after = req.sent_cancel - req.sent
-          item.canceled = req
-        end
+    local request_id
+
+    ---@param err string?
+    ---@param result table?
+    ---@param context table?
+    local function wrapper(err, result, context)
+      entry.error = err or NULL
+      entry.response = result or NULL
+
+      entry.duration = time() - sent
+      entry.sent = nil
+      entry.status = err and "error" or "complete"
+
+      queue:queue(_M.fname, json_encode(entry))
+
+      return handler(err, result, context)
+    end
+
+    local ok
+    ok, request_id = _request(self, method, params, wrapper, bufnr)
+
+    if ok then
+      entry.status = "sent"
+    else
+      entry.status = "error"
+    end
+
+    entry.request.id = request_id
+    in_flight[client_id][request_id] = entry
+
+    return ok, request_id
+  end
+
+  local group = api.nvim_create_augroup("DebugLSP", { clear = true })
+
+  api.nvim_create_autocmd(evt.LspRequest, {
+    group = group,
+    callback = function(e)
+      local client_id = e.data.client_id
+      local request_id = e.data.request_id
+      local request = e.data.request
+
+      local entry = in_flight[client_id]
+                and in_flight[client_id][request_id]
+
+      if not entry then
+        return
       end
-    end
 
-  elseif server_request then
-    server_reqs[id] = {
-      id = id,
-      method = item.method,
-      received = time(),
-    }
+      if request.type == "cancel" then
+        entry.status = "cancel"
+        entry.duration = time() - entry.sent
+        entry.sent = nil
 
-  elseif server_response then
-    local req = client_reqs[id]
-    client_reqs[id] = nil
+        queue:queue(_M.fname, json_encode(entry))
+        in_flight[client_id][request_id] = nil
 
-    if req then
-      item.request = req
-      req.latency = time() - req.sent
-    end
-  end
+      elseif request.type == "complete" then
+        in_flight[client_id][request_id] = nil
+      end
+    end,
+  })
 
-  if not ignore(item) then
-    fh:write(json_encode(item) .. "\n")
-    fh:flush()
-  end
-
-  return format(item)
+  vim.schedule(function()
+    vim.notify("LSP debugging enabled. Log file:\n" .. _M.fname)
+  end)
 end
 
 return _M

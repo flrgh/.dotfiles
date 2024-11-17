@@ -7,8 +7,6 @@ local _M = {
 local vim = vim
 local fn = vim.fn
 local loop = vim.uv
-local expand = fn.expand
-local getcwd = fn.getcwd
 local json_decode = vim.json.decode
 local fs_stat = loop.fs_stat
 local fs_open = loop.fs_open
@@ -149,17 +147,17 @@ function _M.buffer_filename(buf)
   if buf then
     return vim.api.nvim_buf_get_name(buf)
   end
-  return expand("%:p", true)
+  return fn.expand("%:p", true)
 end
 
 ---@return string
 function _M.buffer_directory()
-  return expand("%:p:h", true)
+  return fn.expand("%:p:h", true)
 end
 
 ---@return string?
 function _M.workspace_root()
-  local dir = _M.buffer_directory() or getcwd()
+  local dir = _M.buffer_directory() or fn.getcwd()
   if not dir then
     return
   end
@@ -256,15 +254,16 @@ function _M.dirname(path)
 end
 
 
---- Write data to a file
 ---@param path string
 ---@param data string|string[]
+---@param mode integer?
+---@param flags string
 ---@return integer|nil written
 ---@return string|nil error
-function _M.write_file(path, data, mode)
+local function write_with_flags(path, data, mode, flags)
   mode = mode or oct_to_dec(640)
 
-  local fd, err = fs_open(path, "w+", mode)
+  local fd, err = fs_open(path, flags, mode)
   if not fd then
     return nil, err
   end
@@ -288,6 +287,28 @@ function _M.write_file(path, data, mode)
 
   return bytes
 end
+
+--- Write data to a file
+---@param path string
+---@param data string|string[]
+---@param mode integer?
+---@return integer|nil written
+---@return string|nil error
+function _M.write_file(path, data, mode)
+  return write_with_flags(path, data, mode, "w+")
+end
+
+
+--- Append data to a file
+---@param path string
+---@param data string|string[]
+---@param mode integer?
+---@return integer|nil written
+---@return string|nil error
+function _M.append_file(path, data, mode)
+  return write_with_flags(path, data, mode, "a+")
+end
+
 
 --- Rename a file
 ---@param from string
@@ -416,5 +437,6 @@ function _M.abbreviate(path)
 
   return path
 end
+
 
 return _M

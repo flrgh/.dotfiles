@@ -581,9 +581,6 @@ end
 ---@param settings my.lsp.LuaLS
 ---@param found my.lua.resolver.module[]
 local function update_settings_from_requires(settings, found)
-  paths = settings.runtime.path
-  libraries = settings.workspace.library
-
   local skipped = {}
 
   ---@param tree my.lua.resolver.path

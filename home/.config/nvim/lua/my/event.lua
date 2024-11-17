@@ -1122,5 +1122,6 @@ e.LspAttach = "LspAttach"
 e.LspDetach = "LspDetach"
 e.LspNotify = "LspNotify"
 e.LspProgress = "LspProgress"
+e.LspRequest = "LspRequest"
 
 return e
