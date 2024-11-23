@@ -199,15 +199,13 @@ __rc_add_path() {
 
     # don't insert anything into $PATH before ~/.local/bin by default
     if (( mode == insert )) \
-        && [[ -n $before && -n $after ]] \
+        && [[ -z $before && -z $after ]] \
         && [[ $var == PATH && $path != "$HOME/.local/bin" ]]
     then
         after="$HOME/.local/bin"
     fi
 
-    if [[ -n $after && $after == "$path" ]] \
-        || [[ -n $before && $before == "$path" ]]
-    then
+    if [[ $after == "$path" || $before == "$path" ]]; then
         __rc_warn "--after|--before used with the same value as the input path ($path)"
         return 1
     fi
