@@ -1,7 +1,9 @@
-if [[ -d /usr/local/openresty/bin ]]; then
-    __rc_add_path /usr/local/openresty/bin
+for loc in ~/.local /usr/local; do
+    if [[ -d $loc/openresty/bin && -d $loc/openresty/nginx/sbin ]]; then
+        __rc_add_path "$loc"/openresty/nginx/sbin
+        __rc_add_path "$loc"/openresty/bin
 
-    if [[ -d /usr/local/openresty/nginx/sbin ]]; then
-        __rc_add_path /usr/local/openresty/nginx/sbin
+        break
     fi
-fi
+done
+unset loc || true
