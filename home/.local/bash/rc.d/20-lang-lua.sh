@@ -42,7 +42,7 @@ if [[ -n $luarocks ]]; then
         __rc_add_path "$path" PATH
     done < "$rocks_bin"
 
-    unset rocks_path rocks_cpath rocks_bin
+    unset path rocks_path rocks_cpath rocks_bin
 fi
 unset luarocks
 

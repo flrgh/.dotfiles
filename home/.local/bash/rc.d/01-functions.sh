@@ -124,6 +124,7 @@ __dump_delimited_var() {
     local -r name=$1
 
     if [[ -z ${name:-} ]]; then
+        local var
         for var in "${!__DELIMITED_VARS[@]}"; do
             if is-set "$var"; then
                 __dump_delimited_var "$var"
@@ -225,6 +226,7 @@ __print_nameref_target() {
 
 dump-var() {
     local -r nargs=$#
+    local v
     if (( nargs == 0 )); then
         for v in $(compgen -v); do
             dump-var "$v"
@@ -294,6 +296,7 @@ dump-var() {
 complete -A variable dump-var
 
 dump-prefix() {
+    local arg v
     for arg in "$@"; do
         for v in $(compgen -v "$arg"); do
             dump-var "$v"
@@ -302,6 +305,7 @@ dump-prefix() {
 }
 
 dump-exported() {
+    local v
     for v in $(compgen -e); do
         dump-var "$v"
     done
@@ -313,6 +317,7 @@ complete -A variable dump-prefix
 dump-matching() {
     local -r pat=${1?pattern or substring required}
 
+    local v
     for var in $(compgen -v); do
         if [[ $var = *${pat}* ]]; then
             dump-var "$var"

@@ -231,6 +231,7 @@ __rc_add_path() {
     local -i after_offset=-1
     local -i before_offset=-1
 
+    local i
     for i in "${!old[@]}"; do
         local elem=${old[$i]}
 
@@ -256,6 +257,7 @@ __rc_add_path() {
     fi
 
     local -a new=()
+    local i
 
     if [[ -n $after ]]; then
         for (( i = 0; i < len; i++ )); do
@@ -300,6 +302,7 @@ __rc_add_path() {
         __rc_debug "Prepending $path to \$${var}"
         new+=("$path")
 
+        local elem
         for elem in "$@"; do
             if [[ $elem == "$path" ]]; then
                 continue
@@ -310,6 +313,7 @@ __rc_add_path() {
     elif (( mode == append )); then
         __rc_debug "Appending $path to \$${var}"
 
+        local elem
         for elem in "$@"; do
             if [[ $elem == "$path" ]]; then
                 continue

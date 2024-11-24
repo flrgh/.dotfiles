@@ -43,8 +43,8 @@ declare -g ANSI_CSI="${ANSI_ESC}["
 
 declare -g ANSI_ESC_PROMPT="\e"
 declare -g ANSI_CSI_PROMPT="${ANSI_ESC_PROMPT}["
-declare -g _prompt_pre="\["
-declare -g _prompt_suf="\]"
+declare -g ANSI_PROMPT_PREFIX="\["
+declare -g ANSI_PROMPT_SUFFIX="\]"
 
 
 declare -g ANSI_SGR_FUNCNAME=m
@@ -129,6 +129,7 @@ __is_rgb() {
         return 1
     fi
 
+    local c
     for c in "$@"; do
         if [[ $c != +([0-9]) ]]; then
             return 1
@@ -259,28 +260,28 @@ ansi-style() {
         elems=("$ANSI_SGR_RESET" "${elems[@]}")
     fi
 
-    local __ansi_joined
-    array-join-var __ansi_joined "$ANSI_SGR_SEPARATOR" "${elems[@]}"
+    local ansi_joined
+    array-join-var ansi_joined "$ANSI_SGR_SEPARATOR" "${elems[@]}"
 
     local csi=$ANSI_CSI
     if (( prompt == 1 )); then
         csi=$ANSI_CSI_PROMPT
-        prefix=$_prompt_pre
-        suffix=$_prompt_suf
+        prefix=$ANSI_PROMPT_PREFIX
+        suffix=$ANSI_PROMPT_SUFFIX
     fi
 
-    local __ansi_result
-    printf -v __ansi_result '%s%s%s%s%s' \
+    local ansi_result
+    printf -v ansi_result '%s%s%s%s%s' \
         "${prefix:-}" \
         "$csi" \
-        "$__ansi_joined" \
+        "$ansi_joined" \
         "$ANSI_SGR_FUNCNAME" \
         "${suffix:-}"
 
     if [[ -n ${destvar:-} ]]; then
-        printf -v "$destvar" '%s' "$__ansi_result"
+        printf -v "$destvar" '%s' "$ansi_result"
         return
     fi
 
-    printf '%s' "$__ansi_result"
+    printf '%s' "$ansi_result"
 }
