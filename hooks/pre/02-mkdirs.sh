@@ -20,6 +20,10 @@ DIRS=(
     .local/var/log/lsp
     .local/bash/overrides.d
     .local/share/bash-completion/completions
+
+    # gnome-software seems to be doing some weirdness if this directory
+    # doesn't exist
+    .local/share/xdg-desktop-portal/applications
 )
 
 for d in "${DIRS[@]}"; do
