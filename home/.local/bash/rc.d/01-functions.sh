@@ -325,6 +325,29 @@ dump-matching() {
     done
 }
 
+__complete_PATH_bins() {
+    local -i reset=0
+    if ! shopt -q nullglob; then
+        shopt -s nullglob
+        reset=1
+    fi
+
+    local name=${2##*/}
+    local path matches
+
+    local IFS=$':'
+    COMPREPLY=()
+
+    for path in $PATH; do
+        matches=( "$path/$name"* )
+        COMPREPLY+=( "${matches[@]##*/}" )
+    done
+
+    if (( reset == 1 )); then
+        shopt -u nullglob
+    fi
+}
+
 bin-path() {
     local -r name=${1?binary name is required}
     local path; path=$(builtin type -P "$name")
@@ -335,3 +358,5 @@ bin-path() {
 
     realpath "$path"
 }
+
+complete -F __complete_PATH_bins bin-path
