@@ -1,9 +1,15 @@
+found=0
 for loc in ~/.local /usr/local; do
-    if [[ -d $loc/openresty/bin && -d $loc/openresty/nginx/sbin ]]; then
-        __rc_add_path "$loc"/openresty/nginx/sbin
-        __rc_add_path "$loc"/openresty/bin
+    resty_bin=$loc/openresty/bin
+    nginx_bin=$loc/openresty/nginx/sbin
 
-        break
+    if (( found == 0 )) && [[ -d $resty_bin && -d $nginx_bin ]]; then
+        found=1
+        __rc_add_path "$resty_bin" PATH
+        __rc_add_path "$nginx_bin" PATH
+    else
+        __rc_rm_path "$resty_bin" PATH
+        __rc_rm_path "$nginx_bin" PATH
     fi
 done
-unset loc || true
+unset loc found resty_bin nginx_bin || true

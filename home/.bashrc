@@ -344,6 +344,91 @@ __rc_add_path() {
     __rc_timer_stop "__rc_add_path"
 }
 
+__rc_rm_path() {
+    local var sep remove
+
+    local arg
+    while (( $# > 0 )); do
+        local arg=$1
+        shift 1
+
+        case $arg in
+            --sep)
+                if [[ -z $1 ]]; then
+                    __rc_warn "__rc_rm_path(): --sep requires an argument"
+                    return 1
+                fi
+                sep="$1"
+                shift
+                ;;
+
+            *)
+                set -- "$arg" "$@"
+                break
+                ;;
+        esac
+    done
+
+    local -r remove=$1
+
+    if [[ -z $remove ]]; then
+        __rc_debug "called with empty value"
+        return
+    fi
+
+    local -r var=${2:-PATH}
+
+    if [[ -z $sep ]]; then
+        sep="${__RC_PATH_SEPARATORS["$var"]}"
+
+        if [[ -z $sep ]]; then
+            __rc_debug "using default path separator (':') for $path"
+            sep=":"
+        fi
+    fi
+
+    local -r current=${!var}
+
+    if [[ -z $current ]]; then
+        return
+    fi
+
+    __rc_timer_start "__rc_rm_path"
+
+    local -a old new
+    IFS="${sep}" read -ra old <<<"$current"
+
+    local -i changed=0
+
+    local -i i
+    for i in "${!old[@]}"; do
+        local elem=${old[$i]}
+
+        if [[ $elem == "$remove" ]]; then
+            __rc_debug "Removing $elem from \$${var} at position #$i"
+            changed=1
+            continue
+        fi
+
+        new+=("$elem")
+    done
+
+    if (( changed == 1)); then
+        set -- "${new[@]}"
+        local first=$1
+        shift
+
+        local value
+        printf -v value '%s' "$first" "${@/#/$sep}"
+
+        declare -g -x "${var}=${value}"
+    else
+        __rc_debug "$remove not found in \$${var}, no changes"
+    fi
+
+    __rc_timer_stop "__rc_rm_path"
+}
+
 __rc_prompt_command_array=0
 # as of bash 5.1, PROMPT_COMMAND can be an array, _but_ this was not supported
 # by direnv until 2.34.0
