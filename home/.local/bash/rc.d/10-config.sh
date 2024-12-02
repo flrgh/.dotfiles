@@ -317,3 +317,9 @@ if __rc_command_exists command_not_found_handle; then
     __rc_debug "unsetting command_not_found_handle func"
     unset -f command_not_found_handle
 fi
+
+# max open file descriptors
+builtin ulimit -n $(( 1024 * 16 ))
+
+# max processes
+builtin ulimit -u $(( 1024 * 8 ))
