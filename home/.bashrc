@@ -348,19 +348,15 @@ __rc_prompt_command_array=0
 # as of bash 5.1, PROMPT_COMMAND can be an array, _but_ this was not supported
 # by direnv until 2.34.0
 if (( BASH_VERSINFO[0] > 5 )) || (( BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 1 )); then
-    __rc_direnv=$(command -v "$HOME"/.local/bin/direnv 2>/dev/null \
-                  || command -p -v direnv 2>/dev/null)
+    __rc_direnv=~/.local/bin/direnv
+    if [[ ! -x $__rc_direnv ]]; then
+        __rc_direnv=$(command -v direnv 2>/dev/null ||
+                      command -p -v direnv 2>/dev/null)
+    fi
 
-    if [[ -n $__rc_direnv ]]; then
-        __rc_direnv_version=$("$__rc_direnv" --version)
-        __rc_direnv_major=${__rc_direnv_version%%.*}
-        __rc_direnv_minor=${__rc_direnv_version#[0-9]*.}
-        __rc_direnv_minor=${__rc_direnv_minor%%.*}
-
-        if (( __rc_direnv_major > 2 )) || (( __rc_direnv_major == 2 && __rc_direnv_minor >= 34 )); then
-            __rc_prompt_command_array=1
-        fi
-    else
+    if [[ -n $__rc_direnv && -x $__rc_direnv ]] &&
+        "$__rc_direnv" version 2.34.0 &>/dev/null
+    then
         __rc_prompt_command_array=1
     fi
 fi
