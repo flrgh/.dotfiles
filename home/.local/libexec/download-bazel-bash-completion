@@ -4,14 +4,12 @@ set -euo pipefail
 
 VERSION=$(gh-helper get-latest-release-name bazelbuild/bazel)
 
-echo "VERSION: $VERSION"
-
 URL=https://github.com/bazelbuild/bazel/releases/download/${VERSION}/bazel-${VERSION}-installer-linux-x86_64.sh
 
 ASSET=$(cache-get "$URL")
+if [[ -z ${ASSET:-} ]]; then
+    echo "FATAL: failed downloading"
+    exit 1
+fi
 
-echo "ASSET: $ASSET"
-
-unzip -l "$ASSET"
-
-unzip -p "$ASSET" bazel-complete.bash > "$HOME/.local/share/bash-completion/completions/bazel"
+unzip -q -p "$ASSET" bazel-complete.bash
