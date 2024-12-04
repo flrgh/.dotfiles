@@ -165,6 +165,7 @@ generate deck completion bash
 generate gh-helper generate-bash-completion
 generate bindgen --generate-shell-completions bash
 generate wasmtime completion bash
+generate tree-sitter complete --shell bash
 
 generate-alt cargo rustup completions bash cargo
 generate-alt bazel ~/.local/libexec/download-bazel-bash-completion

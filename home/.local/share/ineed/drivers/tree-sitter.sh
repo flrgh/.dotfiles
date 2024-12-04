@@ -37,4 +37,6 @@ install-from-asset() {
 
     chmod +x "$BIN/${NAME}-${version}"
     ln -sfv "$BIN/${NAME}-${version}" "$BIN/$NAME"
+
+    ~/.local/libexec/update-bash-completion-scripts tree-sitter
 }
