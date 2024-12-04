@@ -393,8 +393,6 @@ local function get_merged_settings()
     return settings
   end
 
-  merge_settings(settings, SETTINGS_COMMON)
-
   if WS.meta.dotfiles then
     merge_settings(settings, SETTINGS_DOTFILES)
   end
@@ -443,6 +441,8 @@ local function get_merged_settings()
       insert(settings.libraries, stdout)
     end
   end
+
+  merge_settings(settings, SETTINGS_COMMON)
 
   return settings
 end
