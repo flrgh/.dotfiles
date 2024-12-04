@@ -1079,6 +1079,23 @@ do
 
   local query_opts = { all = true }
 
+  ---@param res { func: string, mod: string }
+  local function is_require(res)
+    return
+      res.func == "require"
+      and type(res.mod) == "string"
+      -- If the module finder runs while I'm in the middle of typing, and I have
+      -- an un-terminated string:
+      --
+      -- ```
+      -- local mod = require("my.module<CURSOR>
+      -- ```
+      --
+      -- ...tree-sitter will consume the remainder of the buffer and consider it
+      -- the param to `require()`. This filters out the garbage data.
+      and #res.mod < 255
+      and res.mod:find("^[%a%d%p/]+$")
+  end
 
   ---@param buf integer
   ---@return string[]?
@@ -1139,7 +1156,7 @@ do
         end
       end
 
-      if res.func == "require" then
+      if is_require(res) then
         insert(result, res.mod)
       end
     end
