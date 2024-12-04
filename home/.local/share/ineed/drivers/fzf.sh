@@ -4,7 +4,7 @@ set -euo pipefail
 
 readonly NAME=fzf
 readonly REPO=junegunn/fzf
-readonly DEST="$HOME/.local/bin/$NAME"
+readonly BIN="$HOME/.local/bin/$NAME"
 
 is-installed() {
     binary-exists "$NAME"
@@ -32,6 +32,21 @@ get-asset-download-url() {
     echo "https://github.com/${REPO}/releases/download/v${version}/fzf-${version}-linux_amd64.tar.gz"
 }
 
+
+install-key-bindings() {
+    local -r dest=$HOME/.local/share/fzf/shell/key-bindings.bash
+    mkdir -p "$(dirname "$dest")"
+
+    "$BIN" --bash \
+        | sed -n '/### key-bindings.bash ###/,/### end: key-bindings.bash ###/p' \
+        > "$dest"
+
+    if ! test -s "$dest"; then
+        echo "uh oh, $dest is empty"
+        return 1
+    fi
+}
+
 install-from-asset() {
     local -r asset=$1
     local -r version=$2
@@ -40,9 +55,7 @@ install-from-asset() {
 
     tar -xzf "$asset"
     chmod +x fzf
-    cp -a ./fzf "$DEST"
+    cp -a ./fzf "$BIN"
 
-    mkdir -p "$HOME/.local/share/fzf/shell"
-    "$DEST" --bash \
-        > "$HOME/.local/share/fzf/shell/integration.bash"
+    install-key-bindings
 }
