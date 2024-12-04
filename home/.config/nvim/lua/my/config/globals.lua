@@ -81,11 +81,9 @@ globals.github_username = "flrgh"
 ---@type string
 globals.git_root = globals.home .. "/git"
 
-
 --- Path to ~/git/{{github_username}}
 ---@type string
 globals.git_user_root = globals.git_root .. "/" .. globals.github_username
-
 
 do
   local dotfiles = globals.git_user_root .. "/.dotfiles"
@@ -109,37 +107,54 @@ do
 end
 
 do
+  local home = assert(globals.home)
+
+  ---@class user.globals.xdg
+  globals.xdg = {
+    -- $XDG_DATA_HOME (~/.local/share)
+    data = getenv("XDG_DATA_HOME") or (home .. "/.local/share"),
+
+    -- $XDG_CONFIG_HOME (~/.config)
+    config = getenv("XDG_CONFIG_HOME") or (home .. "/.config"),
+
+    -- $XDG_STATE_HOME (~/.local/state)
+    state = getenv("XDG_STATE_HOME") or (home .. "/.local/state"),
+
+    -- $XDG_CACHE_HOME (~/.cache)
+    cache = getenv("XDG_CACHE_HOME") or (home .. "/.cache"),
+  }
+end
+
+do
   local app_name = getenv("NVIM_APPNAME") or "nvim"
-  local share = getenv("XDG_DATA_HOME") or (globals.home .. "/.local/share")
-  local config = getenv("XDG_CONFIG_HOME") or (globals.home .. "/.local/config")
-  local state = getenv("XDG_STATE_HOME") or (globals.home .. "/.local/state")
+
+  local xdg = globals.xdg
 
   ---@class user.globals.nvim
   globals.nvim = {
     -- $NVIM_APPNAME (default "nvim")
     app_name = app_name,
 
-    -- ~/.local/config/nvim
-    config      = config .. "/" .. app_name,
+    -- ~/.config/nvim
+    config = xdg.config .. "/" .. app_name,
 
     -- ~/.local/share/nvim
-    share       = share .. "/" .. app_name,
+    share = xdg.data .. "/" .. app_name,
 
     -- ~/.local/state/nvim
-    state       = state .. "/" .. app_name,
+    state = xdg.state .. "/" .. app_name,
 
     -- ~/.local/share/nvim/runtime
-    runtime     = share .. "/" .. app_name .. "/runtime",
+    runtime = xdg.data .. "/" .. app_name .. "/runtime",
 
     -- ~/.local/share/nvim/runtime/lua
-    runtime_lua = share .. "/" .. app_name .. "/runtime/lua",
+    runtime_lua = xdg.data .. "/" .. app_name .. "/runtime/lua",
 
     -- plugin install path
     -- ~/.local/share/nvim/lazy
-    plugins = share .. "/" .. app_name .. "/lazy",
+    plugins = xdg.data .. "/" .. app_name .. "/lazy",
   }
 end
-
 
 ---@type boolean
 globals.bootstrap = (_G.___BOOTSTRAP and true)
