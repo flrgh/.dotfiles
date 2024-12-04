@@ -125,9 +125,8 @@ local SETTINGS_RESTY = {
 }
 
 local SETTINGS_DOTFILES = {
-  libraries = {
-    globals.dotfiles.config_nvim_lua,
-  },
+  root_dir = globals.dotfiles.config_nvim_lua,
+  libraries = {},
   plugins = {
     "lazy.nvim",
     "nvim-cmp",
@@ -685,6 +684,10 @@ function _M.init()
       Lua = nil,
     },
   }
+
+  if WS.meta.dotfiles then
+    conf.root_dir = SETTINGS_DOTFILES.root_dir
+  end
 
   if settings.luarc_settings then
     conf.settings.Lua = settings.luarc_settings

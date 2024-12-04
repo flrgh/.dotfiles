@@ -1,7 +1,7 @@
 ---@class my.workspace : table
 ---
----@field dir string
----@field basename string
+---@field dir string # fully-qualified workspace directory path
+---@field basename string # last path element of the workspace
 ---@field meta my.workspace.meta
 local WS = {}
 
@@ -47,7 +47,7 @@ local matchers = {
     meta = {
       nvim     = true,
       dotfiles = true,
-      lua = true,
+      lua      = true,
     },
     last = true,
   },
