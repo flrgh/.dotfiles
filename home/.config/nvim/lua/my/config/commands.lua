@@ -73,6 +73,18 @@ add_command("LuaDebug",
     end
 
     do
+      local WS = require "my.workspace"
+      buf:put(   "my.workspace:\n")
+      buf:putf(  "  dir: %s\n", WS.dir)
+      buf:putf(  "  basename: %s\n", WS.basename)
+      buf:putf(  "  meta:\n")
+      for k, v in pairs(WS.meta or {}) do
+        buf:putf("    %s: %s\n", k, v)
+      end
+      buf:put("\n")
+    end
+
+    do
       local path = os.getenv("LUA_PATH")
       if path then
         buf:put("LUA_PATH:\n")
