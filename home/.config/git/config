@@ -63,3 +63,6 @@
 
 [credential "https://github.com"]
 	username = flrgh
+
+[include]
+	path = ~/.config/git/config.local
