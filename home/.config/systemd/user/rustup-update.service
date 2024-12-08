@@ -1,7 +1,0 @@
-[Unit]
-Description=Run `rustup update`
-
-[Service]
-Type=oneshot
-#Environment=RUSTUP_HOME=~/.local/rustup
-ExecStart=/bin/bash -c 'rustup update'
