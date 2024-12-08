@@ -163,7 +163,9 @@ generate rustup completions bash rustup
 generate gitsign completion bash
 generate deck completion bash
 generate gh-helper generate-bash-completion
-generate bindgen --generate-shell-completions bash
+# https://github.com/rust-lang/rust-bindgen/issues/3037
+# https://github.com/rust-lang/rust-bindgen/pull/3040
+generate bindgen --generate-shell-completions bash DUMMY_HEADER_FILE_ARG
 generate wasmtime completion bash
 generate tree-sitter complete --shell bash
 
