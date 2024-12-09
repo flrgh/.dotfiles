@@ -132,6 +132,7 @@ sudo dnf install -y "${PACKAGES[@]}"
 
 REMOVE=(
     bash-completion
+    PackageKit-command-not-found
 )
 
 sudo dnf remove -y "${REMOVE[@]}"
