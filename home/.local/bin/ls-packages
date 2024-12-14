@@ -2,6 +2,8 @@
 
 set -eu
 
+readonly RPM_DB=/var/lib/rpm/rpmdb.sqlite
+
 # shellcheck source=home/.local/lib/bash/std.bash
 . "$HOME"/.local/lib/bash/std.bash
 
@@ -20,6 +22,10 @@ if command-exists rpm; then
     format='%-40{NAME} %{VERSION}\n'
 
     if (( NAME_ONLY == 1 )); then
+        if [[ -e $RPM_DB ]] && command-exists sqlite3; then
+            sqlite3 "$RPM_DB" 'SELECT key FROM Name'
+            exit "$?"
+        fi
         format='%{NAME}\n'
     fi
 
