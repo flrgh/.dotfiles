@@ -119,6 +119,21 @@ fetch-url() {
     fi
 }
 
+create-bash-function() {
+    local -r bin=$1
+    shift
+    local fn="__complete_${bin//-/_}"
+    local cmd="$*"
+
+cat << EOF
+${fn}() {
+    local cur=\${COMP_WORDS[\$COMP_CWORD]}
+    mapfile -t COMPREPLY < <(compgen -W "\$(${cmd})" -- "\$cur")
+}
+complete -F ${fn} ${bin}
+EOF
+}
+
 generate-alt() {
     local -r bin=$1
     shift || true
@@ -148,6 +163,12 @@ download() {
     generate-alt "$bin" fetch-url "$bin" "$url"
 }
 
+candidate-list-command() {
+    local -r bin=$1
+    shift
+    generate-alt "$bin" create-bash-function "$bin" "$@"
+}
+
 echo "Updating bash completion scripts"
 
 generate pip completion --bash
@@ -173,3 +194,8 @@ generate-alt cargo rustup completions bash cargo
 generate-alt bazel ~/.local/libexec/download-bazel-bash-completion
 
 download busted "https://raw.githubusercontent.com/Olivine-Labs/busted/master/completions/bash/busted.bash"
+
+LIST_PACKAGE_NAMES=(ls-packages --name-only)
+candidate-list-command files-in-package "${LIST_PACKAGE_NAMES[@]}"
+candidate-list-command package-info "${LIST_PACKAGE_NAMES[@]}"
+candidate-list-command package-deps "${LIST_PACKAGE_NAMES[@]}"
