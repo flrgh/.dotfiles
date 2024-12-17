@@ -47,6 +47,14 @@ install-key-bindings() {
     fi
 }
 
+install-man-page() {
+    local dir="$HOME"/.local/share/man/man1
+    mkdir -p "$dir"
+
+    # -R tells `man` to re-encode the input rather than formatting it for display
+    MANOPT='-R' "$BIN" --man > "$dir"/fzf.1
+}
+
 install-from-asset() {
     local -r asset=$1
     local -r version=$2
@@ -58,4 +66,5 @@ install-from-asset() {
     cp -a ./fzf "$BIN"
 
     install-key-bindings
+    install-man-page
 }
