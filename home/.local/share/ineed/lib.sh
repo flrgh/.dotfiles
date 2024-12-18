@@ -93,3 +93,21 @@ app-state::set() {
 
     state::set "${app}.${key}" "$value"
 }
+
+app-state::list() {
+    local -r app=$1
+
+    local -r prefix="$INEED_STATE/${app}."
+
+    printf '%s\n' "$app"
+
+    local key value
+
+    shopt -s nullglob
+    for fname in "$prefix"*; do
+        key=${fname#"$prefix"}
+        value=$(< "$fname")
+
+        printf '%-32s => %-32s\n' "$key" "$value"
+    done
+}

@@ -357,6 +357,14 @@ update::cmd() {
     done
 }
 
+state::cmd() {
+    local -r app=${1?app/driver name required}
+    app-state::list "$app"
+}
+
+state::complete() {
+    complete-from-drivers
+}
 
 _bash_completion::cmd() {
     cat "$INEED_ROOT"/completion.sh
