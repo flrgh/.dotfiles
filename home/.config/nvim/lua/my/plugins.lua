@@ -746,6 +746,16 @@ local plugins_by_category = {
     "Glench/Vim-Jinja2-Syntax",
   },
 
+  filesystem = {
+    {
+      "stevearc/oil.nvim",
+      dependencies = {
+        "nvim-tree/nvim-web-devicons",
+      },
+      config = file_config("oil"),
+    }
+  },
+
   -- FIXME: categorize these
   ["*"] = {
     {
