@@ -15,10 +15,10 @@ local Ctrl = km.Ctrl
 local Leader = km.Leader
 
 -- split nav
-nnoremap[Ctrl.J] = "<C-W><C-J>"
-nnoremap[Ctrl.K] = "<C-W><C-K>"
-nnoremap[Ctrl.L] = "<C-W><C-L>"
-nnoremap[Ctrl.H] = "<C-W><C-H>"
+nnoremap[Ctrl.J] = Ctrl.W .. Ctrl.J -- <C-W><C-J>
+nnoremap[Ctrl.K] = Ctrl.W .. Ctrl.K -- <C-W><C-K>
+nnoremap[Ctrl.L] = Ctrl.W .. Ctrl.L -- <C-W><C-L>
+nnoremap[Ctrl.H] = Ctrl.W .. Ctrl.H -- <C-W><C-H>
 
 -- window nav
 noremap[Ctrl.j] = "<C-w>j"
