@@ -163,7 +163,12 @@ local caps
 do
   caps = lsp.protocol.make_client_capabilities()
 
-  if mod.exists("cmp_nvim_lsp") then
+  if plugin.installed("blink.cmp") then
+    local overrides = nil
+    local include_nvim_defaults = true
+    caps = require("blink.cmp").get_lsp_capabilities(overrides, include_nvim_defaults)
+
+  elseif plugin.installed("nvim-cmp") then
     caps = require("cmp_nvim_lsp").default_capabilities(caps)
   end
 end

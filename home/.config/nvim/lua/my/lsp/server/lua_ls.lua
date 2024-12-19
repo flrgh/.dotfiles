@@ -131,6 +131,7 @@ local SETTINGS_DOTFILES = {
     "lazy.nvim",
     "nvim-cmp",
     "nvim-lspconfig",
+    "blink.cmp",
   },
 }
 

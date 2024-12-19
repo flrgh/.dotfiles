@@ -8,7 +8,6 @@ local Leader = km.Leader
 
 local cmd = vim.cmd
 
-
 -- https://lazy.folke.io/configuration
 ---@type LazyConfig
 local conf = {
@@ -90,8 +89,9 @@ end
 ---@param name string
 ---@return function
 local function file_config(name)
+  local modname = "my.plugins." .. name
   return function()
-    require("my.plugins." .. name)
+    require(modname)
   end
 end
 
@@ -570,7 +570,18 @@ local plugins_by_category = {
     },
 
     {
+      "Saghen/blink.cmp",
+      enabled = false,
+      version = "v0.*",
+      config = file_config("blink"),
+      -- allows extending the providers array elsewhere in your config
+      -- without having to redefine it
+      --opts_extend = { "sources.default" },
+    },
+
+    {
       "hrsh7th/nvim-cmp",
+      enabled = true,
       dependencies = {
         "hrsh7th/cmp-buffer",
         "hrsh7th/cmp-calc",
