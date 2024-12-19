@@ -121,9 +121,20 @@ km.nnoremap[km.Leader.pf] = {
       cwd = "~/.local/share/nvim/lazy",
     })
   end,
-  "Find neovim plugin files",
+  "Find neovim [p]lugin [f]iles",
   silent = true,
 }
+
+km.nnoremap[km.Leader.prg] = {
+  function()
+    require("telescope.builtin").live_grep({
+      cwd = "~/.local/share/nvim/lazy",
+    })
+  end,
+  "[p]lugin [f]ile [g]rep",
+  silent = true,
+}
+
 
 km.nnoremap[km.Leader.vf] = {
   function()
