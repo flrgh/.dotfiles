@@ -14,8 +14,10 @@ _M.Return   = CR
 _M.Enter    = CR
 
 _M.Delete = "<Del>"
+_M.Del    = _M.Delete
 _M.End    = "<End>"
 _M.Escape = "<Esc>"
+_M.Esc    = _M.Escape
 _M.Help   = "<Help>"
 _M.Home   = "<Home>"
 _M.Insert = "<Insert>"
@@ -47,6 +49,70 @@ _M.Up       = "<Up>"
 _M.Down     = "<Down>"
 _M.Left     = "<Left>"
 _M.Right    = "<Right>"
+
+_M.Dot      = "."
+_M.Period   = _M.Dot
+
+local alias
+do
+
+  ---@type table<string, string>
+  local wrapped = {
+    Enter       = _M.Enter,
+    Return      = _M.Return,
+
+    Delete = _M.Delete,
+    End    = _M.End,
+    Escape = _M.Escape,
+    Help   = _M.Help,
+    Home   = _M.Home,
+    Insert = _M.Insert,
+    Undo   = _M.Undo,
+
+    F1  = _M.F1,
+    F2  = _M.F2,
+    F3  = _M.F3,
+    F4  = _M.F4,
+    F5  = _M.F5,
+    F6  = _M.F6,
+    F7  = _M.F7,
+    F8  = _M.F8,
+    F9  = _M.F9,
+    F10 = _M.F10,
+    F11 = _M.F11,
+    F12 = _M.F12,
+
+    PageUp   = _M.PageUp,
+    PageDown = _M.PageDown,
+
+    Tab   = _M.Tab,
+    Space = _M.Space,
+
+    Up    = _M.Up,
+    Down  = _M.Down,
+    Left  = _M.Left,
+    Right = _M.Right,
+
+    Dot    = _M.Dot,
+    Period = _M.Period,
+  }
+
+
+  ---@type table<string, string>
+  local unwrapped = {}
+
+  for name, value in pairs(wrapped) do
+    unwrapped[name] = value:gsub("^<(.*)>$", "%1")
+  end
+
+  ---@param key string|integer
+  ---@param wrap? boolean
+  ---@return string
+  function alias(key, wrap)
+    local lookup = wrap and wrapped or unwrapped
+    return lookup[key] or key
+  end
+end
 
 ---@param a table
 ---@param b table
@@ -174,7 +240,7 @@ local mt = {
 ---@param opts my.keymap.opts
 ---@return my.keymap.binding
 local function make_map(mode, opts)
-  local buf = opts.buf
+  local buf = opts.buf or false
   opts.buf = nil
   return setmetatable({
     mode = mode,
@@ -217,6 +283,7 @@ _M.buf = {
 _M.Ctrl = setmetatable({}, {
   __index = function(_, k)
     assert(type(k) == "string" or type(k) == "number")
+    k = alias(k)
     return fmt("<C-%s>", k)
   end,
 })
@@ -232,6 +299,7 @@ _M.Ctrl = setmetatable({}, {
 _M.Shift = setmetatable({}, {
   __index = function(_, k)
     assert(type(k) == "string" or type(k) == "number")
+    k = alias(k)
     return fmt("<S-%s>", k)
   end,
 })
@@ -248,8 +316,29 @@ _M.Shift = setmetatable({}, {
 _M.Leader = setmetatable({}, {
   __index = function(_, k)
     assert(type(k) == "string" or type(k) == "number")
+    k = alias(k)
     return fmt("<Leader>%s", k)
   end,
 })
+
+--- Generate a Meta+<key> key binding
+---
+--- Example:
+--- ```lua
+--- print(Meta.t) -- > `<M-t>`
+--- ```
+---
+---@type table<string, string>
+_M.Meta = setmetatable({}, {
+  __index = function(_, k)
+    assert(type(k) == "string" or type(k) == "number")
+    return fmt("<M-%s>", k)
+  end,
+})
+
+--- Generate an Alt+<key> key binding
+---
+--- (this is actually aliased to `Meta`)
+_M.Alt = _M.Meta
 
 return _M

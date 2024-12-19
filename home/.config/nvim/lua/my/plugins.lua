@@ -436,6 +436,17 @@ local plugins_by_category = {
       dependencies = {
         "tpope/vim-rhubarb",
       },
+      config = function()
+        km.nnoremap[Leader.o] = {
+          ":.GBrowse",
+          "Open current line in github browser"
+        }
+
+        km.nnoremap[Leader.g] = {
+          ":G",
+          "fuGITive",
+        }
+      end,
     },
 
     "rhysd/conflict-marker.vim",

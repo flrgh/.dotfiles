@@ -32,3 +32,10 @@
   insert_at_end = true,
   insert_at_start = false,
 })
+
+local km = require "my.keymap"
+local nnoremap = km.nnoremap
+
+nnoremap[km.Ctrl.PageUp]   = { ":BufferPrevious", "Previous buffer" }
+nnoremap[km.Ctrl.PageDown] = { ":BufferNext", "Next buffer" }
+nnoremap[km.Leader.w]      = { ":BufferWipeout", "Close buffer" }
