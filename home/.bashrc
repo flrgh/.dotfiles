@@ -94,14 +94,37 @@ else
     __rc_timer_stop() { :; }
 fi
 
+__rc_have_pathset=0
+if [[ -e $HOME/.local/lib/bash/builtins.bash ]]; then
+    source "$HOME/.local/lib/bash/builtins.bash"
+    __rc_have_pathset=${BASH_USER_BUILTINS[pathset]:-0}
+else
+    __rc_pathset=$HOME/.local/lib/bash/builtins/libbash_builtin_extras.so
+    if [[ -e $__rc_pathset ]] && enable -f "$__rc_pathset" pathset; then
+        __rc_have_pathset=1
+    fi
+fi
+
 declare -A __RC_PATH_SEPARATORS=()
 
-__rc_set_path_separator() {
-    local -r var=${1?var name require}
-    local -r sep=${2?separator required}
+# pathset -D requires version >=0.3
+if (( ${PATHSET_VERSION[0]:-0} > 0 || ${PATHSET_VERSION[0]:-0} == 0 && ${PATHSET_VERSION[1]:-0} >= 3 )); then
+    __rc_debug "__rc_set_path_separator(): using pathset"
 
-    __RC_PATH_SEPARATORS["$var"]="$sep"
-}
+    __rc_set_path_separator() {
+        local -r var=${1?var name require}
+        local -r sep=${2?separator required}
+
+        pathset -D -v "$var" -s "$sep"
+    }
+else
+    __rc_set_path_separator() {
+        local -r var=${1?var name require}
+        local -r sep=${2?separator required}
+
+        __RC_PATH_SEPARATORS["$var"]="$sep"
+    }
+fi
 
 __rc_set_path_separator PATH       ":"
 __rc_set_path_separator MANPATH    ":"
@@ -114,8 +137,8 @@ __rc_set_path_separator FIGNORE    ":"
 __rc_set_path_separator GLOBIGNORE ":"
 __rc_set_path_separator HISTIGNORE ":"
 
-__rc_pathset=$HOME/.local/lib/bash/builtins/libbash_builtin_extras.so
-if [[ -e $__rc_pathset ]] && enable -f "$__rc_pathset" pathset; then
+
+if (( __rc_have_pathset == 1 )); then
     __rc_debug "__rc_add_path(): using pathset"
 
     __rc_add_path() {

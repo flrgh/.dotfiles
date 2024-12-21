@@ -1,38 +1,53 @@
 # shellcheck source=home/.local/lib/bash/array.bash
 source "$BASH_USER_LIB"/array.bash
 
-# it's like direnv's path_add function, but it supports custom separators
-#
-# unlike the one in my .bashrc, it always prepends the input path to the
-# destination var instead of just checking if it's already present
-# (TODO: maybe my .bashrc should use this?)
-add-path() {
-    local -r var="$1"
-    local -r path="$2"
-    local -r sep="${3:-;}"
+if [[ -e "$BASH_USER_LIB"/builtins.bash ]] \
+    && source "$BASH_USER_LIB"/builtins.bash \
+    && (( BASH_USER_BUILTINS["pathset"] == 1 ))
+then
+    add-path() {
+        local -r var="$1"
+        local -r path="$2"
+        local -r sep="${3:-;}"
 
-    if [[ -z "${!var:-}" ]]; then
-        export "$var=$path"
-        return
-    fi
+        pathset -v "$var" -s "$sep" -P -M "$path"
 
-    local -a old
-    IFS="${sep}" read -ra old <<<"${!var-}"
+        # required for direnv
+        export "$var=${!var}"
+    }
+else
+    # it's like direnv's path_add function, but it supports custom separators
+    #
+    # unlike the one in my .bashrc, it always prepends the input path to the
+    # destination var instead of just checking if it's already present
+    add-path() {
+        local -r var="$1"
+        local -r path="$2"
+        local -r sep="${3:-;}"
 
-    local -a new=("$path")
-
-    for p in "${old[@]}"; do
-        if [[ "$p" == "$path" ]]; then
-            continue
+        if [[ -z "${!var:-}" ]]; then
+            export "$var=$path"
+            return
         fi
-        new+=("$p")
-    done
 
-    array-join-var "$var" "$sep" "${new[@]}"
+        local -a old
+        IFS="${sep}" read -ra old <<<"${!var-}"
 
-    # required for direnv
-    export "$var=${!var}"
-}
+        local -a new=("$path")
+
+        for p in "${old[@]}"; do
+            if [[ "$p" == "$path" ]]; then
+                continue
+            fi
+            new+=("$p")
+        done
+
+        array-join-var "$var" "$sep" "${new[@]}"
+
+        # required for direnv
+        export "$var=${!var}"
+    }
+fi
 
 add-lua-path() {
     local path="$1"
