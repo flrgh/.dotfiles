@@ -116,6 +116,8 @@ __rc_set_path_separator HISTIGNORE ":"
 
 __rc_pathset=$HOME/.local/lib/bash/builtins/libbash_builtin_extras.so
 if [[ -e $__rc_pathset ]] && enable -f "$__rc_pathset" pathset; then
+    __rc_debug "__rc_add_path(): using pathset"
+
     __rc_add_path() {
         __rc_timer_start "__rc_add_path"
 
@@ -420,90 +422,134 @@ else
     }
 fi
 
-__rc_rm_path() {
-    local var sep remove
+# pathset -R requires version >= 0.2
+if (( ${PATHSET_VERSION[0]:-0} > 0 || ${PATHSET_VERSION[0]:-0} == 0 && ${PATHSET_VERSION[1]:-0} > 1 )); then
+    __rc_debug "__rc_rm_path(): using pathset"
 
-    local arg
-    while (( $# > 0 )); do
-        local arg=$1
-        shift 1
+    __rc_rm_path() {
+        local sep
+        while (( $# > 0 )); do
+            case $1 in
+                --sep)
+                    if [[ -z $1 ]]; then
+                        __rc_warn "__rc_rm_path(): --sep requires an argument"
+                        return 1
+                    fi
+                    sep="$1"
+                    shift
+                    ;;
 
-        case $arg in
-            --sep)
-                if [[ -z $1 ]]; then
-                    __rc_warn "__rc_rm_path(): --sep requires an argument"
-                    return 1
-                fi
-                sep="$1"
-                shift
-                ;;
+                *)
+                    break
+                    ;;
+            esac
+        done
 
-            *)
-                set -- "$arg" "$@"
-                break
-                ;;
-        esac
-    done
+        local -r remove=$1
 
-    local -r remove=$1
+        if [[ -z $remove ]]; then
+            __rc_debug "called with empty value"
+            return
+        fi
 
-    if [[ -z $remove ]]; then
-        __rc_debug "called with empty value"
-        return
-    fi
+        local -r var=${2:-PATH}
 
-    local -r var=${2:-PATH}
+        local args=(-R -v "$var")
 
-    if [[ -z $sep ]]; then
-        sep="${__RC_PATH_SEPARATORS["$var"]}"
+        if [[ -n $sep ]]; then
+            args+=(-s "$sep")
+        fi
+
+        args+=("$remove")
+
+        pathset "${args[@]}"
+    }
+else
+    __rc_rm_path() {
+        local var sep remove
+
+        local arg
+        while (( $# > 0 )); do
+            local arg=$1
+            shift 1
+
+            case $arg in
+                --sep)
+                    if [[ -z $1 ]]; then
+                        __rc_warn "__rc_rm_path(): --sep requires an argument"
+                        return 1
+                    fi
+                    sep="$1"
+                    shift
+                    ;;
+
+                *)
+                    set -- "$arg" "$@"
+                    break
+                    ;;
+            esac
+        done
+
+        local -r remove=$1
+
+        if [[ -z $remove ]]; then
+            __rc_debug "called with empty value"
+            return
+        fi
+
+        local -r var=${2:-PATH}
 
         if [[ -z $sep ]]; then
-            __rc_debug "using default path separator (':') for $path"
-            sep=":"
-        fi
-    fi
+            sep="${__RC_PATH_SEPARATORS["$var"]}"
 
-    local -r current=${!var}
-
-    if [[ -z $current ]]; then
-        return
-    fi
-
-    __rc_timer_start "__rc_rm_path"
-
-    local -a old new
-    IFS="${sep}" read -ra old <<<"$current"
-
-    local -i changed=0
-
-    local -i i
-    for i in "${!old[@]}"; do
-        local elem=${old[$i]}
-
-        if [[ $elem == "$remove" ]]; then
-            __rc_debug "Removing $elem from \$${var} at position #$i"
-            changed=1
-            continue
+            if [[ -z $sep ]]; then
+                __rc_debug "using default path separator (':') for $path"
+                sep=":"
+            fi
         fi
 
-        new+=("$elem")
-    done
+        local -r current=${!var}
 
-    if (( changed == 1)); then
-        set -- "${new[@]}"
-        local first=$1
-        shift
+        if [[ -z $current ]]; then
+            return
+        fi
 
-        local value
-        printf -v value '%s' "$first" "${@/#/$sep}"
+        __rc_timer_start "__rc_rm_path"
 
-        declare -g -x "${var}=${value}"
-    else
-        __rc_debug "$remove not found in \$${var}, no changes"
-    fi
+        local -a old new
+        IFS="${sep}" read -ra old <<<"$current"
 
-    __rc_timer_stop "__rc_rm_path"
-}
+        local -i changed=0
+
+        local -i i
+        for i in "${!old[@]}"; do
+            local elem=${old[$i]}
+
+            if [[ $elem == "$remove" ]]; then
+                __rc_debug "Removing $elem from \$${var} at position #$i"
+                changed=1
+                continue
+            fi
+
+            new+=("$elem")
+        done
+
+        if (( changed == 1)); then
+            set -- "${new[@]}"
+            local first=$1
+            shift
+
+            local value
+            printf -v value '%s' "$first" "${@/#/$sep}"
+
+            declare -g -x "${var}=${value}"
+        else
+            __rc_debug "$remove not found in \$${var}, no changes"
+        fi
+
+        __rc_timer_stop "__rc_rm_path"
+    }
+fi
 
 __rc_prompt_command_array=0
 # as of bash 5.1, PROMPT_COMMAND can be an array, _but_ this was not supported
