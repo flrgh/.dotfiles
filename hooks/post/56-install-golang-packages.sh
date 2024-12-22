@@ -3,10 +3,16 @@
 set -euo pipefail
 
 readonly PACKAGES=(
-    golang.org/x/tools/gopls@latest
-    github.com/jstemmer/gotags@latest
+    gopls
+    gotags
 )
 
+# `go install` is trying to run `git tag <tag> <commit>` somewhere, which
+# opens a text editor and prompts the user to write a message for the tag,
+# completely blocking script execution
+export GIT_TERMINAL_PROMPT=0
+export GIT_EDITOR=/dev/null
+
 for p in "${PACKAGES[@]}"; do
-    go install "$p"
+    ineed install "$p"
 done
