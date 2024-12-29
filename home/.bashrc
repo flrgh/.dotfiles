@@ -94,29 +94,24 @@ else
     __rc_timer_stop() { :; }
 fi
 
-__rc_have_pathset=0
+__rc_have_varsplice=0
 if [[ -e $HOME/.local/lib/bash/builtins.bash ]]; then
     source "$HOME/.local/lib/bash/builtins.bash"
-    __rc_have_pathset=${BASH_USER_BUILTINS[pathset]:-0}
-else
-    __rc_pathset=$HOME/.local/lib/bash/builtins/libbash_builtin_extras.so
-    if [[ -e $__rc_pathset ]] && enable -f "$__rc_pathset" pathset; then
-        __rc_have_pathset=1
-    fi
+    __rc_have_varsplice=${BASH_USER_BUILTINS[varsplice]:-0}
 fi
 
 declare -A __RC_PATH_SEPARATORS=()
 
-# pathset -D requires version >=0.3
-if (( ${PATHSET_VERSION[0]:-0} > 0 || ${PATHSET_VERSION[0]:-0} == 0 && ${PATHSET_VERSION[1]:-0} >= 3 )); then
-    __rc_debug "__rc_set_path_separator(): using pathset"
+if (( __rc_have_varsplice == 1 )); then
+    __rc_debug "__rc_set_path_separator(): using varsplice"
 
     __rc_set_path_separator() {
         local -r var=${1?var name require}
         local -r sep=${2?separator required}
 
-        pathset -D -v "$var" -s "$sep"
+        varsplice --default -s "$sep" "$var"
     }
+
 else
     __rc_set_path_separator() {
         local -r var=${1?var name require}
@@ -137,73 +132,20 @@ __rc_set_path_separator FIGNORE    ":"
 __rc_set_path_separator GLOBIGNORE ":"
 __rc_set_path_separator HISTIGNORE ":"
 
+if (( __rc_have_varsplice == 1 )); then
+    varsplice --normalize PATH
+    varsplice --normalize MANPATH
+    varsplice --normalize CDPATH
+    varsplice --normalize LUA_PATH
+    varsplice --normalize LUA_CPATH
+fi
 
-if (( __rc_have_pathset == 1 )); then
-    __rc_debug "__rc_add_path(): using pathset"
+if (( __rc_have_varsplice == 1 )); then
+    __rc_debug "__rc_add_path(): using varsplice"
 
     __rc_add_path() {
         __rc_timer_start "__rc_add_path"
-
-        local pargs=()
-        local args=()
-        local sep
-
-        local -i is_insert=1
-        local before after
-
-        while (( $# > 0 )); do
-            local elem=$1
-            shift 1
-
-            case $elem in
-                --prepend)
-                    is_insert=0
-                    pargs+=("-P")
-                    ;;
-
-                --append)
-                    is_insert=0
-                    pargs+=("-A")
-                    ;;
-
-                --before)
-                    before=$1
-                    pargs+=("-b" "$1")
-                    shift
-                    ;;
-
-                --after)
-                    after=$1
-                    pargs+=("-a" "$1")
-                    shift
-                    ;;
-
-                --sep)
-                    pargs+=("-s" "$1")
-                    shift
-                    ;;
-
-                *)
-                    args+=("$elem")
-                    ;;
-            esac
-        done
-
-        local -r path=${args[0]:-}
-        local -r var=${args[1]:-PATH}
-
-        # don't insert anything into $PATH before ~/.local/bin by default
-        if (( is_insert )) \
-            && [[ -z $before && -z $after ]] \
-            && [[ $var == PATH && $path != "$HOME/.local/bin" ]]
-        then
-            pargs+=("-a" "$HOME/.local/bin")
-        fi
-
-        pargs+=("-v" "$var" "$path")
-
-        pathset "${pargs[@]}"
-
+        varsplice "$@"
         __rc_timer_stop "__rc_add_path"
     }
 
@@ -280,8 +222,8 @@ else
 
         set -- "${args[@]}"
 
-        local -r path=$1
-        local -r var=${2:-PATH}
+        local -r var=${1:-PATH}
+        local -r path=$2
 
         if [[ -z $path ]]; then
             __rc_debug "called with empty value"
@@ -445,48 +387,15 @@ else
     }
 fi
 
-# pathset -R requires version >= 0.2
-if (( ${PATHSET_VERSION[0]:-0} > 0 || ${PATHSET_VERSION[0]:-0} == 0 && ${PATHSET_VERSION[1]:-0} > 1 )); then
-    __rc_debug "__rc_rm_path(): using pathset"
+if (( __rc_have_varsplice == 1 )); then
+    __rc_debug "__rc_rm_path(): using varsplice"
 
     __rc_rm_path() {
-        local sep
-        while (( $# > 0 )); do
-            case $1 in
-                --sep)
-                    if [[ -z $1 ]]; then
-                        __rc_warn "__rc_rm_path(): --sep requires an argument"
-                        return 1
-                    fi
-                    sep="$1"
-                    shift
-                    ;;
-
-                *)
-                    break
-                    ;;
-            esac
-        done
-
-        local -r remove=$1
-
-        if [[ -z $remove ]]; then
-            __rc_debug "called with empty value"
-            return
-        fi
-
-        local -r var=${2:-PATH}
-
-        local args=(-R -v "$var")
-
-        if [[ -n $sep ]]; then
-            args+=(-s "$sep")
-        fi
-
-        args+=("$remove")
-
-        pathset "${args[@]}"
+        __rc_timer_start "__rc_rm_path"
+        varsplice --remove "$@"
+        __rc_timer_stop "__rc_rm_path"
     }
+
 else
     __rc_rm_path() {
         local var sep remove
@@ -513,14 +422,14 @@ else
             esac
         done
 
-        local -r remove=$1
+        local -r var=${1:-PATH}
+        local -r remove=$2
 
         if [[ -z $remove ]]; then
             __rc_debug "called with empty value"
             return
         fi
 
-        local -r var=${2:-PATH}
 
         if [[ -z $sep ]]; then
             sep="${__RC_PATH_SEPARATORS["$var"]}"
@@ -615,7 +524,7 @@ __rc_add_prompt_command() {
         PROMPT_COMMAND=("$cmd" "${new[@]}")
 
     else
-        __rc_add_path "$cmd" "PROMPT_COMMAND" --sep ";"
+        __rc_add_path --prepend --sep ";" PROMPT_COMMAND "$cmd"
     fi
 }
 

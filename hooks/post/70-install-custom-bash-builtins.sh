@@ -10,8 +10,10 @@ mkdir -p "$INSTALL"
 if [[ -d $SRC ]]; then
     pushd "$SRC"
     cargo build --release
+    cargo build --release --package varsplice
     install \
         --target-directory "$INSTALL" \
-        ./target/release/libbash_builtin_extras.so
+        ./target/release/libbash_builtin_extras.so \
+        ./target/release/libvarsplice.so
     popd
 fi

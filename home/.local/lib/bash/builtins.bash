@@ -10,7 +10,7 @@ source "$BASH_USER_LIB"/__init.bash
 declare -gx BASH_USER_BUILTINS_PATH=$HOME/.local/lib/bash/builtins
 declare -gxA BASH_USER_BUILTINS=()
 declare -gxA BASH_USER_BUILTINS_SOURCE=(
-    [pathset]="$BASH_USER_BUILTINS_PATH/libbash_builtin_extras.so"
+    [varsplice]="$BASH_USER_BUILTINS_PATH/libvarsplice.so"
 )
 
 __have_builtin() {

@@ -1,6 +1,6 @@
-__rc_add_path "$HOME/.local/bin" --prepend
+__rc_add_path --prepend PATH "$HOME/.local/bin"
 
-__rc_add_path "$HOME/.local/man"       MANPATH --prepend
-__rc_add_path "$HOME/.local/share/man" MANPATH --prepend
-__rc_add_path /usr/local/share/man     MANPATH --append
-__rc_add_path /usr/share/man           MANPATH --append
+__rc_add_path --prepend MANPATH "$HOME/.local/man"
+__rc_add_path --prepend MANPATH "$HOME/.local/share/man"
+__rc_add_path --append  MANPATH /usr/local/share/man
+__rc_add_path --append  MANPATH /usr/share/man

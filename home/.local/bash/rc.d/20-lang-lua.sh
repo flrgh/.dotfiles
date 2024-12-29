@@ -31,15 +31,15 @@ if [[ -n $luarocks ]]; then
     fi
 
     while read -r path; do
-        __rc_add_path "$path" LUA_PATH
+        __rc_add_path LUA_PATH "$path"
     done < "$rocks_path"
 
     while read -r path; do
-        __rc_add_path "$path" LUA_CPATH
+        __rc_add_path LUA_CPATH "$path"
     done < "$rocks_cpath"
 
     while read -r path; do
-        __rc_add_path "$path" PATH
+        __rc_add_path PATH "$path"
     done < "$rocks_bin"
 
     unset path rocks_path rocks_cpath rocks_bin
@@ -52,7 +52,7 @@ if [[ -n $luajit ]]; then
     lj_include="$HOME/.local/share/${lj_base##*/}"
 
     if [[ -d "$lj_include" ]]; then
-        __rc_add_path "$lj_include/?.lua" LUA_PATH
+        __rc_add_path LUA_PATH "$lj_include/?.lua"
     fi
 
     unset lj_base lj_include
@@ -60,6 +60,6 @@ fi
 unset luajit
 
 if [[ -d ~/git/flrgh/lua-utils ]]; then
-    __rc_add_path "$HOME/git/flrgh/lua-utils/lib/?/init.lua" LUA_PATH --prepend
-    __rc_add_path "$HOME/git/flrgh/lua-utils/lib/?.lua"      LUA_PATH --prepend
+    __rc_add_path --prepend LUA_PATH "$HOME/git/flrgh/lua-utils/lib/?/init.lua"
+    __rc_add_path --prepend LUA_PATH "$HOME/git/flrgh/lua-utils/lib/?.lua"
 fi

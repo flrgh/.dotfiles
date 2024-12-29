@@ -3,18 +3,19 @@ source "$BASH_USER_LIB"/array.bash
 
 if [[ -e "$BASH_USER_LIB"/builtins.bash ]] \
     && source "$BASH_USER_LIB"/builtins.bash \
-    && (( BASH_USER_BUILTINS["pathset"] == 1 ))
+    && (( BASH_USER_BUILTINS["varsplice"] == 1 ))
 then
     add-path() {
         local -r var="$1"
         local -r path="$2"
         local -r sep="${3:-;}"
 
-        pathset -v "$var" -s "$sep" -P -M "$path"
+        varsplice -s "$sep" --prepend --move "$var" "$path"
 
         # required for direnv
         export "$var=${!var}"
     }
+
 else
     # it's like direnv's path_add function, but it supports custom separators
     #

@@ -28,7 +28,7 @@ if [[ -d $NVM_DIR ]]; then
             __rc_debug "Found nvm node at $use_node"
 
             export NVM_BIN="$use_node/bin"
-            __rc_add_path "$NVM_BIN"
+            __rc_add_path PATH "$NVM_BIN"
 
             export NVM_INC="$use_node/include/node"
 
