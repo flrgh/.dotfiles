@@ -9,10 +9,12 @@ shopt -s histappend
 # save multi-command one-liners as a single history item
 shopt -s cmdhist
 
-# Don't save commmands that start with a space
-export HISTCONTROL=ignorespace
-# ...otherwise, keep everything
-unset HISTIGNORE
+# * ignorespace => don't save commmands that start with a space
+# * ignoredups  => don't save commands that match the most recent entry
+export HISTCONTROL=ignorespace:ignoredups
+#
+# Don't save history commands
+export HISTIGNORE='history:history *'
 
 # History is valuable; let's keep lots of it
 export HISTFILESIZE=100000
@@ -24,25 +26,60 @@ export HISTTIMEFORMAT='%F %T '
 export HISTFILE=$XDG_STATE_HOME/.bash_history
 
 declare -gi __history_saved=0
+declare -gi __history_index=0
+declare -gr __history_prompt='\!'
+
+__update_history() {
+    # persist in-memory history items to the HISTFILE
+    history -a
+
+    # clear the in-memory history list
+    history -c
+
+    # re-read the HISTFILE into memory
+    history -r
+
+    #__history_index=$1
+    __history_index=${__history_prompt@P}
+    __history_saved=$EPOCHSECONDS
+}
+
+declare -gi __history_saving_enabled=1
 
 # save+reload history after every command
 # this could get expensive and slow when the history file gets big
-__update_history() {
-    local -i now
-    printf -v now '%(%s)T'
+__check_history() {
+    if (( __history_saving_enabled == 0 )); then
+        return
+    fi
 
-    if (( (now - __history_saved) > 5 )); then
-        # persist in-memory history items to the HISTFILE
-        history -a
+    local -ri idx=${__history_prompt@P}
 
-        # clear the in-memory history list
-        history -c
+    # we executed a new command: update the histfile
+    if (( idx > __history_index )); then
+        __update_history
+        return
+    fi
 
-        # re-read the HISTFILE into memory
-        history -r
+    if (( (EPOCHSECONDS - __history_saved) > 5 )); then
+        local -i stat; stat=$(stat -c '%Y' "$HISTFILE")
 
-        __history_saved=$now
+        # the histfile hast been updated by somebody else--update!
+        if (( stat > __history_saved )); then
+            __update_history
+            return
+        fi
     fi
 }
 
-__rc_add_prompt_command "__update_history"
+toggle_update_history() {
+    if (( __history_saving_enabled == 0 )); then
+        echo "history updating ENABLED"
+        __history_saving_enabled=1
+    else
+        echo "history updating DISABLED"
+        __history_saving_enabled=0
+    fi
+}
+
+__rc_add_prompt_command "__check_history"

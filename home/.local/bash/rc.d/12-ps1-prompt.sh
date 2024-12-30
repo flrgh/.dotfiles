@@ -60,7 +60,11 @@ _prompt_user_at_host="${_cyan}@${_propt_host}${__prompt_reset}"
 _prompt_pwd="${_blue}${_prompt_pwd}${__prompt_reset}"
 
 readonly __ps1_prefix="${_prompt_user_at_host} ${_prompt_pwd}"
-readonly __ps1_suffix="\\$ "
+if (( DEBUG_BASHRC > 0 )); then
+    readonly __ps1_suffix='(# \#) (! \!) \$ '
+else
+    readonly __ps1_suffix='\$ '
+fi
 readonly __ps1_default="${__ps1_prefix} ${__ps1_suffix}"
 export PS1="$__ps1_default"
 
