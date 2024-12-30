@@ -353,6 +353,9 @@ install::complete() {
 
 update::cmd() {
     for d in "${INEED_DRIVERS_LIST[@]}"; do
+        if ! is-installed "$d"; then
+            continue
+        fi
         install::cmd "$d"
     done
 }
