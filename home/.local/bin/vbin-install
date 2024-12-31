@@ -2,20 +2,20 @@
 
 set -euo pipefail
 
-readonly BIN=$HOME/.local/bin
 readonly VBIN=$HOME/.local/vbin
 
 main() {
     local -r name=$1
     local -r version=$2
-    local -r src=${3:-}
+    local -r src=${3:-"-"}
+    local -r bin=${4:-"$name"}
 
     local -r dir=${VBIN}/${name}/${version}
     mkdir -p "$dir"
 
-    local -r dest=${dir}/${name}
+    local dest=${dir}/${bin}
 
-    if [[ -z ${src:-} || $src == "-" ]]; then
+    if [[ $src == "-" ]]; then
         cat > "$dest"
     else
         install \
@@ -27,7 +27,7 @@ main() {
 
     chmod +x "$dest"
 
-    ln -sfv "$dest" "${BIN}/${name}"
+    vbin-link "$name" "$version"
 }
 
 main "$@"

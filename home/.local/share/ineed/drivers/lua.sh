@@ -46,6 +46,9 @@ install-from-asset() {
 
     make linux install INSTALL_TOP="$PREFIX"
 
-    vbin-install lua "$version" "$PREFIX/bin/lua"
-    vbin-install luac "$version" "$PREFIX/bin/luac"
+    vbin-install lua "$version" - lua \
+        < "$PREFIX/bin/lua"
+
+    vbin-install lua "$version" - luac \
+        < "$PREFIX/bin/luac"
 }

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+shopt -s extglob
+shopt -s nullglob
+
+readonly BIN=$HOME/.local/bin
+readonly VBIN=$HOME/.local/vbin
+
+main() {
+    local -r name=$1
+    local -r version=$2
+
+    local -r dir=${VBIN}/${name}/${version}
+    if [[ ! -d $dir ]]; then
+        echo "ERROR: vbin for $name $version ($dir) not found"
+        exit 1
+    fi
+
+    local bin base link
+    for bin in "${dir}"/*; do
+        base=${bin##*/}
+        link=${BIN}/${base}
+
+        ln -rnsfv "$bin" "$link"
+    done
+}
+
+main "$@"

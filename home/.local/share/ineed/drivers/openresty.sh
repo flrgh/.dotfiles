@@ -111,4 +111,22 @@ install-from-asset() {
     make install
 
     ln -nsfv "$version" "$CURRENT_INSTALL"
+
+    if [[ -e "${prefix}"/nginx/sbin/nginx.old ]]; then
+        rm "${prefix}"/nginx/sbin/nginx.old
+    fi
+
+    local -r vbin=$HOME/.local/vbin/${NAME}/${version}
+    rm -rf "$vbin"
+    mkdir -p "$vbin"
+
+    ln \
+        --verbose \
+        --force \
+        --symbolic \
+        --target-directory "$vbin" \
+        "${prefix}"/bin/* \
+        "${prefix}"/nginx/sbin/*
+
+    vbin-link "$NAME" "$version"
 }

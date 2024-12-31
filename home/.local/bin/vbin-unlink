@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+shopt -s extglob
+shopt -s nullglob
+
+readonly BIN=$HOME/.local/bin
+readonly VBIN=$HOME/.local/vbin
+
+main() {
+    local -r name=$1
+    local -r version=${2:-}
+
+    local check=${VBIN}/${name}
+    if [[ -n ${version:-} ]]; then
+        check=${check}/${version}
+    fi
+
+    local bin
+    local link
+
+    local rel; rel=$(dirname "$BIN")
+
+    for bin in "$BIN"/*; do
+        if [[ ! -L $bin ]]; then
+            continue
+        fi
+
+        link=$(readlink "$bin")
+
+        # replace `../` with `$HOME/.local/`
+        link=${link/#"../"/"$rel/"}
+
+        if [[ $link != "$check"/* ]]; then
+            continue
+        fi
+
+        echo "removing $bin -> $link"
+        rm "$bin"
+    done
+}
+
+main "$@"
