@@ -1,0 +1,41 @@
+__complete_vbins() {
+    local count=${#COMP_WORDS[@]}
+    local cur=$2
+    local prev=$3
+
+    COMPREPLY=()
+
+    local vbin=$HOME/.local/vbin
+    local check strip
+
+    if (( count == 2 )); then
+        check=${vbin}/${cur}
+        strip=${vbin}/
+
+    elif (( count == 3 )); then
+        check=${vbin}/${prev}/${cur}
+        strip=${vbin}/${prev}/
+
+    else
+        return
+    fi
+
+    local -i reset=0
+    if ! shopt -q nullglob; then
+        shopt -s nullglob
+        reset=1
+    fi
+
+    local match
+    for match in "$check"*; do
+        COMPREPLY+=( "${match#"$strip"}" )
+    done
+
+    if (( reset == 1 )); then
+        shopt -u nullglob
+    fi
+}
+
+complete -F __complete_vbins vbin-link vbin-unlink
+
+# vim: set ft=sh:

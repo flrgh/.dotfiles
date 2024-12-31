@@ -325,29 +325,6 @@ dump-matching() {
     done
 }
 
-__complete_PATH_bins() {
-    local -i reset=0
-    if ! shopt -q nullglob; then
-        shopt -s nullglob
-        reset=1
-    fi
-
-    local name=${2##*/}
-    local path matches
-
-    local IFS=$':'
-    COMPREPLY=()
-
-    for path in $PATH; do
-        matches=( "$path/$name"* )
-        COMPREPLY+=( "${matches[@]##*/}" )
-    done
-
-    if (( reset == 1 )); then
-        shopt -u nullglob
-    fi
-}
-
 bin-path() {
     local -r name=${1?binary name is required}
     local path; path=$(builtin type -P "$name")
@@ -358,46 +335,3 @@ bin-path() {
 
     realpath "$path"
 }
-
-complete -F __complete_PATH_bins bin-path
-
-__complete_vbins() {
-    local count=${#COMP_WORDS[@]}
-    local cur=$2
-    local prev=$3
-
-    COMPREPLY=()
-
-    local vbin=$HOME/.local/vbin
-    local check strip
-
-    if (( count == 2 )); then
-        check=${vbin}/${cur}
-        strip=${vbin}/
-
-    elif (( count == 3 )); then
-        check=${vbin}/${prev}/${cur}
-        strip=${vbin}/${prev}/
-
-    else
-        return
-    fi
-
-    local -i reset=0
-    if ! shopt -q nullglob; then
-        shopt -s nullglob
-        reset=1
-    fi
-
-    local match
-    for match in "$check"*; do
-        COMPREPLY+=( "${match#"$strip"}" )
-    done
-
-    if (( reset == 1 )); then
-        shopt -u nullglob
-    fi
-}
-
-complete -F __complete_vbins vbin-link
-complete -F __complete_vbins vbin-unlink
