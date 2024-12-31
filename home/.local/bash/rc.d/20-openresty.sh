@@ -1,7 +1,7 @@
 found=0
-for loc in ~/.local /usr/local; do
-    resty_bin=$loc/openresty/bin
-    nginx_bin=$loc/openresty/nginx/sbin
+for loc in ~/.local/openresty/current ~/.local/openresty /usr/local/openresty; do
+    resty_bin=$loc/bin
+    nginx_bin=$loc/nginx/sbin
 
     if (( found == 0 )) && [[ -d $resty_bin && -d $nginx_bin ]]; then
         found=1

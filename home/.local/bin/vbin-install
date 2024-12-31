@@ -1,18 +1,29 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 readonly BIN=$HOME/.local/bin
 readonly VBIN=$HOME/.local/vbin
 
 main() {
     local -r name=$1
     local -r version=$2
-    local -r file=$3
+    local -r src=${3:-}
 
     local -r dir=${VBIN}/${name}/${version}
     mkdir -p "$dir"
 
     local -r dest=${dir}/${name}
-    cat "$file" > "$dest"
+
+    if [[ -z ${src:-} || $src == "-" ]]; then
+        cat > "$dest"
+    else
+        install \
+            --verbose \
+            --no-target-directory \
+            --preserve-timestamps \
+            "$src" "$dest"
+    fi
 
     chmod +x "$dest"
 
