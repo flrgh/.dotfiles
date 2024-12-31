@@ -4,6 +4,7 @@ set -euo pipefail
 
 readonly NAME=luarocks
 readonly PREFIX=$HOME/.local
+readonly REPO=luarocks/luarocks
 
 is-installed() {
     binary-exists "$NAME"
@@ -21,19 +22,14 @@ get-latest-version() {
 }
 
 list-available-versions() {
-    curl \
-        -s \
-        -o- \
-        --url https://luarocks.github.io/luarocks/releases/ \
-    | sed -n -r \
-        -e 's/.*href="luarocks-([0-9.]+).tar.gz.*/\1/gp' \
+    gh-helper get-tag-names "$REPO" \
     | sort -r --version-sort
 }
 
 
 get-asset-download-url() {
     local -r version=$1
-    echo "https://luarocks.github.io/luarocks/releases/luarocks-${version}.tar.gz"
+    echo "https://github.com/${REPO}/archive/refs/tags/v${version}.tar.gz"
 }
 
 install-from-asset() {
@@ -56,11 +52,16 @@ install-from-asset() {
 
     make install
 
-    # luarocks won't install over top of existing files, so.... we gotta do this
+    local lua_version
+    if [[ -e config.unix ]]; then
+        lua_version=$(sed -nre 's/LUA_VERSION=(.+)/\1/p' < config.unix)
+    fi
 
+    lua_version=${lua_version:-"5.1"}
+
+    # this ensures that timestamps are preserved from the source code
     rsync -HavP \
         --delete \
         ./src/luarocks/ \
-        "$PREFIX"/share/lua/5.1/luarocks/
-
+        "${PREFIX}/share/lua/${lua_version}/luarocks/"
 }
