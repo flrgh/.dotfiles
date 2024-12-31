@@ -19,6 +19,7 @@ DIRS=(
     .local/var/log/nvim
     .local/var/log/lsp
     .local/bash/overrides.d
+    .local/bash/gen.d
     .local/share/bash-completion/completions
 
     # gnome-software seems to be doing some weirdness if this directory

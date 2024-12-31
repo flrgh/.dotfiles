@@ -31,4 +31,8 @@ install-from-asset() {
     local -r version=$2
 
     vbin-install "$NAME" "$version" "$asset"
+
+    vbin-exec "$NAME" "$version" "$NAME" \
+        hook bash \
+        > "$HOME/.local/bash/gen.d/direnv"
 }

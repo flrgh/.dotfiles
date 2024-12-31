@@ -574,6 +574,7 @@ __rc_source_dir() {
 }
 
 __rc_source_dir "$HOME/.local/bash/rc.d"
+__rc_source_dir "$HOME/.local/bash/gen.d"
 
 if [[ -d $__RC_LOG_DIR ]]; then
     __RC_END=${EPOCHREALTIME/./}

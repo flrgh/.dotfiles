@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly VBIN=$HOME/.local/vbin
+
+main() {
+    local -r name=$1
+    local -r version=$2
+    local -r bin=$3
+
+    shift 3
+
+    local -r exe=${VBIN}/${name}/${version}/${bin}
+
+    if [[ ! -e $exe ]]; then
+        echo "ERROR: vbin for $name $version ($exe) not found"
+        exit 1
+    fi
+
+    exec -a "$bin" "$exe" "$@"
+}
+
+main "$@"
