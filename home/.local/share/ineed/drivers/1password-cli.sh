@@ -45,8 +45,7 @@ install-from-asset() {
     cd "$tmp"
 
     unzip "$asset"
-    chmod +x ./op
-    mv ./op "$HOME/.local/bin/$NAME"
+    vbin-install op "$version" "$PWD/op"
 
     "$NAME" --version
 }

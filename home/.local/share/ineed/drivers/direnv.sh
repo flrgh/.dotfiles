@@ -28,8 +28,7 @@ get-asset-download-url() {
 
 install-from-asset() {
     local -r asset=$1
+    local -r version=$2
 
-    cp "$asset" "$HOME/.local/bin/direnv"
-
-    chmod +x "$HOME/.local/bin/direnv"
+    vbin-install "$NAME" "$version" "$asset"
 }

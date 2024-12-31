@@ -4,6 +4,7 @@ set -euo pipefail
 
 readonly REPO=tree-sitter/tree-sitter
 readonly NAME=tree-sitter
+readonly VBIN="$HOME/.local/vbin/$NAME"
 readonly BIN="$HOME/.local/bin"
 
 is-installed() {
@@ -33,10 +34,7 @@ install-from-asset() {
 
     gunzip -d \
         < "$asset" \
-        > "$BIN/${NAME}-${version}"
-
-    chmod +x "$BIN/${NAME}-${version}"
-    ln -sfv "$BIN/${NAME}-${version}" "$BIN/$NAME"
+    | vbin-install "$NAME" "$version" -
 
     ~/.local/libexec/update-bash-completion-scripts tree-sitter
 }

@@ -4,15 +4,15 @@ set -euo pipefail
 
 readonly REPO=bitwarden/clients
 readonly BASE_URL=https://github.com/bitwarden/clients/releases/download
-readonly BIN=bw
+readonly NAME=bw
 
 is-installed() {
-    binary-exists "$BIN"
+    binary-exists "$NAME"
 }
 
 get-installed-version() {
     if is-installed; then
-        "$BIN" --version
+        "$NAME" --version
     fi
 }
 
@@ -49,7 +49,5 @@ install-from-asset() {
     local tmp; tmp=$(mktemp -d)
     cd "$tmp"
     unzip "$asset"
-    ls -la "$BIN"
-    chmod +x "$BIN"
-    mv -v "$BIN" ~/.local/bin/
+    vbin-install "$NAME" "$version" "$PWD/$NAME"
 }

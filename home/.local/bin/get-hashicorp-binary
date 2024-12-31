@@ -3,6 +3,7 @@
 set -euo pipefail
 
 BIN_DIR=$HOME/.local/bin
+VBIN_DIR=$HOME/.local/vbin
 
 readonly CACHE=$HOME/.cache/download
 
@@ -88,13 +89,14 @@ fetch() {
 install() {
     local -r name=$1
     local -r version=$2
-    local -r dest=$3
 
-    local -r basename="${name}-${version}"
+    local -r bin=${BIN_DIR}/${name}
+    local -r dir=${VBIN_DIR}/${name}/${version}
+    local -r dest=${dir}/${name}
 
-    if [[ -s "$dest/$basename" && -x "$dest/$basename" ]]; then
+    if [[ -s "$dest" && -x "$dest" ]]; then
         echo "Woohoo! $name $version is already installed"
-        ln -sfv "$dest/$basename" "$dest/$name"
+        ln -sfv "$dest" "$bin"
         return
     fi
 
@@ -135,17 +137,14 @@ install() {
     pushd "$t"
 
     unzip -d . "$archive"
-    mv -v "$name" "$dest/$basename"
+    vbin-install "$name" "$version" "$PWD/$name"
     popd
     rm -rfv "$t"
-
-    ln -sfv "./$basename" "$dest/$name"
 }
 
 main() {
     local -r name=${1:-}
     local version=${2:-latest}
-    local -r dest=${3:-$BIN_DIR}
 
     if [[ -z $name ]]; then
         usage
@@ -160,7 +159,7 @@ main() {
 
     echo "Installing $name version $version..."
 
-    install "$name" "$version" "$dest"
+    install "$name" "$version"
 
     "$name" -v
 }

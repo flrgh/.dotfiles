@@ -52,5 +52,9 @@ install-from-asset() {
         PREFIX="$PREFIX" \
         VERSION="$version"
 
-    ln -sfv "$PREFIX/bin/luajit-${version}" "$PREFIX/bin/luajit"
+    local bin="$PREFIX/bin/luajit-${version}"
+
+    vbin-install luajit "$version" "$bin"
+
+    rm "$bin"
 }

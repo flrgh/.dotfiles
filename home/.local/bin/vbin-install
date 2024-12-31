@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+readonly BIN=$HOME/.local/bin
+readonly VBIN=$HOME/.local/vbin
+
+main() {
+    local -r name=$1
+    local -r version=$2
+    local -r file=$3
+
+    local -r dir=${VBIN}/${name}/${version}
+    mkdir -p "$dir"
+
+    local -r dest=${dir}/${name}
+    cat "$file" > "$dest"
+
+    chmod +x "$dest"
+
+    ln -sfv "$dest" "${BIN}/${name}"
+}
+
+main "$@"

@@ -30,5 +30,5 @@ install-from-asset() {
 
     cd "$(mktemp -d)"
     tar xzf "$asset"
-    mv -v act "$HOME/.local/bin/"
+    vbin-install act "$version" "$PWD/act"
 }

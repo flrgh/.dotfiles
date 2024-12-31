@@ -286,18 +286,20 @@ run-command() {
 install::cmd() {
     local reinstall=0
 
-    for (( i = 0; i < $#; i ++ )); do
-        local arg=$1
-        shift;
+    local -a args=()
+
+    for arg in "$@"; do
         case $arg in
             --reinstall)
                 reinstall=1
                 ;;
             *)
-                set -- "$@" "$arg"
+                args+=("$arg")
                 ;;
         esac
     done
+
+    set -- "${args[@]}"
 
     local -r name=$1
     local version=${2:-latest}

@@ -62,8 +62,7 @@ install-from-asset() {
     cd "$(mktemp -d)"
 
     tar -xzf "$asset"
-    chmod +x fzf
-    cp -a ./fzf "$BIN"
+    vbin-install fzf "$version" "$PWD/fzf"
 
     install-key-bindings
     install-man-page
