@@ -6,8 +6,8 @@
 if [[ -z ${_INEED_CLI_SOURCED:-} ]]; then
     source "$INEED_ROOT/lib.sh"
 
-    readonly YES="✓"
-    readonly NO="✗"
+    readonly YES="+"
+    readonly NO="-"
 
     _INEED_CLI_SOURCED=1
 fi
