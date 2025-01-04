@@ -44,24 +44,18 @@ extract() {
 strip-whitespace() {
     local -n ref=${1:?var name required}
 
-    if shopt -q -p extglob; then
-        ref=${ref##+([[:space:]])}
-        ref=${ref%%+([[:space:]])}
-        return
+    local -i reset=0
+    if ! shopt -q extglob; then
+        shopt -s extglob
+        reset=1
     fi
 
-    local before=$ref
+    ref=${ref##+([[:space:]])}
+    ref=${ref%%+([[:space:]])}
 
-    while true; do
-        ref=${ref##[[:space:]]}
-        ref=${ref%%[[:space:]]}
-
-        if [[ $ref == "$before" ]]; then
-            break
-        fi
-
-        before=$ref
-    done
+    if (( reset == 1 )); then
+        shopt -u extglob
+    fi
 }
 
 dump-array() {
