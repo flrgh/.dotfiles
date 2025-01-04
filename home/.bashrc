@@ -502,14 +502,10 @@ fi
 
 if (( __rc_prompt_command_array == 1 )); then
     declare -a PROMPT_COMMAND=()
-else
-    unset PROMPT_COMMAND
-fi
 
-__rc_add_prompt_command() {
-    local -r cmd=${1?command required}
+    __rc_add_prompt_command() {
+        local -r cmd=${1?command required}
 
-    if (( __rc_prompt_command_array == 1 )); then
         local -a new=()
 
         local elem
@@ -522,11 +518,15 @@ __rc_add_prompt_command() {
 
         # prepend for consistency with `__rc_add_path`
         PROMPT_COMMAND=("$cmd" "${new[@]}")
+    }
+else
+    unset PROMPT_COMMAND
 
-    else
+    __rc_add_prompt_command() {
+        local -r cmd=${1?command required}
         __rc_add_path --prepend --sep ";" PROMPT_COMMAND "$cmd"
-    fi
-}
+    }
+fi
 
 __rc_source_file() {
     local -r fname=$1
