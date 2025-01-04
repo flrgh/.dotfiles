@@ -1,8 +1,9 @@
-__complete_vbins() {
+__complete_vbin_exec() {
     local count=${#COMP_WORDS[@]}
 
     local name=${COMP_WORDS[1]}
     local version=${COMP_WORDS[2]}
+    local bin=${COMP_WORDS[3]}
 
     COMPREPLY=()
 
@@ -16,6 +17,14 @@ __complete_vbins() {
     elif (( count == 3 )); then
         check=${vbin}/${name}/${version}
         strip=${vbin}/${name}/
+
+    elif (( count == 4 )); then
+        check=${vbin}/${name}/${version}/${bin}
+        strip=${vbin}/${name}/${version}/
+
+    elif (( count > 4 )); then
+        _comp_command_offset 3
+        return $?
 
     else
         return
@@ -38,6 +47,6 @@ __complete_vbins() {
 }
 
 
-complete -F __complete_vbins vbin-link vbin-unlink
+complete -F __complete_vbin_exec vbin-exec
 
 # vim: set ft=sh:
