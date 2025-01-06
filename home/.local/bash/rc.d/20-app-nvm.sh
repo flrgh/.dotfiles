@@ -10,7 +10,17 @@ if [[ -d $NVM_DIR ]]; then
             nvm use --lts
             nvm "$@"
         }
-        export -f nvm
+
+        if [[ -e $NVM_DIR/bash_completion ]]; then
+            __complete_nvm() {
+                unset -f __complete_nvm
+                complete -r nvm
+
+                source "$NVM_DIR/bash_completion" && return 124
+            }
+
+            complete -o default -F __complete_nvm nvm
+        fi
     fi
 
     # sourcing $NVM_DIR/nvm.sh does this for us, but it's slow
@@ -37,6 +47,4 @@ if [[ -d $NVM_DIR ]]; then
 
         unset node_paths
     fi
-
-    __rc_source_file "$NVM_DIR/bash_completion"
 fi
