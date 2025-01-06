@@ -563,7 +563,19 @@ __rc_source_dir() {
     local -r key="__rc_source_dir($dir)"
     __rc_timer_start "$key"
 
-    local files=("$dir"/*)
+    # nullglob must be set/reset outside of the file-sourcing context, or else
+    # it is impossible for any sourced file to toggle its value
+    local -i reset=0
+    if ! shopt -q nullglob; then
+        shopt -s nullglob
+        reset=1
+    fi
+
+    local -a files=("$dir"/*)
+
+    if (( reset == 1 )); then
+        shopt -u nullglob
+    fi
 
     local f
     for f in "${files[@]}"; do
