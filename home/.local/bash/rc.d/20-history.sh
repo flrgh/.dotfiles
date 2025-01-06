@@ -17,7 +17,14 @@ export HISTCONTROL=ignorespace:ignoredups
 export HISTIGNORE='history:history *'
 
 # History is valuable; let's keep lots of it
-export HISTFILESIZE=100000
+#
+# Every time HISTFILESIZE is set, bash opens the history file and truncates it
+# to the desired size, which slows down ~/.bashrc. This conditional makes it so
+# that we don't perform that extra I/O on each shell init if the value doesn't
+# need to be changed.
+if (( HISTFILESIZE != 100000 )); then
+    export HISTFILESIZE=100000
+fi
 export HISTSIZE=5000
 
 # timestamps with history
