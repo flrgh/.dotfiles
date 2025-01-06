@@ -65,10 +65,7 @@ if (( DEBUG_BASHRC > 0 )); then
 
     __rc_debug() {
         local -r ctx="${BASH_SOURCE[2]}:${BASH_LINENO[1]} ${FUNCNAME[1]}"
-        local msg
-        for msg in "$@"; do
-            __rc_log "$ctx" "$msg" | tee -a "$__RC_LOG_FILE"
-        done
+        __rc_log "$ctx" "$@" | tee -a "$__RC_LOG_FILE"
     }
 
     __rc_timer_start() {
