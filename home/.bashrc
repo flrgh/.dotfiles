@@ -21,17 +21,14 @@ __rc_log() {
     shift
 
     local -r ts=$EPOCHREALTIME
-    local base
-    printf -v base '[%(%F %T)T.%s] %s (%s) - ' \
+    local fmt
+    printf -v fmt '[%(%F %T)T.%s] %s (%s) - %%s\n' \
         "${ts%.*}" \
         "${ts#*.}" \
         "$__RC_PID" \
         "$ctx"
 
-    local msg
-    for msg in "$@"; do
-        echo "${base}${msg}"
-    done
+    printf "$fmt" "$@"
 }
 
 # returns 0 if and only if a function exists
