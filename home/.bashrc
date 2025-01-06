@@ -14,6 +14,7 @@ __RC_START=${EPOCHREALTIME/./}
 
 __RC_LOG_DIR="$HOME/.local/var/log"
 __RC_LOG_FILE="$__RC_LOG_DIR/bashrc.log"
+__RC_PID=$$
 
 __rc_log() {
     local -r ctx=$1
@@ -21,9 +22,10 @@ __rc_log() {
 
     local -r ts=$EPOCHREALTIME
     local base
-    printf -v base '[%(%F %T)T.%s] - (%s) - ' \
+    printf -v base '[%(%F %T)T.%s] %s (%s) - ' \
         "${ts%.*}" \
         "${ts#*.}" \
+        "$__RC_PID" \
         "$ctx"
 
     local msg
