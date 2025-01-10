@@ -22,6 +22,10 @@ fi
 rustup self update
 rustup self upgrade-data
 
+if rustup target list --installed | grep -qxF wasm32-wasi; then
+    rustup target remove wasm32-wasi
+fi
+
 rustup toolchain install \
     stable \
     nightly
