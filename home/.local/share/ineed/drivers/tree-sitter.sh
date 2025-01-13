@@ -4,8 +4,6 @@ set -euo pipefail
 
 readonly REPO=tree-sitter/tree-sitter
 readonly NAME=tree-sitter
-readonly VBIN="$HOME/.local/vbin/$NAME"
-readonly BIN="$HOME/.local/bin"
 
 is-installed() {
     binary-exists "$NAME"
@@ -17,8 +15,12 @@ get-installed-version() {
     fi
 }
 
+list-available-versions() {
+    gh-helper get-tag-names "$REPO"
+}
+
 get-latest-version() {
-    gh-helper get-latest-release-name "$REPO"
+    list-available-versions | sort -Vr | head -1
 }
 
 get-asset-download-url() {
