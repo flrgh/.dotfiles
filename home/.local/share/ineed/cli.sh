@@ -175,13 +175,15 @@ complete-from-versions() {
 
 list::cmd() {
     printf "%-32s %-16s %s\n" "name" "version" "installed"
-                                              # 2023-09-30T19:18:13-07:00
-    printf "%-32s %-16s %s\n" "----" "-------" "-------------------------"
+    printf "%-32s %-16s %s\n" "----" "-------" "---------------------------"
     for d in $(list-drivers); do
         local v; v=$(get-installed-version "$d")
         local t; t=$(get-installed-timestamp "$d")
+        if [[ -n $t ]]; then
+            t=$(friendly-time-since "$t")
+        fi
 
-        printf "%-32s %-16s %s\n" "$d" "${v:-$NO}" "${t:-$NO}"
+        printf "%-32s %-16s %s ago\n" "$d" "${v:-$NO}" "${t:-$NO}"
     done
 }
 

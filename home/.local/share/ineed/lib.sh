@@ -10,6 +10,58 @@ if [[ -z ${INEED_STATE:-} ]]; then
     declare -rgx INEED_STATE="$HOME/.local/state/ineed"
 fi
 
+declare -gi S_MINUTE=60
+declare -gi S_HOUR=$(( S_MINUTE * 60 ))
+declare -gi S_DAY=$(( 24 * S_HOUR ))
+declare -gi S_YEAR=$(( 365 * S_DAY ))
+
+friendly-time-since() {
+    local -r stamp=$1
+
+    local unix; unix=$(date -d "$stamp" +%s)
+    local -i diff=$(( EPOCHSECONDS - unix ))
+
+    local years=$(( diff / S_YEAR ))
+    diff=$(( diff % S_YEAR ))
+    #local months=0
+
+    local days=$(( diff / S_DAY ))
+    diff=$(( diff % S_DAY ))
+
+    local hours=$((   diff / S_HOUR   ))
+    diff=$(( diff % S_HOUR ))
+
+    local minutes=$(( diff / S_MINUTE ))
+    diff=$(( diff % S_MINUTE ))
+
+    local seconds=$diff
+
+    local fmt
+    local -a args
+
+    if (( years > 0 )); then
+        fmt='%d years, %03d days'
+        args=( "$years" "$days")
+
+    elif (( days > 0 )); then
+        fmt='%d days, %02d hours'
+        args=( "$days" "$hours")
+
+    elif (( hours > 0 )); then
+        fmt='%02d hours, %02d minutes'
+        args=( "$hours" "$minutes" )
+
+    elif (( minutes > 0 )); then
+        fmt='%02d minutes, %02d seconds'
+        args=( "$minutes" "$seconds" )
+
+    else
+        fmt='%d seconds'
+        args=( "$seconds" )
+    fi
+
+    printf "$fmt" "${args[@]}"
+}
 
 function-exists() {
     declare -f "$1" &>/dev/null
