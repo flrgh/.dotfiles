@@ -562,22 +562,32 @@ else
 fi
 __rc_timer_stop
 
-__rc_prompt_command_array=1
+__rc_prompt_command_array=0
 # as of bash 5.1, PROMPT_COMMAND can be an array, _but_ this was not supported
 # by direnv until 2.34.0
 if (( BASH_VERSINFO[0] > 5 )) || (( BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 1 )); then
     __rc_timer_start "direnv-check-version"
 
-    __rc_direnv=~/.local/bin/direnv
-    if [[ ! -x $__rc_direnv ]]; then
-        __rc_direnv=$(command -v direnv 2>/dev/null ||
-                      command -p -v direnv 2>/dev/null)
+    __rc_direnv=$HOME/.local/bin/direnv
+    __rc_direnv_min_version=2.34.0
+    __rc_direnv_version=
+
+    if [[ -L $__rc_direnv ]]; then
+        __rc_direnv=$(realpath "$__rc_direnv")
+        __rc_direnv_version=${__rc_direnv%/*}
+        __rc_direnv_version=${__rc_direnv_version##*/}
+        __rc_debug "direnv version (from vbin): $__rc_direnv_version"
+
+    elif __rc_command_exists direnv; then
+        __rc_direnv_version=$(direnv version 2>/dev/null || true)
+        __rc_debug "direnv version (from 'direnv version'): $__rc_direnv_version"
     fi
 
-    if [[ -n $__rc_direnv && -x $__rc_direnv ]] &&
-        "$__rc_direnv" version 2.34.0 &>/dev/null
-    then
-        __rc_prompt_command_array=1
+    if [[ -n $__rc_direnv_version ]]; then
+        source "$HOME/.local/lib/bash/version.bash"
+        if version-compare "$__rc_direnv_version" gte "$__rc_direnv_min_version"; then
+           __rc_prompt_command_array=1
+        fi
     fi
 
     __rc_timer_stop

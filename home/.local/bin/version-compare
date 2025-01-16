@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+if (( $# != 3 )); then
+    echo "Usage: $0 <version> <op> <version>" >&2
+    exit 127
+fi
+
+BASH_USER_LIB=${BASH_USER_LIB:-$HOME/.local/lib/bash}
+source "$BASH_USER_LIB/version.bash"
+
+version-compare "$@"
+RC=$?
+
+if (( RC != 0 && RC != 1 )); then
+    echo "ERROR: invalid input" >&2
+fi
+
+exit $RC
