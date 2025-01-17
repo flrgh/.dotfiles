@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+export REPO_ROOT=${REPO_ROOT:?REPO_ROOT undefined}
+export INSTALL_PATH=${INSTALL_PATH:?INSTALL_PATH undefined}
+
+HOOKS=${1:?Usage: $0 <hooks>}
+
+DIR=$REPO_ROOT/hooks/$HOOKS
+
+if [[ ! -d $DIR ]]; then
+    echo "ERROR: hook dir ($DIR) does not exist"
+    exit 1
+fi
+
+source "$REPO_ROOT"/lib/bash/common.bash
+
+shopt -s nullglob
+
+STATUS=0
+FAILED=()
+
+for hook in "$DIR"/*; do
+    echo "run: $hook"
+    if ! "$hook"; then
+        STATUS=1
+        FAILED+=("$hook")
+    fi
+done
+
+if (( STATUS != 0 )); then
+    echo "ERROR: one or more scripts returned non-zero"
+    printf '  %s\n' "${FAILED[@]}"
+fi
+
+exit "$STATUS"

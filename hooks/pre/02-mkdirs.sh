@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-INSTALL_PATH=${2:-$HOME}
+readonly INSTALL_PATH=${INSTALL_PATH:?INSTALL_PATH undefined}
 
 DIRS=(
     .cache

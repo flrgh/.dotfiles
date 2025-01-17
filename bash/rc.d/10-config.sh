@@ -306,12 +306,6 @@ if [[ -x /usr/bin/lesspipe ]]; then
     eval "$(SHELL=/bin/sh lesspipe)"
 fi
 
-# use bat as a man pager if it exists
-if __rc_command_exists bat; then
-    export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-    export MANROFFOPT="-c"
-fi
-
 # I hate this thing
 if __rc_command_exists command_not_found_handle; then
     __rc_debug "unsetting command_not_found_handle func"

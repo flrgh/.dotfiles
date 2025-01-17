@@ -39,27 +39,30 @@
 #         embed a terminal control sequence into the prompt
 #  \]     end a sequence of non-printing characters
 
-source "$BASH_USER_LIB"/ansi.bash
+if [[ -z $__prompt_reset || -z $__prompt_alert || -z $__ps1_prefix ]]; then
+    __rc_source_file "$BASH_USER_LIB"/ansi.bash
 
-# _single_underscore vars are temp
-# __double_underscore vars are persistent
+    # _single_underscore vars are temp
+    # __double_underscore vars are persistent
 
-_args=(--prompt --reset)
-_propt_host='\h'
-_prompt_pwd='\w'
+    _args=(--prompt --reset)
+    _prompt_host='\h'
+    _prompt_pwd='\w'
 
-_cyan=;  ansi-style "${_args[@]}" -v _cyan  --cyan
-_blue=;  ansi-style "${_args[@]}" -v _blue  --blue
+    _cyan=;  ansi-style "${_args[@]}" -v _cyan  --cyan
+    _blue=;  ansi-style "${_args[@]}" -v _blue  --blue
 
-__prompt_alert=; ansi-style "${_args[@]}" -v __prompt_alert --bold --color bright-red
-__prompt_reset=; ansi-style "${_args[@]}" -v __prompt_reset
+    __prompt_alert=; ansi-style "${_args[@]}" -v __prompt_alert --bold --color bright-red
+    __prompt_reset=; ansi-style "${_args[@]}" -v __prompt_reset
 
-readonly __prompt_alert __prompt_reset
+    readonly __prompt_alert __prompt_reset
 
-_prompt_user_at_host="${_cyan}@${_propt_host}${__prompt_reset}"
-_prompt_pwd="${_blue}${_prompt_pwd}${__prompt_reset}"
+    _prompt_user_at_host="${_cyan}@${_prompt_host}${__prompt_reset}"
+    _prompt_pwd="${_blue}${_prompt_pwd}${__prompt_reset}"
 
-readonly __ps1_prefix="${_prompt_user_at_host} ${_prompt_pwd}"
+    readonly __ps1_prefix="${_prompt_user_at_host} ${_prompt_pwd}"
+fi
+
 if (( DEBUG_BASHRC > 0 )); then
     readonly __ps1_suffix='(# \#) (! \!) \$ '
 else
@@ -68,7 +71,7 @@ fi
 readonly __ps1_default="${__ps1_prefix} ${__ps1_suffix}"
 export PS1="$__ps1_default"
 
-unset _args _propt_host _prompt_pwd _prompt_user_at_host _prompt_pwd _cyan _blue
+unset _args _prompt_host _prompt_pwd _prompt_user_at_host _prompt_pwd _cyan _blue || true
 
 readonly __prompt_cmd="\#"
 declare -gi __need_prompt_reset=0

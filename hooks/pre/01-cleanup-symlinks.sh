@@ -2,8 +2,8 @@
 
 # delete orphaned symlinks
 
-readonly REPO_ROOT=${1:-$HOME/git/flrgh/.dotfiles}
-readonly INSTALL_PATH=${2:-$HOME}
+readonly REPO_ROOT=${REPO_ROOT:?REPO_ROOT undefined}
+readonly INSTALL_PATH=${INSTALL_PATH:?INSTALL_PATH undefined}
 readonly FILES_D=${REPO_ROOT}/home
 
 if [[ -L "$INSTALL_PATH/.bash" ]]; then

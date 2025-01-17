@@ -26,18 +26,9 @@ get-asset-download-url() {
     echo "https://github.com/${REPO}/releases/download/v${version}/direnv.linux-amd64"
 }
 
-post-install() {
-    local -r version=$1
-
-    vbin-exec "$NAME" "$version" "$NAME" \
-        hook bash \
-        > "$HOME/.local/bash/gen.d/direnv"
-}
-
 install-from-asset() {
     local -r asset=$1
     local -r version=$2
 
     vbin-install "$NAME" "$version" "$asset"
-    post-install "$version"
 }
