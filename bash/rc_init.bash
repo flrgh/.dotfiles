@@ -1,4 +1,6 @@
 # shellcheck enable=deprecate-which
+# shellcheck disable=SC1091
+# shellcheck disable=SC2059
 
 __RC_START=${EPOCHREALTIME/./}
 
@@ -124,6 +126,7 @@ if (( DEBUG_BASHRC > 0 )); then
             return 1
         fi
 
+        # shellcheck disable=SC2034
         dest=${__RC_TIMER_STACK[-1]}
         unset "__RC_TIMER_STACK[-1]"
 

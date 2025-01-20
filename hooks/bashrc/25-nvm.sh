@@ -15,6 +15,7 @@ fi
 if [[ -s "$NVM_DIR/nvm.sh" ]]; then
     nvm() {
         unset -f nvm
+        # shellcheck disable=SC1091
         . "$NVM_DIR/nvm.sh"
         nvm "$@"
     }
@@ -25,6 +26,7 @@ if [[ -s "$NVM_DIR/nvm.sh" ]]; then
             unset -f __complete_nvm
             complete -r nvm
 
+            # shellcheck disable=SC1091
             source "$NVM_DIR/bash_completion" && return 124
         }
         bashrc-includef "$DEST" '%s\n' "$(declare -f __complete_nvm)"
@@ -38,6 +40,7 @@ if declare -f node &>/dev/null; then
     bashrc-includef "$DEST" '%s\n' 'unset -f node'
 fi
 
+# shellcheck disable=SC1091
 source "$NVM_DIR/nvm.sh"
 nvm use --lts
 NODE=$(nvm which current)

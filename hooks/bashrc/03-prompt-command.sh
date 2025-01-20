@@ -78,5 +78,9 @@ add-function __rc_add_prompt_command
 
 
 if [[ -n $DIRENV_HOOK ]]; then
+    bashrc-includef direnv "# shellcheck disable=SC2128\n"
+    bashrc-includef direnv "# shellcheck disable=SC2178\n"
+    bashrc-includef direnv "{\n"
     bashrc-includef direnv "%s\n" "$DIRENV_HOOK"
+    bashrc-includef direnv "}\n"
 fi

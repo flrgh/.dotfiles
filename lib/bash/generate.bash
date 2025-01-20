@@ -162,5 +162,21 @@ bashrc-generate-finalize () {
 
     bashrc-include-file "$BUILD_BASHRC_FILE" "$REPO_ROOT"/bash/rc_cleanup.bash 1
 
-    cat "$BUILD_BASHRC_FILE" > "$HOME/.bashrc"
+    bash -n "$BUILD_BASHRC_FILE" || {
+        echo "FATAL: syntax error in generated .bashrc file" >&2
+        exit 1
+    }
+
+    if bashrc-command-exists shellcheck; then
+        shellcheck "$BUILD_BASHRC_FILE" || {
+            echo "FATAL: 'shellcheck .bashrc' returned non-zero" >&2
+            exit 1
+        }
+    fi
+
+    install \
+        --compare \
+        --no-target-directory \
+        "$BUILD_BASHRC_FILE" \
+        "$HOME/.bashrc"
 }
