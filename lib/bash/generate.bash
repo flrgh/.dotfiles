@@ -127,6 +127,15 @@ bashrc-include-file() {
     bashrc-append "$target" '# END: %s\n\n' "$fname"
 }
 
+bashrc-pre-include-file() {
+    local -r fname=$1
+    local -r base=${2:-${fname##*/}}
+
+    local -r target=${BUILD_BASHRC_PRE}/${base}
+
+    bashrc-include-file "$target" "$fname" 1
+}
+
 bashrc-generate-init() {
     if [[ -d $BUILD_BASHRC_DIR ]]; then
         rm -rfv "$BUILD_BASHRC_DIR"
@@ -147,7 +156,7 @@ bashrc-generate-finalize () {
     bashrc-include-file "$BUILD_BASHRC_FILE" "$REPO_ROOT"/bash/rc_init.bash 1
 
     for f in "$BUILD_BASHRC_PRE"/*; do
-        bashrc-include-file "$BUILD_BASHRC_FILE" "$f"
+        bashrc-include-file "$BUILD_BASHRC_FILE" "$f" 1
     done
 
     bashrc-include-file "$BUILD_BASHRC_FILE" "$REPO_ROOT"/bash/rc_main.bash 1

@@ -106,65 +106,6 @@ if (( DEBUG_BASHRC > 0 )); then
         local -r ctx="${BASH_SOURCE[2]}:${BASH_LINENO[1]} ${FUNCNAME[1]}"
         __rc_log_and_print "$ctx" "$@"
     }
-
-    __rc_timer_push() {
-        local -ri size=${#__RC_TIMER_STACK[@]}
-        if (( size == 0 )); then
-            __RC_TIMED_US_LAST=${EPOCHREALTIME/./}
-        fi
-
-        local -r key=$1
-
-        __RC_TIMER_STACK+=("$key")
-    }
-
-    __rc_timer_pop() {
-        local -nI dest=$1
-        local -ri size=${#__RC_TIMER_STACK[@]}
-        if (( size < 1 )); then
-            __rc_debug "timer stack underflow"
-            return 1
-        fi
-
-        # shellcheck disable=SC2034
-        dest=${__RC_TIMER_STACK[-1]}
-        unset "__RC_TIMER_STACK[-1]"
-
-        if (( size == 1 )); then
-            local -ri now=${EPOCHREALTIME/./}
-            local -ri duration=$(( now - __RC_TIMED_US_LAST ))
-            __RC_TIMED_US+=$duration
-        fi
-    }
-
-    __rc_timer_start() {
-        local -r key=$1
-        local -ri now=${EPOCHREALTIME/./}
-
-        __rc_timer_push "$key"
-        __RC_TIMER_START[$key]=$now
-    }
-
-    __rc_timer_stop() {
-        local -ri now=${EPOCHREALTIME/./}
-
-        local key
-        __rc_timer_pop key || return
-
-        local -ri start=${__RC_TIMER_START[$key]:-0}
-
-        if (( start == 0 )); then
-            return
-        fi
-
-        local -ri duration=$(( now - start ))
-        local -ri last=${__RC_DURATION_US[$key]:-0}
-        local -ri total=$(( duration + last ))
-        __RC_DURATION_US[$key]=$total
-
-        # reformat from us to ms for display
-        __RC_DURATION[$key]=$(( total / 1000 )).$(( total % 1000 ))ms
-    }
 else
     __rc_debug()    { :; }
     __rc_timer_start() { :; }

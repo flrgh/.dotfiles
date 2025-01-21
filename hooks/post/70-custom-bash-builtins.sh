@@ -10,6 +10,8 @@ if [[ ! -d $SRC ]]; then
     git clone "$REPO" "$SRC"
 fi
 
+git -C "$SRC" pull
+
 mkdir -p "$INSTALL"
 
 cargo build \
@@ -25,4 +27,5 @@ install \
     -D \
     --target-directory "$INSTALL" \
     "$SRC"/target/release/libbash_builtin_extras.so \
-    "$SRC"/target/release/libvarsplice.so
+    "$SRC"/target/release/libvarsplice.so \
+    "$SRC"/target/release/libtimer.so

@@ -9,25 +9,7 @@ __RC_TIME_US=$(( __RC_END - __RC_START ))
 __RC_TIME=$(( __RC_TIME_US / 1000 )).$(( __RC_TIME_US % 1000 ))
 
 if (( DEBUG_BASHRC > 0 )); then
-    {
-        for __rc_key in "${!__RC_DURATION[@]}"; do
-            __rc_time=${__RC_DURATION[$__rc_key]}
-            printf '%-16s %s\n' "$__rc_time" "$__rc_key"
-        done
-    } \
-        | sort -n -k1 \
-        | while read -r line; do
-            __rc_debug "$line"
-        done
-
-    __rc_untimed_us=$(( __RC_TIME_US - __RC_TIMED_US ))
-    if (( __rc_untimed_us > 0 )); then
-        __rc_timed=$(( __RC_TIMED_US / 1000 )).$(( __RC_TIMED_US % 1000 ))
-        __rc_untimed=$(( __rc_untimed_us / 1000 )).$(( __rc_untimed_us % 1000 ))
-        __rc_debug "accounted time: ${__rc_timed}ms"
-        __rc_debug "unaccounted time: ${__rc_untimed}ms"
-    fi
-
+    __rc_timer_summary
     __rc_debug "startup complete in ${__RC_TIME}ms"
 else
     __rc_log \

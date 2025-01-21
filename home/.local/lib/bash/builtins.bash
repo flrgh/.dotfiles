@@ -11,6 +11,7 @@ declare -gx BASH_USER_BUILTINS_PATH=$HOME/.local/lib/bash/builtins
 declare -gxA BASH_USER_BUILTINS=()
 declare -gxA BASH_USER_BUILTINS_SOURCE=(
     [varsplice]="$BASH_USER_BUILTINS_PATH/libvarsplice.so"
+    [timer]="$BASH_USER_BUILTINS_PATH/libtimer.so"
 )
 
 __have_builtin() {
@@ -42,7 +43,7 @@ __load_builtin() {
 }
 
 for __name in "${!BASH_USER_BUILTINS_SOURCE[@]}"; do
-    __load_builtin "$__name"
+    __load_builtin "$__name" || true
 done
 
 unset __name
