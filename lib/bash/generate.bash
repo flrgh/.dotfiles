@@ -42,14 +42,14 @@ bashrc-pre-declare() {
     local -r name=$1
     shift
 
-    bashrc-pref "$name" 'declare %s %s\n' "$@"
+    bashrc-pref "01-vars" 'declare %s %s\n' "$@"
 }
 
 bashrc-var() {
     local -r var=$1
     local -r value=$2
 
-    bashrc-pref "var_${var}" '%s=%q\n' "$var" "$value"
+    bashrc-pref "01-vars" '%s=%q\n' "$var" "$value"
 }
 
 bashrc-alias() {
@@ -62,12 +62,12 @@ bashrc-export-var() {
     local -r name=$1
     local -r value=$2
 
-    bashrc-includef "export_${name}" 'export %s=%q\n' "$name" "$value"
+    bashrc-includef "01-vars" 'export %s=%q\n' "$name" "$value"
 }
 
 bashrc-unset-var() {
     local -r name=$1
-    bashrc-includef "unset_${name}" 'unset %s\n' "$name"
+    bashrc-includef "01-vars" 'unset %s\n' "$name"
 }
 
 bashrc-command-exists() {
@@ -77,7 +77,7 @@ bashrc-command-exists() {
 bashrc-source-file() {
     local -r fname=$1
     local base; base=$(basename "$fname")
-    bashrc-includef "source_${base}" '__rc_source_file %q\n' "$fname"
+    bashrc-includef "source-file" '__rc_source_file %q\n' "$fname"
 }
 
 bashrc-source-file-if-exists() {

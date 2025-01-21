@@ -5,7 +5,7 @@ source "$REPO_ROOT"/lib/bash/generate.bash
 source "$BASH_USER_LIB"/ansi.bash
 
 bashrc-declare() {
-    bashrc-pref 'prompt_vars' 'declare %s %s=%q\n' "$@"
+    bashrc-pref '01-vars' 'declare %s %s=%q\n' "$@"
 }
 
 _args=(--prompt --reset)
