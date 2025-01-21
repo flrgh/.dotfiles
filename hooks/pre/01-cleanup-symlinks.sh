@@ -87,7 +87,7 @@ done
 
 EXEC=(
     --batch-size 20
-    --exec-batch "$REPO_ROOT"/bin/remove-dangling-symlinks "$REPO_ROOT"
+    --exec-batch "$REPO_ROOT"/scripts/remove-dangling-symlinks "$REPO_ROOT"
 )
 
 # $HOME itself (no recurse)

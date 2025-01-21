@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-readonly TARGET=${1:?target directory required}
+readonly REPO_ROOT=${1:?repository root directory required}
 shift
 
 is_absolute() {
     [[ $1 = /* ]]
 }
 
-if ! is_absolute "$TARGET"; then
+if ! is_absolute "$REPO_ROOT"; then
     printf "ERROR: target directory must be absolute\n"
     exit 1
 fi
 
-if [[ ! -d "$TARGET" ]]; then
+if [[ ! -d "$REPO_ROOT" ]]; then
     printf "ERROR: target directory must exist and be a directory\n"
     exit 1
 fi
@@ -25,7 +25,7 @@ for link in "$@"; do
         continue
     fi
 
-    if [[ $link = "$TARGET"/* ]]; then
+    if [[ $link = "$REPO_ROOT"/* ]]; then
         printf "uh oh, we shouldn't be evaluating this: %s\n" "$link"
         continue
     fi
@@ -66,7 +66,7 @@ for (( i = 1; i < ${#LINKS[@]}; i++ )); do
         continue
     fi
 
-    if [[ $target = "$TARGET"/* && ! -e $target ]]; then
+    if [[ $target = "$REPO_ROOT"/* && ! -e $target ]]; then
         printf "Danging symlink %q => %q\n" \
             "$link" \
             "$target"
