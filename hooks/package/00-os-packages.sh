@@ -25,6 +25,7 @@ PACKAGES=(
     axel              # openresty build dep
     alacritty         # terminal emulator
     automake
+    bash-devel        # needed to compile my custom bash builtins
     bc                # maths
     bear              # database generator for clang
     bind-utils        # DNS cli tools
