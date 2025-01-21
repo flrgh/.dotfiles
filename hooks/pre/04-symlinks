@@ -4,7 +4,7 @@ from pathlib import Path
 from os import path, walk, getlogin, getenv
 
 DEFAULT_INSTALL_PATH = Path(path.expanduser("~"))
-REPO_ROOT = Path(path.dirname(path.dirname(path.realpath(__file__))))
+REPO_ROOT = Path(getenv("REPO_ROOT"))
 DELETE_MARKER = '.DELETE'
 SKIP = object()
 
