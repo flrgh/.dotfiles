@@ -21,13 +21,9 @@ export LANG=en_US.UTF-8
 
 export EDITOR=vim
 
-export COLORTERM=$COLORTERM
 if [[ -z $COLORTERM ]]; then
     if [[ $TERM == alacritty ]]; then
         COLORTERM=truecolor
     fi
 fi
-
-if [[ -f ~/.config/env.local ]]; then
-    source ~/.config/env.local
-fi
+export COLORTERM
