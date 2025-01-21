@@ -12,7 +12,7 @@ __rc_timer_stop() {
 
 __rc_to_ms() {
     local -i value=$1
-    printf -v REPLY '%s.%s' \
+    printf -v REPLY '%s.%03d' \
         $(( value / 1000 )) \
         $(( value % 1000 ))
 }

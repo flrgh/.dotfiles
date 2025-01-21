@@ -8,6 +8,13 @@ declare -i __RC_TIMED_US=0
 declare -i __RC_TIMER_STACK_POS=0
 declare -a __RC_TIMER_STACK=()
 
+__rc_to_ms() {
+    local -i value=$1
+    printf -v REPLY '%s.%03d' \
+        $(( value / 1000 )) \
+        $(( value % 1000 ))
+}
+
 __rc_timer_push() {
     local -ri size=${#__RC_TIMER_STACK[@]}
     if (( size == 0 )); then
@@ -64,14 +71,17 @@ __rc_timer_stop() {
     __RC_DURATION_US[$key]=$total
 
     # reformat from us to ms for display
-    __RC_DURATION[$key]=$(( total / 1000 )).$(( total % 1000 ))ms
+    __rc_to_ms "$total"
+    __RC_DURATION[$key]=${REPLY}ms
 }
 
 __rc_timer_summary() {
     {
         for __rc_key in "${!__RC_DURATION[@]}"; do
             __rc_time=${__RC_DURATION[$__rc_key]}
-            printf '%-16s %s\n' "$__rc_time" "$__rc_key"
+            __rc_to_ms "$__rc_time"
+            local ms=$REPLY
+            printf '%-16s %s\n' "${ms}ms" "$__rc_key"
         done
     } \
         | sort -n -k1 \
@@ -81,8 +91,12 @@ __rc_timer_summary() {
 
     __rc_untimed_us=$(( __RC_TIME_US - __RC_TIMED_US ))
     if (( __rc_untimed_us > 0 )); then
-        __rc_timed=$(( __RC_TIMED_US / 1000 )).$(( __RC_TIMED_US % 1000 ))
-        __rc_untimed=$(( __rc_untimed_us / 1000 )).$(( __rc_untimed_us % 1000 ))
+        __rc_to_ms "$__RC_TIMED_US"
+        __rc_timed=$REPLY
+
+        __rc_to_ms "$__rc_untimed_us"
+        __rc_untimed=$REPLY
+
         __rc_debug "accounted time: ${__rc_timed}ms"
         __rc_debug "unaccounted time: ${__rc_untimed}ms"
     fi
