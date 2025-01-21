@@ -1,26 +1,21 @@
 INSTALL_PATH := $(HOME)
 REPO_ROOT = $(PWD)
+HOOKS = $(wildcard hooks/*)
+
+.DEFAULT: all
+
+.PHONY: hooks/* debug all install
+
+.EXPORT_ALL_VARIABLES: hooks/*
 
 all: install
 
 debug:
 	@echo REPO_ROOT: $(REPO_ROOT)
 	@echo INSTALL_PATH: $(INSTALL_PATH)
+	@echo HOOKS: $(HOOKS)
 
+hooks/*:
+	./scripts/run-hooks $(notdir $@)
 
-pre-hooks:
-	INSTALL_PATH=$(INSTALL_PATH) REPO_ROOT=$(REPO_ROOT) \
-		./scripts/run-hooks pre
-
-package-hooks:
-	INSTALL_PATH=$(INSTALL_PATH) REPO_ROOT=$(REPO_ROOT) \
-		./scripts/run-hooks package
-post-hooks:
-	INSTALL_PATH=$(INSTALL_PATH) REPO_ROOT=$(REPO_ROOT) \
-		./scripts/run-hooks post
-
-bashrc:
-	INSTALL_PATH=$(INSTALL_PATH) REPO_ROOT=$(REPO_ROOT) \
-		./scripts/run-hooks bashrc
-
-install: pre-hooks package-hooks post-hooks bashrc
+install: hooks/pre hooks/package hooks/post hooks/bashrc
