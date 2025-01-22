@@ -2,6 +2,8 @@
 
 source "$REPO_ROOT"/lib/bash/generate.bash
 
+shopt -s nullglob
+
 readonly DEST=nvm
 
 export NVM_DIR="$HOME/.config/nvm"
@@ -35,15 +37,16 @@ if [[ -s "$NVM_DIR/nvm.sh" ]]; then
 fi
 
 # sourcing $NVM_DIR/nvm.sh does this for us, but it's slow
-if declare -f node &>/dev/null; then
-    echo "unset-ing legacy node function"
-    bashrc-includef "$DEST" '%s\n' 'unset -f node'
-fi
+bashrc-includef "$DEST" '%s\n' 'unset -f node'
 
 # shellcheck disable=SC1091
 source "$NVM_DIR/nvm.sh"
 nvm use --lts
 NODE=$(nvm which current)
+
+for bin in "$NVM_DIR"/versions/node/*/bin; do
+    bashrc-includef "$DEST" '__rc_rm_path PATH %q\n' "$bin"
+done
 
 if [[ -n $NODE ]]; then
     NVM_BIN=${NODE%/node}
