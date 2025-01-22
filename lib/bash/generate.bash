@@ -9,6 +9,19 @@ export BUILD_BASHRC_FILE=$BUILD_BASHRC_DIR/.bashrc
 bashrc-append() {
     local -r name=$1
     shift
+
+    if (( DEBUG > 0 )); then
+        local -i i
+        for (( i = 0; i < ${#BASH_LINENO[@]}; i++ )); do
+            printf '# %2d %-48s:%-3d %s\n' \
+                "$i" \
+                "${BASH_SOURCE[i]#"${REPO_ROOT}/"}" \
+                "${BASH_LINENO[i]}" \
+                "${FUNCNAME[i]}" \
+            >> "$name"
+        done
+    fi
+
     printf -- "$@" | tee -a "$name"
 }
 

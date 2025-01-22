@@ -2,6 +2,7 @@
 
 export REPO_ROOT=${REPO_ROOT:?REPO_ROOT undefined}
 export INSTALL_PATH=${INSTALL_PATH:?INSTALL_PATH undefined}
+export DEBUG=${DEBUG:-0}
 
 HOOKS=${1:?Usage: $0 <hooks>}
 
