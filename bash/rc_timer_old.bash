@@ -76,6 +76,10 @@ __rc_timer_stop() {
 }
 
 __rc_timer_summary() {
+    if (( ${#__RC_TIMER_STACK[@]} > 0 )); then
+        __rc_warn "timer strack should be empty, but: ${__RC_TIMER_STACK[*]}"
+    fi
+
     {
         for __rc_key in "${!__RC_DURATION[@]}"; do
             __rc_time=${__RC_DURATION[$__rc_key]}

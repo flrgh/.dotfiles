@@ -8,6 +8,11 @@ append() {
 }
 
 emit-luarocks() {
+    local conf=$INSTALL_PATH/.config/luarocks/config.lua
+    if [[ -f $conf ]]; then
+        bashrc-export-var LUAROCKS_CONFIG "$conf"
+    fi
+
     if ! command -v luarocks &>/dev/null; then
         echo "luarocks not installed, exiting"
         return 0
@@ -51,5 +56,24 @@ emit-lua-utils() {
         "$lua_utils/lib/?.lua"
 }
 
+emit-luajit-path() {
+    local path=$HOME/.local/share/luajit-2.1
+
+    if [[ -d $path ]]; then
+        append '__rc_add_path LUA_PATH %q\n' "${path}/?.lua"
+    fi
+}
+
+emit-lua-init() {
+    # init script for the lua REPL
+    local fname=$INSTALL_PATH/.config/lua/repl.lua
+
+    if [[ -f $fname ]]; then
+        bashrc-export-var LUA_INIT "@$fname"
+    fi
+}
+
 emit-luarocks
 emit-lua-utils
+emit-luajit-path
+emit-lua-init

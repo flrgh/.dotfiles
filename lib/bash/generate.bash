@@ -206,6 +206,7 @@ bashrc-generate-finalize () {
     local f
 
     bashrc-include-file "$BUILD_BASHRC_FILE" "$REPO_ROOT"/bash/rc_init.bash 1
+    bashrc-include-file "$BUILD_BASHRC_FILE" "$REPO_ROOT"/bash/rc_debug.bash 1
 
     for f in "$BUILD_BASHRC_PRE"/*; do
         bashrc-include-file "$BUILD_BASHRC_FILE" "$f" 1

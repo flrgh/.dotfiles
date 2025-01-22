@@ -301,13 +301,8 @@ shopt -u failglob
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
-# make less more friendly for non-text input files, see lesspipe(1)
-if [[ -x /usr/bin/lesspipe ]]; then
-    eval "$(SHELL=/bin/sh lesspipe)"
-fi
-
 # I hate this thing
-if __rc_command_exists command_not_found_handle; then
+if command -v command_not_found_handle &>/dev/null; then
     __rc_debug "unsetting command_not_found_handle func"
     unset -f command_not_found_handle
 fi
