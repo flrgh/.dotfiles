@@ -12,6 +12,7 @@ declare -gxA BASH_USER_BUILTINS=()
 declare -gxA BASH_USER_BUILTINS_SOURCE=(
     [varsplice]="$BASH_USER_BUILTINS_PATH/libvarsplice.so"
     [timer]="$BASH_USER_BUILTINS_PATH/libtimer.so"
+    [version]="$BASH_USER_BUILTINS_PATH/libversion.so"
 )
 
 __have_builtin() {

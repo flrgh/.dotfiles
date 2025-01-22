@@ -9,6 +9,24 @@ readonly DEST=nvm
 export NVM_DIR="$HOME/.config/nvm"
 bashrc-includef "$DEST" 'export %s=%q\n' NVM_DIR "$NVM_DIR"
 
+if [[ -f "$HOME/.local/lib/bash/builtins.bash" ]] \
+    && source "$HOME/.local/lib/bash/builtins.bash" \
+    && command -v version &>/dev/null \
+    && command -v varsplice &>/dev/null \
+    && version \
+        "${VARSPLICE_VERSION[0]}.${VARSPLICE_VERSION[1]}" \
+        gte \
+        "0.2"
+then
+    bashrc-includef "$DEST" 'varsplice --remove -g PATH %q\n' "${NVM_DIR:?}/*"
+
+else
+    for bin in "$NVM_DIR"/versions/node/*/bin; do
+        bashrc-includef "$DEST" '__rc_rm_path PATH %q\n' "$bin"
+    done
+fi
+
+
 if [[ ! -d $NVM_DIR ]]; then
     exit 0
 fi
@@ -43,10 +61,6 @@ bashrc-includef "$DEST" '%s\n' 'unset -f node'
 source "$NVM_DIR/nvm.sh"
 nvm use --lts
 NODE=$(nvm which current)
-
-for bin in "$NVM_DIR"/versions/node/*/bin; do
-    bashrc-includef "$DEST" '__rc_rm_path PATH %q\n' "$bin"
-done
 
 if [[ -n $NODE ]]; then
     NVM_BIN=${NODE%/node}

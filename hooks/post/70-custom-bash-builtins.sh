@@ -28,4 +28,5 @@ install \
     --target-directory "$INSTALL" \
     "$SRC"/target/release/libbash_builtin_extras.so \
     "$SRC"/target/release/libvarsplice.so \
-    "$SRC"/target/release/libtimer.so
+    "$SRC"/target/release/libtimer.so \
+    "$SRC"/target/release/libversion.so
