@@ -43,7 +43,8 @@ if (( BASH_VERSINFO[0] > 5 )) || (( BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >=
 fi
 
 if (( PROMPT_ARRAY == 1 )); then
-    bashrc-pre-declare "$DEST" -a 'PROMPT_COMMAND=()'
+    declare -a PROMPT_COMMAND=()
+    bashrc-pre-declare PROMPT_COMMAND
 
     __rc_add_prompt_command() {
         local -r cmd=${1?command required}
@@ -74,13 +75,11 @@ else
     }
 fi
 
-add-function __rc_add_prompt_command
+bashrc-pre-function __rc_add_prompt_command
 
 
 if [[ -n $DIRENV_HOOK ]]; then
     bashrc-includef direnv "# shellcheck disable=SC2128\n"
     bashrc-includef direnv "# shellcheck disable=SC2178\n"
-    bashrc-includef direnv "{\n"
-    bashrc-includef direnv "%s\n" "$DIRENV_HOOK"
-    bashrc-includef direnv "}\n"
+    bashrc-includef direnv "{\n%s\n}\n" "$DIRENV_HOOK"
 fi

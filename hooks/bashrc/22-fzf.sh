@@ -22,9 +22,9 @@ if bashrc-command-exists fzf; then
     fi
 
     if [[ -e "$HOME/.local/share/fzf/shell/key-bindings.bash" ]]; then
-        bashrc-source-file "$HOME/.local/share/fzf/shell/key-bindings.bash"
+        bashrc-main-include-file "$HOME/.local/share/fzf/shell/key-bindings.bash"
 
     elif [[ -f /usr/share/fzf/shell/key-bindings.bash ]]; then
-        bashrc-source-file /usr/share/fzf/shell/key-bindings.bash
+        bashrc-main-include-file /usr/share/fzf/shell/key-bindings.bash
     fi
 fi

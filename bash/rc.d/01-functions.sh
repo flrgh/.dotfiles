@@ -3,31 +3,27 @@
 #
 # Functions used only while sourcing .bashrc should go in .bashrc
 
-__rc_source_file "$BASH_USER_LIB"/dispatch.bash
-
-#declare -gf __function_dispatch
-
 :q() {
     echo "hey you're not in vim anymore, but I can exit the shell for you..."
     sleep 0.75 && exit
 }
 
 extract() {
-    __function_dispatch extract "$@"
+    __function_dispatch "$@"
 }
 
 strip-whitespace() {
-    __function_dispatch strip-whitespace "$@"
+    __function_dispatch "$@"
 }
 
 dump-array() {
-    __function_dispatch dump-array "$@"
+    __function_dispatch "$@"
 }
 
 complete -A arrayvar dump-array
 
 dump-var() {
-    __function_dispatch dump-var "$@"
+    __function_dispatch "$@"
 }
 
 complete -A variable dump-var

@@ -1,7 +1,7 @@
 INSTALL_PATH := $(HOME)
 REPO_ROOT = $(PWD)
 HOOKS = $(wildcard hooks/*)
-DEBUG = $(DEBUG)
+DEBUG := $(DEBUG)
 
 .DEFAULT: all
 

@@ -22,7 +22,7 @@ bashrc-append() {
         done
     fi
 
-    printf -- "$@" | tee -a "$name"
+    printf -- "$@" >> "$name"
 }
 
 bashrc-includef() {
@@ -52,10 +52,26 @@ bashrc-pre-exec() {
 }
 
 bashrc-pre-declare() {
-    local -r name=$1
+    local -r var=$1
     shift
 
-    bashrc-pref "01-vars" 'declare %s %s\n' "$@"
+    local dec; dec=$(declare -p "$var")
+    if [[ -z $dec ]]; then
+        return 1
+    fi
+
+    bashrc-pref "01-vars" '%s\n' "$dec"
+}
+
+bashrc-pre-function() {
+    local -r fn=$1
+    local dec; dec=$(declare -f "$fn")
+
+    if [[ -z $dec ]]; then
+        return 1
+    fi
+
+    bashrc-pref "02-functions" '%s\n' "$dec"
 }
 
 bashrc-var() {
@@ -125,13 +141,27 @@ bashrc-include-file() {
     short=${short#"$REPO_ROOT/"}
     short=${short#"$HOME/"}
 
+    local -i is_repo_file=0
+    if [[ "$fname" = "${REPO_ROOT}"/* ]]; then
+        is_repo_file=1
+    fi
+
     bashrc-append "$target" '# BEGIN: %s\n' "$fname"
 
     if (( notime != 1 )); then
         bashrc-append "$target" '__rc_timer_start "include(%s)"\n' "$short"
     fi
 
-    tee -a "$target" < "$fname"
+    if (( is_repo_file == 0 )); then
+        printf '# shellcheck disable=all\n' >> "$target"
+        printf '\n{\n' >> "$target"
+    fi
+
+    cat "$fname" >> "$target"
+
+    if (( is_repo_file == 0 )); then
+        printf '\n}\n' >> "$target"
+    fi
 
     if (( notime != 1 )); then
         bashrc-append "$target" '__rc_timer_stop\n'
@@ -147,6 +177,15 @@ bashrc-pre-include-file() {
     local -r target=${BUILD_BASHRC_PRE}/${base}
 
     bashrc-include-file "$target" "$fname" 1
+}
+
+bashrc-main-include-file() {
+    local -r fname=$1
+    local -r base=${2:-${fname##*/}}
+
+    local -r target=${BUILD_BASHRC_INC}/${base}
+
+    bashrc-include-file "$target" "$fname"
 }
 
 bashrc-generate-init() {

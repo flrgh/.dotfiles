@@ -49,7 +49,7 @@ if (( __rc_have_varsplice == 1 )); then
 
 else
     declare -A __RC_PATH_SEPARATORS=()
-    bashrc-pre-declare "$DEST" -A '__RC_PATH_SEPARATORS=()'
+    bashrc-pre-declare __RC_PATH_SEPARATORS
 
     __rc_set_path_separator() {
         local -r var=${1?var name require}

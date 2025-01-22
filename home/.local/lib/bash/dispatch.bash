@@ -3,8 +3,7 @@ source "$BASH_USER_LIB"/__init.bash
 (( BASH_USER_LIB_SOURCED[dispatch]++ == 0 )) || return 0
 
 __function_dispatch() {
-    local -r fn=$1
-    shift
+    local -r fn=${FUNCNAME[1]:?could not detect function name}
     unset -f "$fn"
 
     # shellcheck disable=SC1090
