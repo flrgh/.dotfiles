@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+ARGS=()
+DECODE=0
+FILE=/dev/stdin
+
+for arg in "$@"; do
+    case $arg in
+        -h|--help)
+            exec base64 --help
+            ;;
+
+        -v|--version)
+            exec base64 --version
+            ;;
+
+        -d|--decode)
+            DECODE=1
+            ARGS+=("$arg")
+            ;;
+
+        -i|--ignore-garbage)
+            ARGS+=("$arg")
+            ;;
+
+        -w*|--wrap|--wrap=*)
+            continue
+            ;;
+
+        -)
+            FILE=/dev/stdin
+            ;;
+
+        -*)
+            ARGS+=("$arg")
+            ;;
+
+        *)
+            FILE=$arg
+            ;;
+    esac
+done
+
+if (( DECODE == 1 )); then
+    tr -- '-_' '+/' < "$FILE" | exec base64 "${ARGS[@]}"
+else
+    base64 -w0 "${ARGS[@]}" < "$FILE" | exec tr -- '+/' '-_'
+fi
