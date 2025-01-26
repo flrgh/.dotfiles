@@ -143,10 +143,7 @@ add_command("LuaDebug",
         return ""
       end
 
-      local out = (res.stdout and res.stdout ~= "" and res.stdout)
-               or (res.stderr and res.stderr ~= "" and res.stderr)
-
-      return vim.trim(out)
+      return vim.trim(res.stdout or ""), vim.trim(res.stderr or "")
     end
 
     local lua = exe("lua")
@@ -217,13 +214,28 @@ add_command("LuaDebug",
 
     buf:put("\n")
 
-    local nginx = exe("nginx")
-    if nginx then
-      local resty = fs.normalize(fs.dirname(nginx) .. "/../..")
-      replace_path(resty, "openresty")
-      buf:put("openresty:\n")
-      buf:putf("  nginx: %s\n", nginx)
-      buf:putf("  prefix: %s\n", resty)
+    local resty = exe("openresty")
+    if resty then
+      local _, stderr = output({resty, "-V"})
+      local prefix
+
+      if stderr then
+        prefix = stderr:gsub(".*prefix=([^%s]+) .*", "%1")
+      end
+
+      local nginx = prefix .. "/sbin/nginx"
+
+      if prefix then
+        replace_path(prefix, "openresty")
+        buf:put("openresty:\n")
+        buf:putf("  prefix: %s\n", prefix)
+
+        if fs.exists(nginx) then
+          buf:putf("  nginx: %s\n", nginx)
+        else
+          buf:putf("  nginx: [not found]s\n")
+        end
+      end
     end
 
     buf:put("\n")
