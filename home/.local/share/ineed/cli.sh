@@ -89,9 +89,7 @@ complete-from-commands() {
 get-available-versions() {
     local -r name=$1
 
-    for v in $(driver-exec list-available-versions "$name"); do
-        normalize-version "$v"
-    done
+    driver-exec list-available-versions "$name" | version-sort
 }
 
 
@@ -162,7 +160,7 @@ get-latest-version() {
 complete-from-versions() {
     local -r name=$1
 
-    local versions=()
+    local -a versions=()
 
     for v in $(get-available-versions "$name"); do
         versions+=("$v")
@@ -371,6 +369,17 @@ state::cmd() {
 
 state::complete() {
     complete-from-drivers
+}
+
+check-latest-version::cmd() {
+    printf '%-32s %-16s\n' "name" "version"
+    printf '%-32s %-16s\n' "----" "-------"
+
+    local v
+    for d in $(list-drivers); do
+        v=$(get-latest-version "$d")
+        printf '%-32s %-16s\n' "$d" "${v:-0.0.0}"
+    done
 }
 
 _bash_completion::cmd() {

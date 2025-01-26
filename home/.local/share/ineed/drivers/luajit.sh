@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-#readonly REPO=LuaJIT/LuaJIT
 readonly PREFIX=$HOME/.local
 readonly NAME=luajit
 readonly REPO=openresty/luajit2
@@ -19,14 +18,7 @@ get-installed-version() {
 
 list-available-versions() {
     gh-helper get-tag-names "$REPO" \
-        | tr -d 'v' \
-        | sort -r -n
-}
-
-get-latest-version() {
-    list-available-versions \
-        | sort -r -n \
-        | head -1
+        | grep -v -- '-beta'
 }
 
 get-asset-download-url() {
@@ -52,9 +44,9 @@ install-from-asset() {
         PREFIX="$PREFIX" \
         VERSION="$version"
 
-    local bin="$PREFIX/bin/luajit-${version}"
+    local src="$PREFIX/bin/luajit-${version}"
 
-    vbin-install luajit "$version" "$bin"
+    vbin-install luajit "$version" "$src"
 
-    rm "$bin"
+    rm "$src"
 }

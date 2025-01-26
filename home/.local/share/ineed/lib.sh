@@ -108,6 +108,21 @@ normalize-version() {
     echo "$version"
 }
 
+read-versions() {
+    local line
+    while read -r line; do
+        normalize-version "$line"
+    done
+}
+
+version-sort() {
+    read-versions | sort -V -r
+}
+
+latest-version() {
+    version-sort | head -1
+}
+
 state::get() {
     local -r name=$1
     local -r fname="$INEED_STATE/$name"

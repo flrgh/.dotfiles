@@ -1,46 +1,44 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
 
-readonly REPO=
-readonly NAME=
+source "$INEED_ROOT/lib.sh"
 
+REPO=
+NAME=
 
-# helpers
-#
-# * binary-exists
 
 _nyi() {
-    echo "This function is NYI"
+    echo "NYI" >&2
     return 127
 }
 
-list-available-versions() {
+base-driver::list-available-versions() {
     _nyi
 }
 
-get-latest-version() {
+base-driver::get-latest-version() {
+    list-available-versions | latest-version
+}
+
+base-driver::get-installed-version() {
     _nyi
 }
 
-get-installed-version() {
+base-driver::get-binary-name() {
     _nyi
 }
 
-get-binary-name() {
+base-driver::is-installed() {
     _nyi
 }
 
-is-installed() {
-    _nyi
-}
-
-get-asset-download-url() {
+base-driver::get-asset-download-url() {
     local version=$1
 
     _nyi
 }
 
-install-from-asset() {
+base-driver::install-from-asset() {
     local asset=$1
     local version=$2
 

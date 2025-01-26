@@ -6,7 +6,7 @@ set -euo pipefail
 source "$INEED_ROOT/lib.sh"
 
 main() {
-    local -r fn=$1
+    local fn=$1
     local -r name=$2
     local -r driver="$INEED_DRIVERS/${name}.sh"
 
@@ -21,12 +21,19 @@ main() {
 
     shift 2
 
+    # shellcheck source-path=SCRIPTDIR
+    source "$INEED_ROOT/base-driver.sh"
+
     # shellcheck disable=SC1090
     source "$driver"
 
     if ! function-exists "$fn"; then
+        fn="base-driver::${fn}"
+    fi
+
+    if ! function-exists "$fn"; then
         printf 'FATAL: function "%s" is not implemented by "%s" driver\n' \
-            "$fn" \
+            "${fn#base-driver::}" \
             "$name" \
         >&2
 
