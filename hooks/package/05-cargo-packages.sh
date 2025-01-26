@@ -20,6 +20,7 @@ readonly PACKAGES=(
     cross          # cargo cross-compilation helper
     inferno        # rust port of flamegraph.pl
     lsd            # fancier version of `ls`
+    minijinja-cli  # template renderer
     ripgrep
     stylua
     wasm-pack
