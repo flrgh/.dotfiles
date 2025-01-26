@@ -49,6 +49,7 @@ local WS = require "my.workspace"
 local resolver = luamod.resolver()
 
 _M.resolver = resolver
+_G.LUA_RESOLVER = resolver
 
 ---@type { Lua: my.lsp.LuaLS }
 _M.settings = nil
@@ -68,19 +69,15 @@ local SRC_RUNTIME_PATH = "Lua.runtime.path"
 local SRC_WS_LIBRARY = "Lua.workspace.library"
 local SRC_PLUGIN = "plugin"
 local SRC_LUA_PATH = "$LUA_PATH / package.path"
+local SRC_WORKSPACE_ROOT = "LSP.root_dir"
 
 
 ---@type string[]
 local LUA_PATH_ENTRIES = {}
 do
-  local lua_path = os.getenv("LUA_PATH")
-                or package.path
-                or ""
-
   local seen = {}
 
-  ---@diagnostic disable-next-line
-  lua_path:gsub("[^;]+", function(path)
+  local function add(path)
     local dir = path:gsub("%?%.lua$", "")
                     :gsub("%?/init%.lua$", "")
                     :gsub("%?%.ljbc$", "")
@@ -96,7 +93,11 @@ do
       seen[dir] = dir
       insert(LUA_PATH_ENTRIES, dir)
     end
-  end)
+  end
+
+  package.path:gsub("[^;]+", add)
+  local env_lua_path = os.getenv("LUA_PATH") or ""
+  env_lua_path:gsub("[^;]+", add)
 end
 
 --- annotations from https://github.com/LuaCATS
@@ -289,10 +290,11 @@ end
 ---@return string|nil
 local function get_plugin_lua_dir(name)
   local p = plugin.get(name)
-  if not p then return end
-  local lua_dir = p.dir .. "/lua"
-  if fs.dir_exists(lua_dir) then
-    return lua_dir
+  if p and p.dir and p.dir ~= "" then
+    local lua_dir = p.dir .. "/lua"
+    if fs.dir_exists(lua_dir) then
+      return lua_dir
+    end
   end
 end
 
@@ -529,13 +531,13 @@ local None = "None!"
 
 ---@param ws? my.lsp.settings
 local function update_resolver(ws)
-  local meta
-
   ws = ws or get_merged_settings()
 
-  meta = { source = SRC_TYPE_DEFS }
+  resolver:add_lua_package_path()
+  resolver:add_env_lua_path()
+
   for _, dir in ipairs(ws.definitions or EMPTY) do
-    resolver:add_dir(dir, meta)
+    resolver:add_dir(dir, { source = SRC_TYPE_DEFS })
   end
 
   local paths = _M.settings
@@ -544,37 +546,36 @@ local function update_resolver(ws)
             and _M.settings.Lua.runtime.path
              or { "?.lua", "?/init.lua" }
 
-  meta = { source = SRC_RUNTIME_PATH }
   for _, p in ipairs(paths) do
-    resolver:add_path(p, meta)
+    resolver:add_path(p, { source = SRC_RUNTIME_PATH })
   end
 
   local libraries = ws.libraries
 
-  meta = { source = SRC_WS_LIBRARY }
   for _, lib in ipairs(libraries) do
-  --for _, lib in ipairs(libraries) do
-    resolver:add_dir(lib, meta)
+    resolver:add_dir(lib, { source = SRC_WS_LIBRARY })
+  end
+
+  if WS.meta.dotfiles then
+    resolver:add_dir(SETTINGS_DOTFILES.root_dir,
+                     { source = SRC_WORKSPACE_ROOT })
   end
 
   if WS.meta.nvim then
     if fs.dir_exists(WS.dir .. "/lua") then
-      resolver:add_dir(WS.dir .. "/lua", {
-        source = SRC_WS_LIBRARY,
-      })
+      resolver:add_dir(WS.dir .. "/lua",
+                       { source = SRC_WS_LIBRARY })
     end
 
     for _, p in ipairs(plugin.list()) do
-      resolver:add_dir(p.dir .. "/lua", {
-        source = SRC_PLUGIN,
-        plugin = p.name,
-      })
+      if p.dir and p.dir ~= "" then
+        resolver:add_dir(p.dir .. "/lua",
+                         {
+                           source = SRC_PLUGIN,
+                           plugin = p.name,
+                         })
+      end
     end
-  end
-
-  meta = { source = SRC_LUA_PATH }
-  for _, dir in ipairs(LUA_PATH_ENTRIES) do
-    resolver:add_dir(dir, meta)
   end
 end
 

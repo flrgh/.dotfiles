@@ -47,6 +47,8 @@ end
 ---@field module_cache table<string, my.lua.resolver.module>
 ---
 ---@field fs_cache table<string, boolean>
+---
+---@field dir_lookup table<string, my.lua.resolver.path>
 local resolver = {}
 
 
@@ -61,8 +63,12 @@ function resolver:find_module(name, debug)
     return result
   end
 
+  if debug == nil then
+    debug = self.debug
+  end
+
   local done = noop
-  if globals.debug then
+  if debug then
     done = sw.new("luamod.resolve(" .. name .. ")", 50)
   end
 
@@ -70,8 +76,7 @@ function resolver:find_module(name, debug)
 
   local fs_cache = self.fs_cache
   local paths = self.paths
-  local tried
-  if debug then tried = {} end
+  local tried = debug and {} or nil
 
   for i = 1, #paths do
     local path = paths[i]
@@ -137,10 +142,6 @@ end
 ---@param meta? my.lua.resolver.path.meta
 ---@return my.lua.resolver
 function resolver:add_dir(dir, meta)
-  if self:has_dir(dir) then
-    return self
-  end
-
   return self:add_search(dir, ".lua", meta)
              :add_search(dir, "/init.lua", meta)
 end
@@ -154,15 +155,16 @@ function resolver:add_search(dir, suffix, meta)
   assert(type(suffix) == "string")
 
   -- little bit of normalization
-  dir = gsub(dir, "/+$", "")
+  if dir == "" then
+    dir = "."
+  end
+  if #dir > 1 then
+    dir = gsub(dir, "/+$", "")
+  end
 
-  local paths = self.paths
-  for i = 1, #paths do
-    local path = paths[i]
+  local path = self.dir_lookup[dir]
 
-    if path.dir == dir then
-      path.meta = merge(path.meta, meta)
-
+  if path then
       local suffixes = path.suffixes
 
       for j = 1, #suffixes do
@@ -172,32 +174,42 @@ function resolver:add_search(dir, suffix, meta)
         end
       end
 
-      -- found existing dir, insert suffix
       insert(suffixes, suffix)
-      return self
-    end
-  end
+  else
+    path = {
+      dir = dir,
+      suffixes = { suffix },
+      absolute = dir:sub(1, 1) == "/",
+      meta = meta or {},
+    }
 
-  insert(paths, {
-    dir = dir,
-    suffixes = { suffix },
-    absolute = dir:sub(1, 1) == "/",
-    meta = meta or {},
-  })
+    self.dir_lookup[dir] = path
+    insert(self.paths, path)
+  end
 
   return self
 end
 
----@param dir string
----@return boolean
-function resolver:has_dir(dir)
-  for _, p in ipairs(self.paths) do
-    if p.dir == dir then
-      return true
-    end
-  end
+function resolver:add_env_lua_path()
+  local lua_path = os.getenv("LUA_PATH") or ""
 
-  return false
+  lua_path:gsub("[^;]+", function(path)
+    if path ~= "" then
+      self:add_path(path, { source = "$LUA_PATH" })
+    end
+  end)
+
+  return self
+end
+
+function resolver:add_lua_package_path()
+  package.path:gsub("[^;]+", function(path)
+    if path ~= "" then
+      self:add_path(path, { source = "package.path" })
+    end
+  end)
+
+  return self
 end
 
 function resolver:purge_cache()
@@ -217,6 +229,8 @@ function _M.new()
     paths = {},
     module_cache = {},
     fs_cache = {},
+    debug = globals.debug or false,
+    dir_lookup = {},
   }, resolver_mt)
 
   return self
