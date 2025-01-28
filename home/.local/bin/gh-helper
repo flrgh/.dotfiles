@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+shopt -s extglob
+
+
 if [[ -z ${GITHUB_TOKEN:-} || -z ${GITHUB_USER:-} ]]; then
     source "$HOME/.config/github/helper-access-token"
 fi
@@ -11,23 +14,25 @@ readonly BASE_URL=https://api.github.com/
 
 if command -v http &>/dev/null; then
     http() {
+        local -r path=${1##+(/)}
         command http \
             --ignore-stdin \
             --auth "${GITHUB_USER}:${GITHUB_TOKEN}" \
             --follow \
             --check-status \
-            "${BASE_URL}$1" \
+            "${BASE_URL}${path}" \
             "X-GitHub-Api-Version: 2022-11-28"
     }
 else
     http() {
+        local -r path=${1##+(/)}
         curl \
             --silent \
             --fail \
             --user "${GITHUB_USER}:${GITHUB_TOKEN}" \
             --header "Accept: application/vnd.github.v3+json" \
             --header "X-GitHub-Api-Version: 2022-11-28" \
-            --url "${BASE_URL}$1"
+            --url "${BASE_URL}${path}"
     }
 fi
 
