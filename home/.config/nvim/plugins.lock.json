@@ -37,6 +37,7 @@
   "nerdfont.vim": { "branch": "master", "commit": "339e5e0f725ad5552c0910653a8b1fbb59eed2b8" },
   "noice.nvim": { "branch": "main", "commit": "eaed6cc9c06aa2013b5255349e4f26a6b17ab70f" },
   "nui.nvim": { "branch": "main", "commit": "53e907ffe5eedebdca1cd503b00aa8692068ca46" },
+  "nvim-bigfile": { "branch": "master", "commit": "7216a143ba8ab01899b0c185f8fb80230fb39b59" },
   "nvim-cmp": { "branch": "main", "commit": "12509903a5723a876abd65953109f926f4634c30" },
   "nvim-lspconfig": { "branch": "master", "commit": "1f941b3668151963fca3e1230922c433ea4b7b64" },
   "nvim-markdown-preview": { "branch": "master", "commit": "3d6f941beb223b23122973d077522e9e2ee33068" },

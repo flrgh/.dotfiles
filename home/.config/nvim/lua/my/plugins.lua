@@ -766,6 +766,35 @@ local plugins_by_category = {
     "vito-c/jq.vim",
 
     "Glench/Vim-Jinja2-Syntax",
+
+    -- turn off fancy features that are slow when opening a big file
+    {
+      "ouuan/nvim-bigfile",
+      config = function()
+        require("bigfile").setup {
+          -- Default size limit in bytes
+          size_limit = 1 * 1024 * 1024,
+
+          -- Per-filetype size limits
+          ft_size_limits = {
+            -- javascript = 100 * 1024, -- 100KB for javascript files
+          },
+
+          -- Show notifications when big files are detected
+          notification = true,
+
+          -- Enable basic syntax highlighting (not TreeSitter) for big files
+          -- (tips: it will be automatically disabled if too slow)
+          syntax = false,
+
+          -- Custom additional hook function to run when big files are detected
+          -- hook = function(buf, ft)
+          --   vim.b.minianimate_disable = true
+          -- end,
+          hook = nil,
+          }
+      end,
+    },
   },
 
   filesystem = {
