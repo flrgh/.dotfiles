@@ -4,11 +4,29 @@ set -euo pipefail
 
 readonly REPO=neovim/neovim
 readonly NAME=nvim
+readonly BASE_URL="https://github.com/neovim/neovim/releases/download"
+readonly PREFIX=$HOME/.local
 
 readonly INSTALL_DIRS=(
-    "$HOME/.local/lib/nvim"
-    "$HOME/.local/share/nvim/runtime"
+    "$PREFIX/lib/nvim"
+    "$PREFIX/share/nvim/runtime"
 )
+
+get-platform-label() {
+    local -r version=${1:?}
+
+    local platform
+
+    # see https://github.com/neovim/neovim/releases/tag/v0.10.4
+    if version-compare "$version" gte "0.10.4"; then
+        platform=nvim-linux-x86_64
+    else
+        platform=nvim-linux64
+    fi
+
+    echo "$platform"
+}
+
 
 is-installed() {
     binary-exists "$NAME"
@@ -33,13 +51,16 @@ get-latest-version() {
 get-asset-download-url() {
     local -r version=$1
 
-    echo "https://github.com/neovim/neovim/releases/download/v${version}/nvim-linux64.tar.gz"
+    echo "${BASE_URL}/v${version}/$(get-platform-label "$version").tar.gz"
 }
 
 copy-files() {
-    cp -af nvim-linux64/bin/* "$HOME/.local/bin/"
-    cp -af nvim-linux64/lib/* "$HOME/.local/lib/"
-    cp -af nvim-linux64/share/* "$HOME/.local/share/"
+    local -r version=${1:?}
+    local label; label=$(get-platform-label "$version")
+
+    for dir in bin lib share; do
+        cp -af "${label}/${dir}/"* "${PREFIX}/${dir}/"
+    done
 }
 
 backup-dirs() {
@@ -80,7 +101,7 @@ install-from-asset() {
     tar xzf "$asset"
 
     backup-dirs
-    if copy-files; then
+    if copy-files "$version"; then
         remove-backups
     else
         restore-dirs
