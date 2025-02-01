@@ -2,6 +2,16 @@
 
 set -euo pipefail
 
+declare -gi QUIET=${CACHE_GET_QUIET:-0}
+
+while [[ $1 ]]; do
+    arg=$1
+    case $arg in
+        -q) QUIET=1; shift ;;
+        *) break ;;
+    esac
+done
+
 readonly URL=${1?URL required}
 
 FNAME=${2:-}
@@ -12,9 +22,13 @@ fi
 
 readonly DEST="$HOME/.cache/download/$FNAME"
 
-log() {
-	printf "$@" >&2
-}
+if (( QUIET == 1 )); then
+    log() { :; }
+else
+    log() {
+        printf "$@" >&2
+    }
+fi
 
 log "URL: $URL\n"
 log "Destination: $DEST\n"
