@@ -139,6 +139,10 @@ state::set() {
     local -r name=$1
     local -r value=$2
 
+    if [[ -z ${value:-} ]]; then
+        return 1
+    fi
+
     local -r fname="$INEED_STATE/$name"
 
     mkdir -p "$INEED_STATE"
