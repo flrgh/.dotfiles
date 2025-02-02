@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source "$REPO_ROOT"/lib/bash/generate.bash
+source "$REPO_ROOT"/lib/bash/facts.bash
 
 readonly DEST=path-munge
 
@@ -14,7 +15,7 @@ add-function() {
     local -r name=$1
 
     local body
-    if body=$(declare -f "$name" 2>/dev/null); then
+    if body=$(bashrc-dump-function "$name"); then
         append '%s\n' "$body"
 
     else
@@ -27,14 +28,13 @@ add-call() {
 }
 
 __rc_have_varsplice=0
-if [[ -e $HOME/.local/lib/bash/builtins.bash ]]; then
-    source "$HOME/.local/lib/bash/builtins.bash"
-    __rc_have_varsplice=${BASH_USER_BUILTINS[varsplice]:-0}
+if have varsplice; then
+    __rc_have_varsplice=1
 fi
 
 if (( __rc_have_varsplice == 1 )); then
-    lib="${BASH_USER_BUILTINS_SOURCE[varsplice]}"
-    add-call enable -f "${lib:?empty varsplice lib source}" varsplice
+    get-location varsplice
+    add-call enable -f "${FACT:?}" varsplice
 fi
 
 if (( __rc_have_varsplice == 1 )); then

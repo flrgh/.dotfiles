@@ -1,4 +1,6 @@
 source "$REPO_ROOT"/lib/bash/common.bash
+source "$REPO_ROOT"/lib/bash/facts.bash
+source "$BASH_USER_LIB"/string.bash
 
 export BUILD_BASHRC_DIR=${BUILD_ROOT:?BUILD_ROOT undefined}/bashrc
 
@@ -63,7 +65,7 @@ bashrc-pre-declare() {
     bashrc-pref "01-vars" '%s\n' "$dec"
 }
 
-bashrc-pre-function() {
+bashrc-dump-function() {
     local -r fn=$1
     local dec; dec=$(declare -f "$fn")
 
@@ -71,6 +73,39 @@ bashrc-pre-function() {
         return 1
     fi
 
+    local -r lf=$'\n'
+    local IFS=$'\n'
+    local -i c=0
+
+    local normalized
+
+    while read -r line; do
+        rtrim line
+        if (( c == 0 )); then
+            if [[ $line == *" ()" ]]; then
+                line="${line: 0:-3}() {"
+            fi
+        elif (( c == 1 )); then
+            if [[ $line == '{' ]]; then
+                line=""
+            fi
+        fi
+
+        if [[ -z ${line:-} ]]; then
+            continue
+        fi
+
+        : $(( c++ ))
+
+        normalized=${normalized:-}${line}${lf}
+    done <<< "$dec"
+
+    echo "$normalized"
+}
+
+bashrc-pre-function() {
+    local -r fn=$1
+    local dec; dec=$(bashrc-dump-function "$fn")
     bashrc-pref "02-functions" '%s\n' "$dec"
 }
 
@@ -103,27 +138,11 @@ bashrc-command-exists() {
     command -v "$1" &>/dev/null
 }
 
-bashrc-source-file() {
-    local -r fname=$1
-    local base; base=$(basename "$fname")
-    bashrc-includef "source-file" '__rc_source_file %q\n' "$fname"
-}
-
-bashrc-source-file-if-exists() {
-    local -r fname=$1
-    if [[ ! -e $fname ]]; then
-        echo "not including $fname (not found)"
-        return
-    fi
-
-    bashrc-source-file "$fname"
-}
-
 bashrc-include-function() {
     local -r name=$1
 
     local body
-    if body=$(declare -f "$name" 2>/dev/null); then
+    if body=$(bashrc-dump-function "$name"); then
         bashrc-includef "function_${name}" '%s\n' "$body"
 
     else
@@ -193,7 +212,11 @@ bashrc-generate-init() {
         rm -rfv "$BUILD_BASHRC_DIR"
     fi
 
-    mkdir -vp "$BUILD_BASHRC_INC" "$BUILD_BASHRC_PRE"
+    reset-facts
+
+    mkdir -vp \
+        "$BUILD_BASHRC_INC" \
+        "$BUILD_BASHRC_PRE"
 
     bashrc-includef "10-alias" 'unalias -a\n'
 }

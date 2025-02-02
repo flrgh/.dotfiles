@@ -20,20 +20,23 @@ add-function() {
     fi
 }
 
+
+if bashrc-command-exists direnv; then
+    set-have direnv
+    set-version direnv "$(direnv version)"
+else
+    set-not-have direnv
+fi
+
 PROMPT_ARRAY=0
 DIRENV_HOOK=
 
 # as of bash 5.1, PROMPT_COMMAND can be an array, _but_ this was not supported
 # by direnv until 2.34.0
-if (( BASH_VERSINFO[0] > 5 )) || (( BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 1 )); then
-    if bashrc-command-exists direnv; then
-        readonly MIN_VERSION=2.34.0
-
-        if direnv version "$MIN_VERSION" &>/dev/null; then
-            echo "direnv has array support for PROMPT_COMMAND"
-            PROMPT_ARRAY=1
-        fi
-
+if have bash gte "5.1"; then
+    if have direnv gte "2.34"; then
+        echo "direnv has array support for PROMPT_COMMAND"
+        PROMPT_ARRAY=1
         DIRENV_HOOK=$(direnv hook bash)
 
     else

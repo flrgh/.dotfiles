@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 source "$REPO_ROOT"/lib/bash/generate.bash
+source "$REPO_ROOT"/lib/bash/facts.bash
 
 shopt -s nullglob
 
@@ -9,17 +10,10 @@ readonly DEST=nvm
 export NVM_DIR="$HOME/.config/nvm"
 bashrc-includef "$DEST" 'export %s=%q\n' NVM_DIR "$NVM_DIR"
 
-if [[ -f "$HOME/.local/lib/bash/builtins.bash" ]] \
-    && source "$HOME/.local/lib/bash/builtins.bash" \
-    && command -v version &>/dev/null \
-    && command -v varsplice &>/dev/null \
-    && version \
-        "${VARSPLICE_VERSION[0]}.${VARSPLICE_VERSION[1]}" \
-        gte \
-        "0.2"
-then
-    bashrc-includef "$DEST" 'varsplice --remove -g PATH %q\n' "${NVM_DIR:?}/*"
-
+if have varsplice gte "0.2"; then
+    bashrc-includef "$DEST" \
+        'varsplice --remove -g PATH %q\n' \
+        "${NVM_DIR:?}/*"
 else
     for bin in "$NVM_DIR"/versions/node/*/bin; do
         bashrc-includef "$DEST" '__rc_rm_path PATH %q\n' "$bin"
@@ -39,7 +33,9 @@ if [[ -s "$NVM_DIR/nvm.sh" ]]; then
         . "$NVM_DIR/nvm.sh"
         nvm "$@"
     }
-    bashrc-includef "$DEST" '%s\n' "$(declare -f nvm)"
+
+    func=$(bashrc-dump-function nvm)
+    bashrc-includef "$DEST" '%s\n' "${func:?}"
 
     if [[ -e $NVM_DIR/bash_completion ]]; then
         __complete_nvm() {
@@ -49,7 +45,8 @@ if [[ -s "$NVM_DIR/nvm.sh" ]]; then
             # shellcheck disable=SC1091
             source "$NVM_DIR/bash_completion" && return 124
         }
-        bashrc-includef "$DEST" '%s\n' "$(declare -f __complete_nvm)"
+        func=$(bashrc-dump-function __complete_nvm)
+        bashrc-includef "$DEST" '%s\n' "${func:?}"
         bashrc-includef "$DEST" '%s\n' 'complete -o default -F __complete_nvm nvm'
     fi
 fi
