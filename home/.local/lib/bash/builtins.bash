@@ -7,12 +7,12 @@ source "$BASH_USER_LIB"/__init.bash
 #(( BASH_USER_LIB_SOURCED[builtins]++ == 0 )) || return 0
 : $(( BASH_USER_LIB_SOURCED[builtins]++ == 0 ))
 
-declare -gx BASH_USER_BUILTINS_PATH=$HOME/.local/lib/bash/builtins
+declare -gx BASH_USER_BUILTINS_PATH=$HOME/.local/lib/bash/loadables
 declare -gxA BASH_USER_BUILTINS=()
 declare -gxA BASH_USER_BUILTINS_SOURCE=(
-    [varsplice]="$BASH_USER_BUILTINS_PATH/libvarsplice.so"
-    [timer]="$BASH_USER_BUILTINS_PATH/libtimer.so"
-    [version]="$BASH_USER_BUILTINS_PATH/libversion.so"
+    [varsplice]="$BASH_USER_BUILTINS_PATH/varsplice"
+    [timer]="$BASH_USER_BUILTINS_PATH/timer"
+    [version]="$BASH_USER_BUILTINS_PATH/version"
 )
 
 __have_builtin() {
