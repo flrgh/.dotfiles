@@ -12,13 +12,6 @@ source ./lib/bash/facts.bash
 }
 
 {
-    rc-new-workfile "$RC_DEP_LOG"
-    rc-workfile-add-dep "$RC_DEP_INIT"
-    rc-workfile-include ./bash/rc-log.bash
-    rc-workfile-close
-}
-
-{
     rc-new-workfile "$RC_DEP_DEBUG"
     rc-workfile-add-dep "$RC_DEP_INIT"
     rc-workfile-include ./bash/rc-debug.bash

@@ -7,3 +7,5 @@ __RC_START=${EPOCHREALTIME/./}
 
 # must be turned on early
 shopt -s extglob
+
+__RC_PID=$$

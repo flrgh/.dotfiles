@@ -3,11 +3,12 @@ source ./lib/bash/facts.bash
 source ./home/.local/lib/bash/string.bash
 
 export BUILD_BASHRC_DIR=${BUILD_ROOT:?BUILD_ROOT undefined}/bashrc
-
 export BUILD_BASHRC_INC=$BUILD_BASHRC_DIR/rc.d
 export BUILD_BASHRC_PRE=$BUILD_BASHRC_DIR/rc.pre.d
-export BUILD_BASHRC_FILE=$BUILD_BASHRC_DIR/.bashrc
 export BUILD_BASHRC_DEPS=$BUILD_BASHRC_DIR/deps
+export BUILD_BASHRC_FILE=${BUILD_ROOT}/home/.bashrc
+
+source ./build/home/.config/env
 
 declare -g _LABEL
 declare -g _FILE
@@ -337,6 +338,7 @@ rc-workfile-add-function() {
     _rc_append "$_FILE" '%s\n' "$dec"
 }
 
+
 rc-var() {
     local -r var=$1
     local -r value=$2
@@ -347,6 +349,13 @@ rc-var() {
     rc-workfile-append '%s=%q\n' "$var" "$value"
 
     _restore_workfile
+}
+
+rc-workfile-var() {
+    local -r var=$1
+    local -r value=$2
+
+    rc-workfile-append '%s=%q\n' "${var:?}" "${value:?}"
 }
 
 rc-have-file() {
@@ -366,11 +375,25 @@ rc-alias() {
     _restore_workfile
 }
 
+rc-require-var() {
+    local -r name=${1:?}
+    if [[ -z ${name:-} ]]; then
+        fatal "var name required"
+    fi
+
+    if ! declare -p "$name" >/dev/null; then
+        fatal "var $name is not declared"
+    fi
+
+    [[ -n ${!name:-} ]] || fatal "var $name is empty"
+}
+
 rc-export() {
     local -r name=$1
     local value=${2:-}
 
     if [[ -z ${value:-} ]]; then
+        rc-require-var "$name"
         value=${!name:?}
     fi
 
@@ -448,6 +471,10 @@ rc-varsplice() {
 }
 
 rc-init() {
+    if [[ -e $BUILD_BASHRC_FILE ]]; then
+        rm "$BUILD_BASHRC_FILE"
+    fi
+
     if [[ -d $BUILD_BASHRC_DIR ]]; then
         rm -rfv "$BUILD_BASHRC_DIR"
     fi
@@ -487,6 +514,8 @@ _clear_rdeps() {
 }
 
 rc-finalize() {
+    echo "finalizing $BUILD_BASHRC_FILE"
+
     local -a all
     get-list-items "$_ALL_FILES"
     all=("${FACT_LIST[@]}")
@@ -539,6 +568,8 @@ rc-finalize() {
 
         fatal "something broke"
     fi
+
+    echo '# vim: set ft=sh:' >> "$BUILD_BASHRC_FILE"
     for f in "${final[@]}"; do
         cat "$BUILD_BASHRC_INC/$f" >> "$BUILD_BASHRC_FILE"
     done

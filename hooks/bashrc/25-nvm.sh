@@ -9,8 +9,8 @@ rc-workfile-add-dep "rc-pathset"
 
 shopt -s nullglob
 
-export NVM_DIR="$HOME/.config/nvm"
-rc-export NVM_DIR "$NVM_DIR"
+rc-require-var NVM_DIR
+rc-export NVM_DIR
 
 if have varsplice gte "0.2"; then
     rc-varsplice --remove -g PATH "${NVM_DIR:?}/*"
