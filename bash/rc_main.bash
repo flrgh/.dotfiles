@@ -1,1 +1,0 @@
-# shellcheck enable=deprecate-which

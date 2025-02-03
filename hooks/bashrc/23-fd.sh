@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source "$REPO_ROOT"/lib/bash/generate.bash
+source ./lib/bash/generate.bash
 
 # I have `find /some/path` permanently stored in muscle memory. This is an
 # issue as I try using fd as a replacement, because the same invocation yields
@@ -21,7 +21,7 @@ source "$REPO_ROOT"/lib/bash/generate.bash
 # This little function exists to handle that case so that I don't have to
 # relearn anything
 #
-if bashrc-command-exists fd; then
+if command -v fd; then
     fd() {
         if (( $# == 1 )) && [[ $1 != . ]]; then
             command fd . "$1"
@@ -29,5 +29,7 @@ if bashrc-command-exists fd; then
             command fd "$@"
         fi
     }
-    bashrc-include-function fd
+    rc-new-workfile fd
+    rc-workfile-add-dep "$RC_DEP_POST_INIT"
+    rc-workfile-add-function fd
 fi

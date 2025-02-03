@@ -2,54 +2,41 @@
 
 set -euo pipefail
 
-source "$REPO_ROOT"/lib/bash/generate.bash
-source "$REPO_ROOT"/lib/bash/facts.bash
+source ./lib/bash/generate.bash
+source ./lib/bash/facts.bash
 
-readonly DEST=path-munge
-
-append() {
-    bashrc-pref "$DEST" "$@"
-}
+rc-new-workfile "rc-pathset"
+rc-workfile-add-dep "$RC_DEP_DEBUG"
+rc-workfile-add-dep "$RC_DEP_TIMER"
 
 add-function() {
-    local -r name=$1
-
-    local body
-    if body=$(bashrc-dump-function "$name"); then
-        append '%s\n' "$body"
-
-    else
-        echo "function $name not found"
-    fi
+    rc-workfile-add-function "$1"
 }
 
 add-call() {
-    bashrc-pre-exec "$DEST" "$@"
+    rc-workfile-add-exec "$@"
 }
 
-__rc_have_varsplice=0
 if have varsplice; then
-    __rc_have_varsplice=1
-fi
-
-if (( __rc_have_varsplice == 1 )); then
     get-location varsplice
     add-call enable -f "${FACT:?}" varsplice
-fi
 
-if (( __rc_have_varsplice == 1 )); then
     add-call __rc_debug '__rc_set_path_separator(): using varsplice'
 
-    __rc_set_path_separator() {
-        local -r var=${1?var name require}
-        local -r sep=${2?separator required}
+    add-call varsplice --default -s PATH       ":"
+    add-call varsplice --default -s MANPATH    ":"
+    add-call varsplice --default -s CDPATH     ":"
+    add-call varsplice --default -s LUA_PATH   ";"
+    add-call varsplice --default -s LUA_CPATH  ";"
 
-        varsplice --default -s "$sep" "$var"
-    }
+    add-call varsplice --default -s EXECIGNORE ":"
+    add-call varsplice --default -s FIGNORE    ":"
+    add-call varsplice --default -s GLOBIGNORE ":"
+    add-call varsplice --default -s HISTIGNORE ":"
 
 else
     declare -A __RC_PATH_SEPARATORS=()
-    bashrc-pre-declare __RC_PATH_SEPARATORS
+    rc-declare __RC_PATH_SEPARATORS
 
     __rc_set_path_separator() {
         local -r var=${1?var name require}
@@ -57,22 +44,23 @@ else
 
         __RC_PATH_SEPARATORS["$var"]="$sep"
     }
+
+    add-function __rc_set_path_separator
+
+    add-call __rc_set_path_separator PATH       ":"
+    add-call __rc_set_path_separator MANPATH    ":"
+    add-call __rc_set_path_separator CDPATH     ":"
+    add-call __rc_set_path_separator LUA_PATH   ";"
+    add-call __rc_set_path_separator LUA_CPATH  ";"
+
+    add-call __rc_set_path_separator EXECIGNORE ":"
+    add-call __rc_set_path_separator FIGNORE    ":"
+    add-call __rc_set_path_separator GLOBIGNORE ":"
+    add-call __rc_set_path_separator HISTIGNORE ":"
 fi
 
-add-function __rc_set_path_separator
 
-add-call __rc_set_path_separator PATH       ":"
-add-call __rc_set_path_separator MANPATH    ":"
-add-call __rc_set_path_separator CDPATH     ":"
-add-call __rc_set_path_separator LUA_PATH   ";"
-add-call __rc_set_path_separator LUA_CPATH  ";"
-
-add-call __rc_set_path_separator EXECIGNORE ":"
-add-call __rc_set_path_separator FIGNORE    ":"
-add-call __rc_set_path_separator GLOBIGNORE ":"
-add-call __rc_set_path_separator HISTIGNORE ":"
-
-if (( __rc_have_varsplice == 1 )); then
+if have varsplice; then
     add-call varsplice --normalize PATH
     add-call varsplice --normalize MANPATH
     add-call varsplice --normalize CDPATH
@@ -80,7 +68,7 @@ if (( __rc_have_varsplice == 1 )); then
     add-call varsplice --normalize LUA_CPATH
 fi
 
-if (( __rc_have_varsplice == 1 )); then
+if have varsplice; then
     add-call __rc_debug "__rc_add_path(): using varsplice"
 
     __rc_add_path() {
@@ -329,7 +317,7 @@ fi
 
 add-function __rc_add_path
 
-if (( __rc_have_varsplice == 1 )); then
+if have varsplice; then
     add-call __rc_debug "__rc_rm_path(): using varsplice"
 
     __rc_rm_path() {
@@ -429,3 +417,5 @@ else
 fi
 
 add-function __rc_rm_path
+
+rc-workfile-close

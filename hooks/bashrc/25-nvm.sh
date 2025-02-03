@@ -1,25 +1,24 @@
 #!/usr/bin/env bash
 
-source "$REPO_ROOT"/lib/bash/generate.bash
-source "$REPO_ROOT"/lib/bash/facts.bash
+source ./lib/bash/generate.bash
+source ./lib/bash/facts.bash
+
+rc-new-workfile nvm
+rc-workfile-add-dep "$RC_DEP_SET_VAR"
+rc-workfile-add-dep "rc-pathset"
 
 shopt -s nullglob
 
-readonly DEST=nvm
-
 export NVM_DIR="$HOME/.config/nvm"
-bashrc-includef "$DEST" 'export %s=%q\n' NVM_DIR "$NVM_DIR"
+rc-export NVM_DIR "$NVM_DIR"
 
 if have varsplice gte "0.2"; then
-    bashrc-includef "$DEST" \
-        'varsplice --remove -g PATH %q\n' \
-        "${NVM_DIR:?}/*"
+    rc-varsplice --remove -g PATH "${NVM_DIR:?}/*"
 else
     for bin in "$NVM_DIR"/versions/node/*/bin; do
-        bashrc-includef "$DEST" '__rc_rm_path PATH %q\n' "$bin"
+        rc-add-path PATH "$bin"
     done
 fi
-
 
 if [[ ! -d $NVM_DIR ]]; then
     exit 0
@@ -34,8 +33,7 @@ if [[ -s "$NVM_DIR/nvm.sh" ]]; then
         nvm "$@"
     }
 
-    func=$(bashrc-dump-function nvm)
-    bashrc-includef "$DEST" '%s\n' "${func:?}"
+    rc-workfile-add-function nvm
 
     if [[ -e $NVM_DIR/bash_completion ]]; then
         __complete_nvm() {
@@ -45,14 +43,14 @@ if [[ -s "$NVM_DIR/nvm.sh" ]]; then
             # shellcheck disable=SC1091
             source "$NVM_DIR/bash_completion" && return 124
         }
-        func=$(bashrc-dump-function __complete_nvm)
-        bashrc-includef "$DEST" '%s\n' "${func:?}"
-        bashrc-includef "$DEST" '%s\n' 'complete -o default -F __complete_nvm nvm'
+
+        rc-workfile-add-function __complete_nvm
+        rc-workfile-add-exec complete -o default -F __complete_nvm nvm
     fi
 fi
 
 # sourcing $NVM_DIR/nvm.sh does this for us, but it's slow
-bashrc-includef "$DEST" '%s\n' 'unset -f node'
+rc-workfile-add-exec unset -f node
 
 # shellcheck disable=SC1091
 source "$NVM_DIR/nvm.sh"
@@ -61,9 +59,9 @@ NODE=$(nvm which current)
 
 if [[ -n $NODE ]]; then
     NVM_BIN=${NODE%/node}
-    bashrc-includef "$DEST" 'export NVM_BIN=%q\n' "$NVM_BIN"
-    bashrc-includef "$DEST" '__rc_add_path PATH %q\n' "$NVM_BIN"
+    rc-export NVM_BIN "$NVM_BIN"
+    rc-add-path PATH "$NVM_BIN"
 
     NVM_INC=${NODE%/bin/node}/include/node
-    bashrc-includef "$DEST" 'export NVM_INC=%q\n' "$NVM_INC"
+    rc-export NVM_INC "$NVM_INC"
 fi

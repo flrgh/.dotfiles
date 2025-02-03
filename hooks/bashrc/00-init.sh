@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source "$REPO_ROOT"/lib/bash/generate.bash
+source ./lib/bash/generate.bash
 
 shopt -s extglob
 shopt -s nullglob
@@ -82,9 +82,8 @@ bash_facts() {
         builtins="$lib/builtins"
     fi
 
-
     if [[ -n ${builtins:-} ]]; then
-        set-fact bash-builtins "$lib/loadables"
+        set-location bash-builtins "$lib/loadables"
 
         for path in "$builtins"/*; do
             local name=${path##*/}
@@ -108,7 +107,7 @@ bash_facts() {
 }
 
 main() {
-    bashrc-generate-init
+    rc-init
     bash_facts
 }
 

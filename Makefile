@@ -5,7 +5,7 @@ DEBUG := $(DEBUG)
 
 .DEFAULT: all
 
-.PHONY: hooks/* debug all install
+.PHONY: hooks/* debug all install bashrc
 
 .EXPORT_ALL_VARIABLES: hooks/*
 
@@ -18,5 +18,13 @@ debug:
 
 hooks/*:
 	./scripts/run-hooks $(notdir $@)
+
+bashrc: hooks/bashrc
+	-diff $(INSTALL_PATH)/.bashrc $(REPO_ROOT)/build/bashrc/.bashrc
+	install --verbose \
+		--compare \
+		--no-target-directory \
+		$(REPO_ROOT)/build/bashrc/.bashrc \
+		$(INSTALL_PATH)/.bashrc
 
 install: hooks/pre hooks/package hooks/post hooks/bashrc

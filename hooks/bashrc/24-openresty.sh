@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-source "$REPO_ROOT"/lib/bash/generate.bash
-source "$REPO_ROOT"/lib/bash/facts.bash
-
-readonly DEST=openresty
+source ./lib/bash/generate.bash
+source ./lib/bash/facts.bash
 
 LOCATIONS=(
     "$HOME"/.local/openresty/current
@@ -11,13 +9,13 @@ LOCATIONS=(
     /usr/local/openresty
 )
 
-for loc in "${LOCATIONS[@]}"; do
-    if have varsplice gte "0.2"; then
-        bashrc-includef "$DEST" \
-            'varsplice --remove -g PATH %q\n' \
-            "${loc}/*"
-    else
-        bashrc-includef "$DEST" '__rc_rm_path PATH %q\n' "$loc/bin"
-        bashrc-includef "$DEST" '__rc_rm_path PATH %q\n' "$loc/nginx/sbin"
-    fi
-done
+if have varsplice gte "0.2"; then
+    for loc in "${LOCATIONS[@]}"; do
+        rc-varsplice --remove -g PATH "${loc}/*"
+    done
+else
+    for loc in "${LOCATIONS[@]}"; do
+        rc-rm-path PATH "$loc/bin"
+        rc-rm-path PATH "$loc/nginx/sbin"
+    done
+fi

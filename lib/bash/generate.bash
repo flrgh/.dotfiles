@@ -1,14 +1,118 @@
-source "$REPO_ROOT"/lib/bash/common.bash
-source "$REPO_ROOT"/lib/bash/facts.bash
-source "$BASH_USER_LIB"/string.bash
+source ./lib/bash/common.bash
+source ./lib/bash/facts.bash
+source ./home/.local/lib/bash/string.bash
 
 export BUILD_BASHRC_DIR=${BUILD_ROOT:?BUILD_ROOT undefined}/bashrc
 
 export BUILD_BASHRC_INC=$BUILD_BASHRC_DIR/rc.d
 export BUILD_BASHRC_PRE=$BUILD_BASHRC_DIR/rc.pre.d
 export BUILD_BASHRC_FILE=$BUILD_BASHRC_DIR/.bashrc
+export BUILD_BASHRC_DEPS=$BUILD_BASHRC_DIR/deps
 
-bashrc-append() {
+declare -g _LABEL
+declare -g _FILE
+declare -g _DEPS
+
+declare -g _ALL_FILES=bashrc-all-files
+
+RC_DEP_INIT="rc-init"
+RC_DEP_POST_INIT="rc-post-init"
+RC_DEP_LOG="rc-log"
+RC_DEP_DEBUG="rc-debug"
+RC_DEP_TIMER="rc-timer"
+RC_DEP_ENV="env"
+RC_DEP_ENV_POST="env-post"
+
+RC_DEP_RESET_VAR="rc-var-reset"
+RC_DEP_SET_VAR="rc-set-var"
+RC_DEP_CLEAR_VAR="rc-clear-var"
+
+RC_DEP_ALIAS_RESET="rc-alias-reset"
+RC_DEP_ALIAS_SET="rc-alias-create"
+
+RC_DEP_RESET_FUNCTION="rc-function-reset"
+RC_DEP_SET_FUNCTION="rc-function-set"
+RC_DEP_CLEAR_FUNCTION="rc-function-clear"
+
+_recursive_has_dep() {
+    local -r item=${1:?}
+    local -r dep=${2:?}
+
+    local -r list="bashrc-${item}-deps"
+
+    if ! list-exists "$list"; then
+        return 1
+    fi
+
+    local -a deps
+    get-list-items "$list"
+    deps=("${FACT_LIST[@]}")
+
+    local -A seen=()
+
+    for elem in "${deps[@]}"; do
+        if [[ $elem == "$dep" ]]; then
+            return 0
+        fi
+
+        if [[ -n ${seen[$elem]:-} ]]; then
+            continue
+        fi
+
+        seen[$elem]=yes
+
+        if _recursive_has_dep "$elem" "$dep"; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+_recursive_add_dep() {
+    local -r item=${1:?}
+    local -r dep=${2:?}
+    local -i depth=${3:-0}
+
+    depth=$(( depth + 1 ))
+    if (( depth > 20 )); then
+        fatal "stack overflow or something"
+    fi
+
+    local -r list="bashrc-${item}-deps"
+    list-add "$list" "$dep"
+    list-add "bashrc-${dep}-rdeps" "$item" "true"
+
+    local -r deplist="bashrc-${dep}-deps"
+    if ! list-exists "$deplist"; then
+        return
+    fi
+
+    local -a deps
+    get-list-items "$deplist"
+    deps=("${FACT_LIST[@]}")
+
+    local -A seen=()
+
+    for elem in "${deps[@]}"; do
+        if [[ -n ${seen[$elem]:-} ]]; then
+            continue
+        fi
+        seen[$elem]=$elem
+        _recursive_add_dep "$item" "$elem"
+    done
+}
+
+
+_have_working_file() {
+    [[ -n ${_LABEL:-} && -n ${_FILE:-} && -n ${_DEPS:-} ]]
+}
+
+_require_working_file() {
+    _have_working_file || fatal "no current working file set"
+}
+
+_rc_append() {
     local -r name=$1
     shift
 
@@ -27,135 +131,121 @@ bashrc-append() {
     printf -- "$@" >> "$name"
 }
 
-bashrc-includef() {
-    local -r name=${BUILD_BASHRC_INC}/${1}.sh
-    shift
-    bashrc-append "$name" "$@"
-}
-
-bashrc-pref() {
-    local -r name=${BUILD_BASHRC_PRE}/${1}.sh
-    shift
-    bashrc-append "$name" "$@"
-}
-
-bashrc-pre-exec() {
+_add_exec() {
     local -r name=$1
     shift
 
-    local args=()
+    # don't quote the first arg (just because)
+    local args=("$1")
+    shift
+
     local quoted
     for arg in "$@"; do
         printf -v quoted '%q' "$arg"
         args+=( "$quoted" )
     done
 
-    bashrc-pref "$name" '%s\n' "${args[*]}"
+    _rc_append "$name" '%s\n' "${args[*]}"
 }
 
-bashrc-pre-declare() {
-    local -r var=$1
-    shift
-
-    local dec; dec=$(declare -p "$var")
-    if [[ -z $dec ]]; then
-        return 1
-    fi
-
-    bashrc-pref "01-vars" '%s\n' "$dec"
+rc-workfile-add-exec() {
+    _require_working_file
+    _add_exec "$_FILE" "$@"
 }
 
-bashrc-dump-function() {
-    local -r fn=$1
-    local dec; dec=$(declare -f "$fn")
-
-    if [[ -z $dec ]]; then
-        return 1
-    fi
-
-    local -r lf=$'\n'
-    local IFS=$'\n'
-    local -i c=0
-
-    local normalized
-
-    while read -r line; do
-        rtrim line
-        if (( c == 0 )); then
-            if [[ $line == *" ()" ]]; then
-                line="${line: 0:-3}() {"
-            fi
-        elif (( c == 1 )); then
-            if [[ $line == '{' ]]; then
-                line=""
-            fi
-        fi
-
-        if [[ -z ${line:-} ]]; then
-            continue
-        fi
-
-        : $(( c++ ))
-
-        normalized=${normalized:-}${line}${lf}
-    done <<< "$dec"
-
-    echo "$normalized"
+rc-workfile-append() {
+    _require_working_file
+    _rc_append "$_FILE" "$@"
 }
 
-bashrc-pre-function() {
-    local -r fn=$1
-    local dec; dec=$(bashrc-dump-function "$fn")
-    bashrc-pref "02-functions" '%s\n' "$dec"
+rc-workfile-close() {
+    _require_working_file
+    unset _LABEL _FILE _DEPS
 }
 
-bashrc-var() {
-    local -r var=$1
-    local -r value=$2
-
-    bashrc-pref "01-vars" '%s=%q\n' "$var" "$value"
-}
-
-bashrc-alias() {
-    local -r name=$1
-    local -r cmd=$2
-    bashrc-includef "10-alias" 'alias %s="%s"\n' "$name" "$cmd"
-}
-
-bashrc-export-var() {
-    local -r name=$1
-    local -r value=$2
-
-    bashrc-includef "01-vars" 'export %s=%q\n' "$name" "$value"
-}
-
-bashrc-unset-var() {
-    local -r name=$1
-    bashrc-includef "01-vars" 'unset %s\n' "$name"
-}
-
-bashrc-command-exists() {
-    command -v "$1" &>/dev/null
-}
-
-bashrc-include-function() {
-    local -r name=$1
-
-    local body
-    if body=$(bashrc-dump-function "$name"); then
-        bashrc-includef "function_${name}" '%s\n' "$body"
-
-    else
-        echo "function $name not found"
+_save_workfile() {
+    if _have_working_file; then
+        [[ -z ${__SAVED_LABEL:-} ]] || fatal "cannot save twice"
+        declare -g __SAVED_LABEL=${_LABEL}
+        declare -g __SAVED_FILE=${_FILE}
+        declare -g __SAVED_DEPS=${_DEPS}
+        unset _LABEL _FILE _DEPS
     fi
 }
 
-bashrc-include-file() {
-    local -r target=$1
-    local -r fname=$2
-    local -ri notime=${3:-0}
+_restore_workfile() {
+    if [[ -n ${__SAVED_LABEL:-} ]]; then
+        declare -g _LABEL=${__SAVED_LABEL}
+        declare -g _FILE=${__SAVED_FILE}
+        declare -g _DEPS=${__SAVED_DEPS}
+        unset __SAVED_LABEL __SAVED_FILE __SAVED_DEPS
+    fi
+}
 
-    local short=${fname#"$BUILD_BASHRC_DIR/"}
+rc-workfile-open() {
+    if _have_working_file; then
+        rc-workfile-close
+    fi
+
+    local -r label=${1:?}
+    local -r file=${BUILD_BASHRC_INC}/${label}
+
+    if [[ ! -f $file ]]; then
+        fatal "workfile $file not found"
+    fi
+
+    _LABEL=$label
+    _FILE=$file
+    _DEPS=bashrc-${label}-deps
+}
+
+rc-have-workfile() {
+    _have_working_file
+}
+
+rc-new-workfile() {
+    local -r label=${1:?}
+    local -r file=${BUILD_BASHRC_INC}/${label}
+
+    if [[ -e $file ]]; then
+        echo "error: $file already exists"
+        exit 1
+    fi
+
+    touch "$file"
+
+    rc-workfile-open "$label"
+
+    create-list "$_DEPS"
+    list-add "$_ALL_FILES" "$label"
+
+    rc-workfile-append '# label: %s\n' "$label"
+
+    if [[ $label != rc-* ]]; then
+        rc-workfile-add-dep "$RC_DEP_POST_INIT"
+    fi
+}
+
+rc-workfile-add-dep() {
+    local -r dep=${1:?}
+    _require_working_file
+    if [[ $_LABEL == "$dep" ]]; then
+        fatal "invalid self-dependency ($_LABEL)"
+    fi
+    _recursive_add_dep "$_LABEL" "$dep"
+    #list-add "bashrc-${dep}-rdeps" "$_LABEL" "true"
+}
+
+rc-workfile-include() {
+    _require_working_file
+    local fname=${1:?}
+    [[ -f $fname ]] || fatal "file ($fname) not found"
+
+    local cwd='./'
+    fname=${fname/#"$cwd"/"$PWD/"}
+
+    local short
+    short=${fname#"$BUILD_BASHRC_DIR/"}
     short=${short#"$REPO_ROOT/home/.local/bash/"}
     short=${short#"$REPO_ROOT/"}
     short=${short#"$HOME/"}
@@ -165,49 +255,199 @@ bashrc-include-file() {
         is_repo_file=1
     fi
 
-    bashrc-append "$target" '# BEGIN: %s\n' "$fname"
+    rc-workfile-append '# BEGIN: %s\n' "$fname"
 
-    if (( notime != 1 )); then
-        bashrc-append "$target" '__rc_timer_start "include(%s)"\n' "$short"
+    local time_it=0
+    if _recursive_has_dep "$_LABEL" "$RC_DEP_TIMER" \
+        && ! _recursive_has_dep "$_LABEL" "rc-timer-post"; then
+        time_it=1
+    fi
+
+    if (( time_it == 1 )); then
+        rc-workfile-append '__rc_timer_start "include(%s)"\n' "$short"
     fi
 
     if (( is_repo_file == 0 )); then
-        printf '# shellcheck disable=all\n' >> "$target"
-        printf '\n{\n' >> "$target"
+        rc-workfile-append '# shellcheck disable=all\n'
+        rc-workfile-append '\n{\n'
     fi
 
-    cat "$fname" >> "$target"
+    rc-workfile-append '%s\n' "$(< "$fname")"
 
     if (( is_repo_file == 0 )); then
-        printf '\n}\n' >> "$target"
+        rc-workfile-append '\n}\n'
     fi
 
-    if (( notime != 1 )); then
-        bashrc-append "$target" '__rc_timer_stop\n'
+    if (( time_it == 1 )); then
+        rc-workfile-append '__rc_timer_stop\n'
     fi
 
-    bashrc-append "$target" '# END: %s\n\n' "$fname"
+    rc-workfile-append '# END: %s\n\n' "$fname"
 }
 
-bashrc-pre-include-file() {
-    local -r fname=$1
-    local -r base=${2:-${fname##*/}}
+rc-has-dep() {
+    local -r label=${1:?}
+    local -r dep=bashrc-${2:?}-deps
 
-    local -r target=${BUILD_BASHRC_PRE}/${base}
-
-    bashrc-include-file "$target" "$fname" 1
+    list-exists "$dep" && list-contains "$dep" "$label"
 }
 
-bashrc-main-include-file() {
-    local -r fname=$1
-    local -r base=${2:-${fname##*/}}
-
-    local -r target=${BUILD_BASHRC_INC}/${base}
-
-    bashrc-include-file "$target" "$fname"
+rc-includef() {
+    local -r name=${BUILD_BASHRC_INC}/${1}.sh
+    shift
+    _rc_append "$name" "$@"
 }
 
-bashrc-generate-init() {
+rc-declare() {
+    local -r var=$1
+    shift
+
+    local dec; dec=$(declare -p "$var")
+    if [[ -z $dec ]]; then
+        return 1
+    fi
+
+    if _have_working_file && [[ $_LABEL != "$RC_DEP_SET_VAR" ]]; then
+        rc-workfile-add-dep "$RC_DEP_SET_VAR"
+    fi
+
+    _save_workfile
+
+    rc-workfile-open "$RC_DEP_SET_VAR"
+    rc-workfile-append '%s\n' "$dec"
+
+    _restore_workfile
+}
+
+rc-dump-function() {
+    local -r fn=$1
+    local dec; dec=$(declare -f "$fn")
+
+    if [[ -z $dec ]]; then
+        return 1
+    fi
+
+    echo "$dec"
+}
+
+rc-workfile-add-function() {
+    _require_working_file
+    local -r fn=$1
+    local dec; dec=$(rc-dump-function "$fn")
+    _rc_append "$_FILE" '%s\n' "$dec"
+}
+
+rc-var() {
+    local -r var=$1
+    local -r value=$2
+
+    _save_workfile
+
+    rc-workfile-open "$RC_DEP_SET_VAR"
+    rc-workfile-append '%s=%q\n' "$var" "$value"
+
+    _restore_workfile
+}
+
+rc-have-file() {
+    local -r name=${1:?}
+    list-contains "$_ALL_FILES" "$name"
+}
+
+rc-alias() {
+    local -r name=$1
+    local -r cmd=$2
+
+    _save_workfile
+
+    rc-workfile-open "$RC_DEP_ALIAS_SET"
+    rc-workfile-add-exec alias "${name}=${cmd}"
+
+    _restore_workfile
+}
+
+rc-export() {
+    local -r name=$1
+    local value=${2:-}
+
+    if [[ -z ${value:-} ]]; then
+        value=${!name:?}
+    fi
+
+    _save_workfile
+
+    rc-workfile-open "$RC_DEP_SET_VAR"
+    rc-workfile-add-exec export "${name}=${value}"
+
+    _restore_workfile
+}
+
+rc-reset-var() {
+    local -r name=$1
+
+    _save_workfile
+
+    rc-workfile-open "$RC_DEP_RESET_VAR"
+    rc-workfile-add-exec unset "$name"
+
+    _restore_workfile
+}
+
+rc-unset() {
+    local -r name=$1
+
+    _save_workfile
+
+    rc-workfile-open "$RC_DEP_CLEAR_VAR"
+    rc-workfile-append 'unset %s\n' "$name"
+
+    _restore_workfile
+}
+
+rc-command-exists() {
+    command -v "$1" &>/dev/null
+}
+
+rc-add-path() {
+    _save_workfile
+
+    rc-workfile-open rc-pathset
+    if have varsplice; then
+        rc-workfile-add-exec varsplice "$@"
+    else
+        rc-workfile-add-exec __rc_add_path "$@"
+    fi
+
+    _restore_workfile
+}
+
+rc-rm-path() {
+    _save_workfile
+
+    rc-workfile-open rc-pathset
+    if have varsplice; then
+        rc-workfile-add-exec varsplice --remove "$@"
+    else
+        rc-workfile-add-exec __rc_rm_path "$@"
+    fi
+
+    _restore_workfile
+}
+
+rc-varsplice() {
+    if ! have varsplice; then
+        fatal "tried to call varsplice but we don't got it"
+    fi
+
+    _save_workfile
+
+    rc-workfile-open rc-pathset
+    rc-workfile-add-exec varsplice "$@"
+
+    _restore_workfile
+}
+
+rc-init() {
     if [[ -d $BUILD_BASHRC_DIR ]]; then
         rm -rfv "$BUILD_BASHRC_DIR"
     fi
@@ -216,52 +456,116 @@ bashrc-generate-init() {
 
     mkdir -vp \
         "$BUILD_BASHRC_INC" \
-        "$BUILD_BASHRC_PRE"
+        "$BUILD_BASHRC_PRE" \
+        "$BUILD_BASHRC_DEPS"
 
-    bashrc-includef "10-alias" 'unalias -a\n'
+    create-list "$_ALL_FILES"
 }
 
-bashrc-generate-finalize () {
-    touch "$BUILD_BASHRC_FILE"
+_clear_dep() {
+    local -r item=${1:?}
+    local -r dep=${2:?}
 
-    shopt -s nullglob
+    list-remove "bashrc-${item}-deps" "$dep"
+}
 
-    local f
+_clear_rdeps() {
+    local -r item=${1:?}
+    local -r list="bashrc-${item}-rdeps"
 
-    bashrc-include-file "$BUILD_BASHRC_FILE" "$REPO_ROOT"/bash/rc_init.bash 1
-    bashrc-include-file "$BUILD_BASHRC_FILE" "$REPO_ROOT"/bash/rc_debug.bash 1
+    if ! list-exists "$list"; then
+        return
+    fi
 
-    for f in "$BUILD_BASHRC_PRE"/*; do
-        bashrc-include-file "$BUILD_BASHRC_FILE" "$f" 1
+    local -a rdeps
+    get-list-items "$list"
+    rdeps=("${FACT_LIST[@]}")
+
+    for rdep in "${rdeps[@]}"; do
+        _clear_dep "$rdep" "$item"
+    done
+}
+
+rc-finalize() {
+    local -a all
+    get-list-items "$_ALL_FILES"
+    all=("${FACT_LIST[@]}")
+
+    local -a final=()
+    local -a remain=("${all[@]}")
+
+    set -- "${remain[@]}"
+
+    local -a failed=()
+
+    while (( $# > 0 )); do
+        local item=$1
+        shift
+
+        local -a deps
+        get-list-items "bashrc-${item}-deps"
+        deps=("${FACT_LIST[@]}")
+
+        local -i count=${#deps[@]}
+
+        if (( count == 0 )); then
+            final+=("$item")
+            _clear_rdeps "$item"
+
+        else
+            local -i oops=0
+            for dep in "${deps[@]}"; do
+                if [[ ! -e ${BUILD_BASHRC_INC}/${dep} ]]; then
+                    oops=1
+                    echo "WARN: $item depends on $dep, but we couldn't find it"
+                fi
+            done
+
+            if (( oops == 1 )); then
+                _clear_rdeps "$item"
+                failed+=("$item")
+            else
+                set -- "$@" "$item"
+            fi
+        fi
     done
 
-    bashrc-include-file "$BUILD_BASHRC_FILE" "$REPO_ROOT"/bash/rc_main.bash 1
+    echo "COMPLETE:"
+    printf '\t%s\n' "${final[@]}"
 
-    for f in "$BUILD_BASHRC_INC"/*; do
-        bashrc-include-file "$BUILD_BASHRC_FILE" "$f"
+    if (( ${#failed[@]} > 0 )); then
+        echo "FAILED:"
+        printf '\t%s\n' "${failed[@]}"
+
+        fatal "something broke"
+    fi
+    for f in "${final[@]}"; do
+        cat "$BUILD_BASHRC_INC/$f" >> "$BUILD_BASHRC_FILE"
     done
-
-    for f in "$REPO_ROOT"/bash/rc.d/*; do
-        bashrc-include-file "$BUILD_BASHRC_FILE" "$f"
-    done
-
-    bashrc-include-file "$BUILD_BASHRC_FILE" "$REPO_ROOT"/bash/rc_cleanup.bash 1
 
     bash -n "$BUILD_BASHRC_FILE" || {
         echo "FATAL: syntax error in generated .bashrc file" >&2
         exit 1
     }
 
-    if bashrc-command-exists shellcheck; then
+    if rc-command-exists shfmt; then
+        shfmt \
+            --write \
+            --language-dialect bash \
+            --simplify \
+            --indent 4 \
+            --binary-next-line \
+            "$BUILD_BASHRC_FILE" \
+        || {
+            echo "FATAL: 'shfmt .bashrc' returned non-zero" >&2
+            exit 1
+        }
+    fi
+
+    if rc-command-exists shellcheck; then
         shellcheck "$BUILD_BASHRC_FILE" || {
             echo "FATAL: 'shellcheck .bashrc' returned non-zero" >&2
             exit 1
         }
     fi
-
-    install \
-        --compare \
-        --no-target-directory \
-        "$BUILD_BASHRC_FILE" \
-        "$HOME/.bashrc"
 }

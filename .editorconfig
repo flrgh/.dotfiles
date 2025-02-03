@@ -1,0 +1,21 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[Makefile]
+indent_style = tab
+
+[*.{sh,bash}]
+indent_style        = space
+indent_size         = 4
+# --language-variant
+shell_variant       = bash
+binary_next_line    = true
+# --case-indent
+#switch_case_indent = true
+#space_redirects    = false
+#keep_padding        = true
+# --func-next-line
+function_next_line  = false

@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-source "$REPO_ROOT"/lib/bash/generate.bash
-
-append() {
-    bashrc-includef "lua-path" "$@"
-}
+source ./lib/bash/generate.bash
 
 emit-luarocks() {
     local conf=$INSTALL_PATH/.config/luarocks/config.lua
     if [[ -f $conf ]]; then
-        bashrc-export-var LUAROCKS_CONFIG "$conf"
+        rc-export LUAROCKS_CONFIG "$conf"
     fi
 
     if ! command -v luarocks &>/dev/null; then
@@ -18,24 +14,22 @@ emit-luarocks() {
         return 0
     fi
 
-    append '# luarocks paths\n'
-
     luarocks path --lr-path | tr ';' '\n' | while read -r elem; do
         if [[ "$elem" = */init.lua ]]; then
             other=${elem%/init.lua}.lua
-            append '__rc_add_path LUA_PATH --append --after %q %q\n' "$other" "$elem"
+            rc-add-path LUA_PATH --append --after "$other" "$elem"
         else
             other=${elem%.lua}/init.lua
-            append '__rc_add_path LUA_PATH --append --before %q %q\n' "$other" "$elem"
+            rc-add-path LUA_PATH --append --before "$other" "$elem"
         fi
     done
 
     luarocks path --lr-cpath | tr ';' '\n' | while read -r elem; do
-        append '__rc_add_path LUA_CPATH --append %q\n' "$elem"
+        rc-add-path LUA_CPATH --append "$elem"
     done
 
     luarocks path --lr-bin | tr ';' '\n' | while read -r elem; do
-        append '__rc_add_path PATH %q\n' "$elem"
+        rc-add-path PATH "$elem"
     done
 }
 
@@ -47,12 +41,10 @@ emit-lua-utils() {
         exit 0
     fi
 
-    append '# ~/git/flrgh/lua-utils paths\n'
-
-    append '__rc_add_path --prepend LUA_PATH %q\n' \
+    rc-add-path --prepend LUA_PATH \
         "$lua_utils/lib/?/init.lua"
 
-    append '__rc_add_path --prepend LUA_PATH %q\n' \
+    rc-add-path --prepend LUA_PATH \
         "$lua_utils/lib/?.lua"
 }
 
@@ -60,7 +52,7 @@ emit-luajit-path() {
     local path=$HOME/.local/share/luajit-2.1
 
     if [[ -d $path ]]; then
-        append '__rc_add_path LUA_PATH %q\n' "${path}/?.lua"
+        rc-add-path LUA_PATH "${path}/?.lua"
     fi
 }
 
@@ -69,7 +61,7 @@ emit-lua-init() {
     local fname=$INSTALL_PATH/.config/lua/repl.lua
 
     if [[ -f $fname ]]; then
-        bashrc-export-var LUA_INIT "@$fname"
+        rc-export LUA_INIT "@$fname"
     fi
 }
 

@@ -1,27 +1,11 @@
 #!/usr/bin/env bash
 
-source "$REPO_ROOT"/lib/bash/generate.bash
+source ./lib/bash/generate.bash
 
-readonly DEST=prompt-command
+rc-new-workfile prompt-command
+rc-workfile-add-dep "$RC_DEP_POST_INIT"
 
-append() {
-    bashrc-pref "$DEST" "$@"
-}
-
-add-function() {
-    local -r name=$1
-
-    local body
-    if body=$(declare -f "$name" 2>/dev/null); then
-        append '%s\n' "$body"
-
-    else
-        echo "function $name not found"
-    fi
-}
-
-
-if bashrc-command-exists direnv; then
+if rc-command-exists direnv; then
     set-have direnv
     set-version direnv "$(direnv version)"
 else
@@ -47,7 +31,7 @@ fi
 
 if (( PROMPT_ARRAY == 1 )); then
     declare -a PROMPT_COMMAND=()
-    bashrc-pre-declare PROMPT_COMMAND
+    rc-declare PROMPT_COMMAND
 
     __rc_add_prompt_command() {
         local -r cmd=${1?command required}
@@ -70,7 +54,7 @@ if (( PROMPT_ARRAY == 1 )); then
         __rc_timer_stop
     }
 else
-    bashrc-pre-exec "$DEST" unset PROMPT_COMMAND
+    rc-reset-var PROMPT_COMMAND
 
     __rc_add_prompt_command() {
         local -r cmd=${1?command required}
@@ -78,11 +62,18 @@ else
     }
 fi
 
-bashrc-pre-function __rc_add_prompt_command
-
+rc-workfile-add-function __rc_add_prompt_command
 
 if [[ -n $DIRENV_HOOK ]]; then
-    bashrc-includef direnv "# shellcheck disable=SC2128\n"
-    bashrc-includef direnv "# shellcheck disable=SC2178\n"
-    bashrc-includef direnv "{\n%s\n}\n" "$DIRENV_HOOK"
+    unset -f _direnv_hook
+    eval "$DIRENV_HOOK"
+
+    if declare -F _direnv_hook; then
+        rc-workfile-add-function _direnv_hook
+        rc-workfile-add-exec __rc_add_prompt_command _direnv_hook
+    else
+        rc-workfile-append "# shellcheck disable=SC2128\n"
+        rc-workfile-append "# shellcheck disable=SC2178\n"
+        rc-workfile-append "{\n%s\n}\n" "$DIRENV_HOOK"
+    fi
 fi

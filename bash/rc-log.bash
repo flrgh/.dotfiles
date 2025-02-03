@@ -1,23 +1,3 @@
-# shellcheck enable=deprecate-which
-# shellcheck disable=SC1090
-# shellcheck disable=SC1091
-# shellcheck disable=SC2059
-
-__RC_START=${EPOCHREALTIME/./}
-
-__RC_DOTFILES="$HOME/git/flrgh/.dotfiles"
-if [[ ! -d $__RC_DOTFILES ]]; then
-    echo "couldn't locate dotfiles directory ($__RC_DOTFILES)"
-    echo "exiting ~/.bashrc early"
-    return
-fi
-
-# must be turned on early
-shopt -s extglob
-
-declare -i DEBUG_BASHRC=${DEBUG_BASHRC:-0}
-declare -i TRACE_BASHRC=${TRACE_BASHRC:-0}
-
 __RC_PID=$$
 __RC_LOG_DIR="$HOME/.local/var/log"
 __RC_LOG_FILE="$__RC_LOG_DIR/bashrc.log"
@@ -66,11 +46,3 @@ __rc_log_and_print() {
 __rc_warn() {
     __rc_print "WARN" "$@"
 }
-
-declare __RC_TRACE_FILE
-if (( TRACE_BASHRC > 0 )); then
-    __RC_TRACE_FILE=${__RC_LOG_DIR}/bashrc.trace.$$.log
-    __rc_print "tracing" "Trace logfile: $__RC_TRACE_FILE"
-    exec {BASH_XTRACEFD}>"$__RC_TRACE_FILE"
-    set -x
-fi

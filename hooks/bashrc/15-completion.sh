@@ -2,15 +2,18 @@
 
 set -euo pipefail
 
-source "$REPO_ROOT"/lib/bash/generate.bash
+source ./lib/bash/generate.bash
+
+rc-new-workfile "completion"
+rc-workfile-add-dep "$RC_DEP_SET_VAR"
 
 BASH_COMPLETION_USER_DIR="$HOME/.local/share/bash-completion"
-bashrc-export-var BASH_COMPLETION_USER_DIR "$BASH_COMPLETION_USER_DIR"
+rc-export BASH_COMPLETION_USER_DIR "$BASH_COMPLETION_USER_DIR"
 
 BASH_COMPLETION_COMPAT_DIR="$HOME/.local/etc/bash_completion.d"
-bashrc-export-var BASH_COMPLETION_COMPAT_DIR "$BASH_COMPLETION_COMPAT_DIR"
+rc-export BASH_COMPLETION_COMPAT_DIR "$BASH_COMPLETION_COMPAT_DIR"
 
-bashrc-unset-var BASH_COMPLETION_COMPAT_IGNORE
+rc-unset BASH_COMPLETION_COMPAT_IGNORE
 
 if [[ -f $BASH_COMPLETION_USER_DIR/bash_completion ]]; then
     __lazy_compgen() {
@@ -22,7 +25,6 @@ if [[ -f $BASH_COMPLETION_USER_DIR/bash_completion ]]; then
         _comp_complete_load "$@" && return 124
     }
 
-    bashrc-include-function __lazy_compgen
-    bashrc-includef 'function___lazy_compgen' \
-        '%s\n' "complete -D -F __lazy_compgen"
+    rc-workfile-add-function __lazy_compgen
+    rc-workfile-add-exec complete -D -F __lazy_compgen
 fi

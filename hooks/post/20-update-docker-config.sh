@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source "${REPO_ROOT:?}"/bash/rc.d/20-app-docker.sh
+DOCKER_CONFIG=${DOCKER_CONFIG:-${HOME}/.config/docker}
 
 mkdir -p "$DOCKER_CONFIG"
 

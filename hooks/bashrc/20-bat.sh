@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-source "$REPO_ROOT"/lib/bash/generate.bash
+source ./lib/bash/generate.bash
 
-if bashrc-command-exists bat; then
-    bashrc-export-var MANPAGER "sh -c 'col -bx | bat -l man -p'"
-    bashrc-export-var MANROFFOPT "-c"
+if rc-command-exists bat; then
+    rc-export MANPAGER "sh -c 'col -bx | bat -l man -p'"
+    rc-export MANROFFOPT "-c"
 fi

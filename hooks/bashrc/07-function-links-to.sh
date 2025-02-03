@@ -2,20 +2,20 @@
 
 set -euo pipefail
 
-source "$REPO_ROOT"/lib/bash/generate.bash
+source ./lib/bash/generate.bash
 
 shopt -s extglob
 shopt -s nullglob
 
-DEST=links-to
+rc-new-workfile "function-links-to"
 
 if have stat; then
     get-location stat
     stat=${FACT:?}
 
-    bashrc-pref "$DEST" 'enable -f %q stat\n' "$stat"
-    bashrc-pref "$DEST" 'enable -n stat\n'
-    bashrc-pref "$DEST" '__rc_debug %q\n' \
+    rc-workfile-add-exec enable -f "${stat:?}" stat
+    rc-workfile-add-exec enable -n stat
+    rc-workfile-add-exec __rc_debug \
         'links-to(): using stat builtin'
 
     links-to() {
@@ -27,6 +27,9 @@ if have stat; then
     }
 
 else
+    rc-workfile-add-exec __rc_debug \
+        'links-to(): using stat command'
+
     links-to() {
         local -r path=${1:?}
         local -r target=${2:?}
@@ -51,4 +54,4 @@ else
     }
 fi
 
-bashrc-pref "$DEST" '%s\n' "$(bashrc-dump-function links-to)"
+rc-workfile-add-function links-to
