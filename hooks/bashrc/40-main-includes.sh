@@ -8,8 +8,7 @@ source ./lib/bash/facts.bash
 rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 
 {
-    rc-workfile-open "$RC_DEP_ENV"
-    rc-workfile-add-exec source "${HOME:?}/.config/env"
+    rc-new-workfile key-bindings
     rc-workfile-include ./bash/conf-key-bindings.sh
     rc-workfile-close
 }

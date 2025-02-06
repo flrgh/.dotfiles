@@ -17,7 +17,7 @@ debug:
 	@echo HOOKS: $(HOOKS)
 
 clean:
-	rm -rf ./build/*
+	rm -rfv ./build/*
 
 hooks/*:
 	./scripts/run-hooks $(notdir $@)

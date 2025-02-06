@@ -7,7 +7,8 @@ source ./lib/bash/facts.bash
 
 LOG_DIR="$HOME/.local/var/log"
 
-rc-new-workfile "rc-log"
+rc-new-workfile "$RC_DEP_LOG"
+rc-workfile-add-dep "$RC_DEP_ENV"
 
 rc-workfile-var __RC_LOG_DIR "$LOG_DIR"
 rc-workfile-var __RC_LOG_FILE "$LOG_DIR/bashrc.log"

@@ -1,6 +1,7 @@
 source ./lib/bash/common.bash
 source ./lib/bash/facts.bash
 source ./home/.local/lib/bash/string.bash
+source ./home/.local/lib/bash/array.bash
 
 export BUILD_BASHRC_DIR=${BUILD_ROOT:?BUILD_ROOT undefined}/bashrc
 export BUILD_BASHRC_INC=$BUILD_BASHRC_DIR/rc.d
@@ -10,30 +11,29 @@ export BUILD_BASHRC_FILE=${BUILD_ROOT}/home/.bashrc
 
 source ./build/home/.config/env
 
-declare -g _LABEL
-declare -g _FILE
-declare -g _DEPS
+# shellcheck disable=SC2034
+{
+    declare -g _LABEL
+    declare -g _FILE
+    declare -g _DEPS
 
-declare -g _ALL_FILES=bashrc-all-files
-
-RC_DEP_INIT="rc-init"
-RC_DEP_POST_INIT="rc-post-init"
-RC_DEP_LOG="rc-log"
-RC_DEP_DEBUG="rc-debug"
-RC_DEP_TIMER="rc-timer"
-RC_DEP_ENV="env"
-RC_DEP_ENV_POST="env-post"
-
-RC_DEP_RESET_VAR="rc-var-reset"
-RC_DEP_SET_VAR="rc-set-var"
-RC_DEP_CLEAR_VAR="rc-clear-var"
-
-RC_DEP_ALIAS_RESET="rc-alias-reset"
-RC_DEP_ALIAS_SET="rc-alias-create"
-
-RC_DEP_RESET_FUNCTION="rc-function-reset"
-RC_DEP_SET_FUNCTION="rc-function-set"
-RC_DEP_CLEAR_FUNCTION="rc-function-clear"
+    declare -g _ALL_FILES=bashrc-all-files
+    declare -g RC_DEP_INIT="rc-init"
+    declare -g RC_DEP_POST_INIT="rc-post-init"
+    declare -g RC_DEP_LOG="rc-log"
+    declare -g RC_DEP_DEBUG="rc-debug"
+    declare -g RC_DEP_TIMER="rc-timer"
+    declare -g RC_DEP_ENV="rc-env"
+    declare -g RC_DEP_ENV_POST="env-post"
+    declare -g RC_DEP_RESET_VAR="rc-var-reset"
+    declare -g RC_DEP_SET_VAR="rc-set-var"
+    declare -g RC_DEP_CLEAR_VAR="rc-clear-var"
+    declare -g RC_DEP_ALIAS_RESET="rc-alias-reset"
+    declare -g RC_DEP_ALIAS_SET="rc-alias-create"
+    declare -g RC_DEP_RESET_FUNCTION="rc-function-reset"
+    declare -g RC_DEP_SET_FUNCTION="rc-function-set"
+    declare -g RC_DEP_CLEAR_FUNCTION="rc-function-clear"
+}
 
 log() {
     if [[ -n ${_LABEL:-} ]]; then
@@ -89,8 +89,15 @@ _recursive_add_dep() {
     fi
 
     local -r list="bashrc-${item}-deps"
+    if (( depth > 0 )); then
+        if list-contains "$list" "$dep"; then
+            #list-add "bashrc-${dep}-rdeps" "$item" "true"
+            return 0
+        fi
+    fi
+
     list-add "$list" "$dep"
-    list-add "bashrc-${dep}-rdeps" "$item" "true"
+    #list-add "bashrc-${dep}-rdeps" "$item" "true"
 
     local -r deplist="bashrc-${dep}-deps"
     if ! list-exists "$deplist"; then
@@ -108,7 +115,7 @@ _recursive_add_dep() {
             continue
         fi
         seen[$elem]=$elem
-        _recursive_add_dep "$item" "$elem"
+        _recursive_add_dep "$item" "$elem" "$depth"
     done
 }
 
@@ -157,6 +164,19 @@ _add_exec() {
     _rc_append "$name" '%s\n' "${args[*]}"
 }
 
+_has_deps() {
+    local -r item=$1
+    local -r list="bashrc-${item}-deps"
+
+    if list-is-empty "$list"; then
+        return 1
+    fi
+}
+
+_unset_workfile() {
+    unset _LABEL _FILE _DEPS
+}
+
 rc-workfile-add-exec() {
     _require_working_file
     _add_exec "$_FILE" "$@"
@@ -169,7 +189,7 @@ rc-workfile-append() {
 
 rc-workfile-close() {
     _require_working_file
-    unset _LABEL _FILE _DEPS
+    _unset_workfile
 }
 
 _save_workfile() {
@@ -191,6 +211,13 @@ _restore_workfile() {
     fi
 }
 
+_set_working_file() {
+    local -r label=${1:?}
+    _LABEL=$label
+    _FILE=$file
+    _DEPS=bashrc-${label}-deps
+}
+
 rc-workfile-open() {
     if _have_working_file; then
         rc-workfile-close
@@ -203,9 +230,7 @@ rc-workfile-open() {
         fatal "workfile $file not found"
     fi
 
-    _LABEL=$label
-    _FILE=$file
-    _DEPS=bashrc-${label}-deps
+    _set_working_file "$label"
 }
 
 rc-have-workfile() {
@@ -419,6 +444,11 @@ rc-export() {
         value=${!name:?}
     fi
 
+    if var-exists "$name" && var-equals "$name" "$value"; then
+        log "SKIP (exists) export($name)"
+        return
+    fi
+
     _save_workfile
 
     rc-workfile-open "$RC_DEP_SET_VAR"
@@ -504,7 +534,7 @@ rc-init() {
         rm -rfv "$BUILD_BASHRC_DIR"
     fi
 
-    reset-facts
+    init-facts
 
     mkdir -vp \
         "$BUILD_BASHRC_INC" \
@@ -521,87 +551,111 @@ _clear_dep() {
     list-remove "bashrc-${item}-deps" "$dep"
 }
 
+_get_rdeps() {
+    local -r item=${1:?}
+
+    shopt -s nullglob
+    local -a rdeps=("${FACT_DIR}"/bashrc-*-deps.list/"${item}")
+
+    rdeps=( "${rdeps[@]%-deps.list/*}" )
+    rdeps=( "${rdeps[@]##*/bashrc-}" )
+
+    declare -ga _RDEPS=( "${rdeps[@]}" )
+}
+
 _clear_rdeps() {
     local -r item=${1:?}
-    local -r list="bashrc-${item}-rdeps"
 
-    if ! list-exists "$list"; then
-        return
-    fi
+    _get_rdeps "$item"
 
-    local -a rdeps
-    get-list-items "$list"
-    rdeps=("${FACT_LIST[@]}")
-
-    for rdep in "${rdeps[@]}"; do
-        _clear_dep "$rdep" "$item"
+    for dep in "${_RDEPS[@]}"; do
+        _clear_dep "$dep" "$item"
     done
 }
 
+_handle() {
+    local -r item=$1
+
+    : $(( _STEPS++ ))
+
+    local -r list="bashrc-${item}-deps"
+
+    #log "checking: $item ($count deps)"
+
+    if list-is-empty "$list"; then
+        _FINAL+=("$item")
+        _clear_rdeps "$item"
+        return 0
+    fi
+
+    local -a deps
+    get-list-items "$list"
+    deps=("${FACT_LIST[@]}")
+
+    local -i oops=0
+    for dep in "${deps[@]}"; do
+        if [[ ! -e ${BUILD_BASHRC_INC}/${dep} ]]; then
+            oops=1
+            log "WARN: $item depends on $dep, but we couldn't find it"
+        fi
+    done
+
+    if (( oops == 1 )); then
+        _clear_rdeps "$item"
+        _FAILED+=("$item")
+    fi
+
+    return 1
+}
+
 rc-finalize() {
-    echo "finalizing $BUILD_BASHRC_FILE"
+    _unset_workfile
+
+    log "finalizing $BUILD_BASHRC_FILE"
 
     local -a all
     get-list-items "$_ALL_FILES"
     all=("${FACT_LIST[@]}")
 
-    local -a final=()
-    local -a remain=("${all[@]}")
+    declare -ga _FINAL=()
+    declare -ga _REMAIN=("${all[@]}")
 
-    set -- "${remain[@]}"
+    set -- "${_REMAIN[@]}"
 
-    local -a failed=()
+    declare -ga _FAILED=()
+
+    declare -gi _STEPS=0
 
     while (( $# > 0 )); do
         local item=$1
         shift
 
-        local -a deps
-        get-list-items "bashrc-${item}-deps"
-        deps=("${FACT_LIST[@]}")
-
-        local -i count=${#deps[@]}
-
-        if (( count == 0 )); then
-            final+=("$item")
-            _clear_rdeps "$item"
-
+        if _handle "$item"; then
+            :
+        elif array-contains "$item" "${_FAILED[@]}"; then
+            :
         else
-            local -i oops=0
-            for dep in "${deps[@]}"; do
-                if [[ ! -e ${BUILD_BASHRC_INC}/${dep} ]]; then
-                    oops=1
-                    echo "WARN: $item depends on $dep, but we couldn't find it"
-                fi
-            done
-
-            if (( oops == 1 )); then
-                _clear_rdeps "$item"
-                failed+=("$item")
-            else
-                set -- "$@" "$item"
-            fi
+            set -- "$@" "$item"
         fi
     done
 
-    echo "COMPLETE:"
-    printf '\t%s\n' "${final[@]}"
+    log "COMPLETE ($_STEPS steps):"
+    printf '\t%s\n' "${_FINAL[@]}"
 
-    if (( ${#failed[@]} > 0 )); then
-        echo "FAILED:"
-        printf '\t%s\n' "${failed[@]}"
+    if (( ${#_FAILED[@]} > 0 )); then
+        log "FAILED:"
+        printf '\t%s\n' "${_FAILED[@]}"
 
         fatal "something broke"
     fi
 
     echo '# vim: set ft=sh:' >> "$BUILD_BASHRC_FILE"
-    for f in "${final[@]}"; do
+    for f in "${_FINAL[@]}"; do
         cat "$BUILD_BASHRC_INC/$f" >> "$BUILD_BASHRC_FILE"
     done
 
     bash -n "$BUILD_BASHRC_FILE" || {
-        echo "FATAL: syntax error in generated .bashrc file" >&2
-        exit 1
+        fatal "syntax error in generated .bashrc file"
     }
 
     if rc-command-exists shfmt; then
@@ -613,15 +667,13 @@ rc-finalize() {
             --binary-next-line \
             "$BUILD_BASHRC_FILE" \
         || {
-            echo "FATAL: 'shfmt .bashrc' returned non-zero" >&2
-            exit 1
+            fatal "'shfmt .bashrc' returned non-zero"
         }
     fi
 
     if rc-command-exists shellcheck; then
         shellcheck "$BUILD_BASHRC_FILE" || {
-            echo "FATAL: 'shellcheck .bashrc' returned non-zero" >&2
-            exit 1
+            fatal "'shellcheck .bashrc' returned non-zero"
         }
     fi
 }

@@ -5,7 +5,7 @@ source "$BASH_USER_LIB"/version.bash
 _FACT_BOOL="bool"
 _FACT_VERSION="version"
 _FACT_LIST="list"
-_FACT_TEXT="text"
+_FACT_TEXT="txt"
 _FACT_LOCATION="location"
 
 __init() {
@@ -22,6 +22,11 @@ __init() {
 
 __init
 
+init-facts() {
+    [[ -n ${FACT_DIR:-} ]] || __init
+    mkdir -p "$FACT_DIR"
+}
+
 reset-facts() {
     [[ -n ${FACT_DIR:-} ]] || __init
 
@@ -29,7 +34,7 @@ reset-facts() {
         rm -rf "$FACT_DIR"
     fi
 
-    mkdir -p "$FACT_DIR"
+    init-facts
 }
 
 declare -ga _FACT_VARS=(
@@ -202,6 +207,16 @@ list-add() {
     _unset_current_fact
 }
 
+list-path() {
+    local -r name=${1:?}
+
+    _set_current_fact "$name" "$_FACT_LIST"
+    _fact_exists || fatal "list ${FACT_NAME:?} not found"
+    FACT=${FACT_PATH:?}
+    _unset_current_fact
+}
+
+
 list-exists() {
     local -r name=${1:?}
 
@@ -258,6 +273,19 @@ get-list-items() {
     _read_list
     _unset_current_fact
 }
+
+list-has-items() {
+    local -r name=${1:?}
+    get-list-items "$name"
+    (( ${#FACT_LIST[@]} > 0 ))
+}
+
+list-is-empty() {
+    local -r name=${1:?}
+    get-list-items "$name"
+    (( ${#FACT_LIST[@]} == 0 ))
+}
+
 
 set-true() {
     local -r name=${1:?}
@@ -333,4 +361,49 @@ set-location() {
 get-location() {
     local -r name=${1:?}
     get-fact "${name}" "${_FACT_LOCATION}"
+}
+
+set-var-value() {
+    local -r name=${1:?}
+    local -r value=${2:?}
+    set-fact "var-value-${name}" "$_FACT_TEXT" "$value"
+}
+
+set-var-exported() {
+    local -r name=${1:?}
+    set-true "var-exported-${name}"
+}
+
+set-var-source() {
+    local -r name=${1:?}
+    local -r src=${2:?}
+
+    set-fact "var-source-${name}" "$_FACT_TEXT" "$src"
+}
+
+var-exists() {
+    local -r name=${1:?}
+    _set_current_fact "var-value-${name}" "$_FACT_TEXT"
+    _fact_exists || return 1
+    _unset_current_fact
+}
+
+get-var-value() {
+    local -r name=${1:?}
+    _set_current_fact "var-value-${name}" "$_FACT_TEXT"
+    _fact_exists || return 1
+    _read_fact
+    _unset_current_fact
+}
+
+var-equals() {
+    local -r name=${1:?}
+    local -r value=${2:?}
+    get-var-value  "$name" || return 1
+    local rc=1
+    if [[ $FACT == "$value" ]]; then
+        rc=0
+    fi
+    _unset_current_fact
+    return "$rc"
 }

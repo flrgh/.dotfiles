@@ -6,9 +6,6 @@ source ./lib/bash/facts.bash
 rc-new-workfile "$RC_DEP_POST_INIT"
 rc-workfile-add-dep "$RC_DEP_TIMER"
 
-rc-new-workfile "$RC_DEP_ENV"
-rc-workfile-add-dep "$RC_DEP_POST_INIT"
-
 {
     rc-new-workfile "$RC_DEP_RESET_VAR"
     rc-workfile-add-dep "$RC_DEP_ENV"
