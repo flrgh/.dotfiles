@@ -45,6 +45,8 @@ __last_status() {
         export PS1="$__ps1_default"
         __need_prompt_reset=0
     fi
+
+    return "$exit_code"
 }
 
 __rc_add_prompt_command "__last_status"
