@@ -1,0 +1,85 @@
+# removes some extra branching
+15c15
+< if [[ $- =~ i ]]; then
+---
+> #if [[ $- =~ i ]]; then
+58,76c58,76
+< if command -v perl > /dev/null; then
+<   __fzf_history__() {
+<     local output script
+<     script='BEGIN { getc; $/ = "\n\t"; $HISTCOUNT = $ENV{last_hist} + 1 } s/^[ *]//; s/\n/\n\t/gm; print $HISTCOUNT - $. . "\t$_" if !$seen{$_}++'
+<     output=$(
+<       set +o pipefail
+<       builtin fc -lnr -2147483648 |
+<         last_hist=$(HISTTIMEFORMAT='' builtin history 1) command perl -n -l0 -e "$script" |
+<         FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '"$'\t'"↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} +m --read0") \
+<         FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd) --query "$READLINE_LINE"
+<     ) || return
+<     READLINE_LINE=$(command perl -pe 's/^\d*\t//' <<< "$output")
+<     if [[ -z "$READLINE_POINT" ]]; then
+<       echo "$READLINE_LINE"
+<     else
+<       READLINE_POINT=0x7fffffff
+<     fi
+<   }
+< else # awk - fallback for POSIX systems
+---
+> #if command -v perl > /dev/null; then
+> #  __fzf_history__() {
+> #    local output script
+> #    script='BEGIN { getc; $/ = "\n\t"; $HISTCOUNT = $ENV{last_hist} + 1 } s/^[ *]//; s/\n/\n\t/gm; print $HISTCOUNT - $. . "\t$_" if !$seen{$_}++'
+> #    output=$(
+> #      set +o pipefail
+> #      builtin fc -lnr -2147483648 |
+> #        last_hist=$(HISTTIMEFORMAT='' builtin history 1) command perl -n -l0 -e "$script" |
+> #        FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '"$'\t'"↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} +m --read0") \
+> #        FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd) --query "$READLINE_LINE"
+> #    ) || return
+> #    READLINE_LINE=$(command perl -pe 's/^\d*\t//' <<< "$output")
+> #    if [[ -z "$READLINE_POINT" ]]; then
+> #      echo "$READLINE_LINE"
+> #    else
+> #      READLINE_POINT=0x7fffffff
+> #    fi
+> #  }
+> #else # awk - fallback for POSIX systems
+105c105
+< fi
+---
+> #fi
+114,126c114,126
+< if (( BASH_VERSINFO[0] < 4 )); then
+<   # CTRL-T - Paste the selected file path into the command line
+<   if [[ "${FZF_CTRL_T_COMMAND-x}" != "" ]]; then
+<     bind -m emacs-standard '"\C-t": " \C-b\C-k \C-u`__fzf_select__`\e\C-e\er\C-a\C-y\C-h\C-e\e \C-y\ey\C-x\C-x\C-f"'
+<     bind -m vi-command '"\C-t": "\C-z\C-t\C-z"'
+<     bind -m vi-insert '"\C-t": "\C-z\C-t\C-z"'
+<   fi
+< 
+<   # CTRL-R - Paste the selected command from history into the command line
+<   bind -m emacs-standard '"\C-r": "\C-e \C-u\C-y\ey\C-u`__fzf_history__`\e\C-e\er"'
+<   bind -m vi-command '"\C-r": "\C-z\C-r\C-z"'
+<   bind -m vi-insert '"\C-r": "\C-z\C-r\C-z"'
+< else
+---
+> #if (( BASH_VERSINFO[0] < 4 )); then
+> #  # CTRL-T - Paste the selected file path into the command line
+> #  if [[ "${FZF_CTRL_T_COMMAND-x}" != "" ]]; then
+> #    bind -m emacs-standard '"\C-t": " \C-b\C-k \C-u`__fzf_select__`\e\C-e\er\C-a\C-y\C-h\C-e\e \C-y\ey\C-x\C-x\C-f"'
+> #    bind -m vi-command '"\C-t": "\C-z\C-t\C-z"'
+> #    bind -m vi-insert '"\C-t": "\C-z\C-t\C-z"'
+> #  fi
+> #
+> #  # CTRL-R - Paste the selected command from history into the command line
+> #  bind -m emacs-standard '"\C-r": "\C-e \C-u\C-y\ey\C-u`__fzf_history__`\e\C-e\er"'
+> #  bind -m vi-command '"\C-r": "\C-z\C-r\C-z"'
+> #  bind -m vi-insert '"\C-r": "\C-z\C-r\C-z"'
+> #else
+138c138
+< fi
+---
+> #fi
+147c147
+< fi
+---
+> #fi

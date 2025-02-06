@@ -33,20 +33,6 @@ get-asset-download-url() {
 }
 
 
-install-key-bindings() {
-    local -r dest=$HOME/.local/share/fzf/shell/key-bindings.bash
-    mkdir -p "$(dirname "$dest")"
-
-    "$BIN" --bash \
-        | sed -n '/### key-bindings.bash ###/,/### end: key-bindings.bash ###/p' \
-        > "$dest"
-
-    if ! test -s "$dest"; then
-        echo "uh oh, $dest is empty"
-        return 1
-    fi
-}
-
 install-man-page() {
     local dir="$HOME"/.local/share/man/man1
     mkdir -p "$dir"
@@ -64,6 +50,5 @@ install-from-asset() {
     tar -xzf "$asset"
     vbin-install fzf "$version" "$PWD/fzf"
 
-    install-key-bindings
     install-man-page
 }

@@ -35,6 +35,14 @@ RC_DEP_RESET_FUNCTION="rc-function-reset"
 RC_DEP_SET_FUNCTION="rc-function-set"
 RC_DEP_CLEAR_FUNCTION="rc-function-clear"
 
+log() {
+    if [[ -n ${_LABEL:-} ]]; then
+        printf '[%s] ' "${_LABEL}"
+    fi
+
+    echo "$@"
+}
+
 _recursive_has_dep() {
     local -r item=${1:?}
     local -r dep=${2:?}
@@ -240,6 +248,7 @@ rc-workfile-add-dep() {
 rc-workfile-include() {
     _require_working_file
     local fname=${1:?}
+    local -i non_repo_file=${2:-0}
     [[ -f $fname ]] || fatal "file ($fname) not found"
 
     local cwd='./'
@@ -252,7 +261,7 @@ rc-workfile-include() {
     short=${short#"$HOME/"}
 
     local -i is_repo_file=0
-    if [[ "$fname" = "${REPO_ROOT}"/* ]]; then
+    if (( non_repo_file == 0 )) && [[ "$fname" = "${REPO_ROOT}"/* ]]; then
         is_repo_file=1
     fi
 
@@ -284,6 +293,10 @@ rc-workfile-include() {
     fi
 
     rc-workfile-append '# END: %s\n\n' "$fname"
+}
+
+rc-workfile-include-external() {
+    rc-workfile-include "$1" 1
 }
 
 rc-has-dep() {
