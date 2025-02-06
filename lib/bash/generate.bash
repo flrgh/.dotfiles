@@ -152,9 +152,37 @@ _add_exec() {
     local -r name=$1
     shift
 
-    # don't quote the first arg (just because)
-    local args=("$1")
+    local cmd=$1
     shift
+
+    local -a args=()
+    local type
+    type=$(type -t "$cmd" || true)
+
+    if [[ $cmd != "builtin" && $cmd != "export" ]]; then
+        case $type in
+            builtin)
+                args=(builtin "$cmd")
+                ;;
+            function)
+                args=("$cmd")
+                ;;
+            file)
+                local path
+                if path=$(command -v "$cmd") && [[ -n ${path:-} ]]; then
+                    args=("$path")
+                else
+                    args=("$cmd")
+                fi
+                ;;
+
+            *)
+                args=("$cmd")
+                ;;
+        esac
+    else
+        args=("$cmd")
+    fi
 
     local quoted
     for arg in "$@"; do
@@ -492,7 +520,7 @@ rc-add-path() {
 
     rc-workfile-open rc-pathset
     if have varsplice; then
-        rc-workfile-add-exec varsplice "$@"
+        rc-workfile-add-exec builtin varsplice "$@"
     else
         rc-workfile-add-exec __rc_add_path "$@"
     fi
@@ -505,7 +533,7 @@ rc-rm-path() {
 
     rc-workfile-open rc-pathset
     if have varsplice; then
-        rc-workfile-add-exec varsplice --remove "$@"
+        rc-workfile-add-exec builtin varsplice --remove "$@"
     else
         rc-workfile-add-exec __rc_rm_path "$@"
     fi
@@ -521,7 +549,7 @@ rc-varsplice() {
     _save_workfile
 
     rc-workfile-open rc-pathset
-    rc-workfile-add-exec varsplice "$@"
+    rc-workfile-add-exec builtin varsplice "$@"
 
     _restore_workfile
 }

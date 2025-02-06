@@ -21,16 +21,16 @@ add-call() {
 if have varsplice; then
     add-call __rc_debug '__rc_set_path_separator(): using varsplice'
 
-    add-call varsplice --default -s PATH       ":"
-    add-call varsplice --default -s MANPATH    ":"
-    add-call varsplice --default -s CDPATH     ":"
-    add-call varsplice --default -s LUA_PATH   ";"
-    add-call varsplice --default -s LUA_CPATH  ";"
+    add-call builtin varsplice --default -s PATH       ":"
+    add-call builtin varsplice --default -s MANPATH    ":"
+    add-call builtin varsplice --default -s CDPATH     ":"
+    add-call builtin varsplice --default -s LUA_PATH   ";"
+    add-call builtin varsplice --default -s LUA_CPATH  ";"
 
-    add-call varsplice --default -s EXECIGNORE ":"
-    add-call varsplice --default -s FIGNORE    ":"
-    add-call varsplice --default -s GLOBIGNORE ":"
-    add-call varsplice --default -s HISTIGNORE ":"
+    add-call builtin varsplice --default -s EXECIGNORE ":"
+    add-call builtin varsplice --default -s FIGNORE    ":"
+    add-call builtin varsplice --default -s GLOBIGNORE ":"
+    add-call builtin varsplice --default -s HISTIGNORE ":"
 
 else
     declare -A __RC_PATH_SEPARATORS=()
@@ -59,11 +59,11 @@ fi
 
 
 if have varsplice; then
-    add-call varsplice --normalize PATH
-    add-call varsplice --normalize MANPATH
-    add-call varsplice --normalize CDPATH
-    add-call varsplice --normalize LUA_PATH
-    add-call varsplice --normalize LUA_CPATH
+    add-call builtin varsplice --normalize PATH
+    add-call builtin varsplice --normalize MANPATH
+    add-call builtin varsplice --normalize CDPATH
+    add-call builtin varsplice --normalize LUA_PATH
+    add-call builtin varsplice --normalize LUA_CPATH
 fi
 
 if have varsplice; then
@@ -71,7 +71,7 @@ if have varsplice; then
 
     __rc_add_path() {
         __rc_timer_start "__rc_add_path"
-        varsplice "$@"
+        builtin varsplice "$@"
         __rc_timer_stop
     }
 

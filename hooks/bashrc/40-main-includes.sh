@@ -8,9 +8,11 @@ source ./lib/bash/facts.bash
 rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 
 {
-    rc-new-workfile key-bindings
-    rc-workfile-include ./bash/conf-key-bindings.sh
-    rc-workfile-close
+    if rc-command-exists stty; then
+        rc-new-workfile key-bindings
+        rc-workfile-add-exec stty werase undef
+        rc-workfile-close
+    fi
 }
 
 {
