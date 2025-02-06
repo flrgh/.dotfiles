@@ -26,9 +26,29 @@ source ./lib/bash/facts.bash
 }
 
 {
+    rc-new-workfile "$RC_DEP_BUILTINS"
+    rc-workfile-add-dep "$RC_DEP_ENV"
+
+    if have stat; then
+        get-location stat
+        rc-workfile-add-exec enable -f "${FACT:?}" stat
+
+        # disable stat immediately so that callers expecting the
+        # stat binary don't get confused
+        rc-workfile-add-exec enable -n stat
+    fi
+
+    if have varsplice; then
+        get-location varsplice
+        rc-workfile-add-exec enable -f "${FACT:?}" varsplice
+    fi
+}
+
+{
     rc-new-workfile "$RC_DEP_TIMER"
     rc-workfile-add-dep "$RC_DEP_ENV"
     rc-workfile-add-dep "$RC_DEP_DEBUG"
+    rc-workfile-add-dep "$RC_DEP_BUILTINS"
 
     rc-workfile-append '%s\n' 'if (( DEBUG_BASHRC > 0 )); then'
 

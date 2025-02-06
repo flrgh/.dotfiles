@@ -33,6 +33,7 @@ source ./build/home/.config/env
     declare -g RC_DEP_RESET_FUNCTION="rc-function-reset"
     declare -g RC_DEP_SET_FUNCTION="rc-function-set"
     declare -g RC_DEP_CLEAR_FUNCTION="rc-function-clear"
+    declare -g RC_DEP_BUILTINS="rc-builtins"
 }
 
 log() {

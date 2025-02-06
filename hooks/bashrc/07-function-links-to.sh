@@ -8,13 +8,9 @@ shopt -s extglob
 shopt -s nullglob
 
 rc-new-workfile "function-links-to"
+rc-workfile-add-dep "$RC_DEP_BUILTINS"
 
 if have stat; then
-    get-location stat
-    stat=${FACT:?}
-
-    rc-workfile-add-exec enable -f "${stat:?}" stat
-    rc-workfile-add-exec enable -n stat
     rc-workfile-add-exec __rc_debug \
         'links-to(): using stat builtin'
 

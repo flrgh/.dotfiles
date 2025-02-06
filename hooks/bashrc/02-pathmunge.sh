@@ -8,6 +8,7 @@ source ./lib/bash/facts.bash
 rc-new-workfile "rc-pathset"
 rc-workfile-add-dep "$RC_DEP_DEBUG"
 rc-workfile-add-dep "$RC_DEP_TIMER"
+rc-workfile-add-dep "$RC_DEP_BUILTINS"
 
 add-function() {
     rc-workfile-add-function "$1"
@@ -18,9 +19,6 @@ add-call() {
 }
 
 if have varsplice; then
-    get-location varsplice
-    add-call enable -f "${FACT:?}" varsplice
-
     add-call __rc_debug '__rc_set_path_separator(): using varsplice'
 
     add-call varsplice --default -s PATH       ":"

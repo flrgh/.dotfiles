@@ -34,6 +34,7 @@ export HISTFILE=$XDG_STATE_HOME/.bash_history
 
 declare -gi __history_saved=0
 declare -gi __history_index=0
+declare -gi __history_checked=0
 declare -gr __history_prompt='\!'
 
 __update_history() {
@@ -56,8 +57,9 @@ declare -gi __history_saving_enabled=1
 # save+reload history after every command
 # this could get expensive and slow when the history file gets big
 __check_history() {
+    local ec=$?
     if (( __history_saving_enabled == 0 )); then
-        return
+        return "$ec"
     fi
 
     local -ri idx=${__history_prompt@P}
@@ -65,18 +67,23 @@ __check_history() {
     # we executed a new command: update the histfile
     if (( idx > __history_index )); then
         __update_history
-        return
+        return "$ec"
     fi
 
-    if (( (EPOCHSECONDS - __history_saved) > 5 )); then
-        local -i stat; stat=$(stat -c '%Y' "$HISTFILE")
+    local -i time=$EPOCHSECONDS
+    if (( (time - __history_checked) > 5 )); then
+        __history_checked=$time
+
+        __get_mtime "$HISTFILE" || true
+        local -i stat=$REPLY
 
         # the histfile hast been updated by somebody else--update!
         if (( stat > __history_saved )); then
             __update_history
-            return
+            return "$ec"
         fi
     fi
+    return "$ec"
 }
 
 toggle_update_history() {
