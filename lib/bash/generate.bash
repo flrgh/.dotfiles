@@ -242,7 +242,6 @@ rc-workfile-add-dep() {
         fatal "invalid self-dependency ($_LABEL)"
     fi
     _recursive_add_dep "$_LABEL" "$dep"
-    #list-add "bashrc-${dep}-rdeps" "$_LABEL" "true"
 }
 
 rc-workfile-include() {
@@ -263,6 +262,9 @@ rc-workfile-include() {
     local -i is_repo_file=0
     if (( non_repo_file == 0 )) && [[ "$fname" = "${REPO_ROOT}"/* ]]; then
         is_repo_file=1
+        log "include($fname)"
+    else
+        log "include-external($fname)"
     fi
 
     rc-workfile-append '# BEGIN: %s\n' "$fname"
@@ -271,6 +273,9 @@ rc-workfile-include() {
     if _recursive_has_dep "$_LABEL" "$RC_DEP_TIMER" \
         && ! _recursive_has_dep "$_LABEL" "rc-timer-post"; then
         time_it=1
+        log "file $short will be timed"
+    else
+        log "file $short will not be timed"
     fi
 
     if (( time_it == 1 )); then
@@ -347,6 +352,7 @@ rc-dump-function() {
 rc-workfile-add-function() {
     _require_working_file
     local -r fn=$1
+    log "function($fn)"
     local dec; dec=$(rc-dump-function "$fn")
     _rc_append "$_FILE" '%s\n' "$dec"
 }
@@ -359,6 +365,7 @@ rc-var() {
     _save_workfile
 
     rc-workfile-open "$RC_DEP_SET_VAR"
+    log "var($var)"
     rc-workfile-append '%s=%q\n' "$var" "$value"
 
     _restore_workfile
@@ -368,6 +375,7 @@ rc-workfile-var() {
     local -r var=$1
     local -r value=$2
 
+    log "var($var)"
     rc-workfile-append '%s=%q\n' "${var:?}" "${value:?}"
 }
 
@@ -383,6 +391,7 @@ rc-alias() {
     _save_workfile
 
     rc-workfile-open "$RC_DEP_ALIAS_SET"
+    log "alias($name)"
     rc-workfile-add-exec alias "${name}=${cmd}"
 
     _restore_workfile
@@ -413,6 +422,7 @@ rc-export() {
     _save_workfile
 
     rc-workfile-open "$RC_DEP_SET_VAR"
+    log "export($name)"
     rc-workfile-add-exec export "${name}=${value}"
 
     _restore_workfile
@@ -424,6 +434,7 @@ rc-reset-var() {
     _save_workfile
 
     rc-workfile-open "$RC_DEP_RESET_VAR"
+    log "unset($name)"
     rc-workfile-add-exec unset "$name"
 
     _restore_workfile
@@ -435,6 +446,7 @@ rc-unset() {
     _save_workfile
 
     rc-workfile-open "$RC_DEP_CLEAR_VAR"
+    log "unset($name)"
     rc-workfile-append 'unset %s\n' "$name"
 
     _restore_workfile
