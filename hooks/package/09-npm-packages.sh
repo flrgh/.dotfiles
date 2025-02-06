@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 
-nvm install --lts --latest-npm
-nvm use --lts
+if ! command -v mise &>/dev/null; then
+    echo "WARN: mise is not installed, so we can't use npm"
+    exit
+fi
+
+npm() {
+    mise exec node -- npm "$@"
+}
 
 readonly PACKAGES=(
     # language servers
