@@ -23,6 +23,7 @@ readonly PACKAGES=(
     minijinja-cli  # template renderer
     ripgrep
     stylua
+    usage-cli
     wasm-pack
     wasmtime-cli
     worker-build   # for cloudflare workers

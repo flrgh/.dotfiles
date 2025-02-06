@@ -192,6 +192,7 @@ generate tree-sitter complete --shell bash
 generate varlink completions bash
 generate bat --completion bash
 generate minijinja-cli --generate-completion bash
+generate mise completion bash
 
 generate-alt cargo rustup completions bash cargo
 generate-alt bazel ~/.local/libexec/download-bazel-bash-completion

@@ -5,75 +5,59 @@ source ./lib/bash/generate.bash
 rc-new-workfile prompt-command
 rc-workfile-add-dep "$RC_DEP_POST_INIT"
 
-if rc-command-exists direnv; then
-    set-have direnv
-    set-version direnv "$(direnv version)"
-else
-    set-not-have direnv
-fi
+declare -a PROMPT_COMMAND=()
+rc-declare PROMPT_COMMAND
 
-PROMPT_ARRAY=0
-DIRENV_HOOK=
+__rc_add_prompt_command() {
+    local -r cmd=${1?command required}
 
-# as of bash 5.1, PROMPT_COMMAND can be an array, _but_ this was not supported
-# by direnv until 2.34.0
-if have bash gte "5.1"; then
-    if have direnv gte "2.34"; then
-        echo "direnv has array support for PROMPT_COMMAND"
-        PROMPT_ARRAY=1
-        DIRENV_HOOK=$(direnv hook bash)
+    __rc_timer_start "__rc_add_prompt_command($cmd)"
 
-    else
-        echo "direnv not installed"
-        PROMPT_ARRAY=1
-    fi
-fi
+    local -a new=()
 
-if (( PROMPT_ARRAY == 1 )); then
-    declare -a PROMPT_COMMAND=()
-    rc-declare PROMPT_COMMAND
+    local elem
+    for elem in "${PROMPT_COMMAND[@]}"; do
+        if [[ $elem == "$cmd" ]]; then
+            continue
+        fi
+        new+=("$elem")
+    done
 
-    __rc_add_prompt_command() {
-        local -r cmd=${1?command required}
+    # prepend for consistency with `__rc_add_path`
+    PROMPT_COMMAND=("$cmd" "${new[@]}")
 
-        __rc_timer_start "__rc_add_prompt_command($cmd)"
-
-        local -a new=()
-
-        local elem
-        for elem in "${PROMPT_COMMAND[@]}"; do
-            if [[ $elem == "$cmd" ]]; then
-                continue
-            fi
-            new+=("$elem")
-        done
-
-        # prepend for consistency with `__rc_add_path`
-        PROMPT_COMMAND=("$cmd" "${new[@]}")
-
-        __rc_timer_stop
-    }
-else
-    rc-reset-var PROMPT_COMMAND
-
-    __rc_add_prompt_command() {
-        local -r cmd=${1?command required}
-        __rc_add_path --prepend --sep ";" PROMPT_COMMAND "$cmd"
-    }
-fi
-
+    __rc_timer_stop
+}
 rc-workfile-add-function __rc_add_prompt_command
 
-if [[ -n $DIRENV_HOOK ]]; then
-    unset -f _direnv_hook
-    eval "$DIRENV_HOOK"
+_dump_func() {
+    local -r name=${1:?}
+    local -r body=${2:?}
+    bash \
+        --norc \
+        --noprofile \
+        -c "$body; declare -f ${name}"
+}
 
-    if declare -F _direnv_hook; then
-        rc-workfile-add-function _direnv_hook
-        rc-workfile-add-exec __rc_add_prompt_command _direnv_hook
-    else
-        rc-workfile-append "# shellcheck disable=SC2128\n"
-        rc-workfile-append "# shellcheck disable=SC2178\n"
-        rc-workfile-append "{\n%s\n}\n" "$DIRENV_HOOK"
-    fi
+if rc-command-exists direnv; then
+    _direnv_hook=$(_dump_func _direnv_hook "$(direnv hook bash)")
+
+    rc-workfile-append '%s\n' "$_direnv_hook"
+    rc-workfile-add-exec __rc_add_prompt_command _direnv_hook
+
+elif rc-command-exists mise; then
+    script=$(mise activate bash)
+
+    mise=$(_dump_func mise "$script")
+    _mise_hook=$(_dump_func _mise_hook "$script")
+
+    rc-workfile-append '# shellcheck disable=all\n'
+    rc-workfile-append '{\n'
+    rc-workfile-append 'export MISE_SHELL=bash\n'
+    rc-workfile-append 'export __MISE_ORIG_PATH="%s"\n' \$PATH
+    rc-workfile-append '%s\n' "$mise"
+    rc-workfile-append '%s\n' "$_mise_hook"
+    rc-workfile-add-exec __rc_add_prompt_command _mise_hook
+    rc-workfile-add-exec _mise_hook
+    rc-workfile-append '}\n'
 fi
