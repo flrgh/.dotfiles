@@ -9,7 +9,7 @@ LOCATIONS=(
     /usr/local/openresty
 )
 
-if have varsplice gte "0.2"; then
+if have-builtin varsplice gte "0.2"; then
     for loc in "${LOCATIONS[@]}"; do
         rc-varsplice --remove -g PATH "${loc}/*"
     done

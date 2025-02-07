@@ -10,7 +10,7 @@ shopt -s nullglob
 rc-new-workfile "function-links-to"
 rc-workfile-add-dep "$RC_DEP_BUILTINS"
 
-if have stat; then
+if have-builtin stat; then
     rc-workfile-add-exec __rc_debug \
         'links-to(): using stat builtin'
 

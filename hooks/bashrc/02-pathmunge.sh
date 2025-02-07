@@ -18,7 +18,7 @@ add-call() {
     rc-workfile-add-exec "$@"
 }
 
-if have varsplice; then
+if have-builtin varsplice; then
     add-call __rc_debug '__rc_set_path_separator(): using varsplice'
 
     add-call builtin varsplice --default -s PATH       ":"
@@ -58,7 +58,7 @@ else
 fi
 
 
-if have varsplice; then
+if have-builtin varsplice; then
     add-call builtin varsplice --normalize PATH
     add-call builtin varsplice --normalize MANPATH
     add-call builtin varsplice --normalize CDPATH
@@ -66,7 +66,7 @@ if have varsplice; then
     add-call builtin varsplice --normalize LUA_CPATH
 fi
 
-if have varsplice; then
+if have-builtin varsplice; then
     add-call __rc_debug "__rc_add_path(): using varsplice"
 
     __rc_add_path() {
@@ -315,7 +315,7 @@ fi
 
 add-function __rc_add_path
 
-if have varsplice; then
+if have-builtin varsplice; then
     add-call __rc_debug "__rc_rm_path(): using varsplice"
 
     __rc_rm_path() {

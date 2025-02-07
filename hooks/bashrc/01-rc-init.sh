@@ -29,8 +29,8 @@ source ./lib/bash/facts.bash
     rc-new-workfile "$RC_DEP_BUILTINS"
     rc-workfile-add-dep "$RC_DEP_ENV"
 
-    if have stat; then
-        get-location stat
+    if have-builtin stat; then
+        get-builtin-location stat
         rc-workfile-add-exec enable -f "${FACT:?}" stat
 
         # disable stat immediately so that callers expecting the
@@ -38,8 +38,8 @@ source ./lib/bash/facts.bash
         rc-workfile-add-exec enable -n stat
     fi
 
-    if have varsplice; then
-        get-location varsplice
+    if have-builtin varsplice; then
+        get-builtin-location varsplice
         rc-workfile-add-exec enable -f "${FACT:?}" varsplice
     fi
 }
@@ -52,7 +52,7 @@ source ./lib/bash/facts.bash
 
     rc-workfile-append '%s\n' 'if (( DEBUG_BASHRC > 0 )); then'
 
-    if have timer && get-location timer; then
+    if have-builtin timer && get-builtin-location timer; then
         rc-workfile-add-exec enable -f "${FACT:?}" timer
         rc-workfile-include ./bash/rc-timer-new.bash
     else

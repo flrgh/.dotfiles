@@ -11,6 +11,12 @@ export BUILD_BASHRC_FILE=${BUILD_ROOT}/home/.bashrc
 
 source ./build/home/.config/env
 
+have-builtin() {
+    local -r name=${1:?}
+    shift
+    have "builtins-${name}" "$@"
+}
+
 # shellcheck disable=SC2034
 {
     declare -g _LABEL
@@ -519,7 +525,7 @@ rc-add-path() {
     _save_workfile
 
     rc-workfile-open rc-pathset
-    if have varsplice; then
+    if have-builtin varsplice; then
         rc-workfile-add-exec builtin varsplice "$@"
     else
         rc-workfile-add-exec __rc_add_path "$@"
@@ -532,7 +538,7 @@ rc-rm-path() {
     _save_workfile
 
     rc-workfile-open rc-pathset
-    if have varsplice; then
+    if have-builtin varsplice; then
         rc-workfile-add-exec builtin varsplice --remove "$@"
     else
         rc-workfile-add-exec __rc_rm_path "$@"
@@ -542,7 +548,7 @@ rc-rm-path() {
 }
 
 rc-varsplice() {
-    if ! have varsplice; then
+    if ! have-builtin varsplice; then
         fatal "tried to call varsplice but we don't got it"
     fi
 

@@ -82,6 +82,11 @@ bash_facts() {
         builtins="$lib/builtins"
     fi
 
+    set-not-have builtins-timer
+    set-not-have builtins-version
+    set-not-have builtins-varsplice
+    set-not-have builtins-stat
+
     if [[ -n ${builtins:-} ]]; then
         set-location bash-builtins "$lib/loadables"
 
@@ -95,13 +100,13 @@ bash_facts() {
             fi
 
             if ! builtin_is_loadable "$bin" "$path" "$name"; then
-                set-not-have "$name"
+                set-not-have "builtins-${name}"
                 continue
             fi
 
             version=$(get_builtin_version "$bin" "$path" "$name")
-            set-have "$name" "$version"
-            set-location "$name" "$path"
+            set-have "builtins-${name}" "$version"
+            set-location "builtins-${name}" "$path"
         done
     fi
 }

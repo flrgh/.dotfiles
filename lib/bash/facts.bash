@@ -363,6 +363,12 @@ get-location() {
     get-fact "${name}" "${_FACT_LOCATION}"
 }
 
+get-builtin-location() {
+    local -r name=${1:?}
+    get-fact "builtins-${name}" "${_FACT_LOCATION}"
+}
+
+
 set-var-value() {
     local -r name=${1:?}
     local -r value=${2:?}

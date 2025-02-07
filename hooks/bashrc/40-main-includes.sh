@@ -150,7 +150,7 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 {
     rc-new-workfile history
     rc-workfile-add-dep "prompt-command"
-    if have stat; then
+    if have-builtin stat; then
         __get_mtime() {
             local -r fname=${1:?}
             declare -g REPLY=0

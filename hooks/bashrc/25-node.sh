@@ -21,7 +21,7 @@ if rc-command-exists mise; then
         rc-add-path MANPATH "${NODE}/man"
     fi
 
-    if have varsplice; then
+    if have-builtin varsplice; then
         rc-varsplice --remove -g PATH "$HOME/.config/nvm/*"
     fi
 fi
