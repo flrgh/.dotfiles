@@ -2,7 +2,7 @@
 
 
 if [[ -z ${INEED_DRIVERS:-} ]]; then
-    declare -rg INEED_DRIVERS="$INEED_ROOT/drivers"
+    declare -rgx INEED_DRIVERS="$INEED_ROOT/drivers"
 fi
 
 

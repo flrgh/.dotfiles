@@ -21,6 +21,11 @@ main() {
 
     shift 2
 
+    export DRIVER_NAME=$name
+    export DRIVER_FILE=$driver
+    export DRIVER_DIR=${INEED_DRIVERS}/${DRIVER_NAME}
+    export DRIVER_PATCH_DIR=${DRIVER_DIR}/patch
+
     # shellcheck source-path=SCRIPTDIR
     source "$INEED_ROOT/base-driver.sh"
 

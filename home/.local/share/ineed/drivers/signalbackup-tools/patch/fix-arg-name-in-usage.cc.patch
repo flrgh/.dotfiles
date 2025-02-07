@@ -1,0 +1,14 @@
+diff --git arg/usage.cc arg/usage.cc
+index 2e88698..bb02552 100644
+--- arg/usage.cc
++++ arg/usage.cc
+@@ -145,7 +145,7 @@ R"*(
+                                          blocked contacts in the database.
+    --includesettings                     Optional modifier for `--exporthtml'. Generate a page showing
+                                          settings found in the backup file.
+-   --includefullcontactslist             Optional modifier for `--exporthtml'. Generate a page showing all
++   --includefullcontactlist              Optional modifier for `--exporthtml'. Generate a page showing all
+                                          contacts present in the backups database. These include hidden
+                                          and blocked contacts, but also system contacts who might not use
+                                          Signal at all.
+

@@ -32,6 +32,11 @@ install-from-asset() {
 
     cd "${NAME}-${version}"
 
+    shopt -s failglob
+    for patch in "${DRIVER_PATCH_DIR}"/*.patch; do
+        patch -p0 < "$patch"
+    done
+
     cmake -B build -DCMAKE_BUILD_TYPE=Release
     cmake --build build -j "$(nproc)"
 
