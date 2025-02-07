@@ -9,6 +9,10 @@ is-installed() {
     binary-exists "$NAME"
 }
 
+get-installed-version() {
+    app-state::get "$DRIVER_NAME" version
+}
+
 list-available-versions() {
     gh-helper get-tag-names "$REPO" \
         | grep -v -- '-beta'
@@ -33,7 +37,15 @@ install-from-asset() {
     cd "${NAME}-${version}"
 
     shopt -s failglob
+    local patch_version patch_name
     for patch in "${DRIVER_PATCH_DIR}"/*.patch; do
+        [[ $patch =~ .*/patch/([0-9.]+)-(.+)\.patch$ ]]
+        patch_version=${BASH_REMATCH[1]:?}
+        patch_name=${BASH_REMATCH[2]:?}
+        if version-compare "$version" gt "$patch_version"; then
+            echo "skipping patch $patch_name for old version ($patch_version)"
+            continue
+        fi
         patch -p0 < "$patch"
     done
 
@@ -45,4 +57,7 @@ install-from-asset() {
         --compare \
         --target-directory "$HOME/.local/bin" \
         "./build/${NAME}"
+
+
+    app-state::set "$DRIVER_NAME" version "$version"
 }
