@@ -7,5 +7,6 @@ vim.filetype.add({
 
   pattern = {
     [".*Dockerfile.*"] = "dockerfile",
+    [".*/%.ssh/config%.d/.*"] = "sshconfig",
   },
 })

@@ -47,3 +47,5 @@ fi
     log "patching bash key bindings"
     rc-workfile-include-external "$BINDINGS"
 }
+
+rc-workfile-close

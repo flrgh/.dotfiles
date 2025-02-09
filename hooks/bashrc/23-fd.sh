@@ -32,4 +32,5 @@ if command -v fd; then
     rc-new-workfile fd
     rc-workfile-add-dep "$RC_DEP_POST_INIT"
     rc-workfile-add-function fd
+    rc-workfile-close
 fi

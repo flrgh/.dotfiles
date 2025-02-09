@@ -67,3 +67,4 @@ rc-new-workfile ps1
 rc-workfile-add-dep "prompt-command"
 rc-workfile-add-dep "prompt-command"
 rc-workfile-include ./bash/conf-color-prompt.sh
+rc-workfile-close

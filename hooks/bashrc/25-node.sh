@@ -24,4 +24,6 @@ if rc-command-exists mise; then
     if have-builtin varsplice; then
         rc-varsplice --remove -g PATH "$HOME/.config/nvm/*"
     fi
+
+    rc-workfile-close
 fi

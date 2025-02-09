@@ -51,3 +51,4 @@ else
 fi
 
 rc-workfile-add-function links-to
+rc-workfile-close

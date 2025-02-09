@@ -1,8 +1,7 @@
 # shellcheck enable=deprecate-which
 
-__RC_END=${EPOCHREALTIME/./}
-__RC_TIME_US=$(( __RC_END - __RC_START ))
-__RC_TIME=$(( __RC_TIME_US / 1000 )).$(( __RC_TIME_US % 1000 ))
+__rc_timer_finish
+unset -f timer
 
 if (( DEBUG_BASHRC > 0 )); then
     __rc_timer_summary

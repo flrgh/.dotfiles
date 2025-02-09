@@ -28,3 +28,5 @@ if [[ -f $BASH_COMPLETION_USER_DIR/bash_completion ]]; then
     rc-workfile-add-function __lazy_compgen
     rc-workfile-add-exec complete -D -F __lazy_compgen
 fi
+
+rc-workfile-close

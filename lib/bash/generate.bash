@@ -2,6 +2,7 @@ source ./lib/bash/common.bash
 source ./lib/bash/facts.bash
 source ./home/.local/lib/bash/string.bash
 source ./home/.local/lib/bash/array.bash
+source ./home/.local/lib/bash/stack.bash
 
 export BUILD_BASHRC_DIR=${BUILD_ROOT:?BUILD_ROOT undefined}/bashrc
 export BUILD_BASHRC_INC=$BUILD_BASHRC_DIR/rc.d
@@ -40,6 +41,12 @@ have-builtin() {
     declare -g RC_DEP_SET_FUNCTION="rc-function-set"
     declare -g RC_DEP_CLEAR_FUNCTION="rc-function-clear"
     declare -g RC_DEP_BUILTINS="rc-builtins"
+    declare -g RC_DEP_PATHSET="rc-pathset"
+}
+
+_is_timed() {
+    local -r label=${1:?}
+    is-true "bashrc-${label}-timed"
 }
 
 log() {
@@ -126,13 +133,25 @@ _recursive_add_dep() {
     done
 }
 
-
 _have_working_file() {
     [[ -n ${_LABEL:-} && -n ${_FILE:-} && -n ${_DEPS:-} ]]
 }
 
+
 _require_working_file() {
     _have_working_file || fatal "no current working file set"
+}
+
+_can_time() {
+    local label=${1:-}
+
+    if [[ -z ${label:-} ]]; then
+        _require_working_file
+        label=$_LABEL
+    fi
+
+    _recursive_has_dep "$label" "$RC_DEP_TIMER" \
+        && ! _recursive_has_dep "$label" "rc-timer-post"
 }
 
 _rc_append() {
@@ -154,6 +173,49 @@ _rc_append() {
     printf -- "$@" >> "$name"
 }
 
+declare -ga _TIMER_STACK=()
+
+_timer_start() {
+    if ! have-builtin timer; then
+        return
+    fi
+
+    local -r fname=${1:?}
+    local -r name=${2:?}
+
+    stack-push _TIMER_STACK "$name"
+
+    local label
+    array-join-var label '/' "${_TIMER_STACK[@]}"
+    _rc_append "$fname" 'timer start "%s"\n' "$label"
+}
+
+_timer_stop() {
+    if ! have-builtin timer; then
+        return
+    fi
+
+    local -r fname=${1:?}
+
+    local label
+    array-join-var label '/' "${_TIMER_STACK[@]}"
+    _rc_append "$fname" 'timer stop # "%s"\n' "${label:?}"
+
+    stack-pop _TIMER_STACK
+}
+
+rc-workfile-timer-start() {
+    local -r name=${1:?}
+    _require_working_file
+    _timer_start "$_FILE" "$name"
+}
+
+rc-workfile-timer-stop() {
+    _require_working_file
+    _timer_stop "$_FILE"
+}
+
+
 _add_exec() {
     local -r name=$1
     shift
@@ -165,7 +227,7 @@ _add_exec() {
     local type
     type=$(type -t "$cmd" || true)
 
-    if [[ $cmd != "builtin" && $cmd != "export" ]]; then
+    if [[ $cmd != "builtin" && $cmd != "export" && $cmd != "timer" ]]; then
         case $type in
             builtin)
                 args=(builtin "$cmd")
@@ -224,8 +286,21 @@ rc-workfile-append() {
 
 rc-workfile-close() {
     _require_working_file
+    if _can_time "$_LABEL"; then
+        set-true "bashrc-${_LABEL}-timed"
+    else
+        set-false "bashrc-${_LABEL}-timed"
+    fi
     _unset_workfile
 }
+
+_maybe_close() {
+    if _have_working_file; then
+        rc-workfile-close
+    fi
+}
+
+trap _maybe_close EXIT
 
 _save_workfile() {
     if _have_working_file; then
@@ -288,8 +363,6 @@ rc-new-workfile() {
     create-list "$_DEPS"
     list-add "$_ALL_FILES" "$label"
 
-    rc-workfile-append '# label: %s\n' "$label"
-
     if [[ $label != rc-* ]]; then
         rc-workfile-add-dep "$RC_DEP_POST_INIT"
     fi
@@ -330,8 +403,7 @@ rc-workfile-include() {
     rc-workfile-append '# BEGIN: %s\n' "$fname"
 
     local time_it=0
-    if _recursive_has_dep "$_LABEL" "$RC_DEP_TIMER" \
-        && ! _recursive_has_dep "$_LABEL" "rc-timer-post"; then
+    if _can_time; then
         time_it=1
         log "file $short will be timed"
     else
@@ -339,7 +411,7 @@ rc-workfile-include() {
     fi
 
     if (( time_it == 1 )); then
-        rc-workfile-append '__rc_timer_start "include(%s)"\n' "$short"
+        _timer_start "$_FILE" "include($short)"
     fi
 
     if (( is_repo_file == 0 )); then
@@ -354,7 +426,7 @@ rc-workfile-include() {
     fi
 
     if (( time_it == 1 )); then
-        rc-workfile-append '__rc_timer_stop\n'
+        _timer_stop "$_FILE"
     fi
 
     rc-workfile-append '# END: %s\n\n' "$fname"
@@ -414,7 +486,16 @@ rc-workfile-add-function() {
     local -r fn=$1
     log "function($fn)"
     local dec; dec=$(rc-dump-function "$fn")
+
+    if (( DEBUG > 0 )) && _can_time "$_LABEL"; then
+       _timer_start "$_FILE" "function($fn)"
+    fi
+
     _rc_append "$_FILE" '%s\n' "$dec"
+
+    if (( DEBUG > 0 )) && _can_time "$_LABEL"; then
+       _timer_stop "$_FILE"
+    fi
 }
 
 
@@ -524,10 +605,30 @@ rc-command-exists() {
 rc-add-path() {
     _save_workfile
 
-    rc-workfile-open rc-pathset
+    rc-workfile-open "$RC_DEP_PATHSET"
     if have-builtin varsplice; then
         rc-workfile-add-exec builtin varsplice "$@"
     else
+        local append_prepend=0
+        local before_after=0
+        for arg in "$@"; do
+            case $arg in
+                --append|--prepend) append_prepend=1 ;;
+                --before|--after) before_after=1 ;;
+            esac
+        done
+
+        if (( append_prepend == 1 && before_after == 1 )); then
+            local -a args=()
+            for arg in "$@"; do
+                case $arg in
+                    --append|--prepend) ;;
+                    *) args+=("$arg") ;;
+                esac
+            done
+            set -- "${args[@]}"
+        fi
+
         rc-workfile-add-exec __rc_add_path "$@"
     fi
 
@@ -537,7 +638,7 @@ rc-add-path() {
 rc-rm-path() {
     _save_workfile
 
-    rc-workfile-open rc-pathset
+    rc-workfile-open "$RC_DEP_PATHSET"
     if have-builtin varsplice; then
         rc-workfile-add-exec builtin varsplice --remove "$@"
     else
@@ -554,7 +655,7 @@ rc-varsplice() {
 
     _save_workfile
 
-    rc-workfile-open rc-pathset
+    rc-workfile-open "$RC_DEP_PATHSET"
     rc-workfile-add-exec builtin varsplice "$@"
 
     _restore_workfile
@@ -686,7 +787,32 @@ rc-finalize() {
 
     echo '# vim: set ft=sh:' >> "$BUILD_BASHRC_FILE"
     for f in "${_FINAL[@]}"; do
-        cat "$BUILD_BASHRC_INC/$f" >> "$BUILD_BASHRC_FILE"
+        local path="$BUILD_BASHRC_INC/$f"
+        local lines
+        lines=$(shfmt --simplify --minify "$path" \
+            | grep -c -vE '^[\s]*$' \
+            || true
+        )
+
+        if (( lines == 0 )); then
+            echo "SKIP $f (empty)"
+            continue
+        fi
+
+        {
+            printf '# label: %s\n' "$f"
+
+            local timer_label="label($f)"
+            if _is_timed "$f"; then
+                _timer_start /dev/stdout "$timer_label"
+            fi
+
+            cat "$BUILD_BASHRC_INC/$f"
+
+            if _is_timed "$f"; then
+                _timer_stop /dev/stdout
+            fi
+        } >> "$BUILD_BASHRC_FILE"
     done
 
     bash -n "$BUILD_BASHRC_FILE" || {

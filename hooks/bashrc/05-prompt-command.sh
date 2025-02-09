@@ -11,7 +11,7 @@ rc-declare PROMPT_COMMAND
 __rc_add_prompt_command() {
     local -r cmd=${1?command required}
 
-    __rc_timer_start "__rc_add_prompt_command($cmd)"
+    timer start "__rc_add_prompt_command($cmd)"
 
     local -a new=()
 
@@ -26,7 +26,7 @@ __rc_add_prompt_command() {
     # prepend for consistency with `__rc_add_path`
     PROMPT_COMMAND=("$cmd" "${new[@]}")
 
-    __rc_timer_stop
+    timer stop
 }
 rc-workfile-add-function __rc_add_prompt_command
 
@@ -61,3 +61,5 @@ elif rc-command-exists mise; then
     rc-workfile-add-exec _mise_hook
     rc-workfile-append '}\n'
 fi
+
+rc-workfile-close
