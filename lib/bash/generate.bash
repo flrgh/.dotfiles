@@ -170,7 +170,11 @@ _rc_append() {
         done
     fi
 
-    printf -- "$@" >> "$name"
+    if (( $# == 1 )); then
+        printf -- '%s' "$1" >> "$name"
+    else
+        printf -- "$@" >> "$name"
+    fi
 }
 
 declare -ga _TIMER_STACK=()
@@ -282,6 +286,11 @@ rc-workfile-add-exec() {
 rc-workfile-append() {
     _require_working_file
     _rc_append "$_FILE" "$@"
+}
+
+rc-workfile-append-line() {
+    _require_working_file
+    _rc_append "$_FILE" '%s\n' "${1:?}"
 }
 
 rc-workfile-close() {
@@ -415,14 +424,14 @@ rc-workfile-include() {
     fi
 
     if (( is_repo_file == 0 )); then
-        rc-workfile-append '# shellcheck disable=all\n'
-        rc-workfile-append '\n{\n'
+        rc-workfile-append-line '# shellcheck disable=all'
+        rc-workfile-append-line '{'
     fi
 
     rc-workfile-append '%s\n' "$(< "$fname")"
 
     if (( is_repo_file == 0 )); then
-        rc-workfile-append '\n}\n'
+        rc-workfile-append-line '}'
     fi
 
     if (( time_it == 1 )); then
@@ -465,7 +474,7 @@ rc-declare() {
     _save_workfile
 
     rc-workfile-open "$RC_DEP_SET_VAR"
-    rc-workfile-append '%s\n' "$dec"
+    rc-workfile-append-line "$dec"
 
     _restore_workfile
 }

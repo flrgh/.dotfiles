@@ -21,7 +21,7 @@ rc-workfile-add-dep "$RC_DEP_TIMER"
 {
     rc-new-workfile "$RC_DEP_ALIAS_RESET"
     rc-workfile-add-dep "$RC_DEP_ENV"
-    rc-workfile-append 'unalias -a\n'
+    rc-workfile-append-line 'unalias -a'
 
     rc-new-workfile "$RC_DEP_ALIAS_SET"
     rc-workfile-add-dep "$RC_DEP_ALIAS_RESET"

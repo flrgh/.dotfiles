@@ -42,7 +42,7 @@ _dump_func() {
 if rc-command-exists direnv; then
     _direnv_hook=$(_dump_func _direnv_hook "$(direnv hook bash)")
 
-    rc-workfile-append '%s\n' "$_direnv_hook"
+    rc-workfile-append-line "$_direnv_hook"
     rc-workfile-add-exec __rc_add_prompt_command _direnv_hook
 
 elif rc-command-exists mise; then
@@ -51,15 +51,15 @@ elif rc-command-exists mise; then
     mise=$(_dump_func mise "$script")
     _mise_hook=$(_dump_func _mise_hook "$script")
 
-    rc-workfile-append '# shellcheck disable=all\n'
-    rc-workfile-append '{\n'
-    rc-workfile-append 'export MISE_SHELL=bash\n'
-    rc-workfile-append 'export __MISE_ORIG_PATH="%s"\n' \$PATH
-    rc-workfile-append '%s\n' "$mise"
-    rc-workfile-append '%s\n' "$_mise_hook"
+    rc-workfile-append-line '# shellcheck disable=all'
+    rc-workfile-append-line '{'
+    rc-workfile-append-line 'export MISE_SHELL=bash'
+    rc-workfile-append      'export __MISE_ORIG_PATH="%s"\n' \$PATH
+    rc-workfile-append-line "$mise"
+    rc-workfile-append-line "$_mise_hook"
     rc-workfile-add-exec __rc_add_prompt_command _mise_hook
     rc-workfile-add-exec _mise_hook
-    rc-workfile-append '}\n'
+    rc-workfile-append-line '}'
 fi
 
 rc-workfile-close

@@ -10,7 +10,9 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 {
     if rc-command-exists stty; then
         rc-new-workfile key-bindings
+        rc-workfile-append-line 'if [[ $- = *i* ]]; then'
         rc-workfile-add-exec stty werase undef
+        rc-workfile-append-line 'fi'
         rc-workfile-close
     fi
 }
@@ -180,6 +182,6 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 {
     # this must be an empty string and not unset
     rc-workfile-open "$RC_DEP_RESET_VAR"
-    rc-workfile-append 'export SYSTEMD_PAGER=""\n'
+    rc-workfile-append-line 'export SYSTEMD_PAGER=""'
     rc-workfile-close
 }

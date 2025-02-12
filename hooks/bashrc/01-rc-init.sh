@@ -9,10 +9,10 @@ set -x
 {
     rc-new-workfile "$RC_DEP_INIT"
 
-    rc-workfile-append '# shellcheck enable=deprecate-which\n'
-    rc-workfile-append '# shellcheck disable=SC1090\n'
-    rc-workfile-append '# shellcheck disable=SC1091\n'
-    rc-workfile-append '# shellcheck disable=SC2059\n'
+    rc-workfile-append-line '# shellcheck enable=deprecate-which'
+    rc-workfile-append-line '# shellcheck disable=SC1090'
+    rc-workfile-append-line '# shellcheck disable=SC1091'
+    rc-workfile-append-line '# shellcheck disable=SC2059'
 
     if have-builtin timer && get-builtin-location timer; then
         rc-workfile-add-exec enable -f "${FACT:?}" timer
@@ -88,7 +88,7 @@ set -x
 
     else
         declare -A __RC_PATH_SEPARATORS=()
-        rc-workfile-append 'declare -A __RC_PATH_SEPARATORS=()\n'
+        rc-workfile-append-line 'declare -A __RC_PATH_SEPARATORS=()'
 
         __rc_set_path_separator() {
             local -r var=${1?var name require}

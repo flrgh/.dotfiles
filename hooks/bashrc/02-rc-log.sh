@@ -14,8 +14,6 @@ rc-workfile-var __RC_LOG_DIR "$LOG_DIR"
 rc-workfile-var __RC_LOG_FILE "$LOG_DIR/bashrc.log"
 rc-workfile-var __RC_LOG_FD 0
 
-rc-workfile-append '%s\n'
-
 __rc_log_init() {
     [[ -d $__RC_LOG_DIR ]] || mkdir -p "$__RC_LOG_DIR"
     exec {__RC_LOG_FD}>>"$__RC_LOG_FILE"
