@@ -14,6 +14,10 @@ set -x
     rc-workfile-append-line '# shellcheck disable=SC1091'
     rc-workfile-append-line '# shellcheck disable=SC2059'
 
+    if have local-bash; then
+        rc-workfile-include ./bash/ssh-shell-check.bash
+    fi
+
     if have-builtin timer && get-builtin-location timer; then
         rc-workfile-add-exec enable -f "${FACT:?}" timer
         rc-workfile-include ./bash/rc-timer-new.bash
@@ -22,6 +26,7 @@ set -x
     fi
 
     rc-workfile-include ./bash/rc-preamble.bash
+
     rc-workfile-close
 }
 
