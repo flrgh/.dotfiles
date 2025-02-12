@@ -16,6 +16,10 @@ strip-whitespace() {
     __function_dispatch "$@"
 }
 
+bin-path() {
+    __function_dispatch "$@"
+}
+
 dump-array() {
     __function_dispatch "$@"
 }
@@ -56,15 +60,4 @@ dump-matching() {
             dump-var "$var"
         fi
     done
-}
-
-bin-path() {
-    local -r name=${1?binary name is required}
-    local path; path=$(builtin type -P "$name")
-
-    if [[ -z $path ]]; then
-        return 1
-    fi
-
-    realpath "$path"
 }
