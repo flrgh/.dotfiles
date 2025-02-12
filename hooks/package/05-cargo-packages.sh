@@ -27,6 +27,7 @@ readonly PACKAGES=(
     wasm-pack
     wasmtime-cli
     worker-build   # for cloudflare workers
+    xh             # httpie but written in rust
 )
 
 if [[ -e ~/.config/github/helper-access-token ]]; then
@@ -50,3 +51,9 @@ cargo binstall \
     --no-confirm \
     --continue-on-failure \
     "${PACKAGES[@]}"
+
+
+if XH=$(command -v xh 2>/dev/null); then
+    echo "symlinking http(ie) to xh"
+    ln --no-target-directory -sfv "$XH" "$HOME/.local/bin/http"
+fi
