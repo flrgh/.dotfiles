@@ -44,6 +44,16 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
     rc-add-path --append  MANPATH /usr/share/man
 }
 
+{
+    if rc-command-exists mise; then
+        mise reshim
+        shims=$HOME/.local/share/mise/shims
+        if [[ -d $shims ]]; then
+            rc-add-path PATH "$shims" --prepend --after "$HOME/.local/bin"
+        fi
+    fi
+}
+
 # aliases
 {
     rc-alias grep 'grep --color=auto'
@@ -66,7 +76,9 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
     # https://github.com/golang/go/wiki/GOPATH
     GOPATH=$HOME/.local/go
     rc-export GOPATH
-    rc-add-path PATH "$GOPATH/bin"
+    if ! rc-command-exists mise; then
+        rc-add-path PATH "$GOPATH/bin"
+    fi
 }
 
 # rust
@@ -78,14 +90,6 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 
     # https://blog.rust-lang.org/2023/03/09/Rust-1.68.0.html#cargos-sparse-protocol
     rc-export CARGO_REGISTRIES_CRATES_IO_PROTOCOL sparse
-}
-
-# ruby
-{
-    rc-new-workfile lang-ruby
-    GEM_HOME="$HOME/.local/gems"
-    rc-export GEM_HOME
-    rc-add-path PATH "${GEM_HOME}"/bin
 }
 
 # python
@@ -100,9 +104,27 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
     rc-export IPYTHONDIR
 }
 
-# npm
+# node / npm
 {
     rc-export NPM_CONFIG_USERCONFIG "$HOME/.config/npm/npmrc"
+
+    if rc-command-exists mise; then
+        rc-new-workfile node
+
+        mise where node &>/dev/null || {
+            mise install node@latest
+        }
+
+        NODE=$(mise where node)
+        if [[ -d $NODE/man ]]; then
+            rc-add-path MANPATH "${NODE}/man"
+        fi
+        rc-workfile-close
+    fi
+
+    if have-builtin varsplice; then
+        rc-varsplice --remove -g PATH "$HOME/.config/nvm/*"
+    fi
 }
 
 # docker

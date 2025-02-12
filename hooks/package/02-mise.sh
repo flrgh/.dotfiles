@@ -12,10 +12,12 @@ if [[ -n ${GITHUB_TOKEN:-} ]]; then
 fi
 
 if [[ -x $MISE_INSTALL_PATH ]]; then
-    "$MISE_INSTALL_PATH" self-update
+    "$MISE_INSTALL_PATH" self-update --yes
 else
     export MISE_INSTALL_HELP=1
     export MISE_DEBUG=1
     export MISE_QUIET=0
     curl https://mise.run | sh
 fi
+
+"$MISE_INSTALL_PATH" upgrade

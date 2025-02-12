@@ -2,6 +2,18 @@
 node = "latest"
 go = "latest"
 zig = "latest"
+aws-cli = "latest"
+python = "latest"
+shfmt = "latest"
+
+[settings]
+disable_backends = ["asdf", "vfox", "dotnet"]
+
+[settings.cargo]
+binstall = true
+
+[settings.python]
+compile = true
 
 # # mise config files are hierarchical. mise will find all of the config files
 # # in all parent directories and merge them together.
