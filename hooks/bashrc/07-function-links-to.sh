@@ -9,6 +9,7 @@ shopt -s nullglob
 
 rc-new-workfile "function-links-to"
 rc-workfile-add-dep "$RC_DEP_BUILTINS"
+rc-workfile-add-dep "$RC_DEP_DEBUG"
 
 if have-builtin stat; then
     rc-workfile-add-exec __rc_debug \

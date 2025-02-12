@@ -128,6 +128,7 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 {
     rc-new-workfile ssh
     rc-workfile-add-dep "function-links-to"
+    rc-workfile-add-dep "$RC_DEP_DEBUG"
     rc-workfile-include ./bash/app-ssh.sh
     rc-workfile-close
 }
@@ -143,6 +144,7 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 {
     if command -v wezterm; then
         rc-new-workfile wezterm
+        rc-workfile-add-dep "$RC_DEP_DEBUG"
         rc-workfile-include ./bash/app-wezterm.sh
         rc-workfile-close
     fi
