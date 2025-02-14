@@ -12,7 +12,6 @@ readonly NAME=bash
 readonly BIN=${PREFIX}/bin/${NAME}
 
 SYSTEM_BASH=$(PATH="" command -v -p bash)
-readonly SYSTEM_BASH
 
 readonly BUILTINS=(
     stat
@@ -51,10 +50,18 @@ readonly LOCATIONS=(
   # psdir=DIR              # [DOCDIR]               ps documentation
 )
 
+DEFAULT_PATH="${BINDIR}:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin"
+# add /bin and /sbin, but only if they aren't symlinks to /usr/*
+for dir in /bin /sbin; do
+    if [[ -e $dir && ! -L $dir ]]; then
+        DEFAULT_PATH=${DEFAULT_PATH}:${dir}
+    fi
+done
+
 # constants from config-top.h, config.h, config-bot.h
-readonly DEFINES=(
+readonly CONFIG_DEFINES=(
     # The default value of the PATH variable.
-    DEFAULT_PATH_VALUE="${BINDIR}:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
+    DEFAULT_PATH_VALUE="${DEFAULT_PATH}"
 
     # The default path for enable -f
     DEFAULT_LOADABLE_BUILTINS_PATH="$LOADABLES"
@@ -65,7 +72,7 @@ readonly DEFINES=(
 
     # Define to 1 if you want the shell to re-check $PATH if a hashed filename
     # no longer exists.  This behavior is the default in Posix mode.
-    CHECKHASH_DEFAULT="0"
+    CHECKHASH_DEFAULT="1"
 
     # Define to the maximum level of recursion you want for the eval builtin
     # and trap handlers (since traps are run as if run by eval).
@@ -78,7 +85,16 @@ readonly DEFINES=(
 
     # Define to set the initial size of the history list ($HISTSIZE). This must
     # be a string
-    HISTSIZE_DEFAULT="${HISTSIZE:-500}"
+    HISTSIZE_DEFAULT="${HISTSIZE:-5000}"
+)
+
+readonly SYS_PROFILE=$PREFIX/etc/profile
+mkdir -p "$(dirname "$SYS_PROFILE")"
+echo '# empty on purpose, no touch' > "$SYS_PROFILE"
+
+# constants from pathnames.h
+readonly PATH_DEFINES=(
+    SYS_PROFILE="$SYS_PROFILE"
 )
 
 readonly ENABLED=(
@@ -188,15 +204,23 @@ install-from-asset() {
     local -r asset=$1
     local -r version=$2
 
-    cd "$(mktemp -d)"
+    # keep source code around since I commonly reference it
+    local -r src=$HOME/.local/src/bash/${version}
+    if [[ -e $src ]]; then
+        rm -rf "${src:?}"
+    fi
+    mkdir -p "$src"
 
-    tar --strip-components 1 \
+    tar -C "$src" --strip-components 1 \
         -xzf "$asset"
+
+    cd "$(mktemp -d)"
+    rsync -a "$src/" "$PWD/"
 
     cp -a ./config-top.h{,.bak}
 
     local CFLAGS="-g -O2"
-    for def in "${DEFINES[@]}"; do
+    for def in "${CONFIG_DEFINES[@]}"; do
         key=${def%%=*}
         value=${def#*=}
 
@@ -215,6 +239,21 @@ install-from-asset() {
         else
             sed -r -i -e "s|.*${prefix}.*|${line}|" ./config-top.h
         fi
+    done
+
+    local dest
+    for def in "${PATH_DEFINES[@]}"; do
+        key=${def%%=*}
+        value=${def#*=}
+
+        for dest in ./pathnames.h.in ./pathnames.h; do
+            if [[ ! -e $dest ]]; then continue; fi
+
+            # e.g. `#define SYS_PROFILE "/etc/profile"`
+            sed -r -i \
+                -e "s|^(#define[ ]+${key})[ ]+.*|\1 \"${value}\"|" \
+                "$dest"
+        done
     done
 
     ./configure \
