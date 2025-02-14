@@ -18,11 +18,13 @@ fi
 
 # shellcheck disable=SC2046
 {
-    unset -n -v "${!__RC_@}" "${!__rc_@}"
+    unset -n "${!__RC_@}" "${!__rc_@}"
+    unset -v "${!__RC_@}" "${!__rc_@}"
     unset -f $(compgen -A function __rc_)
 
     # ${!<varname>*} doesn't expand associative array vars (?!)
-    unset -n -v $(compgen -A variable __rc_) $(compgen -A variable __RC_)
+    unset -n $(compgen -A variable __rc_) $(compgen -A variable __RC_)
+    unset -v $(compgen -A variable __rc_) $(compgen -A variable __RC_)
 }
 
 if (( TRACE_BASHRC > 0 )); then
