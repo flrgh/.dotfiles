@@ -9,9 +9,10 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 {
     if rc-command-exists stty; then
         rc-new-workfile key-bindings
-        rc-workfile-append-line 'if [[ $- = *i* ]]; then'
-        rc-workfile-add-exec stty werase undef
-        rc-workfile-append-line 'fi'
+
+        rc-workfile-if-interactive \
+            rc-workfile-add-exec stty werase undef
+
         rc-workfile-close
     fi
 }
@@ -174,29 +175,6 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 # history
 {
     rc-new-workfile history
-    rc-workfile-add-dep "prompt-command"
-    if have-builtin stat; then
-        __get_mtime() {
-            local -r fname=${1:?}
-            declare -g REPLY=0
-            builtin stat "$fname" || return 1
-            REPLY=${STAT[mtime]:-0}
-        }
-    else
-        __get_mtime() {
-            local -r fname=${1:?}
-            declare -g REPLY=0
-            local mtime
-            if mtime=$(stat -c '%Y' "$fname"); then
-                REPLY=${mtime}
-            else
-                return 1
-            fi
-        }
-    fi
-
-    rc-workfile-add-function __get_mtime
-
     rc-workfile-include ./bash/conf-history.sh
     rc-workfile-close
 }

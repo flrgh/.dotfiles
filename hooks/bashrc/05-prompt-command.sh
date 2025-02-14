@@ -14,6 +14,27 @@ _dump_func() {
 }
 
 emit-history-command() {
+    if have-builtin stat; then
+        __get_mtime() {
+            local -r fname=${1:?}
+            declare -g REPLY=0
+            builtin stat "$fname" || return 1
+            REPLY=${STAT[mtime]:-0}
+        }
+    else
+        __get_mtime() {
+            local -r fname=${1:?}
+            declare -g REPLY=0
+            local mtime
+            if mtime=$(stat -c '%Y' "$fname"); then
+                REPLY=${mtime}
+            else
+                return 1
+            fi
+        }
+    fi
+    rc-workfile-add-function __get_mtime
+
     rc-workfile-include ./bash/update-history.bash
     PROMPT_COMMAND+=(__check_history)
 }
@@ -54,11 +75,12 @@ main() {
     rc-workfile-add-dep "$RC_DEP_POST_INIT"
     rc-workfile-add-dep "$RC_DEP_SET_VAR"
 
+    rc-workfile-if-interactive
     emit-history-command
     emit-status-command
     emit-env-command
-
     rc-workfile-append-line "${PROMPT_COMMAND[*]@A}"
+    rc-workfile-fi
 
     rc-workfile-close
 }

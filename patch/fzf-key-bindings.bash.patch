@@ -2,7 +2,7 @@
 15c15
 < if [[ $- =~ i ]]; then
 ---
-> if [[ $- = *i* ]]; then
+> #if [[ $- =~ i ]]; then
 58,76c58,76
 < if command -v perl > /dev/null; then
 <   __fzf_history__() {
@@ -76,6 +76,10 @@
 > #  bind -m vi-insert '"\C-r": "\C-z\C-r\C-z"'
 > #else
 138c138
+< fi
+---
+> #fi
+147c147
 < fi
 ---
 > #fi

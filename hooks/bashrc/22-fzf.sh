@@ -14,6 +14,8 @@ rc-workfile-add-dep "$RC_DEP_SET_VAR"
 
 rc-export FZF_DEFAULT_OPTS "--info=default --height=80% --border=sharp --tabstop=4"
 
+rc-workfile-if-interactive
+
 if rc-command-exists fd; then
     log "fd is installed, adding some fzf support functions"
 
@@ -47,5 +49,7 @@ fi
     log "patching bash key bindings"
     rc-workfile-include-external "$BINDINGS"
 }
+
+rc-workfile-fi
 
 rc-workfile-close

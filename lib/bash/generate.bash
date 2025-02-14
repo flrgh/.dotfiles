@@ -510,6 +510,32 @@ rc-workfile-add-function() {
     fi
 }
 
+rc-workfile-else() {
+    rc-workfile-append-line 'else'
+}
+
+rc-workfile-fi() {
+    rc-workfile-append-line 'fi'
+}
+
+rc-workfile-if-login() {
+    rc-workfile-append-line 'if (( __RC_LOGIN_SHELL == 1 )); then'
+
+    if (( $# > 0 )); then
+        "$@"
+        rc-workfile-fi
+    fi
+}
+
+rc-workfile-if-interactive() {
+    rc-workfile-append-line 'if (( __RC_INTERACTIVE_SHELL == 1 )); then'
+
+    if (( $# > 0 )); then
+        "$@"
+        rc-workfile-fi
+    fi
+}
+
 
 rc-var() {
     local -r var=$1
@@ -846,7 +872,7 @@ rc-finalize() {
     fi
 
     if rc-command-exists shellcheck; then
-        shellcheck "$BUILD_BASHRC_FILE" || {
+        shellcheck --norc --shell bash "$BUILD_BASHRC_FILE" || {
             fatal "'shellcheck .bashrc' returned non-zero"
         }
     fi

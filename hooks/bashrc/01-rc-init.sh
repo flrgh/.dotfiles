@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source ./lib/bash/generate.bash
+source ./home/.local/lib/bash/array.bash
 
 {
     rc-new-workfile "$RC_DEP_INIT"
@@ -77,25 +78,53 @@ source ./lib/bash/generate.bash
     rc-workfile-add-dep "$RC_DEP_BUILTINS"
 
     if have-builtin varsplice; then
+        delim_vars=(
+            PATH=':'
+            MANPATH=':'
+            CDPATH=':'
+            LUA_PATH=';'
+            LUA_CPATH=';'
+            EXECIGNORE=':'
+            FIGNORE=':'
+            GLOBIGNORE=':'
+            HISTIGNORE=':'
+            XDG_DATA_DIRS=':'
+            XDG_CONFIG_DIRS=':'
+        )
+
         rc-workfile-timer-start "configure-delimited-vars"
-        rc-workfile-add-exec builtin varsplice --default -s PATH       ":"
-        rc-workfile-add-exec builtin varsplice --default -s MANPATH    ":"
-        rc-workfile-add-exec builtin varsplice --default -s CDPATH     ":"
-        rc-workfile-add-exec builtin varsplice --default -s LUA_PATH   ";"
-        rc-workfile-add-exec builtin varsplice --default -s LUA_CPATH  ";"
-        rc-workfile-add-exec builtin varsplice --default -s EXECIGNORE ":"
-        rc-workfile-add-exec builtin varsplice --default -s FIGNORE    ":"
-        rc-workfile-add-exec builtin varsplice --default -s GLOBIGNORE ":"
-        rc-workfile-add-exec builtin varsplice --default -s HISTIGNORE ":"
+        for elem in "${delim_vars[@]}"; do
+            var=${elem%%=*}
+            delim=${elem##*=}
+            rc-workfile-add-exec builtin varsplice --default -s "${var:?}" "${delim:?}"
+        done
         rc-workfile-timer-stop
 
+        norm_vars=(
+            PATH
+            MANPATH
+            CDPATH
+            LUA_PATH
+            LUA_CPATH
+        )
+
+        array-join-var default_path ':' \
+            "$HOME/.local/bin" \
+            /usr/local/bin \
+            /usr/local/sbin \
+            /usr/bin \
+            /usr/sbin \
+
+        rc-workfile-append-line 'if (( __RC_LOGIN_SHELL == 1 )); then'
+        rc-workfile-append 'export PATH=%q\n' "${default_path:?}"
+        rc-workfile-append-line 'fi'
+
         rc-workfile-timer-start "normalize-path-vars"
-        rc-workfile-add-exec builtin varsplice --normalize PATH
-        rc-workfile-add-exec builtin varsplice --normalize MANPATH
-        rc-workfile-add-exec builtin varsplice --normalize CDPATH
-        rc-workfile-add-exec builtin varsplice --normalize LUA_PATH
-        rc-workfile-add-exec builtin varsplice --normalize LUA_CPATH
+        for var in "${norm_vars[@]}"; do
+            rc-workfile-add-exec builtin varsplice --normalize "$var"
+        done
         rc-workfile-timer-stop
+
     else
         rc-workfile-include ./bash/rc-compat-pathset.bash
     fi

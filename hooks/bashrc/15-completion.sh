@@ -25,8 +25,10 @@ if [[ -f $BASH_COMPLETION_USER_DIR/bash_completion ]]; then
         _comp_complete_load "$@" && return 124
     }
 
+    rc-workfile-if-interactive
     rc-workfile-add-function __lazy_compgen
     rc-workfile-add-exec complete -D -F __lazy_compgen
+    rc-workfile-fi
 fi
 
 rc-workfile-close
