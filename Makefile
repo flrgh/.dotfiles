@@ -28,9 +28,9 @@ clean:
 pre:
 	./scripts/run-hooks pre
 
-.PHONY: packages
-packages:
-	./scripts/run-hooks packages
+.PHONY: package
+package:
+	./scripts/run-hooks package
 
 .PHONY: post
 post:
