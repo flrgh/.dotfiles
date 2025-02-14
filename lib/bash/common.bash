@@ -4,11 +4,20 @@ export INSTALL_PATH=${INSTALL_PATH:?INSTALL_PATH undefined}
 export BUILD_ROOT=${REPO_ROOT}/build
 export BASH_USER_LIB=${REPO_ROOT}/home/.local/lib/bash
 
-source "$BASH_USER_LIB"/trace.bash
+source ./home/.local/lib/bash/trace.bash
 
 LOCAL_BIN=$HOME/.local/bin
 if [[ $PATH != "$LOCAL_BIN":* ]]; then
-    export PATH=${LOCAL_BIN}:${PATH}
+    PATH=${LOCAL_BIN}:${PATH}
+fi
+
+if command -v mise &>/dev/null; then
+    mise reshim
+    shims=$HOME/.local/share/mise/shims
+    if [[ $PATH != *:"$shims":* ]]; then
+        PATH=${PATH#"$LOCAL_BIN":}
+        PATH=${LOCAL_BIN}:${shims}:${PATH}
+    fi
 fi
 
 fatal() {
