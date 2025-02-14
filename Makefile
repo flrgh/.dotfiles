@@ -13,7 +13,7 @@ export DIFF := diff --suppress-common-lines --suppress-blank-empty \
 all: install
 
 .PHONY: install
-install: pre packages post env bashrc
+install: pre package post env bashrc
 
 .PHONY: debug
 debug:
