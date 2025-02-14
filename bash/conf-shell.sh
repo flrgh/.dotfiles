@@ -17,3 +17,11 @@ builtin ulimit -n $(( 1024 * 16 ))
 
 # max processes
 builtin ulimit -u $(( 1024 * 8 ))
+
+if [[ -z ${COLORTERM:-} ]]; then
+    if [[ $TERM == alacritty ]]; then
+        COLORTERM=truecolor
+    fi
+fi
+export COLORTERM
+export TERM=${TERM:-screen-256color}

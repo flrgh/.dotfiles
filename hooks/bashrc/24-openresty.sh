@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source ./lib/bash/generate.bash
-source ./lib/bash/facts.bash
 
 LOCATIONS=(
     "$HOME"/.local/openresty/current

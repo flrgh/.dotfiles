@@ -64,7 +64,4 @@ __ps1_prefix="${_prompt_user_at_host} ${_prompt_pwd}"
 rc-declare __ps1_prefix
 
 rc-new-workfile ps1
-rc-workfile-add-dep "prompt-command"
-rc-workfile-add-dep "prompt-command"
-rc-workfile-include ./bash/conf-color-prompt.sh
 rc-workfile-close

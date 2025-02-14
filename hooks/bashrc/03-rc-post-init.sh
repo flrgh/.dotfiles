@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source ./lib/bash/generate.bash
-source ./lib/bash/facts.bash
 
 rc-new-workfile "$RC_DEP_POST_INIT"
 rc-workfile-add-dep "$RC_DEP_TIMER"

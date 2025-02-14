@@ -10,11 +10,14 @@ export BUILD_BASHRC_PRE=$BUILD_BASHRC_DIR/rc.pre.d
 export BUILD_BASHRC_DEPS=$BUILD_BASHRC_DIR/deps
 export BUILD_BASHRC_FILE=${BUILD_ROOT}/home/.bashrc
 
+init-namespace bash
+
 source ./build/home/.config/env
 
 have-builtin() {
     local -r name=${1:?}
     shift
+
     have "builtins-${name}" "$@"
 }
 
@@ -680,6 +683,7 @@ rc-init() {
     fi
 
     init-facts
+    reset-namespace bash
 
     mkdir -vp \
         "$BUILD_BASHRC_INC" \

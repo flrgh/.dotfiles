@@ -3,7 +3,6 @@
 set -euo pipefail
 
 source ./lib/bash/generate.bash
-source ./lib/bash/facts.bash
 
 {
     rc-new-workfile "$RC_DEP_INIT"

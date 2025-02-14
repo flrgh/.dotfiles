@@ -48,5 +48,3 @@ __last_status() {
 
     return "$exit_code"
 }
-
-__rc_add_prompt_command "__last_status"

@@ -1,45 +1,51 @@
-source "$REPO_ROOT"/lib/bash/common.bash
-source "$BASH_USER_LIB"/functions/strip-whitespace.bash
-source "$BASH_USER_LIB"/version.bash
+source ./lib/bash/common.bash
+source ./home/.local/lib/bash/functions/strip-whitespace.bash
+source ./home/.local/lib/bash/version.bash
+source ./home/.local/lib/bash/stack.bash
 
-_FACT_BOOL="bool"
-_FACT_VERSION="version"
-_FACT_LIST="list"
-_FACT_TEXT="txt"
-_FACT_LOCATION="location"
+FACT_TYPE_BOOL="bool"
+FACT_TYPE_VERSION="version"
+FACT_TYPE_LIST="list"
+FACT_TYPE_TEXT="txt"
+FACT_TYPE_LOCATION="location"
 
-__init() {
+FACT_NS_GLOBAL="global"
+FACT_ROOT=${BUILD_ROOT:?}/facts
+
+__FACT_INIT=0
+
+_set_namespace() {
+    local ns=${1:?}
+    declare -g FACT_NS=$ns
+    declare -g FACT_DIR=${FACT_ROOT}/${FACT_NS}
+}
+
+_init() {
+    if (( __FACT_INIT == 1 )); then
+        return
+    fi
+
+    __FACT_INIT=1
+
+    unset FACT_NAME
+    unset FACT_TYPE
+    unset FACT_PATH
+    unset FACT_NS
+    unset FACT_DIR
+    unset FACT
+    unset FACT_LIST
+    unset FACT_NS_STACK
+
     declare -g FACT_NAME
     declare -g FACT_TYPE
     declare -g FACT_PATH
 
+    declare -ga FACT_NS_STACK=("$FACT_NS_GLOBAL")
+    _set_namespace "$FACT_NS_GLOBAL"
+
     declare -g FACT
     declare -ga FACT_LIST=()
-
-    declare -g FACT_DIR
-    FACT_DIR=${BUILD_ROOT:?BUILD_ROOT undefined}/facts
 }
-
-__init
-
-init-facts() {
-    [[ -n ${FACT_DIR:-} ]] || __init
-    mkdir -p "$FACT_DIR"
-}
-
-reset-facts() {
-    [[ -n ${FACT_DIR:-} ]] || __init
-
-    if [[ -e $FACT_DIR ]]; then
-        rm -rf "$FACT_DIR"
-    fi
-
-    init-facts
-}
-
-declare -ga _FACT_VARS=(
-    FACT_NAME FACT_TYPE FACT_PATH FACT FACT_LIST
-)
 
 _unset_current_fact() {
     unset FACT_NAME FACT_TYPE FACT_PATH
@@ -86,12 +92,12 @@ _require_fact_type() {
 _require_non_list() {
     _require_fact
 
-    [[ $FACT_TYPE != "$_FACT_LIST" ]] \
-        || fatal "$FACT_NAME is a $_FACT_LIST"
+    [[ $FACT_TYPE != "$FACT_TYPE_LIST" ]] \
+        || fatal "$FACT_NAME is a $FACT_TYPE_LIST"
 }
 
 _require_list() {
-    _require_fact_type "$_FACT_LIST"
+    _require_fact_type "$FACT_TYPE_LIST"
 }
 
 _reset_fact_value() {
@@ -122,9 +128,67 @@ _read_fact() {
     _fact_exists || fatal "$FACT_TYPE $FACT_NAME does not exist"
 
     case $FACT_TYPE in
-        "$_FACT_LIST") _read_list  ;;
-        *)             _read_plain ;;
+        "$FACT_TYPE_LIST") _read_list  ;;
+        *)                 _read_plain ;;
     esac
+}
+
+_list_contains() {
+    local -r value=${1:?}
+
+    _require_fact
+    _fact_exists || fatal "list ${FACT_NAME:?} not found"
+
+    [[ -e ${FACT_PATH:?}/$value ]]
+}
+
+init-facts() {
+    _init
+    mkdir -p "$FACT_DIR"
+}
+
+reset-facts() {
+    init-facts
+
+    if [[ -e $FACT_DIR ]]; then
+        rm -rf "${FACT_DIR:?}"
+    fi
+
+    mkdir -p "$FACT_DIR"
+}
+
+init-namespace() {
+    local -r ns=${1:?}
+
+    init-facts
+
+    _set_namespace "$ns"
+    mkdir -p "$FACT_DIR"
+}
+
+reset-namespace() {
+    local -r ns=${1:?}
+
+    _init
+
+    _set_namespace "$ns"
+
+    if [[ -e $FACT_DIR ]]; then
+        rm -rf "${FACT_DIR:?}"
+    fi
+
+    init-namespace "$ns"
+}
+
+push-namespace() {
+    local -r ns=${1:?}
+    stack-push FACT_NS_STACK "${FACT_NS:?}"
+    _set_namespace "$ns"
+}
+
+pop-namespace() {
+    stack-pop FACT_NS_STACK
+    _set_namespace "${REPLY:?}"
 }
 
 get-fact() {
@@ -158,7 +222,7 @@ set-fact() {
 create-list() {
     local -r name=${1:?}
 
-    _set_current_fact "$name" "$_FACT_LIST"
+    _set_current_fact "$name" "$FACT_TYPE_LIST"
 
     if _fact_exists; then
         fatal "list $name already exists"
@@ -168,20 +232,11 @@ create-list() {
     _unset_current_fact
 }
 
-_list_contains() {
-    local -r value=${1:?}
-
-    _require_fact
-    _fact_exists || fatal "list ${FACT_NAME:?} not found"
-
-    [[ -e ${FACT_PATH:?}/$value ]]
-}
-
 list-contains() {
     local -r name=${1:?}
     local value=${2:?}
 
-    _set_current_fact "$name" "$_FACT_LIST"
+    _set_current_fact "$name" "$FACT_TYPE_LIST"
 
     local ec=0
     _list_contains "$value" || ec=1
@@ -198,7 +253,7 @@ list-add() {
         create-list-if-not-exists "$name"
     fi
 
-    _set_current_fact "$name" "$_FACT_LIST"
+    _set_current_fact "$name" "$FACT_TYPE_LIST"
 
     if ! _list_contains "$value"; then
         touch "${FACT_PATH:?}/${value}"
@@ -210,7 +265,7 @@ list-add() {
 list-path() {
     local -r name=${1:?}
 
-    _set_current_fact "$name" "$_FACT_LIST"
+    _set_current_fact "$name" "$FACT_TYPE_LIST"
     _fact_exists || fatal "list ${FACT_NAME:?} not found"
     FACT=${FACT_PATH:?}
     _unset_current_fact
@@ -220,7 +275,7 @@ list-path() {
 list-exists() {
     local -r name=${1:?}
 
-    _set_current_fact "$name" "$_FACT_LIST"
+    _set_current_fact "$name" "$FACT_TYPE_LIST"
 
     local ec=0
     _fact_exists || ec=1
@@ -242,7 +297,7 @@ create-list-if-not-exists() {
 list-size() {
     local -r name=${1:?}
 
-    _set_current_fact "$name" "$_FACT_LIST"
+    _set_current_fact "$name" "$FACT_TYPE_LIST"
     _fact_exists || fatal "list ${FACT_NAME:?} not found"
 
     _read_list
@@ -255,7 +310,7 @@ list-remove() {
     local -r name=${1:?}
     local value=${2:?}
 
-    _set_current_fact "$name" "$_FACT_LIST"
+    _set_current_fact "$name" "$FACT_TYPE_LIST"
     _fact_exists || fatal "list ${FACT_NAME:?} not found"
 
     local -r path=${FACT_PATH}/${value}
@@ -269,7 +324,7 @@ list-remove() {
 get-list-items() {
     local -r name=${1:?}
 
-    _set_current_fact "$name" "$_FACT_LIST"
+    _set_current_fact "$name" "$FACT_TYPE_LIST"
     _read_list
     _unset_current_fact
 }
@@ -289,17 +344,17 @@ list-is-empty() {
 
 set-true() {
     local -r name=${1:?}
-    set-fact "${name}" "${_FACT_BOOL}" 1
+    set-fact "${name}" "${FACT_TYPE_BOOL}" 1
 }
 
 set-false() {
     local -r name=${1:?}
-    set-fact "${name}" "${_FACT_BOOL}" 0
+    set-fact "${name}" "${FACT_TYPE_BOOL}" 0
 }
 
 is-true() {
     local -r name=${1:?}
-    get-fact "${name}" "${_FACT_BOOL}" || return 1
+    get-fact "${name}" "${FACT_TYPE_BOOL}" || return 1
     (( FACT == 1 ))
 }
 
@@ -309,7 +364,7 @@ set-version() {
 
     _version_parse "$version" || return 1
 
-    set-fact "${name}" "${_FACT_VERSION}" "$version"
+    set-fact "${name}" "${FACT_TYPE_VERSION}" "$version"
 }
 
 set-have() {
@@ -340,7 +395,7 @@ fact-version-compare() {
     local -r op=${2:?}
     local -r rhs=${3:?}
 
-    get-fact "${name}" "${_FACT_VERSION}" || return 1
+    get-fact "${name}" "${FACT_TYPE_VERSION}" || return 1
 
     local version=${FACT:?}
     version-compare "$version" "$op" "$rhs"
@@ -355,61 +410,89 @@ set-location() {
         test -e "$path" || return 1
     fi
 
-    set-fact "${name}" "${_FACT_LOCATION}" "$path"
+    set-fact "${name}" "${FACT_TYPE_LOCATION}" "$path"
 }
 
 get-location() {
     local -r name=${1:?}
-    get-fact "${name}" "${_FACT_LOCATION}"
+    get-fact "${name}" "${FACT_TYPE_LOCATION}"
 }
 
 get-builtin-location() {
     local -r name=${1:?}
-    get-fact "builtins-${name}" "${_FACT_LOCATION}"
+    push-namespace bash
+    get-fact "builtins-${name}" "${FACT_TYPE_LOCATION}"
+    pop-namespace
 }
 
 
 set-var-value() {
     local -r name=${1:?}
     local -r value=${2:?}
-    set-fact "var-value-${name}" "$_FACT_TEXT" "$value"
+    push-namespace env
+    set-fact "var-value-${name}" "$FACT_TYPE_TEXT" "$value"
+    pop-namespace
 }
 
 set-var-exported() {
     local -r name=${1:?}
+    push-namespace env
     set-true "var-exported-${name}"
+    pop-namespace
 }
 
 set-var-source() {
     local -r name=${1:?}
     local -r src=${2:?}
 
-    set-fact "var-source-${name}" "$_FACT_TEXT" "$src"
+    push-namespace env
+    set-fact "var-source-${name}" "$FACT_TYPE_TEXT" "$src"
+    pop-namespace
 }
 
 var-exists() {
     local -r name=${1:?}
-    _set_current_fact "var-value-${name}" "$_FACT_TEXT"
-    _fact_exists || return 1
+    push-namespace env
+    _set_current_fact "var-value-${name}" "$FACT_TYPE_TEXT"
+    _fact_exists || {
+        pop-namespace
+        return 1
+    }
     _unset_current_fact
+    pop-namespace
 }
 
 get-var-value() {
     local -r name=${1:?}
-    _set_current_fact "var-value-${name}" "$_FACT_TEXT"
-    _fact_exists || return 1
+    push-namespace env
+    _set_current_fact "var-value-${name}" "$FACT_TYPE_TEXT"
+    _fact_exists || {
+        pop-namespace
+        return 1
+    }
     _read_fact
     _unset_current_fact
+    pop-namespace
 }
 
 var-equals() {
     local -r name=${1:?}
     local -r value=${2:?}
-    get-var-value  "$name" || return 1
+
+    push-namespace env
+    get-var-value  "$name" || {
+        pop-namespace
+        return 1
+    }
+
     local rc=1
     if [[ $FACT == "$value" ]]; then
         rc=0
     fi
     _unset_current_fact
+    pop-namespace
     return "$rc"
 }
+
+
+# vim: set ft=sh:
