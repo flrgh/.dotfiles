@@ -28,9 +28,15 @@ ARGS=(
     --one-file-system
     --full-path
     --min-depth 1
+    --exclude "**/logs"
+    --exclude "**/node_modules"
+    --exclude "**/.git"
+    --exclude "**/.cache"
+    --exclude "**/systemtap"
 )
 
 PATHS=()
+SEARCH_PATH_ARGS=()
 
 for sub in "$FILES_D"/*; do
     if [[ ! -d "$sub" ]]; then
@@ -38,65 +44,74 @@ for sub in "$FILES_D"/*; do
     fi
 
     path=${sub/$FILES_D/$INSTALL_PATH}
-    PATHS+=(--search-path "$path")
+    PATHS+=("$path")
+    SEARCH_PATH_ARGS+=(--search-path "$path")
 done
 
+IGNORE_ARGS=()
 readonly IGNORE=(
-    "GoLand-*"
-    "aws-cli/v*"
-    "luarocks/rocks-*"
+    ".local/GoLand-*"
+    ".local/lib/python*/site-packages"
+    ".local/lib64/python*/site-packages"
+    .cache
+    .config/JetBrains
+    .config/REAPER
+    .config/chromium
+    .config/google-chrome
+    .config/libreoffice
     .config/nvm
-    .cpan/build
-    .git
+    .config/pulse-sms
+    .local/aws-cli
     .local/cargo
+    .local/go
+    .local/lib/luarocks
     .local/libexec/lua-language-server
-    .local/share/Steam
+    .local/rustup
+    .local/share/.cpan
     .local/share/Trash
-    .local/share/bash-completion/completions
+    .local/share/flatpak
     .local/share/lua/5.1
     .local/share/man/man1
+    .local/share/mise
     .local/share/virtualenv
     .local/state/nvim
     .local/var/log/lua-lsp
-    JetBrains
-    REAPER/Data
-    cargo/registry
-    #chromium/AutofillStates
-    #chromium/Default
-    flatpak
-    go/misc
-    go/pkg
-    go/src
-    go/test
-    google-chrome/Default
-    lib/luarocks
-    lib/perl5/share/perl5
-    libreoffice
-    logs
-    node_modules
-    nvm/test
-    pulse-sms/Cache
-    rustup/toolchains
-    site-packages
-    systemtap/tapset/linux
+    Backups
+    backup
+    git
+    lib/perl5
+    opt/REAPER
 )
 
 for p in "${IGNORE[@]}"; do
-    ARGS+=(--exclude "**/$p/")
+    IGNORE_ARGS+=(--exclude "/$p")
 done
 
 EXEC=(
-    --batch-size 20
+    --batch-size 100
     --exec-batch "$REPO_ROOT"/scripts/remove-dangling-symlinks "$REPO_ROOT"
 )
 
 # $HOME itself (no recurse)
 fd "${ARGS[@]}" \
+    "${IGNORE_ARGS[@]}" \
     --max-depth 1 \
     --search-path "$INSTALL_PATH" \
     "${EXEC[@]}"
 
+IGNORE_ARGS=()
+for p in "${IGNORE[@]}"; do
+    for search in "${PATHS[@]}"; do
+        search_base=${search##*/}
+        if [[ ${p#"$search_base"/} != "$p" ]]; then
+            IGNORE_ARGS+=(--exclude "**/${p#"$search_base"/}/**" )
+        fi
+    done
+    #IGNORE_ARGS+=(--exclude "**/$p/**")
+done
+
 # $HOME sub-paths (with recurse)
 fd "${ARGS[@]}" \
+    "${IGNORE_ARGS[@]}" \
     "${PATHS[@]}" \
     "${EXEC[@]}"

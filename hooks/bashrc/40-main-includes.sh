@@ -110,11 +110,6 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 
     if rc-command-exists mise; then
         rc-new-workfile node
-
-        mise where node &>/dev/null || {
-            mise install node@latest
-        }
-
         NODE=$(mise where node)
         if [[ -d $NODE/man ]]; then
             rc-add-path MANPATH "${NODE}/man"
@@ -122,6 +117,10 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
         rc-workfile-close
     fi
 
+    # clean up old nvm things
+    rc-unset NVM_BIN
+    rc-unset NVM_DIR
+    rc-unset NVM_INC
     if have-builtin varsplice; then
         rc-varsplice --remove -g PATH "$HOME/.config/nvm/*"
     fi

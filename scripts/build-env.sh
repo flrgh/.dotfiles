@@ -32,8 +32,15 @@ emit-editor() {
 
 emit-app-config() {
     add-export GOPATH           "$HOME/.local/go"
+
     add-export CARGO_HOME       "$HOME/.local/cargo"
+    add-export MISE_CARGO_HOME  "$HOME/.local/cargo"
+
     add-export RUSTUP_HOME      "$HOME/.local/rustup"
+    add-export MISE_RUSTUP_HOME "$HOME/.local/rustup"
+
+    add-export MISE_PARANOID    "1"
+
     add-export GEM_HOME         "$HOME/.local/gems"
     add-export DOCKER_CONFIG    "$XDG_CONFIG_HOME/docker"
     add-export AZURE_CONFIG_DIR "$XDG_CONFIG_HOME/azure"
@@ -44,12 +51,14 @@ emit-ls-colors() {
         return
     fi
 
-    local -r url=https://raw.githubusercontent.com/seebi/dircolors-solarized/master/dircolors.256dark
-    local dl; dl=$(cache-get "$url")
+    if [[ ! -e build/dircolors ]]; then
+        echo "build/dircolors is missing"
+        return 1
+    fi
 
     # dircolors emits an expression for us to eval
     local colors
-    colors=$(dircolors "$dl")
+    colors=$(dircolors build/dircolors)
     unset LS_COLORS
     eval "$colors"
     add-export LS_COLORS "${LS_COLORS:?}"

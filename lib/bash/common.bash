@@ -7,18 +7,21 @@ export BASH_USER_LIB=${REPO_ROOT}/home/.local/lib/bash
 source ./home/.local/lib/bash/trace.bash
 
 LOCAL_BIN=$HOME/.local/bin
-if [[ $PATH != "$LOCAL_BIN":* ]]; then
-    PATH=${LOCAL_BIN}:${PATH}
+
+_prepend_to_PATH() {
+    local -r elem=${1:?}
+    PATH=${PATH//"$elem":/}
+    PATH=${PATH//:"$elem"/}
+    PATH=${elem}:${PATH}
+}
+
+if [[ -x $LOCAL_BIN/mise ]]; then
+    mise=$LOCAL_BIN/mise
+    "$mise" reshim
+    _prepend_to_PATH "$HOME/.local/share/mise/shims"
 fi
 
-if command -v mise &>/dev/null; then
-    mise reshim
-    shims=$HOME/.local/share/mise/shims
-    if [[ $PATH != *:"$shims":* ]]; then
-        PATH=${PATH#"$LOCAL_BIN":}
-        PATH=${LOCAL_BIN}:${shims}:${PATH}
-    fi
-fi
+_prepend_to_PATH "$LOCAL_BIN"
 
 fatal() {
     echo FATAL: "$@" >&2

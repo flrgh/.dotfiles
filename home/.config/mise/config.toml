@@ -2,18 +2,47 @@
 node = "latest"
 go = "latest"
 zig = "latest"
-aws-cli = "latest"
 python = "latest"
+
+aws-cli = "latest"
 shfmt = "latest"
+fd = "latest"
+uv = "latest"
+ninja = "latest"
 
 [settings]
-disable_backends = ["asdf", "vfox", "dotnet"]
+# everything but aqua is disabled until I actually need something from
+# another backend
+disable_backends = [
+    # "aqua",
+    "asdf",
+    "cargo",
+    "core",
+    "dotnet",
+    "gem",
+    "npm",
+    "pipx",
+    "spm",
+    "ubi",
+    "vfox",
+]
+paranoid = true
 
 [settings.cargo]
 binstall = true
 
-[settings.python]
-compile = true
+[settings.pipx]
+uvx = true
+
+[settings.aqua]
+# enable all the security things
+slsa = true
+cosign = true
+minisign = true
+
+[settings.node]
+gpg_verify = true
+
 
 # # mise config files are hierarchical. mise will find all of the config files
 # # in all parent directories and merge them together.
