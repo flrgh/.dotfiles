@@ -13,10 +13,6 @@ get-latest-version() {
     gh-helper get-latest-release-name "$REPO"
 }
 
-get-installed-version() {
-    echo "2.11"
-}
-
 get-binary-name() {
     echo "$NAME"
 }

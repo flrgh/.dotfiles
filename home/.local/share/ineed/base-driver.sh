@@ -21,7 +21,7 @@ base-driver::get-latest-version() {
 }
 
 base-driver::get-installed-version() {
-    _nyi
+    app-state::get "${DRIVER_NAME:?}" version
 }
 
 base-driver::get-binary-name() {
