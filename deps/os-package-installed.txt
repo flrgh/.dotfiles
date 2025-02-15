@@ -1,0 +1,116 @@
+# fonts
+adobe-source-code-pro-fonts
+liberation-fonts
+
+# things installed for Kong development
+libpasswdqc-devel
+libyaml-devel
+m4
+perl-FindBin
+zlib-devel
+
+axel              # openresty build dep
+alacritty         # terminal emulator
+automake
+bash-devel        # needed to compile my custom bash builtins
+bc                # maths
+bear              # database generator for clang
+bind-utils        # DNS cli tools
+cargo             # rustlang package manager
+clang
+clang-tools-extra # provides clangd
+cmake
+ctags
+curl
+diffutils
+dos2unix
+duf               # modern version of df
+etckeeper         # /etc as a git repo
+fd-find           # fast file finder
+file
+fontconfig
+fontconfig-devel  # currently required to build alacritty
+fzf
+gcc
+gcc-c++
+git
+git-extras
+golang
+gzip
+htop
+httpie
+hub               # github CLI
+iftop
+inotify-tools
+iotop
+irqbalance
+jc                # convert text output from common tools to JSON
+jq
+jo                # command-line JSON object creation
+jwhois
+libtool           # nvim build dep
+libyaml
+libyaml-devel
+litecli           # nicer SQLite CLI
+lnav              # log file navigator
+lsd               # modern ls replacement
+lshw
+lsof
+man-db
+mkpasswd
+moreutils
+mycli             # nicer MySQL CLI
+musl-gcc
+net-tools         # netstat
+ninja-build
+nmap
+nmap-ncat
+openssl-devel
+openssl-libs
+pandoc
+patch
+pcre
+pcre-devel
+pcre2
+pgcli             # nicer Postgres CLI
+plocate
+pre-commit        # fancy git pre-commit framework
+psutils
+python3
+python3-devel
+python3-dnf
+python3-pip
+readline-devel
+ripgrep
+rsync
+rust
+rust-src
+scdoc             # man-page/doc generator
+sd                # find+replace (simpler, faster sed)
+sed
+ShellCheck
+sqlite
+sqlite-devel
+strace
+sysstat
+taglib
+tcpdump
+telnet
+tmux
+traceroute
+tree
+unzip
+valgrind
+valgrind-devel
+util-linux
+vim-common
+wabt              # WebAssembly Binary Toolkit: https://github.com/WebAssembly/wabt
+wget
+which
+wireshark
+wl-clipboard
+xdg-user-dirs
+xdg-utils
+zip
+zlib
+zlib-devel

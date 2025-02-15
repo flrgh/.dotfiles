@@ -1,0 +1,3 @@
+PackageKit-command-not-found
+bash-completion
+nano-default-editor
