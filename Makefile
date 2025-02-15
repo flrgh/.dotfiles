@@ -127,7 +127,7 @@ mise-upgrade: $(MISE) home/.config/mise/config.toml
 
 .PHONY: mise-deps
 mise-install-deps: $(MISE)
-	$(MISE) install
+	$(MISE) install --yes
 
 .PHONY: mise
 mise: $(MISE)
