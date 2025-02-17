@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+source ./home/.local/lib/bash/github-helper-token.bash
+
 export CARGO_HOME=${CARGO_HOME:-$HOME/.local/cargo}
 export RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.local/rustup}
 
@@ -29,11 +31,6 @@ readonly PACKAGES=(
     worker-build   # for cloudflare workers
     xh             # httpie but written in rust
 )
-
-if [[ -e ~/.config/github/helper-access-token ]]; then
-    source ~/.config/github/helper-access-token
-    export GITHUB_TOKEN
-fi
 
 if command -v cargo-binstall &>/dev/null; then
     echo "checking for updates to cargo-binstall"

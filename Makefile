@@ -57,6 +57,9 @@ debug:
 clean:
 	rm -rfv ./build/*
 
+.PHONY: update
+update: clean links os-packages-update mise-update rust-update
+
 $(PKG)/os.installed: deps/os-package-installed.txt
 	sudo dnf install -y $(shell ./scripts/get-lines ./deps/os-package-installed.txt)
 	@mkdir -p $(dir $@)
@@ -97,8 +100,19 @@ $(CARGO_PKG): $(RUSTUP) scripts/install-cargo-packages
 .PHONY: rust
 rust: $(RUSTUP) $(CARGO_PKG)
 
+.PHONY: rust-update
+rust-update: $(RUSTUP)
+	$(RUSTUP) self update
+	$(RUSTUP) self upgrade-data
+	$(RUSTUP) update
+	./scripts/install-cargo-packages
+
 .PHONY: os-packages
 os-packages: $(PKG)/os.installed $(PKG)/os.removed
+
+.PHONY: os-packages-update
+os-packages-update: os-packages
+	sudo dnf update -y
 
 .PHONY: rm-old-files
 rm-old-files:
@@ -121,9 +135,10 @@ $(MISE): scripts/install-mise
 
 $(LUAROCKS): $(NEED)/luarocks
 
-.PHONY: mise-upgrade
-mise-upgrade: $(MISE) home/.config/mise/config.toml
+.PHONY: mise-update
+mise-update: $(MISE) home/.config/mise/config.toml
 	$(MISE) self-update --yes
+	$(MISE) upgrade --yes
 
 .PHONY: mise-deps
 mise-install-deps: $(MISE)

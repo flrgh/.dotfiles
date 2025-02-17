@@ -5,6 +5,7 @@ export BUILD_ROOT=${REPO_ROOT}/build
 export BASH_USER_LIB=${REPO_ROOT}/home/.local/lib/bash
 
 source ./home/.local/lib/bash/trace.bash
+source ./home/.local/lib/bash/github-helper-token.bash
 
 LOCAL_BIN=$HOME/.local/bin
 

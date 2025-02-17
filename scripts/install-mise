@@ -6,14 +6,7 @@ if [[ -x $MISE_INSTALL_PATH ]]; then
     exit 0
 fi
 
-if [[ -z ${GITHUB_TOKEN:-} ]]; then
-    if [[ -e $HOME/.config/github/helper-access-token ]]; then
-        source "$HOME/.config/github/helper-access-token"
-    fi
-fi
-if [[ -n ${GITHUB_TOKEN:-} ]]; then
-    export GITHUB_API_TOKEN=${GITHUB_TOKEN}
-fi
+source ./home/.local/lib/bash/github-helper-token.bash
 
 export MISE_INSTALL_HELP=1
 export MISE_DEBUG=1

@@ -18,10 +18,6 @@ if [[ ! -x $CARGO_HOME/bin/rustup ]]; then
             --default-host x86_64-unknown-linux-gnu
 fi
 
-# housekeeping
-rustup self update
-rustup self upgrade-data
-
 if rustup target list --installed | grep -qxF wasm32-wasi; then
     rustup target remove wasm32-wasi
 fi
@@ -52,5 +48,3 @@ rustup component add --toolchain stable \
     rust-std \
     rustc \
     rustfmt
-
-rustup update
