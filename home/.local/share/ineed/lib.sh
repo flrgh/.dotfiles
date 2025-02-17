@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-
 if [[ -z ${INEED_DRIVERS:-} ]]; then
     declare -rgx INEED_DRIVERS="$INEED_ROOT/drivers"
 fi
-
 
 if [[ -z ${INEED_STATE:-} ]]; then
     declare -rgx INEED_STATE="$HOME/.local/state/ineed"
@@ -15,8 +13,31 @@ declare -gi S_HOUR=$(( S_MINUTE * 60 ))
 declare -gi S_DAY=$(( 24 * S_HOUR ))
 declare -gi S_YEAR=$(( 365 * S_DAY ))
 
+__init_driver_list() {
+    unset INEED_DRIVER_LIST
+    unset INEED_DRIVER_HASH
+
+    declare -ga INEED_DRIVER_LIST=()
+    declare -gA INEED_DRIVER_HASH=()
+
+    local -
+    shopt -s nullglob
+
+    for f in "$INEED_DRIVERS"/*.sh; do
+        local name=${f##*/}
+        name=${name%.sh}
+
+        INEED_DRIVER_LIST+=("$name")
+        INEED_DRIVER_HASH[$name]=1
+    done
+}
+__init_driver_list; unset -f __init_driver_list
+
 friendly-time-since() {
     local -r stamp=$1
+
+    unset INEED_REPLY
+    declare -g INEED_REPLY
 
     local unix; unix=$(date -d "$stamp" +%s)
     local -i diff=$(( EPOCHSECONDS - unix ))
@@ -40,27 +61,27 @@ friendly-time-since() {
     local -a args
 
     if (( years > 0 )); then
-        fmt='%d years, %03d days'
+        fmt='%d years, %03d days ago'
         args=( "$years" "$days")
 
     elif (( days > 0 )); then
-        fmt='%d days, %02d hours'
+        fmt='%d days, %02d hours ago'
         args=( "$days" "$hours")
 
     elif (( hours > 0 )); then
-        fmt='%02d hours, %02d minutes'
+        fmt='%02d hours, %02d minutes ago'
         args=( "$hours" "$minutes" )
 
     elif (( minutes > 0 )); then
-        fmt='%02d minutes, %02d seconds'
+        fmt='%02d minutes, %02d seconds ago'
         args=( "$minutes" "$seconds" )
 
     else
-        fmt='%d seconds'
+        fmt='%d seconds ago'
         args=( "$seconds" )
     fi
 
-    printf "$fmt" "${args[@]}"
+    printf -v INEED_REPLY "$fmt" "${args[@]}"
 }
 
 function-exists() {
@@ -69,18 +90,6 @@ function-exists() {
 
 binary-exists() {
     type -t "$1" &>/dev/null
-}
-
-list-drivers() {
-    local -
-    shopt -s nullglob
-
-    for f in "$INEED_DRIVERS"/*.sh; do
-        local name=${f##*/}
-        name=${name%.sh}
-
-        echo "$name"
-    done
 }
 
 driver-exec() {
@@ -102,16 +111,20 @@ driver-exec-quiet() {
 normalize-version() {
     local version=$1
 
+    unset INEED_REPLY
+    declare -g INEED_REPLY
+
     # trim leading v (v1.2.3 => 1.2.3)
     version=${version#v}
 
-    echo "$version"
+    INEED_REPLY=$version
 }
 
 read-versions() {
     local line
     while read -r line; do
         normalize-version "$line"
+        printf '%s\n' "$INEED_REPLY"
     done
 }
 
@@ -127,8 +140,11 @@ state::get() {
     local -r name=$1
     local -r fname="$INEED_STATE/$name"
 
+    unset INEED_REPLY
+    declare -g INEED_REPLY
+
     if [[ -f $fname ]]; then
-        cat "$fname"
+        INEED_REPLY="$(< "$fname")"
 
     else
         return 1
@@ -181,4 +197,8 @@ app-state::list() {
 
         printf '%-32s => %-32s\n' "$key" "$value"
     done
+}
+
+state::timestamp() {
+    command date --iso-8601=seconds "$@"
 }

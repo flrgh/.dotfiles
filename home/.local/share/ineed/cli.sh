@@ -23,7 +23,7 @@ is-command() {
 is-driver() {
     local -r name=$1
 
-    [[ -n $name && -n ${INEED_DRIVERS_HASH[$name]} ]]
+    [[ -n $name && -n ${INEED_DRIVER_HASH[$name]} ]]
 }
 
 
@@ -73,7 +73,7 @@ complete-from-drivers() {
         return
     fi
 
-    complete-from-args "${INEED_DRIVERS_LIST[@]}"
+    complete-from-args "${INEED_DRIVER_LIST[@]}"
 }
 
 
@@ -105,8 +105,7 @@ get-installed-version() {
     v=$(normalize-version "$v")
 
     set-installed-version "$name" "$v"
-
-    echo "$v"
+    INEED_REPLY=$v
 }
 
 get-installed-timestamp() {
@@ -122,29 +121,34 @@ get-installed-timestamp() {
     bin=$(type -f -P "$bin")
 
     if [[ -z ${bin:-} ]]; then
-        return
+        return 1
     fi
 
     bin=$(realpath "$bin")
 
     if [[ -n ${bin:-} && -e ${bin:-} ]]; then
-        local t; t=$(date --iso-8601=seconds --reference="$bin")
+        local t; t=$(state::timestamp --reference="$bin")
 
         app-state::set \
             "$name" \
             installed-timestamp \
             "$t"
 
-        echo "$t"
+        INEED_REPLY="$t"
+        return 0
     fi
+
+    return 1
 }
 
 
 
 set-installed-version() {
     local -r name=$1
-    local -r version=$2
-    app-state::set "$name" version "$(normalize-version "$version")"
+    local version=$2
+    normalize-version "$version"
+    version=$INEED_REPLY
+    app-state::set "$name" version "$version"
 }
 
 
@@ -175,17 +179,21 @@ list::cmd() {
     printf "%-32s %-16s %s\n" "name" "version" "installed"
     printf "%-32s %-16s %s\n" "----" "-------" "---------------------------"
     local v t
-    for d in $(list-drivers); do
+    for d in "${INEED_DRIVER_LIST[@]}"; do
+        v=${NO}
+        t=${NO}
+
         if is-installed "$d"; then
-            v=$(get-installed-version "$d")
-            t=$(get-installed-timestamp "$d")
-            if [[ -n $t ]]; then
-                t=$(friendly-time-since "$t")
-                t="${t} ago"
+            if get-installed-version "$d"; then
+                v=$INEED_REPLY
             fi
-        else
-            v=${NO}
-            t=${NO}
+
+            if get-installed-timestamp "$d"; then
+                if [[ -n $INEED_REPLY ]]; then
+                    friendly-time-since "$INEED_REPLY"
+                    t=$INEED_REPLY
+                fi
+            fi
         fi
 
         printf "%-32s %-16s %s\n" "$d" "${v:-$NO}" "${t:-$NO}"
@@ -194,12 +202,12 @@ list::cmd() {
 
 
 is-installed() {
-    driver-exec-quiet is-installed "$1"
+    get-installed-version "$1"
 }
 
 
 version() {
-    get-installed-version "$1"
+    get-installed-version "$1" && echo "$INEED_REPLY"
 }
 
 
@@ -211,7 +219,7 @@ version::complete() {
 drivers::cmd() {
     printf "%-32s %s\n" "name" "installed"
     printf "%-32s %s\n" "----" "---------"
-    for d in "${INEED_DRIVERS_LIST[@]}"; do
+    for d in "${INEED_DRIVER_LIST[@]}"; do
         local mark
         if is-installed "$d"; then
             mark="$YES"
@@ -241,6 +249,7 @@ get-latest::cmd() {
     local -r name="$1"
 
     get-latest-version "$name"
+    echo "$INEED_REPLY"
 }
 
 
@@ -312,7 +321,8 @@ install::cmd() {
     local version=${2:-latest}
 
     if [[ $version == latest ]]; then
-        version=$(get-latest-version "$name")
+        get-latest-version "$name"
+        version=$INEED_REPLY
     fi
 
     if ! need-install "$name" "$version"; then
@@ -339,10 +349,9 @@ install::cmd() {
 
     driver-exec install-from-asset "$name" "$fname" "$version"
 
-    echo "$name" "$(driver-exec get-installed-version "$name")"
-
+    echo "$name" "$version"
     set-installed-version "$name" "$version"
-    app-state::set "$name" installed-timestamp "$(date --iso-8601=seconds)"
+    app-state::set "$name" installed-timestamp "$(state::timestamp)"
 }
 
 
@@ -361,7 +370,7 @@ install::complete() {
 
 
 update::cmd() {
-    for d in "${INEED_DRIVERS_LIST[@]}"; do
+    for d in "${INEED_DRIVER_LIST[@]}"; do
         if ! is-installed "$d"; then
             continue
         fi
@@ -383,9 +392,10 @@ check-latest-version::cmd() {
     printf '%-32s %-16s\n' "----" "-------"
 
     local v
-    for d in $(list-drivers); do
-        v=$(get-latest-version "$d")
-        printf '%-32s %-16s\n' "$d" "${v:-0.0.0}"
+    for d in "${INEED_DRIVER_LIST[@]}"; do
+        get-latest-version "$d" || true
+        v=${INEED_REPLY:-0.0.0}
+        printf '%-32s %-16s\n' "$d" "$v"
     done
 }
 
@@ -402,11 +412,4 @@ for fn in $(compgen -A function); do
         INEED_CLI_COMMANDS+=("$fn")
         INEED_CLI_COMMANDS_HASH[$fn]=1
     fi
-done
-
-declare -ga INEED_DRIVERS_LIST=()
-declare -gA INEED_DRIVERS_HASH=()
-for d in $(list-drivers); do
-    INEED_DRIVERS_LIST+=("$d")
-    INEED_DRIVERS_HASH[$d]=1
 done
