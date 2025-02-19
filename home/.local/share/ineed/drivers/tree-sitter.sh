@@ -37,6 +37,4 @@ install-from-asset() {
     gunzip -d \
         < "$asset" \
     | vbin-install "$NAME" "$version" -
-
-    ~/.local/libexec/update-bash-completion-scripts tree-sitter
 }

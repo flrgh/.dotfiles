@@ -9,6 +9,7 @@ LUAROCKS := $(INSTALL_BIN)/luarocks
 LIBEXEC := home/.local/libexec
 
 export INSTALL := install --verbose --compare --no-target-directory
+export INSTALL_INTO := install --verbose --compare --target-directory
 
 export DIFF := diff --suppress-common-lines --suppress-blank-empty \
 	--ignore-tab-expansion --ignore-all-space --minimal
@@ -46,7 +47,7 @@ CREATE_DIRS := $(addprefix $(INSTALL_PATH)/,$(CREATE_DIRS))
 all: install
 
 .PHONY: install
-install: links env rust lua bashrc docker alacritty golang
+install: links env rust lua bash docker alacritty golang
 
 .PHONY: debug
 debug:
@@ -174,14 +175,22 @@ build/home/.bashrc: mise-install-deps $(BASH_BUILTINS) lib/bash/* bash/* hooks/b
 	@-$(DIFF) $(INSTALL_PATH)/.bashrc $(REPO_ROOT)/build/home/.bashrc
 
 build/bash-completion: links $(NEED)/bash-completion
-	$(LIBEXEC)/update-bash-completion-scripts
+	$(MAKE) -C ./bash/completion all
 	@mkdir -p $(dir $@)
 	@touch $@
+
+.PHONY: bash-completion
+bash-completion: build/bash-completion
+	$(INSTALL_INTO) $(INSTALL_PATH)/.local/share/bash-completion/completions \
+		--mode '0644' \
+		$(REPO_ROOT)/build/bash-completion/*
 
 .PHONY: bashrc
 bashrc: links env mise build/home/.bashrc
 	$(INSTALL) $(REPO_ROOT)/build/home/.bashrc $(INSTALL_PATH)/.bashrc
 
+.PHONY: bash
+bash: bash-completion bashrc
 
 $(INSTALL_BIN)/teal-language-server: $(LIBEXEC)/install/lsp/install-teal-language-server
 	$(LIBEXEC)/install/lsp/install-teal-language-server
