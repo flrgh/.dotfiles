@@ -167,10 +167,11 @@ env: $(MISE) build/home/.config/env
 BASH_BUILTINS := timer varsplice version
 BASH_BUILTINS := $(addprefix $(INSTALL_PATH)/.local/lib/bash/loadables/, $(BASH_BUILTINS))
 
-$(BASH_BUILTINS):
+.PHONY: bash-builtins
+bash-builtins:
 	./scripts/install-custom-bash-builtins
 
-build/home/.bashrc: mise-install-deps $(BASH_BUILTINS) lib/bash/* bash/* hooks/bashrc/* $(NEED)/bat $(NEED)/direnv $(NEED)/bash-completion
+build/home/.bashrc: mise-install-deps bash-builtins lib/bash/* bash/* hooks/bashrc/* $(NEED)/bat $(NEED)/direnv $(NEED)/bash-completion
 	$(REPO_ROOT)/scripts/run-hooks bashrc
 	@-$(DIFF) $(INSTALL_PATH)/.bashrc $(REPO_ROOT)/build/home/.bashrc
 
