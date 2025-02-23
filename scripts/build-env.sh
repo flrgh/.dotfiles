@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source ./lib/bash/env.bash
+source ./home/.local/lib/bash/array.bash
 
 emit-xdg() {
     # https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
@@ -64,6 +65,18 @@ emit-ls-colors() {
     add-export LS_COLORS "${LS_COLORS:?}"
 }
 
+emit-pkg-config() {
+    local -a paths=(
+        "$HOME/.local/lib/pkgconfig"
+
+        # bash-completion puts its pkg-config stuff in ~/.local/share/pkgconfig,
+        # which is an outlier, but I don't care to do anything about that right now
+        "$HOME/.local/share/pkgconfig"
+    )
+
+    add-export PKG_CONFIG_PATH "$(array-join ':' "${paths[@]}")"
+}
+
 main() {
     env-reset
 
@@ -75,6 +88,7 @@ main() {
     emit-editor
     emit-app-config
     emit-ls-colors
+    emit-pkg-config
 
     if command -v shfmt &>/dev/null; then
         shfmt \
