@@ -8,6 +8,8 @@ if [[ -z ${INEED_STATE:-} ]]; then
     declare -rgx INEED_STATE="$HOME/.local/state/ineed"
 fi
 
+source "${BASH_USER_LIB:-$HOME/.local/lib/bash}"/functions/strip-whitespace.bash
+
 declare -gi S_MINUTE=60
 declare -gi S_HOUR=$(( S_MINUTE * 60 ))
 declare -gi S_DAY=$(( 24 * S_HOUR ))
@@ -114,6 +116,8 @@ normalize-version() {
     unset INEED_REPLY
     declare -g INEED_REPLY
 
+    strip-whitespace version
+
     # trim leading v (v1.2.3 => 1.2.3)
     version=${version#v}
 
@@ -124,6 +128,9 @@ read-versions() {
     local line
     while read -r line; do
         normalize-version "$line"
+        if [[ -z ${INEED_REPLY:-} ]]; then
+            continue
+        fi
         printf '%s\n' "$INEED_REPLY"
     done
 }
