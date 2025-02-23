@@ -98,14 +98,9 @@ get-installed-version() {
 
     if app-state::get "$name" version; then
         return
+    else
+        return 1
     fi
-
-    # state is not yet populated, need to refresh from the binary itself
-    local v; v=$(driver-exec get-installed-version "$name")
-    v=$(normalize-version "$v")
-
-    set-installed-version "$name" "$v"
-    INEED_REPLY=$v
 }
 
 get-installed-timestamp() {
@@ -113,34 +108,10 @@ get-installed-timestamp() {
 
     if app-state::get "$name" installed-timestamp; then
         return
-    fi
-
-    local bin
-
-    bin=$(driver-exec-quiet get-binary-name "$name" || echo "$name")
-    bin=$(type -f -P "$bin")
-
-    if [[ -z ${bin:-} ]]; then
+    else
         return 1
     fi
-
-    bin=$(realpath "$bin")
-
-    if [[ -n ${bin:-} && -e ${bin:-} ]]; then
-        local t; t=$(state::timestamp --reference="$bin")
-
-        app-state::set \
-            "$name" \
-            installed-timestamp \
-            "$t"
-
-        INEED_REPLY="$t"
-        return 0
-    fi
-
-    return 1
 }
-
 
 
 set-installed-version() {
