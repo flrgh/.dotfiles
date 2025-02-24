@@ -1,0 +1,246 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+_fatal() {
+    echo "FATAL: $*" >&2
+    exit 1
+}
+
+_usage() {
+    echo "Usage: ${0##*/} [ARG...]"
+    echo ""
+    echo "OPTIONS for bash:"
+    echo ""
+    echo "  -e <CMD>, --exec <CMD>               run <CMD> when bash starts"
+    echo ""
+    echo "  --include <FILE>                     load <FILE> using the source builtin before invoking"
+    echo "                                       any commands"
+    echo ""
+    echo "  -i, --interactive                    start bash shell in interactive mode"
+    echo ""
+    echo "  -l, --login                          make bash act as if it had been invoked as a login shell"
+    echo ""
+    echo "  -r, --restricted                     start bash in restricted mode"
+    echo ""
+    echo "  -s                                   read and execute commands from standard input"
+    echo ""
+    echo "  -O <OPTION>, +O <OPTION>             <OPTION> is one of the shell options accepted by the shopt"
+    echo "                                       builtin. -O sets the value of that option; +O unsets it."
+    echo ""
+    echo "  --, -                                signals the end of options and disables further option processing."
+    echo ""
+    echo "  --init-file <FILE>, --rcfile <FILE>  execute commands from <FILE> instead of the standard personal"
+    echo "                                       initialization file ~/.bashrc if the shell is interactive."
+    echo ""
+    echo "  --noediting                          do not use the GNU readline library to read command lines in"
+    echo "                                       interactive mode"
+    echo ""
+    echo "  --noprofile                          do not read either the system-wide startup file /etc/profile or"
+    echo "                                       any of the personal initialization files ~/.bash_profile,"
+    echo "                                       ~/.bash_login, or ~/.profile when invoked as a login shell."
+    echo ""
+    echo "  --norc                               do not read and execute the personal initialization file"
+    echo "                                       ~/.bashrc if the shell is interactive."
+    echo ""
+    echo "  --posix                              start bash in POSIX mode"
+    echo ""
+    echo "OPTIONS for execution:"
+    echo ""
+    echo "  -a, --argv0 <ARG>                    pass ARG as the zeroth argument of the command"
+    echo ""
+    echo "  --ignore-environment                 start with an empty environment"
+    echo ""
+    echo "  -E <VAR>=<VAL>, --env <VAR>=<VAL>    set an environment var for use by bash"
+    echo ""
+    echo "  -u <NAME>, --unset <NAME>            remove variable from the environment"
+    echo ""
+    echo "  -C <DIR>, --chdir <DIR>              change working directory to <DIR>"
+    echo ""
+    echo "  --block-signal <SIG>                 block delivery of <SIG> signal(s) to bash"
+    echo ""
+    echo "  --default-signal <SIG>               reset handling of SIG signal(s) to the default"
+    echo ""
+    echo "  --ignore-signal <SIG>                set handling of SIG signal(s) to do nothing"
+}
+
+SOURCES=()
+STATEMENTS=()
+
+BASH_SHORT_OPTS=()
+BASH_OPTS=()
+
+ENV_VARS=()
+ENV_OPTS=()
+ARGV0=bash
+EMPTY_ENV=0
+UNSET=()
+
+while (( $# > 0 )); do
+    opt=$1
+    shift || true
+
+    opt_with_arg=0
+    used_opt=1
+    used_arg=0
+    stop=0
+
+    if [[ $opt = -* && $opt = *=* ]]; then
+        opt_with_arg=1
+        arg=${opt#*=}
+        opt=${opt%%=*}
+    elif (( $# > 0 )); then
+        arg=${1:-}
+        shift
+    fi
+
+    case $opt in
+        -h|--help)
+            _usage
+            exit 0
+            ;;
+
+        --include)
+            SOURCES+=("${arg:?}")
+            used_arg=1
+            ;;
+
+        -e|--exec)
+            STATEMENTS+=("${arg:?}")
+            used_arg=1
+            ;;
+
+        -l)
+            BASH_SHORT_OPTS+=("-l")
+            ARGV0='-bash'
+            ;;
+
+        --login)
+            BASH_OPTS+=("--login")
+            ARGV0='-bash'
+            ;;
+
+        -O|+O)
+            BASH_SHORT_OPTS+=("$opt" "${arg:?}")
+            used_arg=1
+            ;;
+
+        -i|-r|-s)
+            BASH_SHORT_OPTS+=("$opt")
+            ;;
+
+        --noediting|--noprofile|--norc|--posix|--verbose)
+            BASH_OPTS+=("$opt")
+            ;;
+
+        --init-file|--rcfile)
+            BASH_OPTS+=("$opt" "${arg:?}")
+            used_arg=1
+            ;;
+
+        -E|--env|--environment)
+            ENV_VARS+=("${arg:?}")
+            used_arg=1
+            ;;
+
+        -u|-U|--unset)
+            UNSET+=("--unset" "${arg:?}")
+            used_arg=1
+            ;;
+
+        --ignore-environment|--empty-environment)
+            EMPTY_ENV=1
+            ;;
+
+        -C|--chdir|--workdir)
+            ENV_OPTS+=(--chdir "${arg:?}")
+            used_arg=1
+            ;;
+
+        --block-signal|--ignore-signal|--default-signal)
+            ENV_OPTS+=("$opt" "${arg:?}")
+            used_arg=1
+            ;;
+
+        -a|--argv0)
+            ARGV0=${arg:?}
+            used_arg=1
+            ;;
+
+        --|-)
+            stop=1
+            ;;
+        *)
+            used_opt=0
+            stop=1
+            ;;
+    esac
+
+    declare -a prepend=()
+
+    if (( used_opt == 0 )); then
+        prepend+=("$opt")
+    fi
+
+    if (( used_arg == 0 )); then
+        if (( opt_with_arg == 1 )); then
+            _fatal "unreachable"
+        fi
+
+        if [[ -n ${arg:-} ]]; then
+            prepend+=("$arg")
+        fi
+    fi
+
+    if (( ${#prepend[@]} > 0 )); then
+        set -- "${prepend[@]}" "$@"
+    fi
+
+    if (( stop == 1 )); then
+        break
+    fi
+done
+
+SCRIPT=""
+for src in "${SOURCES[@]}"; do
+    if [[ ! -e $src || ! -f $src || ! -r $src ]]; then
+        _fatal "source file ($src) does not exist, is not a file, or is not readable."
+    fi
+    src=$(realpath --logical --no-symlinks "$src")
+
+    SCRIPT=${SCRIPT:+"${SCRIPT}; "}
+    printf -v SCRIPT '%ssource %q' "$SCRIPT" "$src"
+done
+
+for stmt in "${STATEMENTS[@]}"; do
+    SCRIPT=${SCRIPT:+"${SCRIPT}; "}
+    printf -v SCRIPT '%s%s' "$SCRIPT" "$stmt"
+done
+
+if (( EMPTY_ENV == 1 )); then
+    ENV_VARS=('-' "${ENV_VARS[@]}")
+else
+    ENV_OPTS+=( "${UNSET[@]}" )
+fi
+
+BASH_OPTS+=( "${BASH_SHORT_OPTS[@]}" )
+
+if [[ -n ${SCRIPT:-} ]]; then
+    BASH_OPTS+=(-c "$SCRIPT")
+fi
+
+ARGS=()
+if (( ${#ENV_OPTS[@]} > 0 || ${#ENV_VARS[@]} > 0 )); then
+    if [[ -n ${ARGV0:-} ]]; then
+        ENV_OPTS+=(--argv0 "$ARGV0")
+    fi
+
+    ARGS+=(env "${ENV_OPTS[@]}" "${ENV_VARS[@]}")
+
+else
+    if [[ -n ${ARGV0:-} ]]; then
+        ARGS+=(-a "$ARGV0")
+    fi
+fi
+
+exec "${ARGS[@]}" bash "${BASH_OPTS[@]}" "$@"
