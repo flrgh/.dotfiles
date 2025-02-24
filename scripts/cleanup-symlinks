@@ -6,10 +6,18 @@ readonly REPO_ROOT=${REPO_ROOT:?REPO_ROOT undefined}
 readonly INSTALL_PATH=${INSTALL_PATH:?INSTALL_PATH undefined}
 readonly FILES_D=${REPO_ROOT}/home
 
-if [[ -L "$INSTALL_PATH/.bash" ]]; then
-    echo "removing legacy ~/.bash path"
-    rm -v "$INSTALL_PATH/.bash"
-fi
+OLD=(
+    .bash
+    .local/.bash
+    .local/bash
+)
+for old in "${OLD[@]}"; do
+    path=$INSTALL_PATH/$old
+    if [[ -e $path ]]; then
+        echo "removing legacy path ($path)"
+        rm -rf "${path:?}"
+    fi
+done
 
 if ! type -f -t fd &>/dev/null; then
     echo "fd not installed, exiting"
