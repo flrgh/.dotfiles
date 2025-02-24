@@ -16,11 +16,12 @@ readonly URL=${1?URL required}
 
 FNAME=${2:-}
 if [[ -z $FNAME ]]; then
-    FNAME=$(basename "$URL")
+    FNAME=${URL##*//}
     FNAME=${FNAME%\?*}
 fi
 
 readonly DEST="$HOME/.cache/download/$FNAME"
+readonly ETAG=${DEST}.etag
 
 if (( QUIET == 1 )); then
     log() { :; }
@@ -40,6 +41,15 @@ ARGS=(
     --silent
     --fail
     --location
+    --compressed
+    --referer ';auto'
+    --etag-save "$ETAG"
+    --etag-compare "$ETAG"
+    --remote-time
+    --remove-on-error
+    --retry 3
+    --speed-limit 1024
+    --speed-time 10
     --output "$DEST"
     --url "$URL"
 )
