@@ -314,7 +314,7 @@ install::cmd() {
       '%s-%s-%s' \
       "$name" \
       "$version" \
-      "$(basename "$url")"
+      "${url##*/}"
 
     local fname; fname=$(cache-get "$url" "$base")
 
