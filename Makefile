@@ -229,6 +229,8 @@ alacritty: $(CARGO_BIN)/alacritty
 build/home/.config/curlrc: scripts/build-curlrc
 	./scripts/build-curlrc > $@
 
+$(NEED)/curl: os-packages
+
 .PHONY: curl
 curl: $(NEED)/curl build/home/.config/curlrc
-	$(INSTALL_INTO) $(REPO_ROOT)/build/home/.config $(INSTALL_PATH)/.config/curlrc
+	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
