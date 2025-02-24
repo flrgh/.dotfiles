@@ -131,11 +131,15 @@ install-from-asset() {
         --with-gssapi
     )
 
+    local triple; triple=$(gcc -dumpmachine)
+
     ./configure \
+        --host "$triple" \
+        --build "$triple" \
         "${dirs[@]}" \
         "${features[@]}" \
         "${packages[@]}"
 
-    make -j$(nproc)
+    make -j"$(nproc)"
     make install
 }
