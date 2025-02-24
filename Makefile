@@ -47,7 +47,7 @@ CREATE_DIRS := $(addprefix $(INSTALL_PATH)/,$(CREATE_DIRS))
 all: install
 
 .PHONY: install
-install: links env rust lua bash docker alacritty golang
+install: links env rust lua bash docker alacritty golang curl
 
 .PHONY: debug
 debug:
@@ -225,3 +225,10 @@ $(CARGO_BIN)/alacritty: $(CARGO_PKG)
 alacritty: $(CARGO_BIN)/alacritty
 	./scripts/update-gsettings
 	./scripts/set-alacritty-default-shell
+
+build/home/.config/curlrc: scripts/build-curlrc
+	./scripts/build-curlrc > $@
+
+.PHONY: curl
+curl: $(NEED)/curl build/home/.config/curlrc
+	$(INSTALL_INTO) $(REPO_ROOT)/build/home/.config $(INSTALL_PATH)/.config/curlrc

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# curl won't perform tilde/parameter expansion for values in a config
+# file, and we're using paths relative to $HOME, so we need to generate
+# the rc file
+
+readonly STATE=${XDG_STATE_HOME:-$HOME/.local/state}/curl
+mkdir -p "$STATE"
+chmod 0700 "$STATE"
+
+cat <<EOF
+connect-timeout = "5"
+
+referer = ";auto"
+
+--compressed
+--create-dirs
+--tcp-fastopen
+
+# never treat url inputs as globs
+--globoff
+
+alt-svc = "$STATE/alt-svc.txt"
+hsts = "$STATE/hsts.txt"
+ssl-sessions = "$STATE/ssl-sessions.txt"
+EOF
