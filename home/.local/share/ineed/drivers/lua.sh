@@ -39,16 +39,22 @@ install-from-asset() {
     local -r version=$2
 
     cd "$(mktemp -d)"
+    echo "build temp directory: $PWD"
 
-    tar xzf "$asset"
+    tar --strip-components 1 \
+        --extract \
+        --gzip \
+        --file "$asset"
 
-    cd "lua-${version}"
+    local -a env=(
+        PLAT=linux
+        INSTALL_TOP="$HOME/.local"
+        INSTALL_BIN="$HOME/.local/bin"
+        INSTALL_INC="$HOME/.local/include"
+        INSTALL_LIB="$HOME/.local/lib"
+        INSTALL_MAN="$HOME/.local/share/man/man1"
+    )
 
-    make linux install INSTALL_TOP="$PREFIX"
-
-    vbin-install lua "$version" - lua \
-        < "$PREFIX/bin/lua"
-
-    vbin-install lua "$version" - luac \
-        < "$PREFIX/bin/luac"
+    make echo "${env[@]}"
+    make linux install "${env[@]}"
 }
