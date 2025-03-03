@@ -10,6 +10,7 @@ OLD=(
     .bash
     .local/.bash
     .local/bash
+    .local/man
 )
 for old in "${OLD[@]}"; do
     path=$INSTALL_PATH/$old
@@ -79,7 +80,6 @@ readonly IGNORE=(
     .local/share/Trash
     .local/share/flatpak
     .local/share/lua/5.1
-    .local/share/man/man1
     .local/share/mise
     .local/share/virtualenv
     .local/state/nvim
