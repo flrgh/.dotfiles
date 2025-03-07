@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+# $ python -m http.server --help
+# usage: server.py [-h] [--cgi] [-b ADDRESS] [-d DIRECTORY] [-p VERSION] [port]
+#
+# positional arguments:
+#   port                  bind to this port (default: 8000)
+#
+# options:
+#   -h, --help            show this help message and exit
+#   --cgi                 run as CGI server
+#   -b, --bind ADDRESS    bind to this address (default: all interfaces)
+#   -d, --directory DIRECTORY
+#                         serve this directory (default: current directory)
+#   -p, --protocol VERSION
+#                         conform to this HTTP version (default: HTTP/1.0)
+
+ADDR=127.0.0.1
+DIR=$PWD
+PORT=8080
+
+usage() {
+    echo "$0 [OPTIONS...]"
+    echo ""
+    echo "OPTIONS:"
+    echo ""
+    echo "-b, --bind ADDRESS          bind to this address (default: $ADDR)"
+    echo "-p, --port PORT             listen on this port  (default: $PORT)"
+    echo "-d, --directory DIRECTORY   serve this directory (default: current directory)"
+    echo ""
+}
+
+while (( $# > 0 )); do
+    case $1 in
+        -h|--help)      usage;   exit 0 ;;
+        -b|--bind)      ADDR=$1; shift  ;;
+        -p|--port)      PORT=$1; shift  ;;
+        -d|--directory) DIR=$1;  shift  ;;
+        *)              usage;   exit 1 ;;
+    esac
+done
+
+exec python -m http.server \
+    --protocol "HTTP/1.1" \
+    --directory "${DIR}" \
+    --bind "${ADDR}" \
+    "${PORT}"
