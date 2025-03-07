@@ -26,7 +26,6 @@
 	editor = nvim
 	excludesfile = ~/.config/git/ignore
 	fsmonitor = true
-#	pager = delta
 	untrackedCache = true
 	safecrlf = true
 
@@ -58,14 +57,19 @@
 	defaultBranch = main
 	templatedir = ~/.config/git/template
 
-#[interactive]
-#	diffFilter = delta --color-only --config ~/.config/git/config
-
+# delta is not used by default but optionally enabled in
+# ./scripts/update-git-config if it is found to be installed
 [delta]
+	decorations = true
+	hunk-header-style = omit-code-fragment
 	line-numbers = true
+	# use n and N to move between diff sections
 	navigate = true
 	side-by-side = true
-	hunk-header-style = omit-code-fragment
+
+	# just a little brighter/more contrast-y than the defaults
+	plus-style = syntax "#003800"
+	minus-style = syntax "#3f0001"
 
 [merge]
 	conflictstyle = zdiff3

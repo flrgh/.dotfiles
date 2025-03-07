@@ -20,6 +20,7 @@ readonly PACKAGES=(
     cargo-release
     cargo-update
     cross          # cargo cross-compilation helper
+    git-delta      # pager for git with nice colors and such
     inferno        # rust port of flamegraph.pl
     lsd            # fancier version of `ls`
     minijinja-cli  # template renderer

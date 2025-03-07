@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly GLOBAL_CONFIG=${XDG_CONFIG_HOME:-$HOME/.config}/git/config
+readonly LOCAL_CONFIG=${XDG_CONFIG_HOME:-$HOME/.config}/git/config.local
+
+reset-local-config() {
+    mkdir -p "${LOCAL_CONFIG%/*}"
+
+    : >"$LOCAL_CONFIG"
+}
+
+set-config() {
+    local -r key=$1
+    shift
+
+    printf '[git-config] %s = %s\n' "$key" "$*"
+
+    git config set -f "$LOCAL_CONFIG" "$key" "$@"
+}
+
+update-delta() {
+    if command -v delta &>/dev/null; then
+        echo "[delta] installed"
+    else
+        echo "[delta] not installed"
+        return
+    fi
+
+    local delta="delta --config \"$GLOBAL_CONFIG\""
+
+    set-config core.pager "$delta"
+    set-config interactive.diffFilter "$delta --color-only"
+}
+
+update-user-signing-key() {
+    local -a keys=(
+        ~/.ssh/id_ed25519
+    )
+
+    local key
+    for key in "${keys[@]}"; do
+        if [[ -e $key ]]; then
+            set-config user.signingKey "$key"
+            return
+        fi
+    done
+}
+
+main() {
+    update-user-signing-key
+    update-delta
+}
+
+main

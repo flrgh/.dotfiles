@@ -47,7 +47,7 @@ CREATE_DIRS := $(addprefix $(INSTALL_PATH)/,$(CREATE_DIRS))
 all: install
 
 .PHONY: install
-install: links env rust lua bash docker alacritty golang curl
+install: links env rust lua bash docker alacritty golang curl git-config
 
 .PHONY: debug
 debug:
@@ -234,3 +234,7 @@ $(NEED)/curl: os-packages
 .PHONY: curl
 curl: $(NEED)/curl build/home/.config/curlrc
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
+
+.PHONY: git-config
+git-config:
+	./scripts/update-git-config

@@ -7,6 +7,7 @@ COMMANDS := \
 	busted \
 	cargo \
 	deck \
+	delta \
 	files-in-package \
 	gh \
 	gh-helper \
@@ -139,6 +140,10 @@ cargo:
 
 bazel: CMD = $(HOME)/.local/libexec/download-bazel-bash-completion
 bazel:
+	$(from-command)
+
+delta: CMD = delta --generate-completion bash
+delta:
 	$(from-command)
 
 busted: URL = https://raw.githubusercontent.com/Olivine-Labs/busted/master/completions/bash/busted.bash
