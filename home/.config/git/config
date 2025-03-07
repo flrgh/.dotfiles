@@ -8,45 +8,91 @@
 	cat = "!git show \"$1:$2\" #"
 	lb = branch --sort=-authordate --format '%(align:width=18)%(authordate:format:%Y-%m-%d %H:%M)%(end) %(align:width=14,position=right)%(authordate:relative)%(end)  %(objectname:short)  %(HEAD) %(if)%(HEAD)%(then)%(color:green)%(end)%(refname:short)'
 
+[branch]
+	sort = -committerdate
+
 [color]
 	ui = true
 
+[column]
+	ui = auto
+
+[commit]
+	gpgsign = true
+	verbose = true
+
 [core]
 	autocrlf = input
-	safecrlf = true
-	excludesfile = ~/.config/git/ignore
 	editor = nvim
+	excludesfile = ~/.config/git/ignore
+	fsmonitor = true
+#	pager = delta
+	untrackedCache = true
+	safecrlf = true
+
+[credential "https://github.com"]
+	username = flrgh
+
+[diff]
+	algorithm = histogram
+	compactionHeuristic = true
+	colorMoved = plain
+	noprefix = true
+	renames = true
+
+[fetch]
+	all = true
+	prune = true
+	pruneTags = true
+
+[gpg]
+	format = ssh
+
+[grep]
+	patternType = extended
+
+[help]
+	autocorrect = prompt
 
 [init]
-	templatedir = ~/.config/git/template
 	defaultBranch = main
+	templatedir = ~/.config/git/template
+
+#[interactive]
+#	diffFilter = delta --color-only --config ~/.config/git/config
+
+[delta]
+	line-numbers = true
+	navigate = true
+	side-by-side = true
+	hunk-header-style = omit-code-fragment
 
 [merge]
-	tool = nvim -d
 	conflictstyle = zdiff3
+	tool = nvim -d
 
 [mergetool]
 	prompt = false
 
 [mergetool "nvim"]
-	cmd = nvim -f -c \"Gdiffsplit!\" \"$MERGED\"
+	cmd = "nvim -f -c \"Gdiffsplit!\" \"$MERGED\""
 
 [pull]
 	ff = only
 
 [push]
-	autosetupremote = true
+	autoSetupRemote = true
+	default = simple
+	followTags = true
 
-[diff]
-	noprefix = true
-	algorithm = histogram
-	compactionHeuristic = true
+[rebase]
+	autoSquash = true
+	autoStash = true
+	updateRefs = true
 
-[commit]
-	gpgsign = true
-
-[gpg]
-	format = ssh
+[rerere]
+	autoupdate = true
+	enabled = true
 
 [url "https://github.com/"]
 	insteadOf = git://github.com:
@@ -57,12 +103,7 @@
 
 [tag]
 	gpgsign = true
-
-[rerere]
-	enabled = true
-
-[credential "https://github.com"]
-	username = flrgh
+	sort = version:refname
 
 [include]
 	path = ~/.config/git/config.local
