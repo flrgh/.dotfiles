@@ -48,8 +48,14 @@ update-user-signing-key() {
     done
 }
 
+# credential.helper needs to be an absolute path in order to work properly
+update-credential-helper() {
+    set-config credential.helper ~/.local/libexec/github-credential-helper
+}
+
 main() {
     update-user-signing-key
+    update-credential-helper
     update-delta
 }
 
