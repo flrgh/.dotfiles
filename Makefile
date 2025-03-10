@@ -192,6 +192,7 @@ bashrc: links env mise build/home/.bashrc
 
 .PHONY: bash
 bash: bash-completion bashrc
+	./scripts/update-default-shell
 
 $(INSTALL_BIN)/teal-language-server: $(LIBEXEC)/install/lsp/install-teal-language-server
 	$(LIBEXEC)/install/lsp/install-teal-language-server
@@ -224,7 +225,7 @@ $(CARGO_BIN)/alacritty: $(CARGO_PKG)
 .PHONY: alacritty
 alacritty: $(CARGO_BIN)/alacritty
 	./scripts/update-gsettings
-	./scripts/set-alacritty-default-shell
+	./scripts/update-default-shell
 
 build/home/.config/curlrc: scripts/build-curlrc
 	./scripts/build-curlrc > $@

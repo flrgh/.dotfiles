@@ -68,6 +68,7 @@
   "vim-etlua": { "branch": "master", "commit": "bb2974d0134ce6da60c3be0d82d809976b859c1c" },
   "vim-fugitive": { "branch": "master", "commit": "4a745ea72fa93bb15dd077109afbb3d1809383f2" },
   "vim-ipmotion": { "branch": "master", "commit": "74762a4fae452766e462ca563c169f781971bad9" },
+  "vim-kitty": { "branch": "main", "commit": "cb2ecc9a08638c20f22dade37683a3e8e1ba657b" },
   "vim-markdown": { "branch": "master", "commit": "8f6cb3a6ca4e3b6bcda0730145a0b700f3481b51" },
   "vim-rhubarb": { "branch": "master", "commit": "386daa2e9d98e23e27ad089afcbe5c5a903e488d" },
   "vim-rsi": { "branch": "master", "commit": "45540637ead22f011e8215f1c90142e49d946a54" },

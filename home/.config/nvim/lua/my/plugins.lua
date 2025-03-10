@@ -795,6 +795,9 @@ local plugins_by_category = {
           }
       end,
     },
+
+    -- syntax detection for kitty.conf files
+    "fladson/vim-kitty",
   },
 
   filesystem = {

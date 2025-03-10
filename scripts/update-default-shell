@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+readonly LOCAL=$HOME/.local/bin/bash
+
+update-kitty() {
+    readonly KITTY=$HOME/.config/kitty/kitty.local.shell.conf
+
+    if [[ -e $KITTY ]]; then
+        rm -v "$KITTY"
+    fi
+
+    if [[ ! -x $LOCAL ]]; then
+        return
+    fi
+
+    echo "updating kitty ($KITTY)"
+    mkdir -vp "${KITTY%/*}"
+    printf 'shell %s\n' "$LOCAL" > "$KITTY"
+}
+
+update-alacritty() {
+    readonly ALACRITTY=$HOME/.config/alacritty/shell.toml
+
+    if [[ -e $ALACRITTY ]]; then
+        rm -v "$ALACRITTY"
+    fi
+
+    if [[ ! -x $LOCAL ]]; then
+        return
+    fi
+
+    echo "updating alacrity ($ALACRITTY)"
+    mkdir -vp "${ALACRITTY%/*}"
+    cat <<EOF > "$ALACRITTY"
+[terminal]
+shell = "$LOCAL"
+EOF
+}
+
+main() {
+    update-alacritty
+    update-kitty
+}
+
+main "$@"
