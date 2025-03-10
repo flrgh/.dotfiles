@@ -150,6 +150,7 @@ local SETTINGS_NVIM = {
 local SETTINGS_KONG = {
   definitions = {
     LUA_TYPE_ANNOTATIONS .. "/kong",
+    LUA_TYPE_ANNOTATIONS .. "/lua_pack",
   },
   ignore = {
     -- kong-build-tools
