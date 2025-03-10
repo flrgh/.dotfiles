@@ -9,6 +9,7 @@ shfmt = "latest"
 fd = "latest"
 uv = "latest"
 ninja = "latest"
+yq = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from

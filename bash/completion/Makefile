@@ -27,7 +27,8 @@ COMMANDS := \
 	tree-sitter \
 	usage \
 	varlink \
-	wasmtime
+	wasmtime \
+	yq
 
 COMMANDS := $(foreach cmd, $(COMMANDS), $(shell command -v $(cmd)))
 COMMANDS := $(foreach cmd, $(COMMANDS), $(notdir $(cmd)))
@@ -144,6 +145,9 @@ bazel:
 
 delta: CMD = delta --generate-completion bash
 delta:
+
+yq: CMD = yq shell-completion bash
+yq:
 	$(from-command)
 
 busted: URL = https://raw.githubusercontent.com/Olivine-Labs/busted/master/completions/bash/busted.bash
