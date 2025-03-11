@@ -37,9 +37,27 @@ shell = "$LOCAL"
 EOF
 }
 
+update-tmux() {
+    readonly TMUX=$HOME/.config/tmux/shell.conf
+    if [[ -e $TMUX ]]; then
+        rm -v "$TMUX"
+    fi
+
+    if [[ ! -x $LOCAL ]]; then
+        return
+    fi
+
+    echo "updating tmux ($TMUX)"
+    printf 'set-option -g default-shell %s\n' \
+        "${HOME}/.local/bin/bash" \
+    >"$TMUX"
+
+}
+
 main() {
     update-alacritty
     update-kitty
+    update-tmux
 }
 
 main "$@"
