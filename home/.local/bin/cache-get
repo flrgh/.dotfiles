@@ -2,66 +2,8 @@
 
 set -euo pipefail
 
-declare -gi QUIET=${CACHE_GET_QUIET:-0}
+BASH_USER_LIB=${BASH_USER_LIB:-$HOME/.local/lib/bash}
 
-while [[ $1 ]]; do
-    arg=$1
-    case $arg in
-        -q) QUIET=1; shift ;;
-        *) break ;;
-    esac
-done
+source "$BASH_USER_LIB"/functions/cache-get.bash
 
-readonly URL=${1?URL required}
-
-FNAME=${2:-}
-if [[ -z $FNAME ]]; then
-    FNAME=${URL##*//}
-    FNAME=${FNAME%\?*}
-fi
-
-readonly DEST="$HOME/.cache/download/$FNAME"
-readonly ETAG=${DEST}.etag
-
-if (( QUIET == 1 )); then
-    log() { :; }
-else
-    log() {
-        printf "$@" >&2
-    }
-fi
-
-log "URL: $URL\n"
-log "Destination: $DEST\n"
-
-log "Fetching ... "
-
-
-ARGS=(
-    --silent
-    --fail
-    --location
-    --compressed
-    --referer ';auto'
-    --etag-save "$ETAG"
-    --etag-compare "$ETAG"
-    --remote-time
-    --remove-on-error
-    --retry 3
-    --speed-limit 1024
-    --speed-time 10
-    --output "$DEST"
-    --url "$URL"
-)
-
-if [[ -e $DEST ]]; then
-	log "File is cached locally; using If-Modified-Since\n"
-
-    ARGS+=(--time-cond "$DEST")
-fi
-
-curl "${ARGS[@]}"
-
-log "done.\n"
-
-printf "%s\n" "$DEST"
+cache-get "$@"
