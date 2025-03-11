@@ -2,51 +2,102 @@
 
 set -euo pipefail
 
-readonly INSTALL_PATH=$HOME/.local/share/fonts
-readonly REPO=ryanoasis/nerd-fonts
+source "$BASH_USER_LIB"/functions/cache-get.bash
 
-readonly FONTS=(
-    SourceCodePro
-    FiraCode
+readonly FONTS=$HOME/.local/share/fonts
+readonly FONT_CONFIG=$HOME/.config/fontconfig/conf.d
+readonly REPO=ryanoasis/nerd-fonts
+readonly BASE_URL=https://raw.githubusercontent.com/${REPO}/refs/tags
+
+readonly INSTALL_FONTS=(
+    0xProto
+    Agave
     DejaVuSansMono
     DroidSansMono
+    FiraCode
+    FiraMono
+    Iosevka
     JetBrainsMono
-    UbuntuMono
     LiberationMono
+    MartianMono
+    SourceCodePro
+    UbuntuMono
+
+    # symbols
     NerdFontsSymbolsOnly
 )
 
-TAG=$(gh-helper get-latest-release-tag "$REPO")
+declare -gi ANY_INSTALLED=0
 
-echo "Latest tag: $TAG"
+install_config() {
+    local -r tag=$1
 
-get_font() {
-    local name=$1
+    local fname=10-nerd-font-symbols.conf
+    cache-get --quiet --silent \
+        "${BASE_URL}/${tag}/10-nerd-font-symbols.conf" \
+        "$fname"
 
-    cache-get \
-        "https://github.com/${REPO}/releases/download/${TAG}/${name}.zip" \
-        "font-${TAG}-${name}.zip"
+    if (( CACHE_GET_CACHED == 1 )); then
+        printf '%s was already installed\n' "$fname"
+        return
+    fi
+
+    ANY_INSTALLED=1
+
+    local dest=$CACHE_GET_DEST
+    mkdir -p "$FONT_CONFIG"
+    install -t "$FONT_CONFIG" "$dest"
 }
 
 install_font() {
-    local path=$1
+    local -r tag=$1
+    local -r name=$2
+
+    cache-get \
+        --quiet \
+        --silent \
+        "https://github.com/${REPO}/releases/download/${tag}/${name}.tar.xz" \
+        "font-${tag}-${name}.tar.xz"
+
+    if (( CACHE_GET_CACHED == 1 )); then
+        printf '%s %s was already installed\n' "$name" "$tag"
+        return
+    fi
+
+    ANY_INSTALLED=1
+
+    local path=$CACHE_GET_DEST
 
     printf "Installing %s..." "${path##*/}"
 
-    unzip \
-        -u \
-        -d "$INSTALL_PATH" \
-        "$path" \
-        '*.[t|o]tf' \
-    > /dev/null
+    tar -C "$FONTS" \
+        --no-same-owner \
+        --extract \
+        --keep-newer-files \
+        --file "$path" \
+        --wildcards '*.[o|t]tf'
 
     printf " ...done.\n"
 }
 
-for f in "${FONTS[@]}"; do
-    dest=$(get_font "$f")
-    install_font "$dest"
-done
+main() {
+    local tag
+    tag=$(gh-helper get-latest-release-tag "$REPO")
 
-echo "Clearing font cache"
-fc-cache -vf "$INSTALL_PATH"
+    echo "Latest tag: $tag"
+
+    for f in "${INSTALL_FONTS[@]}"; do
+        install_font "$tag" "$f"
+    done
+
+    install_config "$tag"
+
+    if (( ANY_INSTALLED > 0 )); then
+        echo "Clearing font cache"
+        fc-cache -vf "$FONTS"
+    else
+        echo "Nothing was installed, no need to clear font cache"
+    fi
+}
+
+main "$@"
