@@ -92,6 +92,14 @@ cache-get() {
         CACHE_GET_CACHED=0
     fi
 
+    # update atime
+    touch -a "$dest"
+
+    if [[ -e $etag ]]; then
+        # etag file should match mtime and atime of dest file
+        touch --reference "$dest" "$etag"
+    fi
+
     declare -g CACHE_GET_DEST=$dest
 
     if (( silent == 0 )); then
