@@ -11,7 +11,7 @@
     pinned = {
       button = '📌',
     },
-    button = '❌',
+    button = 'x',
     modified = {
       button= '●',
     },
