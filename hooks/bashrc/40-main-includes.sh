@@ -167,7 +167,6 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 # ssh
 {
     rc-new-workfile ssh
-    rc-workfile-add-dep "function-links-to"
     rc-workfile-add-dep "$RC_DEP_DEBUG"
     rc-workfile-include ./bash/app-ssh.sh
     rc-workfile-close
