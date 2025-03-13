@@ -5,6 +5,7 @@ COMMANDS := \
 	bazel \
 	bindgen \
 	busted \
+	bws \
 	cargo \
 	deck \
 	delta \
@@ -148,6 +149,10 @@ delta:
 
 yq: CMD = yq shell-completion bash
 yq:
+	$(from-command)
+
+bws: CMD = bws completions bash
+bws:
 	$(from-command)
 
 busted: URL = https://raw.githubusercontent.com/Olivine-Labs/busted/master/completions/bash/busted.bash

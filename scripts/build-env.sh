@@ -77,6 +77,37 @@ emit-pkg-config() {
     add-export PKG_CONFIG_PATH "$(array-join ':' "${paths[@]}")"
 }
 
+emit-bitwarden-secrets-manager() {
+    local conf=${XDG_CONFIG_HOME}/bws/config
+    mkdir -p "${conf%/*}"
+
+    local -r profile=main
+
+    add-export BWS_CONFIG_FILE "$conf"
+    add-export BWS_PROFILE "$profile"
+
+    if command -v bws &>/dev/null; then
+        local -a args=(
+            --config-file "$conf"
+            --profile "$profile"
+            config
+        )
+
+        bws "${args[@]}" \
+            state-dir "${XDG_STATE_HOME}/bws"
+
+        bws "${args[@]}" \
+            server-api "https://api.bitwarden.com"
+
+        bws "${args[@]}" \
+            server-identity "https://identity.bitwarden.com"
+    fi
+
+    if [[ -e ${XDG_CONFIG_HOME}/bws/state ]]; then
+        rm -rf "${XDG_CONFIG_HOME}/bws/state"
+    fi
+}
+
 main() {
     env-reset
 
@@ -89,6 +120,7 @@ main() {
     emit-app-config
     emit-ls-colors
     emit-pkg-config
+    emit-bitwarden-secrets-manager
 
     if command -v shfmt &>/dev/null; then
         shfmt \
