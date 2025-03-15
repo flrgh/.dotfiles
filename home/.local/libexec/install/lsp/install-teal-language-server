@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-luarocks install tl
-luarocks install teal-language-server

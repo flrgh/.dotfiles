@@ -175,27 +175,34 @@ end
 
 
 local servers = {
-  awk          = "awk_ls",
-  bash         = "bashls",
-  clang        = "clangd",
-  dockerfile   = "dockerls",
-  go           = "gopls",
-  jinja        = "jinja_lsp",
-  json         = "jsonls",
-  lua          = "lua_ls",
-  markdown     = "marksman",
-  python       = "pyright",
-  rust         = "rust_analyzer",
+  "awk_ls",
+  "bashls",
+  "clangd",
+  "docker_compose_language_service",
+  "dockerls",
+  "gh_actions_ls",
+  "gopls",
+  "jinja_lsp",
+  "jsonls",
+  "lua_ls",
+  "marksman",
+  --[[
+  unmaintained
+  "nginx_language_server",
+  --]]
+  "pyright",
+  "rust_analyzer",
+  "systemd_ls",
 
   --[[
-    sql-language-server is completely unusable
-  sql          = "sqlls",
+  sql-language-server is completely unusable
+  "sqlls",
   ]]--
 
-  terraform    = "terraformls",
-  yaml         = "yamlls",
-  typescript   = "ts_ls",
-  zig          = "zls",
+  "terraformls",
+  "yamlls",
+  "ts_ls",
+  "zls",
 }
 
 if plugin.installed("rustaceanvim") then
@@ -228,12 +235,12 @@ end
 local hooks = {}
 
 
----@param lang string
 ---@param name string
-local function setup_server(lang, name)
+local function setup_server(name)
   local server = lspconfig[name]
   if not server then
     vim.notify("unknown LSP server: " .. name, vim.log.levels.WARN)
+    return
   end
 
   ---@type lspconfig.Config
@@ -261,8 +268,8 @@ local function setup_server(lang, name)
   end
 end
 
-for lang, server in pairs(servers) do
-  setup_server(lang, server)
+for _, server in ipairs(servers) do
+  setup_server(server)
 end
 
 local group = vim.api.nvim_create_augroup("UserLSP", { clear = true })

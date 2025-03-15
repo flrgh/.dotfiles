@@ -140,7 +140,7 @@ cargo: CMD = rustup completions bash cargo
 cargo:
 	$(from-command)
 
-bazel: CMD = $(HOME)/.local/libexec/download-bazel-bash-completion
+bazel: CMD = $(REPO_ROOT)/scripts/download-bazel-bash-completion
 bazel:
 	$(from-command)
 

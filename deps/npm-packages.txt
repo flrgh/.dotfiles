@@ -1,7 +1,9 @@
 # language servers
 awk-language-server
 bash-language-server
+@microsoft/compose-language-service
 dockerfile-language-server-nodejs
+gh-actions-language-server
 pyright
 sql-language-server
 typescript-language-server

@@ -28,12 +28,13 @@ PKG := build/pkg
 NEED := $(PKG)/need
 NPM_PKG := $(PKG)/npm
 CARGO_PKG := $(PKG)/cargo
+PIP_PKG := $(PKG)/pip
+LUAROCKS_PKG := $(PKG)/luarocks
+HASHICORP_PKG := $(PKG)/hashicorp
 
 CARGO_HOME := $(INSTALL_PATH)/.local/cargo
 CARGO_BIN := $(CARGO_HOME)/bin
 RUSTUP := $(CARGO_HOME)/bin/rustup
-
-LSP := build/lsp
 
 # gnome-software seems to be doing some weirdness if this directory
 # doesn't exist
@@ -81,7 +82,17 @@ $(NEED)/%:
 	@mkdir -p $(dir $@)
 	@touch $@
 
-$(NPM_PKG): $(MISE)
+$(PIP_PKG)/%:
+	pip install --user $(notdir $@)
+	@mkdir -p $(dir $@)
+	@touch $@
+
+$(LUAROCKS_PKG)/%:
+	luarocks install $(notdir $@)
+	@mkdir -p $(dir $@)
+	@touch $@
+
+$(NPM_PKG): $(MISE) deps/npm-packages.txt
 	$(MISE) exec node -- npm install -g \
 		$(shell ./scripts/get-lines ./deps/npm-packages.txt)
 	$(MISE) reshim
@@ -194,21 +205,22 @@ bashrc: links env mise build/home/.bashrc
 bash: bash-completion bashrc
 	./scripts/update-default-shell
 
-$(INSTALL_BIN)/teal-language-server: $(LIBEXEC)/install/lsp/install-teal-language-server
-	$(LIBEXEC)/install/lsp/install-teal-language-server
+$(LUAROCKS_PKG)/teal-language-server: $(LUAROCKS_PKG)/tl
 
-$(LSP)/teal: $(INSTALL_BIN)/teal-language-server
-
-$(INSTALL_BIN)/terraform-ls: $(LIBEXEC)/install/lsp/install-terraform-lsp
-	$(LIBEXEC)/install/lsp/install-terraform-lsp
-
-$(LSP)/terraform: $(INSTALL_BIN)/terraform-ls
+$(HASHICORP_PKG)/%:
+	get-hashicorp-binary $(notdir $@) latest
+	@mkdir -p $(dir $@)
+	@touch $@
 
 .PHONY: golang
 golang: $(NEED)/gopls $(NEED)/gotags
 
 .PHONY: language-servers
-language-servers: $(NPM_PKG) $(LIBEXEC) $(LSP)/teal $(LSP)/terraform $(NEED)/gopls
+language-servers: $(NPM_PKG) $(LIBEXEC) \
+	$(LUAROCKS_PKG)/teal-language-server \
+	$(HASHICORP_PKG)/terraform-ls \
+	$(NEED)/gopls \
+	$(PIP_PKG)/systemd-language-server
 
 .PHONY: neovim
 neovim: language-servers $(NEED)/neovim $(NEED)/tree-sitter $(NEED)/fzf
@@ -228,6 +240,7 @@ alacritty: $(CARGO_BIN)/alacritty
 	./scripts/update-default-shell
 
 build/home/.config/curlrc: scripts/build-curlrc
+	mkdir -p $(dir $@)
 	./scripts/build-curlrc > $@
 
 $(NEED)/curl: os-packages

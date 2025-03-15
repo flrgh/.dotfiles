@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-VERSION=${1:-latest}
-
-get-hashicorp-binary terraform-ls "$VERSION"

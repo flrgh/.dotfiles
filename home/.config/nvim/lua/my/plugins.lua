@@ -131,7 +131,7 @@ local plugins_by_filetype = {
       build = function()
         local opts = { text = true }
         local pandoc = vim.system(
-          { g.home .. "/.local/libexec/install/tools/install-pandoc" },
+          { "ineed", "install", "pandoc" },
           opts
         )
 
