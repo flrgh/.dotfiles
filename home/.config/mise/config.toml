@@ -10,6 +10,7 @@ fd = "latest"
 uv = "latest"
 ninja = "latest"
 yq = "latest"
+ast-grep = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from

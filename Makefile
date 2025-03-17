@@ -196,6 +196,10 @@ bash-completion: build/bash-completion
 	$(INSTALL_INTO) $(INSTALL_PATH)/.local/share/bash-completion/completions \
 		--mode '0644' \
 		$(REPO_ROOT)/build/bash-completion/*
+	find $(INSTALL_PATH)/.local/share/bash-completion/completions \
+		-type f \
+		-empty \
+		-delete
 
 .PHONY: bashrc
 bashrc: links env mise build/home/.bashrc

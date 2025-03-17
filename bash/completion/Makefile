@@ -1,6 +1,7 @@
 BUILD := ../../build/bash-completion
 
 COMMANDS := \
+	ast-grep \
 	bat \
 	bazel \
 	bindgen \
@@ -25,6 +26,7 @@ COMMANDS := \
 	pip \
 	pip3 \
 	rustup \
+	sg \
 	tree-sitter \
 	usage \
 	varlink \
@@ -153,6 +155,14 @@ yq:
 
 bws: CMD = bws completions bash
 bws:
+	$(from-command)
+
+ast-grep: CMD = ast-grep completions bash
+ast-grep:
+	$(from-command)
+
+sg: CMD = sg completions bash
+sg:
 	$(from-command)
 
 busted: URL = https://raw.githubusercontent.com/Olivine-Labs/busted/master/completions/bash/busted.bash
