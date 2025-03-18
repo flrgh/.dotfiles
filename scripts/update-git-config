@@ -9,6 +9,8 @@ reset-local-config() {
     mkdir -p "${LOCAL_CONFIG%/*}"
 
     : >"$LOCAL_CONFIG"
+
+    echo '# vim:ft=gitconfig' >>"$LOCAL_CONFIG"
 }
 
 set-config() {
@@ -51,7 +53,12 @@ update-user-signing-key() {
 
 # credential.helper needs to be an absolute path in order to work properly
 update-credential-helper() {
-    set-config credential.helper ~/.local/libexec/github-credential-helper
+    local helper=$HOME/.local/libexec/github-credential-helper
+    if [[ -x $helper ]]; then
+        set-config credential.helper ~/.local/libexec/github-credential-helper
+    else
+        echo "WARN: credential.helper ($helper) not found or not executable"
+    fi
 }
 
 main() {

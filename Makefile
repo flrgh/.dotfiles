@@ -254,5 +254,5 @@ curl: $(NEED)/curl build/home/.config/curlrc
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
 
 .PHONY: git-config
-git-config:
+git-config: $(NEED)/github-cli
 	./scripts/update-git-config
