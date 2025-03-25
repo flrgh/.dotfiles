@@ -32,17 +32,18 @@ install-from-asset() {
 
     cd "$(mktemp -d)"
 
-    tar xzf "$asset"
+    tar --strip-components 1 \
+        --extract \
+        --file "$asset"
 
-    cd openresty-luajit2-*
-
-    make \
-        PREFIX="$PREFIX" \
+    local -a env=(
+        -j"$(nproc)"
+        PREFIX="$HOME/.local"
         VERSION="$version"
+    )
 
-    make install \
-        PREFIX="$PREFIX" \
-        VERSION="$version"
+    make "${env[@]}"
+    make "${env[@]}" install
 
     local src="$PREFIX/bin/luajit-${version}"
 
