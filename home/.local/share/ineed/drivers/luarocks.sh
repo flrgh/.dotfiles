@@ -39,9 +39,9 @@ install-from-asset() {
 
     cd "$(mktemp -d)"
 
-    tar xzf "$asset"
-
-    cd "luarocks-${version}"
+    tar --strip-components 1 \
+        --extract \
+        --file "$asset"
 
     ./configure \
         --prefix="$PREFIX" \
@@ -65,30 +65,4 @@ install-from-asset() {
         --delete \
         ./src/luarocks/ \
         "${PREFIX}/share/lua/${lua_version}/luarocks/"
-
-    # update generated things
-    local fname="$HOME/.local/bash/gen.d/luarocks"
-    if [[ -e $fname ]]; then
-        rm "$fname"
-    fi
-
-    touch "$fname"
-
-    "$BIN" path --lr-path | tr ';' '\n' | while read -r elem; do
-        if [[ "$elem" = */init.lua ]]; then
-            other=${elem%/init.lua}.lua
-            printf '__rc_add_path LUA_PATH --append --after %q %q\n' "$other" "$elem" >> "$fname"
-        else
-            other=${elem%.lua}/init.lua
-            printf '__rc_add_path LUA_PATH --append --before %q %q\n' "$other" "$elem" >> "$fname"
-        fi
-    done
-
-    "$BIN" path --lr-cpath | tr ';' '\n' | while read -r elem; do
-        printf '__rc_add_path LUA_CPATH --append %q\n' "$elem" >> "$fname"
-    done
-
-    "$BIN" path --lr-bin | tr ';' '\n' | while read -r elem; do
-        printf '__rc_add_path PATH %q\n' "$elem" >> "$fname"
-    done
 }
