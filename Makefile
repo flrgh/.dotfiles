@@ -53,7 +53,7 @@ CREATE_DIRS := $(addprefix $(INSTALL_PATH)/,$(CREATE_DIRS))
 all: install
 
 .PHONY: install
-install: env rust lua bash docker alacritty golang curl git-config
+install: ssh env rust lua bash docker alacritty golang curl git-config
 
 .PHONY: debug
 debug:
@@ -182,6 +182,10 @@ build/home/.config/env: $(MISE_DEPS) lib/bash/* scripts/build-env.sh build/dirco
 	./scripts/build-env.sh
 	@-$(DIFF) $(INSTALL_PATH)/.config/env $(REPO_ROOT)/build/home/.config/env
 
+.PHONY: ssh
+ssh: | .setup
+	./scripts/update-ssh-config
+
 .PHONY: env
 env: $(MISE) build/home/.config/env | .setup
 	$(INSTALL) $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.config/env
@@ -270,5 +274,5 @@ curl: $(NEED)/curl build/home/.config/curlrc | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
 
 .PHONY: git-config
-git-config: $(NEED)/github-cli | .setup
+git-config: $(NEED)/github-cli | ssh .setup
 	./scripts/update-git-config

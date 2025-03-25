@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+shopt -s nullglob
+
+SSH=$HOME/.ssh
+SSH_CONF=${SSH}/config
+SSH_CONF_D=${SSH}/config.d
+SSH_CONF_CONTROL_PATH=${SSH_CONF_D}/ControlPath.conf
+
+mkdir -p "$SSH" "$SSH_CONF_D"
+
+STAMP=$(stat -L -c %Y "$SSH_CONF" "$SSH_CONF_D"/* \
+        | sort --numeric-sort \
+        | tail -1)
+
+printf 'ControlPath %s/.sshc_%s_%%C\n' \
+    "${XDG_RUNTIME_DIR:?}" \
+    "$STAMP" \
+| tee "$SSH_CONF_CONTROL_PATH"
+
+touch --date "@$STAMP" "$SSH_CONF_CONTROL_PATH"
+
+chmod -c 0640 "$SSH_CONF" "$SSH_CONF_D"/*
