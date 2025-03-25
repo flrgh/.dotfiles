@@ -3,6 +3,9 @@ export INSTALL_BIN := $(INSTALL_PATH)/.local/bin
 export REPO_ROOT = $(PWD)
 export DEBUG := $(DEBUG)
 
+# no implicit rules
+.SUFFIXES:
+
 CACHE_DIR := $(INSTALL_PATH)/.cache
 MISE := $(INSTALL_BIN)/mise
 LUAROCKS := $(INSTALL_BIN)/luarocks
@@ -31,6 +34,8 @@ CARGO_PKG := $(PKG)/cargo
 PIP_PKG := $(PKG)/pip
 LUAROCKS_PKG := $(PKG)/luarocks
 HASHICORP_PKG := $(PKG)/hashicorp
+MISE_PKG := $(PKG)/mise
+MISE_DEPS := $(MISE_PKG)/.default
 
 CARGO_HOME := $(INSTALL_PATH)/.local/cargo
 CARGO_BIN := $(CARGO_HOME)/bin
@@ -48,7 +53,7 @@ CREATE_DIRS := $(addprefix $(INSTALL_PATH)/,$(CREATE_DIRS))
 all: install
 
 .PHONY: install
-install: links env rust lua bash docker alacritty golang curl git-config
+install: env rust lua bash docker alacritty golang curl git-config
 
 .PHONY: debug
 debug:
@@ -60,7 +65,7 @@ clean:
 	rm -rfv ./build/*
 
 .PHONY: update
-update: clean links os-packages-update mise-update rust-update
+update: clean os-packages-update mise-update rust-update
 
 $(PKG)/os.installed: deps/os-package-installed.txt
 	sudo dnf install -y $(shell ./scripts/get-lines ./deps/os-package-installed.txt)
@@ -77,7 +82,7 @@ $(PKG)/python: $(MISE) deps/python-packages.txt
 	@mkdir -p $(dir $@)
 	@touch $@
 
-$(NEED)/%:
+$(NEED)/%: | .setup
 	ineed install $(notdir $@)
 	@mkdir -p $(dir $@)
 	@touch $@
@@ -87,7 +92,7 @@ $(PIP_PKG)/%:
 	@mkdir -p $(dir $@)
 	@touch $@
 
-$(LUAROCKS_PKG)/%:
+$(LUAROCKS_PKG)/%: $(LUAROCKS)
 	luarocks install $(notdir $@)
 	@mkdir -p $(dir $@)
 	@touch $@
@@ -99,7 +104,7 @@ $(NPM_PKG): $(MISE) deps/npm-packages.txt
 	@mkdir -p $(dir $@)
 	@touch $@
 
-$(RUSTUP): scripts/install-rust
+$(RUSTUP): scripts/install-rust | .setup
 	./scripts/install-rust
 	@touch --reference ./scripts/install-rust $@
 
@@ -133,18 +138,24 @@ rm-old-files:
 		rm -v "$$f"; \
 	done
 
+.PRECIOUS: $(CREATE_DIRS)
 $(CREATE_DIRS):
-	mkdir -v -p $(CREATE_DIRS)
+	mkdir -v -p $@
 
-.PHONY: links
-links: $(CREATE_DIRS) rm-old-files
-	./scripts/cleanup-symlinks
-	./scripts/create-symlinks
+.PHONY: symlinks
+symlinks:
+	@./scripts/cleanup-symlinks
+	@./scripts/create-symlinks
 
-$(MISE): scripts/install-mise
+.PHONY: .setup
+.setup: | rm-old-files $(CREATE_DIRS) symlinks
+
+.PRECIOUS: $(MISE)
+$(MISE): scripts/install-mise | .setup
 	./scripts/install-mise
 	touch --reference ./scripts/install-mise $(MISE)
 
+.PRECIOUS: $(LUAROCKS)
 $(LUAROCKS): $(NEED)/luarocks
 
 .PHONY: mise-update
@@ -152,9 +163,10 @@ mise-update: $(MISE) home/.config/mise/config.toml
 	$(MISE) self-update --yes
 	$(MISE) upgrade --yes
 
-.PHONY: mise-deps
-mise-install-deps: $(MISE)
+$(MISE_DEPS): $(MISE) mise.toml home/.config/mise/config.toml
 	$(MISE) install --yes
+	@mkdir -p $(dir $@)
+	@touch $@
 
 .PHONY: mise
 mise: $(MISE)
@@ -166,33 +178,35 @@ build/dircolors:
 	./home/.local/bin/cache-get $(DIRCOLORS_URL) $(DIRCOLORS_FNAME)
 	cp $(CACHE_DIR)/download/$(DIRCOLORS_FNAME) build/dircolors
 
-build/home/.config/env: links mise-install-deps lib/bash/* scripts/build-env.sh build/dircolors
+build/home/.config/env: $(MISE_DEPS) lib/bash/* scripts/build-env.sh build/dircolors
 	./scripts/build-env.sh
 	@-$(DIFF) $(INSTALL_PATH)/.config/env $(REPO_ROOT)/build/home/.config/env
 
 .PHONY: env
-env: $(MISE) build/home/.config/env
+env: $(MISE) build/home/.config/env | .setup
 	$(INSTALL) $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.config/env
 	$(INSTALL) $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.pam_environment
 
-BASH_BUILTINS := timer varsplice version
-BASH_BUILTINS := $(addprefix $(INSTALL_PATH)/.local/lib/bash/loadables/, $(BASH_BUILTINS))
-
-.PHONY: bash-builtins
-bash-builtins:
+BASH_BUILTINS := build/bash-builtins
+$(BASH_BUILTINS): ./scripts/install-custom-bash-builtins
 	./scripts/install-custom-bash-builtins
+	@touch $@
 
-build/home/.bashrc: mise-install-deps bash-builtins lib/bash/* bash/* hooks/bashrc/* $(NEED)/bat $(NEED)/direnv $(NEED)/bash-completion
+build/bash-facts: build/home/.config/env $(BASH_BUILTINS)
+	./scripts/bashrc-init-facts
+	@touch $@
+
+build/home/.bashrc: build/bash-facts $(MISE_DEPS) lib/bash/* bash/* hooks/bashrc/* $(NEED)/bat $(NEED)/direnv $(NEED)/bash-completion
 	$(REPO_ROOT)/scripts/run-hooks bashrc
 	@-$(DIFF) $(INSTALL_PATH)/.bashrc $(REPO_ROOT)/build/home/.bashrc
 
-build/bash-completion: links $(NEED)/bash-completion
+build/bash-completion: $(NEED)/bash-completion
 	$(MAKE) -C ./bash/completion all
 	@mkdir -p $(dir $@)
 	@touch $@
 
 .PHONY: bash-completion
-bash-completion: build/bash-completion
+bash-completion: build/bash-completion | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.local/share/bash-completion/completions \
 		--mode '0644' \
 		$(REPO_ROOT)/build/bash-completion/*
@@ -202,11 +216,11 @@ bash-completion: build/bash-completion
 		-delete
 
 .PHONY: bashrc
-bashrc: links env mise build/home/.bashrc
+bashrc: $(MISE) build/home/.bashrc | .setup
 	$(INSTALL) $(REPO_ROOT)/build/home/.bashrc $(INSTALL_PATH)/.bashrc
 
 .PHONY: bash
-bash: bash-completion bashrc
+bash: bash-completion bashrc | .setup
 	./scripts/update-default-shell
 
 $(LUAROCKS_PKG)/teal-language-server: $(LUAROCKS_PKG)/tl
@@ -217,29 +231,31 @@ $(HASHICORP_PKG)/%:
 	@touch $@
 
 .PHONY: golang
-golang: $(NEED)/gopls $(NEED)/gotags
+golang: $(NEED)/gopls $(NEED)/gotags | .setup
 
 .PHONY: language-servers
 language-servers: $(NPM_PKG) $(LIBEXEC) \
 	$(LUAROCKS_PKG)/teal-language-server \
 	$(HASHICORP_PKG)/terraform-ls \
 	$(NEED)/gopls \
-	$(PIP_PKG)/systemd-language-server
+	$(PIP_PKG)/systemd-language-server \
+	| .setup
 
 .PHONY: neovim
-neovim: language-servers $(NEED)/neovim $(NEED)/tree-sitter $(NEED)/fzf
+neovim: language-servers $(NEED)/neovim $(NEED)/tree-sitter $(NEED)/fzf | .setup
 
 .PHONY: lua
 lua: $(LUAROCKS)
 
 .PHONY: docker
-docker: scripts/update-docker-config $(NEED)/docker-buildx
+docker: scripts/update-docker-config $(NEED)/docker-buildx | .setup
 	./scripts/update-docker-config
 
+.PRECIOUS: $(CARGO_BIN)/alacritty
 $(CARGO_BIN)/alacritty: $(CARGO_PKG)
 
 .PHONY: alacritty
-alacritty: $(CARGO_BIN)/alacritty
+alacritty: $(CARGO_BIN)/alacritty | .setup
 	./scripts/update-gsettings
 	./scripts/update-default-shell
 
@@ -247,12 +263,12 @@ build/home/.config/curlrc: scripts/build-curlrc
 	mkdir -p $(dir $@)
 	./scripts/build-curlrc > $@
 
-$(NEED)/curl: os-packages
+$(NEED)/curl: $(PKG)/os.installed
 
 .PHONY: curl
-curl: $(NEED)/curl build/home/.config/curlrc
+curl: $(NEED)/curl build/home/.config/curlrc | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
 
 .PHONY: git-config
-git-config: $(NEED)/github-cli
+git-config: $(NEED)/github-cli | .setup
 	./scripts/update-git-config

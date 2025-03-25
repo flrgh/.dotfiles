@@ -13,7 +13,8 @@ source ./home/.local/lib/bash/array.bash
     rc-workfile-append-line '# shellcheck disable=SC1091'
     rc-workfile-append-line '# shellcheck disable=SC2059'
 
-    if have local-bash; then
+    if have local-bash && get-location bash; then
+        rc-workfile-var __RC_BASH "${FACT:?}"
         rc-workfile-include ./bash/ssh-shell-check.bash
     fi
 

@@ -536,7 +536,6 @@ rc-workfile-if-interactive() {
     fi
 }
 
-
 rc-var() {
     local -r var=$1
     local -r value=$2
