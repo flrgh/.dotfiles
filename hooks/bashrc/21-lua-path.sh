@@ -3,6 +3,11 @@
 set -euo pipefail
 source ./lib/bash/generate.bash
 
+emit-lua-vars() {
+    rc-set-exported LUA_PATH
+    rc-set-exported LUA_CPATH
+}
+
 emit-luarocks() {
     local conf=$INSTALL_PATH/.config/luarocks/config.lua
     if [[ -f $conf ]]; then
@@ -65,6 +70,7 @@ emit-lua-init() {
     fi
 }
 
+emit-lua-vars
 emit-luarocks
 emit-lua-utils
 emit-luajit-path

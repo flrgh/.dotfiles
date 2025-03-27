@@ -588,6 +588,25 @@ rc-require-var() {
     [[ -n ${!name:-} ]] || fatal "var $name is empty"
 }
 
+rc-set-exported() {
+    local -r name=${1:?}
+    local -r value=${2:-}
+
+    _save_workfile
+
+    rc-workfile-open "$RC_DEP_SET_VAR"
+    if [[ -n ${value:-} ]]; then
+        log "export-with-value($name)"
+        rc-workfile-add-exec export "${name}=${value}"
+
+    else
+        log "export($name)"
+        rc-workfile-add-exec export "$name"
+    fi
+
+    _restore_workfile
+}
+
 rc-export() {
     local -r name=$1
     local value=${2:-}
@@ -602,13 +621,7 @@ rc-export() {
         return
     fi
 
-    _save_workfile
-
-    rc-workfile-open "$RC_DEP_SET_VAR"
-    log "export($name)"
-    rc-workfile-add-exec export "${name}=${value}"
-
-    _restore_workfile
+    rc-set-exported "$name" "$value"
 }
 
 rc-reset-var() {
