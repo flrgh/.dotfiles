@@ -95,9 +95,7 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
     # https://github.com/golang/go/wiki/GOPATH
     GOPATH=$HOME/.local/go
     rc-export GOPATH
-    if ! rc-command-exists mise; then
-        rc-add-path PATH "$GOPATH/bin"
-    fi
+    rc-add-path PATH "$GOPATH/bin"
 }
 
 # rust
