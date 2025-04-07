@@ -44,9 +44,7 @@
 	renames = true
 
 [fetch]
-	all = true
 	prune = true
-	pruneTags = true
 
 [gpg]
 	format = ssh
