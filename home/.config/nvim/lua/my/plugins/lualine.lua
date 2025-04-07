@@ -11,7 +11,7 @@ local mode                      = vim.fn.mode
 local index                     = vim.fn.index
 local finddir                   = vim.fn.finddir
 local buf_get_option            = vim.api.nvim_buf_get_option
-local lsp_get_active_clients    = vim.lsp.get_active_clients
+local lsp_get_clients           = vim.lsp.get_clients
 local insert                    = table.insert
 local next                      = next
 
@@ -22,7 +22,7 @@ end
 local function lsp_server_name()
   local msg = "(no LSP)"
   local buf_ft = buf_get_option(0, 'filetype')
-  local clients = lsp_get_active_clients()
+  local clients = lsp_get_clients()
   if next(clients) == nil then
     return msg
   end

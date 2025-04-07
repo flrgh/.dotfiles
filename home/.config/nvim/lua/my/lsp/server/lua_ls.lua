@@ -268,7 +268,7 @@ local function update_settings(settings, client)
   vim.notify("Updating LuaLS settings...")
   _M.settings.Lua = settings
   client.settings = _M.settings
-  client.notify("workspace/didChangeConfiguration", _M.settings)
+  client:notify("workspace/didChangeConfiguration", _M.settings)
 end
 
 ---@param t string[]
