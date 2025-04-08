@@ -18,6 +18,10 @@ do
       local select = select
       local tostring = tostring
       local type = type
+      local print = print
+
+      local s = "%s"
+      local space = " "
 
       local function _tostring(obj)
         if type(obj) == 'table' then
@@ -38,14 +42,10 @@ do
         return func(first), _map(func, select(2, ...))
       end
 
-      _G.old_print = print
-      local old_print = _G.old_print
-      local s = "%s"
-      local space = " "
-      function _G.print(...)
+      function _G.pprint(...)
         local n = select("#", ...)
         local tmpl = rep(s, n, space)
-        return old_print(fmt(tmpl, _map(_tostring, n, ...)))
+        return print(fmt(tmpl, _map(_tostring, n, ...)))
       end
     end
   end
