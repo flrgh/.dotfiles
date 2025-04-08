@@ -6,6 +6,9 @@ dockerfile-language-server-nodejs
 gh-actions-language-server
 pyright
 sql-language-server
+# typescript-language-server stopped working until I explicitly installed the
+# typescript package 🤷
+typescript
 typescript-language-server
 vscode-json-languageserver
 yaml-language-server
