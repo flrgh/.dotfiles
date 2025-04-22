@@ -19,6 +19,7 @@ readonly PACKAGES=(
     cargo-modules
     cargo-release
     cargo-update
+    cbindgen
     cross          # cargo cross-compilation helper
     git-delta      # pager for git with nice colors and such
     inferno        # rust port of flamegraph.pl
