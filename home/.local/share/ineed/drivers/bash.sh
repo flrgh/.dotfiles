@@ -99,7 +99,6 @@ readonly PATH_DEFINES=(
 
 readonly ENABLED=(
     alias                    # enable shell aliases
-    alt-array-implementation # enable an alternate array implementation that optimizes speed at the cost of space
     arith-for-command        # enable arithmetic for command
     array-variables          # include shell array variables
     brace-expansion          # include brace expansion
@@ -136,6 +135,7 @@ readonly ENABLED=(
 
 DISABLED=(
     #bang-history          # turn on csh-style history substitution
+    alt-array-implementation # enable an alternate array implementation that optimizes speed at the cost of space
     direxpand-default     # enable the direxpand shell option by default
     rpath                 # do not hardcode runtime library paths
     extended-glob-default # force extended pattern matching to be enabled by default
