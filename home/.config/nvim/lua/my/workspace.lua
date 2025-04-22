@@ -99,6 +99,16 @@ local matchers = {
       lua = true,
     },
   },
+
+  {
+    match = function(ws)
+      return substr(ws.dir, "blj")
+    end,
+    meta = {
+      lua = true,
+      blj = true,
+    },
+  },
 }
 
 if not WS.dir then

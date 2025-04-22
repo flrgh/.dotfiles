@@ -147,6 +147,13 @@ local SETTINGS_NVIM = {
 }
 
 ---@type my.lsp.settings
+local SETTINGS_BLJ = {
+  libraries = {
+    globals.git_user_root .. "/blj/lua",
+  },
+}
+
+---@type my.lsp.settings
 local SETTINGS_KONG = {
   definitions = {
     LUA_TYPE_ANNOTATIONS .. "/kong",
@@ -431,6 +438,10 @@ local function get_merged_settings()
 
   if WS.meta.kong then
     merge_settings(settings, SETTINGS_KONG)
+  end
+
+  if WS.meta.blj then
+    merge_settings(settings, SETTINGS_BLJ)
   end
 
   if WS.meta.luarocks then
