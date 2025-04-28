@@ -12,3 +12,6 @@ typescript
 typescript-language-server
 vscode-json-languageserver
 yaml-language-server
+
+# used by nvim-markdown-preview plugin
+live-server
