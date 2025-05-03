@@ -109,6 +109,15 @@ local matchers = {
       blj = true,
     },
   },
+
+  {
+    match = function(ws)
+      return fs.file_exists(fs.join(ws.dir, ".busted"))
+    end,
+    meta = {
+      busted = true,
+    },
+  },
 }
 
 if not WS.dir then

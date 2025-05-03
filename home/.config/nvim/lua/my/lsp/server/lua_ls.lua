@@ -154,6 +154,17 @@ local SETTINGS_BLJ = {
 }
 
 ---@type my.lsp.settings
+local SETTINGS_BUSTED = {
+  definitions = {
+    LUA_TYPE_ANNOTATIONS .. "/say",
+    LUA_TYPE_ANNOTATIONS .. "/mediator",
+
+    LUA_CATS .. "/busted" .. "/library",
+    LUA_CATS .. "/luassert" .. "/library",
+  },
+}
+
+---@type my.lsp.settings
 local SETTINGS_KONG = {
   definitions = {
     LUA_TYPE_ANNOTATIONS .. "/kong",
@@ -442,6 +453,10 @@ local function get_merged_settings()
 
   if WS.meta.blj then
     merge_settings(settings, SETTINGS_BLJ)
+  end
+
+  if WS.meta.busted then
+    merge_settings(settings, SETTINGS_BUSTED)
   end
 
   if WS.meta.luarocks then
