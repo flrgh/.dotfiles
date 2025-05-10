@@ -1,6 +1,6 @@
 ﻿local km = require "my.keymap"
 local evt = require "my.event"
-local g = require "my.config.globals"
+local const = require "my.constants"
 local fs = require "my.utils.fs"
 
 local Ctrl = km.Ctrl
@@ -11,8 +11,8 @@ local cmd = vim.cmd
 -- https://lazy.folke.io/configuration
 ---@type LazyConfig
 local conf = {
-  lockfile = fs.join(g.dotfiles.config_nvim, "plugins.lock.json"),
-  root = g.nvim.plugins,
+  lockfile = fs.join(const.dotfiles.config_nvim, "plugins.lock.json"),
+  root = const.nvim.plugins,
 
   defaults = {
   },
@@ -53,8 +53,8 @@ local conf = {
   },
 
   profiling = {
-    loader  = g.debug,
-    require = g.debug,
+    loader  = const.debug,
+    require = const.debug,
   },
 }
 
@@ -642,10 +642,6 @@ local plugins_by_category = {
         "b0o/schemastore.nvim",
         "folke/neodev.nvim"
       },
-      config = function()
-        require("my.config.lsp")
-        cmd "LspStart"
-      end,
     },
 
     {

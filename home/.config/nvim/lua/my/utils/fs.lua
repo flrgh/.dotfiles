@@ -415,15 +415,15 @@ end
 ---@return string
 function _M.abbreviate(path)
   if not path then return "" end
-  local g = require "my.config.globals"
+  local const = require "my.constants"
 
   local replace = {
-    { g.nvim.runtime_lua, "{ nvim.runtime.lua }" },
-    { g.nvim.plugins,     "{ nvim.plugins }" },
-    { g.nvim.runtime,     "{ nvim.runtime }" },
-    { g.nvim.config,      "{ nvim.userconfig }" },
-    { g.workspace,        "{ workspace }" },
-    { g.home,             "~" },
+    { const.nvim.runtime_lua, "{ nvim.runtime.lua }" },
+    { const.nvim.plugins,     "{ nvim.plugins }" },
+    { const.nvim.runtime,     "{ nvim.runtime }" },
+    { const.nvim.config,      "{ nvim.userconfig }" },
+    { const.workspace,        "{ workspace }" },
+    { const.home,             "~" },
   }
 
   for _, item in ipairs(replace) do

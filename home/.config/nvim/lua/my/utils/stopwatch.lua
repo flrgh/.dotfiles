@@ -8,16 +8,7 @@ local hrtime = vim.uv.hrtime
 local huge = math.huge
 local fmt = string.format
 
-local globals = require "my.config.globals"
-
-local function warn(msg)
-  if vim.in_fast_event() then
-    vim.schedule(function() warn(msg) end)
-    return
-  end
-
-  vim.notify(msg, WARN)
-end
+local const = require "my.constants"
 
 local function log_duration(task, duration, lvl)
   if vim.in_fast_event() then
@@ -26,7 +17,7 @@ local function log_duration(task, duration, lvl)
   end
 
   lvl = lvl
-     or (globals.debug and WARN)
+     or (const.debug and WARN)
      or DEBUG
 
   vim.notify(fmt("task %q completed in %.3f ms", task, duration),

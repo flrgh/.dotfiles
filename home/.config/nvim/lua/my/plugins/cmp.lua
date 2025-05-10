@@ -13,7 +13,7 @@ end
 ---@module 'cmp'
 local cmp = require 'cmp'
 local km = require 'my.keymap'
-local g = require "my.config.globals"
+local const = require "my.constants"
 
 local Ctrl = km.Ctrl
 local Tab = km.Tab
@@ -52,7 +52,7 @@ end
 
 do
   local get_cwd
-  local ws = g.workspace or os.getenv("PWD")
+  local ws = const.workspace or os.getenv("PWD")
   if ws then
     get_cwd = function() return ws end
   end

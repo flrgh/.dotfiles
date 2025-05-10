@@ -7,8 +7,8 @@ local json_encode = vim.json.encode
 local NULL = vim.NIL
 local evt = require "my.event"
 
----@type luv_work_ctx_t
-local queue
+local FILENAME = "my.lsp.log"
+_M.fname = FILENAME
 
 local format
 do
@@ -31,6 +31,7 @@ do
   end
 end
 
+---@type fun():number
 local time
 do
   local update_time = vim.uv.update_time
@@ -51,52 +52,53 @@ do
     ["window/workDoneProgress/create"] = true,
   }
 
-  function ignore(item)
-    return ignored[item]
-        or (item.method and ignored[item.method])
-        or (item.request and item.request.method and ignored[item.request.method])
+  ---@param entry string|table
+  ---@return boolean
+  function ignore(entry)
+    return ignored[entry]
+        or (entry.method and ignored[entry.method])
+        or (entry.request and entry.request.method and ignored[entry.request.method])
   end
 end
 
-local function log_server_stderr(prefix, cmd, event, chunk)
-  local entry
-
-  if prefix == "rpc" then
-    if event == "stderr" then
-      chunk = chunk:gsub("[\r\n]+$", "")
-    end
-
-    entry = {
-      command = cmd,
-      event = event,
-      data = chunk,
-    }
-
-  else
-    return
+---@param queue luv_work_ctx_t
+local function log_server_stderr(queue, prefix, cmd, event, chunk)
+  if chunk then
+    chunk = chunk:gsub("[\r\n]+$", "")
   end
+
+  local entry = {
+    prefix = prefix,
+    command = cmd,
+    event = event,
+    data = chunk,
+  }
 
   if ignore(entry) then
     return
   end
 
-  queue:queue(_M.fname, json_encode(entry))
+  queue:queue(FILENAME, json_encode(entry))
 end
 
 
-local function wrap(handler)
+local function wrap(queue, handler)
   return function(...)
-    log_server_stderr(...)
+    log_server_stderr(queue, ...)
     return handler(...)
   end
 end
 
-_M.fname = "my.lsp.log"
 
 function _M.init()
-  _M.fname = os.getenv("NVIM_LSP_DEBUG_LOG") or _M.fname
+  FILENAME = os.getenv("NVIM_LSP_DEBUG_LOG") or FILENAME
+  _M.fname = FILENAME
 
-  queue = assert(vim.uv.new_work(
+  vim.schedule(function()
+    vim.notify("LSP debugging enabled. Log file:\n" .. FILENAME)
+  end)
+
+  local queue = assert(vim.uv.new_work(
     function(fname, entry)
       assert(require("my.utils.fs").append_file(fname, entry .. "\n"))
     end,
@@ -106,24 +108,31 @@ function _M.init()
   -- monkey-patch log functions so that we can access the whole log entry
   do
     local log = require "vim.lsp.log"
-    log.debug = wrap(log.debug)
-    log.error = wrap(log.error)
-    log.info = wrap(log.info)
-    log.trace = wrap(log.trace)
-    log.warn = wrap(log.warn)
+    log.debug = wrap(queue, log.debug)
+    log.error = wrap(queue, log.error)
+    log.info = wrap(queue, log.info)
+    log.trace = wrap(queue, log.trace)
+    log.warn = wrap(queue, log.warn)
 
     log.set_format_func(format)
   end
 
+  -- XXX: all of my extra fancy logging is broken as of nvim 0.11 (figures)
+  --
+  -- fix it later
+  if true then
+    return
+  end
+
   local rpc = require "vim.lsp.client"
-  local _request = rpc._request
+  local request = rpc.request
 
   ---@type table<integer, table<integer, my.lsp.logger.entry>>
   local in_flight = {}
 
-  rpc._request = function(self, method, params, handler, bufnr)
+  rpc.request = function(self, method, params, handler, bufnr)
     if ignore(method) then
-      return _request(self, method, params, handler, bufnr)
+      return request(self, method, params, handler, bufnr)
     end
 
     handler = handler or assert(
@@ -145,19 +154,28 @@ function _M.init()
         ---@type table?
         params = params,
       },
+
       sent = sent,
+
       ---@type number?
       duration = nil,
+
       ---@type string|table|nil
       error = nil,
+
       ---@type table?
       response = nil,
+
       client = {
         ---@type integer
         id = client_id,
         ---@type string
         name = self.name,
+
+        ---@type integer
+        buffer = bufnr,
       },
+
       ---@type "init"|"complete"|"cancel"|"sent"|"error"
       status = "init",
     }
@@ -175,13 +193,13 @@ function _M.init()
       entry.sent = nil
       entry.status = err and "error" or "complete"
 
-      queue:queue(_M.fname, json_encode(entry))
+      queue:queue(FILENAME, json_encode(entry))
 
       return handler(err, result, context)
     end
 
     local ok
-    ok, request_id = _request(self, method, params, wrapper, bufnr)
+    ok, request_id = request(self, method, params, wrapper, bufnr)
 
     if ok then
       entry.status = "sent"
@@ -216,7 +234,7 @@ function _M.init()
         entry.duration = time() - entry.sent
         entry.sent = nil
 
-        queue:queue(_M.fname, json_encode(entry))
+        queue:queue(FILENAME, json_encode(entry))
         in_flight[client_id][request_id] = nil
 
       elseif request.type == "complete" then
@@ -224,10 +242,6 @@ function _M.init()
       end
     end,
   })
-
-  vim.schedule(function()
-    vim.notify("LSP debugging enabled. Log file:\n" .. _M.fname)
-  end)
 end
 
 return _M

@@ -1,9 +1,22 @@
 local vim = vim
+local api = vim.api
+
 local startswith = vim.startswith
 local endswith   = vim.endswith
-local nvim_buf_set_keymap = vim.api.nvim_buf_set_keymap
-local nvim_set_keymap = vim.api.nvim_set_keymap
+
+local get_keymap      = api.nvim_get_keymap
+local buf_get_keymap  = api.nvim_buf_get_keymap
+
+local del_keymap      = api.nvim_del_keymap
+local buf_del_keymap  = api.nvim_buf_del_keymap
+
+local set_keymap      = api.nvim_set_keymap
+local buf_set_keymap  = api.nvim_buf_set_keymap
+
+local get_current_buf = api.nvim_get_current_buf
+
 local fmt = string.format
+local insert = table.insert
 
 local _M = {}
 
@@ -114,6 +127,19 @@ do
   end
 end
 
+
+---@class my.keymap.tagged.entry
+---
+---@field mode string
+---@field lhs string
+---@field buf? number
+---@field old? vim.api.keyset.get_keymap[]
+
+
+---@type { [string]: my.keymap.tagged.entry[] }
+local TAGS = {}
+
+
 ---@param a table
 ---@param b table
 ---@return table
@@ -127,16 +153,48 @@ local function extend(a, b)
   return vim.tbl_deep_extend("force", a, b)
 end
 
+
+---@param mode string
+---@param lhs string
+---@param action string
+---@param opts? vim.api.keyset.keymap
+---@param buf? boolean
+local function save_tagged(mode, lhs, _action, opts, buf)
+  local tag = opts.tag
+  opts.tag = nil
+  if not tag then
+    return
+  end
+
+  TAGS[tag] = TAGS[tag] or {}
+
+  local bufid
+  if buf then
+    bufid = get_current_buf()
+  end
+
+  insert(TAGS[tag], {
+    mode = mode,
+    lhs = lhs,
+    buf = bufid,
+  })
+end
+
+
 ---@param mode string
 ---@param key string
 ---@param action string
 ---@param opts? vim.api.keyset.keymap
 ---@param buf? boolean
 local function create_keymap(mode, key, action, opts, buf)
+  if opts.tag then
+    save_tagged(mode, key, action, opts, buf)
+  end
+
   if buf then
-    return nvim_buf_set_keymap(0, mode, key, action, opts)
+    return buf_set_keymap(0, mode, key, action, opts)
   else
-    return nvim_set_keymap(mode, key, action, opts)
+    return set_keymap(mode, key, action, opts)
   end
 end
 
@@ -185,6 +243,9 @@ local mt = {
     opts.desc = opts.desc or opts[2]
     opts[2] = nil
 
+    opts.tag = opts.tag or opts[3]
+    opts[3] = nil
+
     if is_callable(action) then
       opts = vim.deepcopy(opts)
       opts.callback = action
@@ -219,10 +280,13 @@ local mt = {
 ---
 ---@field buf?        boolean
 ---@field no_auto_cr? boolean
+---@field desc?       string
+---@field tag?        string
 
 ---@class my.keymap.action.table : my.keymap.opts
 ---@field [1] string|function # the RHS of the key map
 ---@field [2] string|nil      # shorthand for desc = ...
+---@field [3] string|nil      # shorthand for tag = ...
 
 ---@alias my.keymap.action string|my.keymap.action.table
 
@@ -340,5 +404,26 @@ _M.Meta = setmetatable({}, {
 ---
 --- (this is actually aliased to `Meta`)
 _M.Alt = _M.Meta
+
+
+---@param tag string
+function _M.remove_by_tag(tag)
+  local tags = TAGS[tag]
+  if not tags then
+    vim.notify(tag .. ": no tags")
+    return
+  end
+
+  TAGS[tag] = nil
+
+  for _, item in ipairs(tags) do
+    if item.buf then
+      buf_del_keymap(item.buf, item.mode, item.lhs)
+    else
+      del_keymap(item.mode, item.lhs)
+    end
+  end
+end
+
 
 return _M

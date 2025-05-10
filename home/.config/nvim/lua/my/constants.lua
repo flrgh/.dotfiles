@@ -1,5 +1,5 @@
----@class user.globals
-local globals = {}
+---@class my.constants
+local const = {}
 
 local getenv = os.getenv
 local vim = vim
@@ -16,54 +16,45 @@ local function expand(path)
 end
 
 local function detect_workspace()
-  local mod = require "my.utils.luamod"
   local fs = require "my.utils.fs"
-  local ws
 
-  if mod.exists("lspconfig") then
-    local util = require "lspconfig.util"
-    local f = vim.fn.expand("%:p:h")
-    ws = util.find_git_ancestor(f)
-  end
-
-  return ws
+  return vim.fs.root(0, ".git")
       or fs.workspace_root()
       or fs.buffer_directory()
-      or vim.loop.cwd()
+      or vim.uv.cwd()
       or vim.fn.getenv("PWD")
 end
 
 
 --- nvim workspace directory
 ---@type string
-globals.workspace = detect_workspace()
-if globals.workspace then
-  vim.fn.setenv("NVIM_WORKSPACE", globals.workspace)
+const.workspace = detect_workspace()
+if const.workspace then
+  vim.fn.setenv("NVIM_WORKSPACE", const.workspace)
 end
+
+---@type integer
+const.lsp_log_level = vim.log.levels.OFF
 
 --- LSP debug enabled (based on `NVIM_LSP_DEBUG=1`)
 ---@type boolean
-globals.lsp_debug = false
+const.lsp_debug = false
 do
   local env = getenv("NVIM_LSP_DEBUG")
   if env and env ~= "0" then
-    globals.lsp_debug = true
-
-    local level = vim.log.levels[env] or vim.log.levels.DEBUG
-    vim.lsp.set_log_level(level)
-
-    require("my.lsp.logger").init()
+    const.lsp_debug = true
+    const.lsp_log_level = vim.log.levels.DEBUG
   end
 end
 
 
 --- Debug flag (based on the value of `NVIM_DEBUG=1`)
 ---@type boolean
-globals.debug = false
+const.debug = false
 do
   local env = getenv("NVIM_DEBUG")
   if env and env ~= "0" then
-    globals.debug = true
+    const.debug = true
     vim.schedule(function()
       vim.notify("Neovim debug enabled via `NVIM_DEBUG` var")
     end)
@@ -71,27 +62,39 @@ do
 end
 
 
-globals.home = getenv("HOME") or expand("~")
+--- `$(whoami)`
+---@type string
+const.username = getenv("USER")
+                or getenv("LOGNAME")
+                or getenv("USERNAME")
+                or vim.system({ "whoami" })
+                   :wait()
+                   .stdout
+                   :gsub("[\r\n]*$", "")
+
+const.home = getenv("HOME")
+            or expand("~")
+            or ("/home/" .. const.username)
 
 --- My github username
 ---@type string
-globals.github_username = "flrgh"
+const.github_username = "flrgh"
 
 --- Path to ~/git
 ---@type string
-globals.git_root = globals.home .. "/git"
+const.git_root = const.home .. "/git"
 
 --- Path to ~/git/{{github_username}}
 ---@type string
-globals.git_user_root = globals.git_root .. "/" .. globals.github_username
+const.git_user_root = const.git_root .. "/" .. const.github_username
 
 do
-  local dotfiles = globals.git_user_root .. "/.dotfiles"
+  local dotfiles = const.git_user_root .. "/.dotfiles"
   local config_nvim = dotfiles .. "/home/.config/nvim"
 
   --- Special locations within my dotfiles repo
   ---@class user.globals.dotfiles
-  globals.dotfiles = {
+  const.dotfiles = {
     --- Absolute to my dotfiles repo (~/git/flrgh/.dotfiles)
     ---@type string
     root = dotfiles,
@@ -107,10 +110,10 @@ do
 end
 
 do
-  local home = assert(globals.home)
+  local home = assert(const.home)
 
   ---@class user.globals.xdg
-  globals.xdg = {
+  const.xdg = {
     -- $XDG_DATA_HOME (~/.local/share)
     data = getenv("XDG_DATA_HOME") or (home .. "/.local/share"),
 
@@ -128,10 +131,10 @@ end
 do
   local app_name = getenv("NVIM_APPNAME") or "nvim"
 
-  local xdg = globals.xdg
+  local xdg = const.xdg
 
   ---@class user.globals.nvim
-  globals.nvim = {
+  const.nvim = {
     -- $NVIM_APPNAME (default "nvim")
     app_name = app_name,
 
@@ -157,7 +160,7 @@ do
 end
 
 ---@type boolean
-globals.bootstrap = (_G.___BOOTSTRAP and true)
+const.bootstrap = (_G.___BOOTSTRAP and true)
                     or getenv("NVIM_BOOTSTRAP") == "1"
 
-return globals
+return const

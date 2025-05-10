@@ -2,29 +2,15 @@ local _M = {}
 
 local fs = require "my.utils.fs"
 local sw = require "my.utils.stopwatch"
-local globals = require "my.config.globals"
+local const = require "my.constants"
 
 local insert = table.insert
 local find = string.find
 local sub = string.sub
 local gsub = string.gsub
-local pairs = pairs
 local file_exists = fs.file_exists
 
 local function noop() end
-
---- shallow table merge
-local function merge(a, b)
-  if b then
-    a = a or {}
-
-    for k, v in pairs(b) do
-      a[k] = v
-    end
-  end
-
-  return a
-end
 
 ---@class my.lua.resolver.module
 ---
@@ -223,13 +209,14 @@ end
 
 local resolver_mt = { __index = resolver }
 
+
 ---@return my.lua.resolver
 function _M.new()
   local self = setmetatable({
     paths = {},
     module_cache = {},
     fs_cache = {},
-    debug = globals.debug or false,
+    debug = const.debug or false,
     dir_lookup = {},
   }, resolver_mt)
 

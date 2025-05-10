@@ -1,6 +1,10 @@
-local add_command = vim.api.nvim_create_user_command
+local command = vim.api.nvim_create_user_command
 
-add_command("Dump",
+local vim = vim
+local lsp = vim.lsp
+
+
+command("Dump",
   "lua vim.pretty_print(<args>)",
   { nargs = 1,
     complete = "lua",
@@ -8,7 +12,7 @@ add_command("Dump",
   }
 )
 
-add_command("LuaDebug",
+command("LuaDebug",
   function()
     local fs = require "my.utils.fs"
 
@@ -79,7 +83,14 @@ add_command("LuaDebug",
       buf:putf(  "  basename: %s\n", WS.basename)
       buf:putf(  "  meta:\n")
       for k, v in pairs(WS.meta or {}) do
-        buf:putf("    %s: %s\n", k, v)
+        if type(v) == "table" then
+          buf:putf("    %s:\n", k)
+          for kk, vv in pairs(v) do
+            buf:putf("      %s: %s\n", kk, vv)
+          end
+        else
+          buf:putf("    %s: %s\n", k, v)
+        end
       end
       buf:put("\n")
     end
@@ -175,7 +186,7 @@ add_command("LuaDebug",
 
     replace_path(vim.env.VIMRUNTIME, "nvim.runtime")
     replace_path(vim.fn.stdpath("data") .. "/lazy", "nvim.plugins")
-    replace_path(require("my.config.globals").workspace, "workspace")
+    replace_path(require("my.constants").workspace, "workspace")
 
     if luarocks then
       buf:put("luarocks:\n")
@@ -255,39 +266,8 @@ add_command("LuaDebug",
     do
       local client = vim.lsp.get_clients({ name = "lua_ls" })[1]
       local settings = client and client.settings and client.settings.Lua
-      local function tlen(t)
-        if type(t) == "table" then
-          return vim.tbl_count(t)
-        end
-        return 0
-      end
-
       if settings then
         buf:put("LSP:\n")
-
-        local ws = require("my.lsp.server.lua_ls").workspace
-        if ws then
-          buf:put("  workspace:\n")
-          if ws.dir then
-            buf:putf("    dirname: %s\n", ws.dir)
-          end
-
-          if ws.path_match then
-            buf:putf("    path_match: %s\n", ws.path_match)
-          end
-
-          buf:putf("    resty: %s\n", ws.settings.resty or false)
-          buf:putf("    kong: %s\n", ws.settings.kong or false)
-          buf:putf("    nvim: %s\n", ws.settings.nvim or false)
-          buf:putf("    luarc: %s\n", ws.settings.luarc or false)
-          buf:putf("    luarocks: %s\n", ws.settings.luarocks or false)
-          buf:putf("    override_all: %s\n", ws.settings.override_all or false)
-
-          buf:putf("    libraries: %s\n", tlen(ws.settings.libraries))
-          buf:putf("    definitions: %s\n", tlen(ws.settings.definitions))
-          buf:putf("    ignore: %s\n", tlen(ws.settings.ignore))
-          buf:putf("    plugins: %s\n", tlen(ws.settings.plugins))
-        end
 
         buf:putf("  root_dir: %s\n", client.root_dir)
         buf:putf("  runtime.version: %s\n", settings.runtime.version)
@@ -314,7 +294,7 @@ add_command("LuaDebug",
   }
 )
 
-add_command("ShowEditorSettings",
+command("ShowEditorSettings",
   function()
     local o = vim.opt_local
     local get_info = vim.api.nvim_get_option_info2
@@ -411,5 +391,141 @@ add_command("ShowEditorSettings",
   end,
   {
     desc = "Show common editor settings (indent, format, etc)",
+  }
+)
+
+command("LspSettings",
+  function(args)
+    ---@param client vim.lsp.Client
+    local function info(client)
+      return {
+        name = client.name,
+        settings = client.settings or vim.NIL,
+        workspace_folders = client.workspace_folders or vim.NIL,
+      }
+    end
+
+    if args.fargs and #args.fargs == 1 then
+      local name = args.fargs[1]
+
+      for _, client in ipairs(lsp.get_clients()) do
+        if client.name == name then
+          vim.print(info(client).settings)
+          return
+        end
+      end
+
+      vim.notify("LSP client '" .. name .. "' not found")
+      return
+    end
+
+    local result = {}
+    for i, client in ipairs(lsp.get_clients()) do
+      result[i] = info(client)
+    end
+
+    if #result > 1 then
+      vim.print(result)
+
+    elseif #result == 1 then
+      vim.print(result[1])
+
+    else
+      vim.notify("No active LSP clients")
+    end
+  end,
+  {
+    desc = "Show settings for active LSP clients",
+    nargs = "?",
+    complete = function()
+      local names = {}
+      for i, client in ipairs(lsp.get_clients()) do
+        names[i] = client.name
+      end
+      return names
+    end,
+  }
+)
+
+command("LspCapabilities",
+  function(args)
+    ---@param client vim.lsp.Client
+    local function get_caps(client)
+      return {
+        name = client.name,
+        client = client.capabilities,
+        server = client.server_capabilities,
+      }
+    end
+
+    local buf = require("string.buffer").new()
+
+    ---@param t table|any
+    ---@param label string
+    ---@param lvl? integer
+    local function display(t, label, lvl)
+      local typ = type(t)
+      lvl = lvl or 0
+      if typ == "table" then
+        display("...", label, lvl)
+        for k, v in pairs(t) do
+          display(v, tostring(k), lvl + 1)
+        end
+
+      else
+        buf:putf("%s%s => %q\n", string.rep("  ", lvl), label, t)
+      end
+    end
+
+    local function render(info)
+      buf:putf("%s\n", info.name)
+      display(info.client, "client")
+      display(info.server, "server")
+    end
+
+    if args.fargs and #args.fargs == 1 then
+      local name = args.fargs[1]
+
+      for _, client in ipairs(lsp.get_clients()) do
+        if client.name == name then
+          render(get_caps(client))
+          vim.print(buf:get())
+          return
+        end
+      end
+
+      vim.notify("LSP client '" .. name .. "' not found")
+      return
+    end
+
+    local result = {}
+    for i, client in ipairs(lsp.get_clients()) do
+      result[i] = get_caps(client)
+    end
+
+    if #result > 1 then
+      for _, info in ipairs(result) do
+        render(info)
+      end
+      vim.print(buf:get())
+
+    elseif #result == 1 then
+      render(result[1])
+      vim.print(buf:get())
+
+    else
+      vim.notify("No active LSP clients")
+    end
+  end,
+  {
+    desc = "Show capabilities for active LSP clients",
+    nargs = "?",
+    complete = function()
+      local names = {}
+      for i, client in ipairs(lsp.get_clients()) do
+        names[i] = client.name
+      end
+      return names
+    end,
   }
 )

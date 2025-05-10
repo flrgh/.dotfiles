@@ -183,7 +183,6 @@ e.BufWritePre = "BufWritePre"
 ---
 --- When the command resets 'modified' the undo information is adjusted to mark older undo states as 'modified', like `:write` does.
 ---
---- |Cmd-event`
 e.BufWriteCmd = "BufWriteCmd"
 
 --- After writing the whole buffer to a file (should undo the commands for `BufWritePre`).
@@ -372,6 +371,22 @@ e.CursorMoved = "CursorMoved"
 ---
 --- Otherwise the same as CursorMoved.
 e.CursorMovedI = "CursorMovedI"
+
+--- After diagnostics have changed.
+---
+--- When used from Lua, the new diagnostics are passed to the autocmd callback in the "data" table.
+---
+--- Triggered per buffer.
+---
+---```lua
+---  vim.api.nvim_create_autocmd('DiagnosticChanged', {
+---    callback = function(args)
+---      local diagnostics = args.data.diagnostics
+---      vim.print(diagnostics)
+---    end,
+---  })
+---```
+e.DiagnosticChanged = "DiagnosticChanged"
 
 --- After diffs have been updated.
 ---
@@ -1123,5 +1138,24 @@ e.LspDetach = "LspDetach"
 e.LspNotify = "LspNotify"
 e.LspProgress = "LspProgress"
 e.LspRequest = "LspRequest"
+
+
+--- Creates a namespaced User event pattern
+---
+---@param evt my.vim.event
+---@param name? string|string[]
+---@return my.vim.event event
+---@return string pattern
+function e.user_event(evt, name)
+  name = name or "*"
+  if type(name) == "table" then
+    name = table.concat(name, ".")
+  else
+    name = tostring(name)
+  end
+
+  return e.User, e.User .. "." .. evt .. "." .. name
+end
+
 
 return e
