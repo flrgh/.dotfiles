@@ -74,7 +74,11 @@ do
     code_action         = lsp.buf.code_action,
     declaration         = lsp.buf.declaration,
     definition          = lsp.buf.definition,
-    hover               = lsp.buf.hover,
+    hover               = function()
+      return lsp.buf.hover({
+        border = "rounded",
+      })
+    end,
     implementation      = lsp.buf.implementation,
     references          = lsp.buf.references,
     rename              = lsp.buf.rename,
@@ -93,12 +97,11 @@ do
 
     configured = true
 
-    if mod.exists("lspsaga") then
+    if plugin.installed("lspsaga.nvim") then
       local cmd = function(s)
         return ("<cmd>Lspsaga %s<CR>"):format(s)
       end
 
-      maps.hover = cmd("hover_doc")
       maps.references = cmd("finder")
 
       -- FIXME: re-enable this
@@ -107,23 +110,6 @@ do
 
       maps.next_diagnostic = cmd("diagnostic_jump_next")
       maps.prev_diagnostic = cmd("diagnostic_jump_prev")
-    end
-
-    if mod.exists("hover") then
-      -- I like this better than lspsaga's hover_doc
-      local hover = require("hover").hover
-
-      -- 1. press the key once to show the doc window
-      -- 2. press the key a second time to change focus to the window
-      -- https://github.com/lewis6991/hover.nvim/issues/49
-      maps.hover = function()
-        local hover_win = vim.b.hover_preview
-        if hover_win and api.nvim_win_is_valid(hover_win) then
-          api.nvim_set_current_win(hover_win)
-        else
-          return hover()
-        end
-      end
     end
 
     do
@@ -164,11 +150,11 @@ do
     configure()
 
     -- set up key bindings
-    km.buf.nnoremap.gD          = { maps.declaration, "Go to declaration", KEYMAP_TAG }
-    km.buf.nnoremap.gd          = { maps.type_definition, "Go to type definition", KEYMAP_TAG }
-    km.buf.nnoremap.gi          = { maps.implementation, "Go to implementation", KEYMAP_TAG }
+    km.buf.nnoremap.gD           = { maps.declaration, "Go to declaration", KEYMAP_TAG }
+    km.buf.nnoremap.gd           = { maps.type_definition, "Go to type definition", KEYMAP_TAG }
+    km.buf.nnoremap.gi           = { maps.implementation, "Go to implementation", KEYMAP_TAG }
 
-    km.buf.nnoremap.K           = { maps.hover, "Hover info", KEYMAP_TAG }
+    km.buf.nnoremap.K            = { maps.hover, "Hover info", KEYMAP_TAG }
 
     km.buf.nnoremap[Leader.ca]   = { maps.code_action, "Code action", KEYMAP_TAG }
     km.buf.vnoremap[Leader.ca]   = { maps.range_code_action, "Code action (ranged)", KEYMAP_TAG }
@@ -196,12 +182,29 @@ function _M.on_attach(_client_id, buf)
 
   vim.diagnostic.config({
     virtual_text = false,
+    float = {
+      border = "rounded",
+    },
   })
 
   vim.bo[buf].tagfunc = "v:lua.vim.lsp.tagfunc"
   vim.bo[buf].omnifunc = "v:lua.vim.lsp.omnifunc"
 end
 
+local function no_more_attached_clients(buf, client_id)
+  local clients = lsp.get_clients({ bufnr = buf })
+  if not clients then
+    return true
+
+  elseif #clients == 0 then
+    return true
+
+  elseif #clients == 1 and clients[1].id == client_id then
+    return true
+  end
+
+  return false
+end
 
 ---@param client_id number
 ---@param buf    number
@@ -209,14 +212,15 @@ function _M.on_detach(client_id, buf)
   local clients = lsp.get_clients({ bufnr = buf })
 
   -- no more connected clients (or this was the last one)
-  if not clients
-    or #clients == 0
-    or (#clients == 1 and clients[1].id == client_id)
-  then
-    -- teardown for midterms
-    vim.bo[buf].tagfunc = nil
-    vim.bo[buf].omnifunc = nil
-    km.remove_by_tag(KEYMAP_TAG)
+  if no_more_attached_clients(buf, client_id) then
+    vim.schedule(function()
+      if api.nvim_buf_is_valid(buf) then
+        vim.notify("[lsp] teardown for midterms")
+        vim.bo[buf].tagfunc = nil
+        vim.bo[buf].omnifunc = nil
+        km.remove_by_tag(KEYMAP_TAG)
+      end
+    end)
   end
 end
 

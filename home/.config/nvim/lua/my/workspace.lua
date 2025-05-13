@@ -81,6 +81,10 @@ local function include_nvim(ws)
     const.nvim.runtime_lua,
   })
 
+  extend(ws, "lua.definitions", {
+    LUA_CATS .. "/luv/library",
+  })
+
   extend(ws, "lua.ignore", {
     "lspconfig/server_configurations"
   })

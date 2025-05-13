@@ -651,13 +651,6 @@ local function get_merged_settings()
   end
 
   if WS.meta.nvim then
-    if luamod.exists("neodev.config") then
-      local nconf = require("neodev.config")
-      insert(settings.definitions, nconf.root() .. "/types/stable")
-    else
-      vim.notify("module `neodev.config` is missing")
-    end
-
     for _, name in ipairs(settings.plugins or EMPTY) do
       local lib = get_plugin_lua_dir(name)
       if lib then

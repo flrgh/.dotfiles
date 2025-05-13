@@ -337,16 +337,6 @@ local plugins_by_category = {
       cmd = { "TagbarToggle" },
     },
 
-    {
-      "folke/noice.nvim",
-      event = evt.VeryLazy,
-      dependencies = {
-        "MunifTanjim/nui.nvim",
-        "rcarriga/nvim-notify",
-      },
-      config = file_config("noice"),
-    },
-
     { "rcarriga/nvim-notify",
       init = function()
         local notify = require "notify"
@@ -640,7 +630,6 @@ local plugins_by_category = {
       event = evt.VeryLazy,
       dependencies = {
         "b0o/schemastore.nvim",
-        "folke/neodev.nvim"
       },
     },
 
@@ -664,28 +653,6 @@ local plugins_by_category = {
 
           code_action = {
             extend_gitsigns = true,
-          },
-        })
-      end,
-    },
-
-    {
-      "lewis6991/hover.nvim",
-      event = evt.VeryLazy,
-      config = function()
-        require("hover").setup({
-          init = function()
-            require("hover.providers.lsp")
-            require("hover.providers.man")
-            require("hover.providers.gh")
-            require("hover.providers.dictionary")
-          end,
-          preview_opts = {
-            border = nil,
-          },
-          title = true,
-          mouse_providers = {
-            "LSP",
           },
         })
       end,

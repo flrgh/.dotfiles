@@ -18,6 +18,7 @@ local get_current_buf = api.nvim_get_current_buf
 local fmt = string.format
 local insert = table.insert
 
+
 local _M = {}
 
 local CR = "<CR>"
@@ -25,6 +26,7 @@ local CR = "<CR>"
 _M.CR       = CR
 _M.Return   = CR
 _M.Enter    = CR
+
 
 _M.Delete = "<Del>"
 _M.Del    = _M.Delete
@@ -274,7 +276,7 @@ local mt = {
 }
 
 
----@alias my.keymap.mode "n"|"v"|"x"|""
+---@alias my.keymap.mode "n"|"v"|"x"|"i"|"o"|""
 
 ---@class my.keymap.opts : vim.api.keyset.keymap
 ---
@@ -314,26 +316,45 @@ local function make_map(mode, opts)
 end
 
 _M.map      = make_map('',  { noremap = false })
-_M.vmap     = make_map('v', { noremap = false })
+_M.noremap  = make_map('',  { noremap = true  })
 _M.nmap     = make_map('n', { noremap = false })
-_M.noremap  = make_map('',  { noremap = true })
-_M.vnoremap = make_map('v', { noremap = true })
-_M.nnoremap = make_map('n', { noremap = true })
-_M.xmap     = make_map('x', { noremap = false })
-_M.imap     = make_map('i', { noremap = false })
+_M.nnoremap = make_map('n', { noremap = true  })
+_M.vmap     = make_map('v', { noremap = false })
+_M.vnoremap = make_map('v', { noremap = true  })
 _M.smap     = make_map('s', { noremap = false })
+_M.snoremap = make_map('s', { noremap = true  })
+_M.xmap     = make_map('x', { noremap = false })
+_M.xnoremap = make_map('x', { noremap = true  })
+_M.omap     = make_map('o', { noremap = false })
+_M.onoremap = make_map('o', { noremap = true  })
+_M.imap     = make_map('i', { noremap = false })
+_M.inoremap = make_map('i', { noremap = true  })
+_M.cmap     = make_map('c', { noremap = false })
+_M.cnoremap = make_map('c', { noremap = true  })
+_M.tmap     = make_map('t', { noremap = false })
+_M.tnoremap = make_map('t', { noremap = true  })
+
 
 -- for setting buffer-specific mappings
 _M.buf = {
   map      = make_map('',  { buf = true, noremap = false }),
-  vmap     = make_map('v', { buf = true, noremap = false }),
+  noremap  = make_map('',  { buf = true, noremap = true  }),
   nmap     = make_map('n', { buf = true, noremap = false }),
-  noremap  = make_map('',  { buf = true, noremap = true }),
-  vnoremap = make_map('v', { buf = true, noremap = true }),
-  nnoremap = make_map('n', { buf = true, noremap = true }),
-  xmap     = make_map('x', { buf = true, noremap = false }),
-  imap     = make_map('i', { buf = true, noremap = false }),
+  nnoremap = make_map('n', { buf = true, noremap = true  }),
+  vmap     = make_map('v', { buf = true, noremap = false }),
+  vnoremap = make_map('v', { buf = true, noremap = true  }),
   smap     = make_map('s', { buf = true, noremap = false }),
+  snoremap = make_map('s', { buf = true, noremap = true  }),
+  xmap     = make_map('x', { buf = true, noremap = false }),
+  xnoremap = make_map('x', { buf = true, noremap = true  }),
+  omap     = make_map('o', { buf = true, noremap = false }),
+  onoremap = make_map('o', { buf = true, noremap = true  }),
+  imap     = make_map('i', { buf = true, noremap = false }),
+  inoremap = make_map('i', { buf = true, noremap = true  }),
+  cmap     = make_map('c', { buf = true, noremap = false }),
+  cnoremap = make_map('c', { buf = true, noremap = true  }),
+  tmap     = make_map('t', { buf = true, noremap = false }),
+  tnoremap = make_map('t', { buf = true, noremap = true  }),
 }
 
 --- Generate a Ctrl+<key> key binding

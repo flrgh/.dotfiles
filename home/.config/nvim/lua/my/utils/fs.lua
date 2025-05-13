@@ -1,8 +1,6 @@
 --- filesystem utility functions
 ---@module "my.utils.fs"
-local _M = {
-  _VERSION = '0.1'
-}
+local _M = {}
 
 local vim = vim
 local fn = vim.fn
