@@ -571,13 +571,15 @@ local plugins_by_category = {
     },
 
     {
-      "Saghen/blink.cmp",
+      "saghen/blink.cmp",
       enabled = false,
-      version = "v0.*",
+      version = "v1.*",
       config = file_config("blink"),
-      -- allows extending the providers array elsewhere in your config
-      -- without having to redefine it
-      --opts_extend = { "sources.default" },
+      dependencies = {
+        "moyiz/blink-emoji.nvim",
+        "Kaiser-Yang/blink-cmp-git",
+        "MahanRahmati/blink-nerdfont.nvim",
+      },
     },
 
     {
