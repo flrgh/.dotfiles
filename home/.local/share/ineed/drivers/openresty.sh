@@ -108,7 +108,7 @@ install-from-asset() {
     )
 
     ./configure "${flags[@]}"
-    make install
+    make -j"$(nproc)" install
 
     ln -nsfv "$version" "$CURRENT_INSTALL"
 
