@@ -19,6 +19,7 @@ strip-whitespace() {
 bin-path() {
     __function_dispatch "$@"
 }
+alias which="bin-path"
 
 dump-array() {
     __function_dispatch "$@"
