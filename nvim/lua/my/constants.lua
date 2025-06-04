@@ -90,7 +90,7 @@ const.git_user_root = const.git_root .. "/" .. const.github_username
 
 do
   local dotfiles = const.git_user_root .. "/.dotfiles"
-  local config_nvim = dotfiles .. "/home/.config/nvim"
+  local config_nvim = dotfiles .. "/nvim"
 
   --- Special locations within my dotfiles repo
   ---@class user.globals.dotfiles
