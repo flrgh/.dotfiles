@@ -40,6 +40,7 @@ get-asset-download-url() {
 
 install-from-asset() {
     local -r asset=$1
+    local -r version=$2
 
     local tmp; tmp=$(mktemp -d)
     cd "$tmp"
