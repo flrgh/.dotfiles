@@ -10,7 +10,6 @@ export RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.local/rustup}
 readonly PACKAGES=(
     alacritty      # terminal emulator
     bindgen-cli
-    btm            # nifty system monitor (top => btm)
     cargo-bloat
     cargo-cache
     cargo-dist
