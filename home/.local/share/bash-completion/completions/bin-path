@@ -23,4 +23,6 @@ __complete_PATH_bins() {
 
 complete -F __complete_PATH_bins bin-path
 
+complete -F __complete_PATH_bins which
+
 # vim: set ft=sh:
