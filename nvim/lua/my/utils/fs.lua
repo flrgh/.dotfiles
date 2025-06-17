@@ -153,23 +153,6 @@ function _M.buffer_directory()
   return fn.expand("%:p:h", true)
 end
 
----@return string?
-function _M.workspace_root()
-  local dir = _M.buffer_directory() or fn.getcwd()
-  if not dir then
-    return
-  end
-
-  while not _M.dir_exists(dir .. "/.git") do
-    dir = dir:gsub("/[^/]+$", "")
-    if dir == nil or dir == "/" or dir == "" then
-      return
-    end
-  end
-
-  return dir
-end
-
 local normalize
 do
   local buf = {}
@@ -231,6 +214,24 @@ do
   normalize = _M.normalize
 end
 
+---@return string?
+function _M.workspace_root()
+  local dir = _M.buffer_directory() or fn.getcwd()
+  if not dir then
+    return
+  end
+
+  dir = normalize(dir)
+
+  while not _M.dir_exists(dir .. "/.git") do
+    dir = dir:gsub("/[^/]+$", "")
+    if dir == nil or dir == "/" or dir == "" then
+      return
+    end
+  end
+
+  return dir
+end
 
 ---@param path string
 ---@return string
