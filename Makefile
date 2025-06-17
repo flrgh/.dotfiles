@@ -240,13 +240,13 @@ golang: $(NEED)/gopls $(NEED)/gotags | .setup
 .PHONY: language-servers
 language-servers: $(NPM_PKG) $(LIBEXEC) \
 	$(LUAROCKS_PKG)/teal-language-server \
-	$(HASHICORP_PKG)/terraform-ls \
 	$(NEED)/gopls \
 	$(PIP_PKG)/systemd-language-server \
+	$(MISE_DEPS) \
 	| .setup
 
 .PHONY: neovim
-neovim: language-servers $(NEED)/neovim $(NEED)/tree-sitter $(NEED)/fzf | .setup
+neovim: language-servers $(NEED)/neovim $(NEED)/tree-sitter $(MISE_DEPS) | .setup
 
 .PHONY: lua
 lua: $(LUAROCKS)
@@ -274,5 +274,5 @@ curl: $(NEED)/curl build/home/.config/curlrc | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
 
 .PHONY: git-config
-git-config: $(NEED)/github-cli | ssh .setup
+git-config: $(MISE_DEPS) | ssh .setup
 	./scripts/update-git-config

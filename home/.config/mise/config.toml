@@ -11,6 +11,13 @@ uv = "latest"
 ninja = "latest"
 yq = "latest"
 ast-grep = "latest"
+jq = "latest"
+shellcheck = "latest"
+gh = { version = "latest", postinstall = "~/.config/mise/post-install gh" }
+cargo-binstall = "latest"
+fzf = { version = "latest", postinstall = "~/.config/mise/post-install fzf" }
+git-cliff = { version = "latest", postinstall = "~/.config/mise/post-install git-cliff" }
+terraform-ls = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
