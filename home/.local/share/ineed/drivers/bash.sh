@@ -190,7 +190,7 @@ list-available-versions() {
     local html
     html=$(cache-get -q "$INDEX" "bash-versions.html")
     sed -n -r \
-        -e 's/.*href="bash-([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz".*/\1/p' \
+        -e 's/.*href="bash-([0-9]+\.[0-9]+(\.[0-9]+)?)\.tar\.gz".*/\1/p' \
     < "$html"
 }
 
