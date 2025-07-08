@@ -19,7 +19,7 @@ rc-workfile-if-interactive
 if rc-command-exists fd; then
     log "fd is installed, adding some fzf support functions"
 
-    cmd='fd --hidden --type f --color=never'
+    cmd='fd --hidden --type f --color=never --exclude ".git"'
     rc-export FZF_DEFAULT_COMMAND "$cmd"
     rc-export FZF_CTRL_T_COMMAND "$cmd"
 
