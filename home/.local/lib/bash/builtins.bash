@@ -15,10 +15,18 @@ declare -gxA BASH_USER_BUILTINS_SOURCE=(
     [version]="$BASH_USER_BUILTINS_PATH/version"
 )
 
-__have_builtin() {
-    local -r name=$1
-    [[ $(type -t "$name" 2>/dev/null) == "builtin" ]]
-}
+if (( BASH_USER_5_3 == 1 )); then
+    # shellcheck disable=SC2127
+    __have_builtin() {
+        local -r name=$1
+        [[ ${ type -t "$name";} == "builtin" ]]
+    }
+else
+    __have_builtin() {
+        local -r name=$1
+        [[ $(type -t "$name") == "builtin" ]]
+    }
+fi
 
 __load_builtin() {
     local -r name=$1

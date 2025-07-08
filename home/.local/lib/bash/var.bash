@@ -10,43 +10,82 @@ is-valid-identifier() {
     [[ ${1:-} = [a-zA-Z_]*([a-zA-Z_0-9]) ]]
 }
 
-var-dec() {
-    local -r name=${1:?var name is required}
-    local -r dest=${2:?dest var is required}
-
-    if ! is-valid-identifier "$name"; then
-        return 1
-    fi
-
-    printf -v "$dest" '%s' "$(builtin declare -p "$name" 2>/dev/null)"
-
-    [[ -n "${!dest:-}" ]]
-}
-
 declare -g VAR_FLAGS
 declare -g VAR_VALUE
 
-__parse_decl() {
-    VAR_FLAGS=""
-    VAR_VALUE=""
+if (( BASH_USER_5_3 == 1 )); then
+    var-dec() {
+        local -r name=${1:?var name is required}
+        local -r dest=${2:?dest var is required}
 
-    local -r name=${1:?var name is required}
+        if ! is-valid-identifier "$name"; then
+            return 1
+        fi
 
-    local __decl; __decl=$(builtin declare -p "$name" 2>/dev/null || true)
+        # shellcheck disable=SC2127
+        printf -v "$dest" '%s' "${ builtin declare -p "$name" 2>/dev/null;}"
 
-    if [[ -z $__decl ]]; then
-        return 1
-    fi
+        [[ -n "${!dest:-}" ]]
+    }
 
-    VAR_FLAGS=${__decl##"declare -"}
-    VAR_FLAGS=${VAR_FLAGS#"-"}
+    __parse_decl() {
+        VAR_FLAGS=""
+        VAR_VALUE=""
 
-    VAR_VALUE=${VAR_FLAGS#* *=}
-    VAR_VALUE=${VAR_VALUE#\"}
-    VAR_VALUE=${VAR_VALUE%\"}
+        local -r name=${1:?var name is required}
 
-    VAR_FLAGS=${VAR_FLAGS%% *}
-}
+        # shellcheck disable=SC2155,SC2127
+        local __decl=${ builtin declare -p "$name" 2>/dev/null;}
+        if [[ -z $__decl ]]; then
+            return 1
+        fi
+
+        VAR_FLAGS=${__decl##"declare -"}
+        VAR_FLAGS=${VAR_FLAGS#"-"}
+
+        VAR_VALUE=${VAR_FLAGS#* *=}
+        VAR_VALUE=${VAR_VALUE#\"}
+        VAR_VALUE=${VAR_VALUE%\"}
+
+        VAR_FLAGS=${VAR_FLAGS%% *}
+    }
+else
+    var-dec() {
+        local -r name=${1:?var name is required}
+        local -r dest=${2:?dest var is required}
+
+        if ! is-valid-identifier "$name"; then
+            return 1
+        fi
+
+        printf -v "$dest" '%s' "$(builtin declare -p "$name" 2>/dev/null)"
+
+        [[ -n "${!dest:-}" ]]
+    }
+
+    __parse_decl() {
+        VAR_FLAGS=""
+        VAR_VALUE=""
+
+        local -r name=${1:?var name is required}
+
+        # shellcheck disable=SC2155
+        local __decl=$(builtin declare -p "$name" 2>/dev/null)
+        if [[ -z $__decl ]]; then
+            return 1
+        fi
+
+        VAR_FLAGS=${__decl##"declare -"}
+        VAR_FLAGS=${VAR_FLAGS#"-"}
+
+        VAR_VALUE=${VAR_FLAGS#* *=}
+        VAR_VALUE=${VAR_VALUE#\"}
+        VAR_VALUE=${VAR_VALUE%\"}
+
+        VAR_FLAGS=${VAR_FLAGS%% *}
+    }
+fi
+
 
 # Given a variable name, fills a global VAR_INFO associative array with
 # the variable's metadata. The VAR_INFO array has the following keys:

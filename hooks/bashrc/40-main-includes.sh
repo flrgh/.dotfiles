@@ -7,6 +7,13 @@ source ./lib/bash/generate.bash
 rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 
 {
+    rc-new-workfile user-lib
+    rc-workfile-add-dep "$RC_DEP_SET_VAR"
+    rc-workfile-add-exec source "${BASH_USER_LIB:?}/__init.bash"
+    rc-workfile-close
+}
+
+{
     if rc-command-exists stty; then
         rc-new-workfile key-bindings
 
@@ -166,6 +173,7 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 {
     rc-new-workfile ssh
     rc-workfile-add-dep "$RC_DEP_DEBUG"
+    rc-workfile-add-dep user-lib
     rc-workfile-include ./bash/app-ssh.sh
     rc-workfile-close
 }

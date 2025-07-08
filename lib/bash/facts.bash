@@ -381,15 +381,6 @@ set-not-have() {
     set-false "have.${name}"
 }
 
-have() {
-    local -r name=$1
-    is-true "have.${name}" || return 1
-
-    if [[ -n ${2:-} && -n ${3:-} ]]; then
-        fact-version-compare "$name" "$2" "$3"
-    fi
-}
-
 fact-version-compare() {
     local -r name=${1:?}
     local -r op=${2:?}
@@ -399,6 +390,15 @@ fact-version-compare() {
 
     local version=${FACT:?}
     version-compare "$version" "$op" "$rhs"
+}
+
+have() {
+    local -r name=$1
+    is-true "have.${name}" || return 1
+
+    if [[ -n ${2:-} && -n ${3:-} ]]; then
+        fact-version-compare "$name" "$2" "$3"
+    fi
 }
 
 set-location() {
