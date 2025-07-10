@@ -17,7 +17,23 @@ export INSTALL_INTO := install --verbose --compare --target-directory
 export DIFF := diff --suppress-common-lines --suppress-blank-empty \
 	--ignore-tab-expansion --ignore-all-space --minimal
 
-OLD_FILES := $(INSTALL_PATH)/.bash_profile $(INSTALL_PATH)/.bash_logout
+OLD_FILES := $(INSTALL_PATH)/.bash_profile \
+	$(INSTALL_PATH)/.bash_logout \
+	$(INSTALL_BIN)/*~ \
+	$(INSTALL_BIN)/aws \
+	$(INSTALL_BIN)/aws_* \
+	$(INSTALL_BIN)/fd \
+	$(INSTALL_BIN)/fzf \
+	$(INSTALL_BIN)/gh \
+	$(INSTALL_BIN)/git-cliff \
+	$(INSTALL_BIN)/jq \
+	$(INSTALL_BIN)/python \
+	$(INSTALL_BIN)/shellcheck \
+	$(INSTALL_BIN)/terraform-ls \
+	$(INSTALL_BIN)/terraform-ls-* \
+	$(INSTALL_BIN)/tree-sitter-* \
+	$(INSTALL_BIN)/yq \
+	$(INSTALL_BIN)/zig
 
 CREATE_DIRS := \
 	.cache .cache/download \
@@ -134,8 +150,7 @@ os-packages-update: os-packages
 .PHONY: rm-old-files
 rm-old-files:
 	@for f in $(OLD_FILES); do \
-		[[ -e $$f ]] || continue; \
-		rm -v "$$f"; \
+		rm -fv "$$f"; \
 	done
 
 .PRECIOUS: $(CREATE_DIRS)
