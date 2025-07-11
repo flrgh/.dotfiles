@@ -1,0 +1,12 @@
+com.bitwarden.desktop
+com.discordapp.Discord
+com.spotify.Client
+org.signal.Signal
+org.videolan.VLC
+us.zoom.Zoom
+
+# caffeine
+io.github.sigmasd.stimulator
+
+# install from flatpakref
+com.onepassword.OnePassword https://downloads.1password.com/linux/flatpak/1Password.flatpakref

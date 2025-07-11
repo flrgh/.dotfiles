@@ -98,6 +98,20 @@ $(PKG)/python: $(MISE) deps/python-packages.txt
 	@mkdir -p $(dir $@)
 	@touch $@
 
+$(PKG)/flatpak.remotes: deps/flatpak-remotes.txt
+	./scripts/setup-flatpak-remotes
+	@mkdir -p $(dir $@)
+	@touch $@
+
+$(PKG)/flatpak.apps.installed: $(PKG)/flatpak.remotes deps/flatpak-apps.txt
+	./scripts/install-flatpak-apps
+	@mkdir -p $(dir $@)
+	@touch $@
+
+.PHONY: flatpak
+flatpak: $(PKG)/flatpak.apps.installed
+	@flatpak --user update --noninteractive
+
 $(NEED)/%: | .setup
 	ineed install $(notdir $@)
 	@mkdir -p $(dir $@)

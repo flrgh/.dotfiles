@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source ./home/.local/lib/bash/std.bash
+
+readonly REMOTES=deps/flatpak-remotes.txt
+
+declare -gA USER_REMOTES=()
+
+fp() {
+    flatpak --user "$@"
+}
+
+while read -r name url; do
+    # skip header line
+    if [[ $name == Name ]]; then
+        continue
+    fi
+
+    USER_REMOTES[$name]=$url
+done < <(fp remotes --columns=name,url)
+
+delete-remote() {
+    local -r name=${1:?}
+
+    if [[ -z ${USER_REMOTES[$name]:-} ]]; then
+        return
+    fi
+
+    echo "deleting flatpak remote: $name"
+    fp remote-delete "$name"
+}
+
+add-or-upate-remote() {
+    local -r name=${1:?}
+    local -r url=${2:?}
+
+    local current=${USER_REMOTES[$name]:-absent}
+    if [[ $current == "absent" ]]; then
+        echo "adding flatpak remote: $name, url: $url"
+        fp remote-add "$name" "$url"
+
+    elif [[ $current != "$url" ]]; then
+        echo "updating flatpak remote: $name, old url: $current, new url: $url"
+        fp remote-modify "$name" --url "$url"
+    fi
+}
+
+while read -r line; do
+    # strip trailing comments
+    line=${line%%#*}
+
+    strip-whitespace line
+
+    if [[ $line == "" || $line == "#"* ]]; then
+        continue
+    fi
+
+    name=${line%% *}
+    url=${line##* }
+
+    if [[ $url == "delete" ]]; then
+        delete-remote "$name"
+    else
+        add-or-upate-remote "$name" "$url"
+    fi
+done < "$REMOTES"

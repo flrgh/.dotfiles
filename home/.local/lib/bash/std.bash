@@ -12,3 +12,6 @@ source "$BASH_USER_LIB"/var.bash
 
 # shellcheck source=home/.local/lib/bash/array.bash
 source "$BASH_USER_LIB"/array.bash
+
+# shellcheck source=home/.local/lib/bash/string.bash
+source "$BASH_USER_LIB"/string.bash

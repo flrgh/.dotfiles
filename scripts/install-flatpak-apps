@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source ./home/.local/lib/bash/std.bash
+
+readonly APPS=deps/flatpak-apps.txt
+
+declare -ga REMOVE=()
+declare -ga INSTALL=()
+
+fp() {
+    flatpak --user "$@"
+}
+
+declare -gA INSTALLED=()
+while read -r app; do
+    # skip header
+    if [[ $app == "Application "* ]]; then
+        continue
+    fi
+
+    INSTALLED[$app]=1
+done < <(fp list --columns=application)
+
+while read -r line; do
+    # strip trailing comments
+    line=${line%%#*}
+
+    strip-whitespace line
+
+    if [[ $line == "" || $line == "#"* ]]; then
+        continue
+    fi
+
+    name=${line%% *}
+    url=${line##* }
+
+    if [[ ${url:-} == "delete" ]]; then
+        REMOVE+=("$name")
+        continue
+
+    elif [[ -n ${INSTALLED[$name]:-} ]]; then
+        continue
+    fi
+
+
+    if [[ -z ${url:-} ]]; then
+        INSTALL+=("$name")
+    else
+        INSTALL+=("$url")
+    fi
+done < "$APPS"
+
+if (( ${#REMOVE[@]} > 0 )); then
+    fp uninstall --noninteractive "${REMOVE[@]}"
+fi
+
+for app in "${INSTALL[@]}"; do
+    fp install --noninteractive "$app"
+done

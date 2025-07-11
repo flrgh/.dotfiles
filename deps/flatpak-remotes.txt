@@ -1,0 +1,4 @@
+flathub            https://dl.flathub.org/repo/
+
+# removed
+signal-origin delete
