@@ -305,3 +305,30 @@ curl: $(NEED)/curl build/home/.config/curlrc | .setup
 .PHONY: git-config
 git-config: $(MISE_DEPS) | ssh .setup
 	./scripts/update-git-config
+
+
+.PHONY: server
+server: \
+	bash \
+	curl \
+	docker \
+	env \
+	git-config \
+	golang \
+	lua \
+	mise \
+	rust \
+	neovim \
+	ssh
+
+.PHONY: server-update
+server-update: mise-update rust-update os-packages-update | server
+
+.PHONY: workstation
+workstation: \
+	server \
+	alacritty \
+	flatpak
+
+.PHONY: workstation-update
+workstation-update: server-update | workstation
