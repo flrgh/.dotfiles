@@ -1,5 +1,6 @@
 export INSTALL_PATH := $(HOME)
 export INSTALL_BIN := $(INSTALL_PATH)/.local/bin
+export INSTALL_DATA := $(INSTALL_PATH)/.local/share
 export REPO_ROOT = $(PWD)
 export DEBUG := $(DEBUG)
 
@@ -307,6 +308,40 @@ git-config: $(MISE_DEPS) | ssh .setup
 	./scripts/update-git-config
 
 
+export KEYBOARD_GROUP = plugdev
+export KEYBOARD_GROUP_ID = 1003
+
+build/zsa-group:
+	if ! getent group "$(KEYBOARD_GROUP)" &>/dev/null; then \
+	    sudo groupadd --gid "$(KEYBOARD_GROUP_ID)" "$(KEYBOARD_GROUP)"; \
+	fi
+	if ! getent group "$(KEYBOARD_GROUP)" | grep -q "$(USER)" &>/dev/null; then \
+	    sudo usermod --append --groups "$(KEYBOARD_GROUP_ID)" "$(USER)"; \
+	fi
+	@touch $@
+
+build/zsa-udev-rule: ./scripts/zsa-udev-rule
+	./scripts/zsa-udev-rule > $@
+
+/etc/udev/rules.d/50-zsa.rules: build/zsa-udev-rule build/zsa-group
+	sudo install build/zsa-udev-rule $@
+
+build/keymapp/%:
+	./scripts/download-keymapp
+	@touch $@
+
+$(INSTALL_BIN)/keymapp: build/keymapp/keymapp
+	$(INSTALL_INTO) $(INSTALL_BIN) build/keymapp/keymapp
+
+$(INSTALL_DATA)/applications/keymapp.desktop: assets/keymapp.desktop build/keymapp/icon.png $(INSTALL_BIN)/keymapp
+	xdg-icon-resource install --size 128 build/keymapp/icon.png application-keymapp
+	desktop-file-validate assets/keymapp.desktop
+	desktop-file-install --dir="$(INSTALL_DATA)/applications" assets/keymapp.desktop
+	update-desktop-database
+
+.PHONY: keymapp
+keymapp: /etc/udev/rules.d/50-zsa.rules $(INSTALL_DATA)/applications/keymapp.desktop
+
 .PHONY: server
 server: \
 	bash \
@@ -328,7 +363,8 @@ server-update: mise-update rust-update os-packages-update | server
 workstation: \
 	server \
 	alacritty \
-	flatpak
+	flatpak \
+	keymapp
 
 .PHONY: workstation-update
 workstation-update: server-update | workstation

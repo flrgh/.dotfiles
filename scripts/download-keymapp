@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly URL=https://oryx.nyc3.cdn.digitaloceanspaces.com/keymapp/keymapp-latest.tar.gz
+readonly BUILD_DIR=build/keymapp
+
+source ./home/.local/lib/bash/functions/cache-get.bash
+
+cache-get "$URL"
+
+mkdir -p "$BUILD_DIR"
+
+tar -C "$BUILD_DIR" -xzf "$CACHE_GET_DEST"

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Keymapp
+Comment=ZSA Moonlander Keymapp
+TryExec=keymapp
+Exec=keymapp
+Type=Application
+Keywords=keyboard;keymapp;zsa;moonlander
+Icon=keymapp
+Categories=Utility
+StartupNotify=false
+SingleMainWindow=false
