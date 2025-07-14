@@ -196,7 +196,7 @@ mise-update: $(MISE) home/.config/mise/config.toml
 	$(MISE) upgrade --yes
 
 $(MISE_DEPS): $(MISE) mise.toml home/.config/mise/config.toml
-	$(MISE) install --yes
+	$(MISE) upgrade --yes
 	@mkdir -p $(dir $@)
 	@touch $@
 
