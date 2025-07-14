@@ -1,6 +1,7 @@
 export INSTALL_PATH := $(HOME)
 export INSTALL_BIN := $(INSTALL_PATH)/.local/bin
 export INSTALL_DATA := $(INSTALL_PATH)/.local/share
+export INSTALL_STATE := $(INSTALL_PATH)/.local/state
 export REPO_ROOT = $(PWD)
 export DEBUG := $(DEBUG)
 
@@ -34,7 +35,8 @@ OLD_FILES := $(INSTALL_PATH)/.bash_profile \
 	$(INSTALL_BIN)/terraform-ls-* \
 	$(INSTALL_BIN)/tree-sitter-* \
 	$(INSTALL_BIN)/yq \
-	$(INSTALL_BIN)/zig
+	$(INSTALL_BIN)/zig \
+	$(INSTALL_STATE)/ineed/aws-cli.*
 
 CREATE_DIRS := \
 	.cache .cache/download \

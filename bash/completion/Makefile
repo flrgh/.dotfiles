@@ -2,6 +2,7 @@ BUILD := ../../build/bash-completion
 
 COMMANDS := \
 	ast-grep \
+	aws \
 	bat \
 	bazel \
 	bindgen \
@@ -59,6 +60,11 @@ define from-candidate-list-command =
 	@echo '       < <(compgen -W "$(COMP_LIST_CMD)" -- "$$cur")'  >> $(COMP_SCRIPT)
 	@echo '}'                                                     >> $(COMP_SCRIPT)
 	@echo 'complete -F $(COMP_FUNCNAME) $(notdir $@)'             >> $(COMP_SCRIPT)
+	@$(COMP_TEST)
+endef
+
+define completion-command =
+	@echo 'complete -C "$(CMD)" $@' > $(COMP_SCRIPT)
 	@$(COMP_TEST)
 endef
 
@@ -182,3 +188,7 @@ package-info:
 package-deps: CMD = $(LIST_PACKAGE_NAMES)
 package-deps:
 	$(from-candidate-list-command)
+
+aws: CMD = $(shell mise which aws_completer)
+aws:
+	$(completion-command)
