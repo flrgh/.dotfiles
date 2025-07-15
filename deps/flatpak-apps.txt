@@ -1,5 +1,6 @@
 com.bitwarden.desktop
 com.discordapp.Discord
+com.slack.Slack
 com.spotify.Client
 org.signal.Signal
 org.videolan.VLC
