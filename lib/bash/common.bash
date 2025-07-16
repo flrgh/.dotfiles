@@ -1,5 +1,5 @@
-export REPO_ROOT=${REPO_ROOT:?REPO_ROOT undefined}
-export INSTALL_PATH=${INSTALL_PATH:?INSTALL_PATH undefined}
+export REPO_ROOT=${DOTFILES_REPO_ROOT:?}
+export INSTALL_PATH=${DOTFILES_INSTALL_PATH:?}
 
 export BUILD_ROOT=${REPO_ROOT}/build
 export BASH_USER_LIB=${REPO_ROOT}/home/.local/lib/bash

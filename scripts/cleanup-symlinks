@@ -2,8 +2,8 @@
 
 # delete orphaned symlinks
 
-readonly REPO_ROOT=${REPO_ROOT:?REPO_ROOT undefined}
-readonly INSTALL_PATH=${INSTALL_PATH:?INSTALL_PATH undefined}
+readonly REPO_ROOT=${DOTFILES_REPO_ROOT:?}
+readonly INSTALL_PATH=${DOTFILES_INSTALL_PATH:?}
 readonly FILES_D=${REPO_ROOT}/home
 
 OLD=(

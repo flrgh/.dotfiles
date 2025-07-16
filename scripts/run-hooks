@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-export REPO_ROOT=${REPO_ROOT:?REPO_ROOT undefined}
-export INSTALL_PATH=${INSTALL_PATH:?INSTALL_PATH undefined}
-export DEBUG=${DEBUG:-0}
+export REPO_ROOT=${DOTFILES_REPO_ROOT:?}
+export INSTALL_PATH=${DOTFILES_INSTALL_PATH:?}
+export DEBUG=${DOTFILES_DEBUG:-0}
 
 HOOKS=${1:?Usage: $0 <hooks>}
 

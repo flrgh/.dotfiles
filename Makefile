@@ -1,9 +1,17 @@
-export INSTALL_PATH := $(HOME)
-export INSTALL_BIN := $(INSTALL_PATH)/.local/bin
-export INSTALL_DATA := $(INSTALL_PATH)/.local/share
-export INSTALL_STATE := $(INSTALL_PATH)/.local/state
-export REPO_ROOT = $(PWD)
-export DEBUG := $(DEBUG)
+INSTALL_PATH := $(HOME)
+INSTALL_BIN := $(INSTALL_PATH)/.local/bin
+INSTALL_DATA := $(INSTALL_PATH)/.local/share
+INSTALL_STATE := $(INSTALL_PATH)/.local/state
+REPO_ROOT = $(PWD)
+DEBUG := $(DEBUG)
+
+# namespace exported vars so that they don't interfere with other build tools
+export DOTFILES_INSTALL_PATH := $(INSTALL_PATH)
+export DOTFILES_INSTALL_BIN := $(INSTALL_BIN)
+export DOTFILES_INSTALL_DATA := $(INSTALL_DATA)
+export DOTFILES_INSTALL_STATE := $(INSTALL_STATE)
+export DOTFILES_REPO_ROOT := $(REPO_ROOT)
+export DOTFILES_DEBUG := $(DEBUG)
 
 # no implicit rules
 .SUFFIXES:
@@ -13,10 +21,10 @@ MISE := $(INSTALL_BIN)/mise
 LUAROCKS := $(INSTALL_BIN)/luarocks
 LIBEXEC := home/.local/libexec
 
-export INSTALL := install --verbose --compare --no-target-directory
-export INSTALL_INTO := install --verbose --compare --target-directory
+INSTALL := install --verbose --compare --no-target-directory
+INSTALL_INTO := install --verbose --compare --target-directory
 
-export DIFF := diff --suppress-common-lines --suppress-blank-empty \
+DIFF := diff --suppress-common-lines --suppress-blank-empty \
 	--ignore-tab-expansion --ignore-all-space --minimal
 
 OLD_FILES := $(INSTALL_PATH)/.bash_profile \

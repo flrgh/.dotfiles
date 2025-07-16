@@ -4,7 +4,7 @@ from pathlib import Path
 from os import path, walk, getlogin, getenv
 
 DEFAULT_INSTALL_PATH = Path(path.expanduser("~"))
-REPO_ROOT = Path(getenv("REPO_ROOT"))
+REPO_ROOT = Path(getenv("DOTFILES_REPO_ROOT"))
 DELETE_MARKER = '.DELETE'
 SKIP = object()
 
@@ -103,7 +103,7 @@ def target_exists(path):
 
 
 def main():
-    install_path = getenv("INSTALL_PATH") or DEFAULT_INSTALL_PATH
+    install_path = getenv("DOTFILES_INSTALL_PATH") or DEFAULT_INSTALL_PATH
     homedir(install_path)
     nvim(install_path)
 
