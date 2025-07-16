@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# removes any files from ~/.local/bin which are present in ~/.local/share/mise/shims
+
+set -euo pipefail
+
+readonly BIN=${HOME}/.local/bin
+readonly SHIMS=${XDG_DATA_HOME:-${HOME}/.local/share}/mise/shims
+
+shopt -s nullglob
+
+mise reshim --force
+
+FILES=( "${SHIMS}"/* )
+
+rm -fv "${FILES[@]/#"$SHIMS"/"$BIN"}"

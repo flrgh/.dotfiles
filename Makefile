@@ -22,20 +22,6 @@ export DIFF := diff --suppress-common-lines --suppress-blank-empty \
 OLD_FILES := $(INSTALL_PATH)/.bash_profile \
 	$(INSTALL_PATH)/.bash_logout \
 	$(INSTALL_BIN)/*~ \
-	$(INSTALL_BIN)/aws \
-	$(INSTALL_BIN)/aws_* \
-	$(INSTALL_BIN)/fd \
-	$(INSTALL_BIN)/fzf \
-	$(INSTALL_BIN)/gh \
-	$(INSTALL_BIN)/git-cliff \
-	$(INSTALL_BIN)/jq \
-	$(INSTALL_BIN)/python \
-	$(INSTALL_BIN)/shellcheck \
-	$(INSTALL_BIN)/terraform-ls \
-	$(INSTALL_BIN)/terraform-ls-* \
-	$(INSTALL_BIN)/tree-sitter-* \
-	$(INSTALL_BIN)/yq \
-	$(INSTALL_BIN)/zig \
 	$(INSTALL_STATE)/ineed/aws-cli.*
 
 CREATE_DIRS := \
@@ -191,17 +177,21 @@ $(MISE): scripts/install-mise | .setup
 $(LUAROCKS): $(NEED)/luarocks
 
 .PHONY: mise-update
-mise-update: $(MISE) home/.config/mise/config.toml
+mise-update: $(MISE) home/.config/mise/config.toml scripts/mise-shims
 	$(MISE) self-update --yes
 	$(MISE) upgrade --yes
+	./scripts/mise-shims
 
-$(MISE_DEPS): $(MISE) mise.toml home/.config/mise/config.toml
+$(MISE_DEPS): $(MISE) mise.toml home/.config/mise/config.toml scripts/mise-shims
 	$(MISE) upgrade --yes
+	./scripts/mise-shims
 	@mkdir -p $(dir $@)
 	@touch $@
 
 .PHONY: mise
 mise: $(MISE)
+	$(MISE) install --yes
+	./scripts/mise-shims
 
 DIRCOLORS_FNAME := dircolors.256dark
 DIRCOLORS_URL := https://raw.githubusercontent.com/seebi/dircolors-solarized/master/$(DIRCOLORS_FNAME)
