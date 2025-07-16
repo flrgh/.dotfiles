@@ -342,8 +342,7 @@ $(INSTALL_DATA)/applications/keymapp.desktop: assets/keymapp.desktop build/keyma
 .PHONY: keymapp
 keymapp: /etc/udev/rules.d/50-zsa.rules $(INSTALL_DATA)/applications/keymapp.desktop
 
-.PHONY: server
-server: \
+COMMON = \
 	bash \
 	curl \
 	docker \
@@ -356,12 +355,15 @@ server: \
 	neovim \
 	ssh
 
+.PHONY: server
+server: $(COMMON) $(NEED)/signalbackup-tools
+
 .PHONY: server-update
 server-update: mise-update rust-update os-packages-update | server
 
 .PHONY: workstation
 workstation: \
-	server \
+	$(COMMON) \
 	alacritty \
 	flatpak \
 	keymapp
