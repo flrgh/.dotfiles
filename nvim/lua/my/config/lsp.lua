@@ -112,12 +112,12 @@ do
           hide_from_history = true,
         }
 
-        if vim.lsp.inlay_hint.is_enabled() then
+        if lsp.inlay_hint.is_enabled() then
           vim.notify("disabling inlay hints", nil, opts)
-          vim.lsp.inlay_hint.enable(false)
+          lsp.inlay_hint.enable(false)
         else
           vim.notify("enabling inlay hints", nil, opts)
-          vim.lsp.inlay_hint.enable(true)
+          lsp.inlay_hint.enable(true)
         end
       end
     end
@@ -243,8 +243,6 @@ end
 ---@param client_id number
 ---@param buf    number
 function _M.on_detach(client_id, buf)
-  local clients = lsp.get_clients({ bufnr = buf })
-
   -- no more connected clients (or this was the last one)
   if no_more_attached_clients(buf, client_id) then
     vim.schedule(function()
@@ -308,7 +306,7 @@ function _M.init()
     LOG_LEVEL = const.lsp_log_level
     require("my.lsp.logger").init()
   end
-  vim.lsp.set_log_level(LOG_LEVEL)
+  lsp.set_log_level(LOG_LEVEL)
 
   lsp.config("*", {
     capabilities = make_capabilities(),
