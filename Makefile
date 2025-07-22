@@ -124,12 +124,15 @@ $(LUAROCKS_PKG)/%: $(LUAROCKS)
 	@mkdir -p $(dir $@)
 	@touch $@
 
-$(NPM_PKG): $(MISE) deps/npm-packages.txt
-	$(MISE) exec node -- npm install -g \
-		$(shell ./scripts/get-lines ./deps/npm-packages.txt)
+$(NPM_PKG): $(MISE) ./deps/package.json
+	$(MISE) exec node -- npm install -g ./deps
 	$(MISE) reshim
 	@mkdir -p $(dir $@)
 	@touch $@
+
+.PHONY: npm-update
+npm-update: $(NPM_PKG)
+	ncu --global --install always --upgrade --packageFile ./deps/package.json
 
 $(RUSTUP): scripts/install-rust | .setup
 	./scripts/install-rust
@@ -364,13 +367,20 @@ COMMON = \
 	mise \
 	rust \
 	neovim \
-	ssh
+	ssh \
+	$(NPM_PKG)
+
+COMMON_UPDATE = \
+		mise-update \
+		npm-update \
+		os-packages-update \
+		rust-update
 
 .PHONY: server
 server: $(COMMON) $(NEED)/signalbackup-tools
 
 .PHONY: server-update
-server-update: mise-update rust-update os-packages-update | server
+server-update: $(COMMON_UPDATE) | server
 
 .PHONY: workstation
 workstation: \
