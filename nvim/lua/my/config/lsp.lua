@@ -1,21 +1,19 @@
 local _M = {}
 
-local mod = require "my.utils.luamod"
 local plugin = require "my.utils.plugin"
 local km = require("my.keymap")
-local proto = require("vim.lsp.protocol")
 local const = require("my.constants")
 
 local executable = vim.fn.executable
-local is_empty = vim.tbl_isempty
 local api = vim.api
 local lsp = vim.lsp
-local is_list = vim.islist
 local vim = vim
-local textDocumentDefinition = proto.Methods.textDocument_definition
+local byte = string.byte
+local sort = table.sort
 
 local LOG_LEVEL = vim.log.levels.WARN
 local KEYMAP_TAG = "global-lsp-keymaps"
+local SLASH = byte("/")
 
 local SERVERS = {
   "awk_ls",
@@ -47,24 +45,6 @@ local SERVERS = {
   "ts_ls",
   "zls",
 }
-
-
-local function setup_goto_definition()
-  local jump_to_location = lsp.util.jump_to_location
-
-  lsp.handlers[textDocumentDefinition] = function(_, result)
-    if not result or is_empty(result) then
-      print "[LSP] Could not find definition"
-      return
-    end
-
-    if is_list(result) then
-      jump_to_location(result[1], "utf-8")
-    else
-      jump_to_location(result, "utf-8")
-    end
-  end
-end
 
 
 ---@type function
@@ -173,13 +153,64 @@ do
 end
 
 
+---@param lhs string
+---@param rhs string
+---@return integer
+local function common_prefix_len(lhs, rhs)
+  local n = 0
+  for i = 1, #lhs do
+    local a = byte(lhs, i)
+    local b = byte(rhs, i)
+    if a ~= b then
+      break
+    end
+
+    if a == SLASH then
+      n = n + 1
+    end
+  end
+  return n
+end
+
+
+local function cmp_match_length(a, b)
+  return a.matched > b.matched
+end
+
+-- sorts entries from vim.lsp.tagfunc to prioritize matches with the longest
+-- common prefix with the source buffer filename
+local function tagfunc(pattern, flags, ctx)
+  ---@type string|nil
+  local fname = ctx and ctx.buf_ffname
+
+  local res = lsp.tagfunc(pattern, flags)
+
+  if fname and res ~= vim.NIL and #res > 1 then
+    local copy = {}
+    for i = 1, #res do
+      local item = res[i]
+      copy[i] = item
+
+      if item.filename then
+        item.matched = common_prefix_len(fname, item.filename)
+      else
+        item.matched = 0
+      end
+    end
+
+    sort(copy, cmp_match_length)
+
+    return copy
+  end
+
+  return res
+end
+
 
 ---@param _client_id number
 ---@param buf    number
 function _M.on_attach(_client_id, buf)
   attach_keymaps()
-
-  setup_goto_definition()
 
   vim.diagnostic.config({
     virtual_text = false,
@@ -188,7 +219,9 @@ function _M.on_attach(_client_id, buf)
     },
   })
 
-  vim.bo[buf].tagfunc = "v:lua.vim.lsp.tagfunc"
+  _G.__my_lua_tag_func = tagfunc
+  vim.bo[buf].tagfunc = "v:lua.__my_lua_tag_func"
+
   vim.bo[buf].omnifunc = "v:lua.vim.lsp.omnifunc"
 end
 
