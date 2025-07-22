@@ -10,68 +10,8 @@ local cmd = vim.cmd
 
 -- https://lazy.folke.io/configuration
 ---@type LazyConfig
-local conf = {
-  lockfile = fs.join(const.dotfiles.config_nvim, "plugins.lock.json"),
-  root = const.nvim.plugins,
-
-  defaults = {
-  },
-
-  pkg = {
-    -- we'll see...
-    enabled = false,
-  },
-
-  install = {
-    -- install missing plugins on startup
-    missing = true,
-  },
-
-  change_detection = {
-    enabled = false,
-  },
-
-  performance = {
-    cache = {
-      enabled = true,
-    },
-
-    reset_packpath = true,
-
-    rtp = {
-      reset = true,
-      disabled_plugins = {
-        "gzip",
-        "netrwPlugin",
-        "rplugin",
-        "spellfile",
-        "tarPlugin",
-        "tutor",
-        "zipPlugin",
-      },
-    },
-  },
-
-  profiling = {
-    loader  = const.debug,
-    require = const.debug,
-  },
-}
-
-do
-  local lazypath = conf.root .. "/lazy.nvim"
-  if not fs.exists(lazypath) then
-   vim.fn.system({
-     "git",
-     "clone",
-     "--filter=blob:none",
-     "--single-branch",
-     "https://github.com/folke/lazy.nvim.git",
-     lazypath,
-   })
-  end
-  vim.opt.runtimepath:prepend(lazypath)
-end
+local conf = require("my.lazy.config")
+require("my.lazy.install")
 
 ---@param plugin string|table|LazySpec
 ---@return LazyPluginSpec
@@ -818,4 +758,8 @@ do
   end
 end
 
-require("lazy").setup(plugins, conf)
+if not const.bootstrap then
+  require("lazy").setup(plugins, conf)
+end
+
+return plugins

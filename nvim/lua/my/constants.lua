@@ -163,4 +163,8 @@ end
 const.bootstrap = (_G.___BOOTSTRAP and true)
                     or getenv("NVIM_BOOTSTRAP") == "1"
 
+---@type boolean
+const.headless = #vim.api.nvim_list_uis() == 0
+
+
 return const

@@ -275,8 +275,19 @@ language-servers: $(NPM_PKG) $(LIBEXEC) \
 	$(MISE_DEPS) \
 	| .setup
 
+$(PKG)/neovim: $(NEED)/neovim nvim/plugins.lock.json
+	nvim -l ./nvim/bootstrap.lua
+	@touch $@
+
+$(INSTALL_DATA)/nvim/lazy/lazy.nvim: $(PKG)/neovim
+
 .PHONY: neovim
-neovim: language-servers $(NEED)/neovim $(NEED)/tree-sitter $(MISE_DEPS) | .setup
+neovim: language-servers \
+	$(NEED)/neovim \
+	$(INSTALL_DATA)/nvim/lazy/lazy.nvim \
+	$(NEED)/tree-sitter \
+	$(MISE_DEPS) \
+	| .setup
 
 .PHONY: lua
 lua: $(LUAROCKS)

@@ -4,6 +4,7 @@ local mod = require "my.utils.luamod"
 local plugin = require "my.utils.plugin"
 local km = require("my.keymap")
 local proto = require("vim.lsp.protocol")
+local const = require("my.constants")
 
 local executable = vim.fn.executable
 local is_empty = vim.tbl_isempty
@@ -259,8 +260,7 @@ end
 
 
 function _M.init()
-  -- don't configure or start lsp if vim is running in headless mode
-  if #api.nvim_list_uis() == 0 then
+  if const.headless then
     return
   end
 
@@ -271,7 +271,6 @@ function _M.init()
 
   require("lspconfig")
 
-  local const = require("my.constants")
   if const.lsp_debug then
     LOG_LEVEL = const.lsp_log_level
     require("my.lsp.logger").init()
