@@ -1,8 +1,7 @@
 local schemaStore
 local schemas
 
-local mod = require "my.utils.luamod"
-if mod.exists("schemastore") then
+if require("my.utils.plugin").installed("schemastore") then
   local ss = require "schemastore"
 
   schemaStore = {

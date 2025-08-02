@@ -3,8 +3,7 @@ local json = {
   validate = { enable = false },
 }
 
-local mod = require "my.utils.luamod"
-if mod.exists("schemastore") then
+if require("my.utils.plugin").installed("schemastore") then
   local ss = require "schemastore"
   json.schemas = ss.json.schemas()
   json.validate.enable = true
