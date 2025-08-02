@@ -16,6 +16,7 @@ local KEYMAP_TAG = "global-lsp-keymaps"
 local SLASH = byte("/")
 
 local SERVERS = {
+  "ast_grep",
   "awk_ls",
   "bashls",
   "clangd",
