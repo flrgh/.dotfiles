@@ -18,15 +18,12 @@ local insert = table.insert
 
 ---@alias my.workspace.meta table<string, any>
 
----@alias my.workspace.matcher fun(ws: my.workspace):boolean
+---@alias my.workspace.matcher fun(ws: my.workspace):boolean|nil
 
 
-local function match_dir_exact(dir)
-  return function(ws)
-    return ws.dir == dir
-  end
-end
-
+---@param subject string
+---@param sub string
+---@return boolean
 local function substr(subject, sub)
   return subject:find(sub, nil, true) ~= nil
 end

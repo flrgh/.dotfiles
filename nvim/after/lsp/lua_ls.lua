@@ -40,6 +40,10 @@ local NAME = "lua_ls"
 ---@field workspace my.lsp.LuaLS.workspace
 ---@field semantic? table
 ---@field type? table
+---
+---@field doc? table
+---@field window? table
+---@field spell? table
 
 local fs = require "my.utils.fs"
 local luamod = require "my.utils.luamod"
@@ -65,7 +69,7 @@ local Opened = "Opened!"
 local None = "None!"
 
 
----@type my.lua.resolver
+---@type my.lua.resolver|nil
 local Resolver
 
 local Completion = {
@@ -188,7 +192,6 @@ local Diagnostics = {
     -- group: type-check
     ["assign-type-mismatch"] = Opened,
     ["cast-local-type"]      = Opened,
-    ["cast-type-mismatch"]   = Opened,
     ["inject-field"]         = Opened,
     ["need-check-nil"]       = Opened,
     ["param-type-mismatch"]  = Opened,
@@ -463,7 +466,6 @@ local function update_workspace_library(path, tree)
 end
 
 
----@param settings my.lsp.LuaLS
 ---@param client? vim.lsp.Client
 local function update_client_settings(client)
   client = client or lsp.get_clients({ name = NAME })[1]
@@ -574,6 +576,7 @@ local DEFAULT_SETTINGS = {
 }
 
 ---@param p string
+---@param skip_realpath? boolean
 ---@return string
 local function normalize(p, skip_realpath)
   if skip_realpath then
@@ -605,6 +608,7 @@ local function imerge(a, b)
 end
 
 ---@param paths string[]
+---@param skip_realpath? boolean
 ---@return string[]
 local function dedupe(paths, skip_realpath)
   local seen = {}
@@ -1076,10 +1080,9 @@ do
 
     local found = _find_type_defs(names, extra)
     local changed = false
-    local settings = Settings.Lua
 
     for _, path in ipairs(found) do
-      changed = update_workspace_library(settings, path) or changed
+      changed = update_workspace_library(path) or changed
     end
 
     if changed then
