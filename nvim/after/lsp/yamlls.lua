@@ -9,7 +9,25 @@ if require("my.utils.plugin").installed("schemastore") then
     url = "",
   }
 
-  schemas = ss.yaml.schemas()
+  schemas = ss.yaml.schemas({
+    extra = {
+      {
+        description = "ast-grep rule",
+        name = "rule.yml",
+        fileMatch = {
+          -- this matches kong & kong-ee layouts
+          "ast-grep/rules/*.yml",
+        },
+        url = "https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json",
+      },
+      {
+        description = "ast-grep project config",
+        name = "sgconfig.yml",
+        fileMatch = { "sgconfig.yml", "sgconfig.yaml" },
+        url = "https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/project.json",
+      },
+    },
+  })
 end
 
 return {
