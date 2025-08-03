@@ -25,6 +25,12 @@ NPM := $(MISE) exec node -- npm
 INSTALL := install --verbose --compare --no-target-directory
 INSTALL_INTO := install --verbose --compare --target-directory
 
+RM := ./scripts/files rm
+CLEANDIR := ./scripts/files cleandir
+MKPARENT := ./scripts/files mkparent
+MKDIR := ./scripts/files mkdir
+TOUCH := ./scripts/files touch
+
 DIFF := diff --suppress-common-lines --suppress-blank-empty \
 	--ignore-tab-expansion --ignore-all-space --minimal
 
@@ -41,9 +47,9 @@ CREATE_DIRS := \
 	.local/share .local/var .local/var/log .local/var/log/nvim \
 	.local/var/log/lsp .local/share/bash-completion/completions
 
-PKG := build/pkg
+BUILD := build
+PKG := $(BUILD)/pkg
 NEED := $(PKG)/need
-NPM_PKG := $(PKG)/npm
 CARGO_PKG := $(PKG)/cargo
 PIP_PKG := $(PKG)/pip
 LUAROCKS_PKG := $(PKG)/luarocks
@@ -76,35 +82,31 @@ debug:
 
 .PHONY: clean
 clean:
-	rm -rfv ./build/*
+	$(CLEANDIR) $(BUILD)
 
 .PHONY: update
 update: clean os-packages-update mise-update rust-update
 
 $(PKG)/os.installed: deps/os-package-installed.txt
 	sudo dnf install -y $(shell ./scripts/get-lines ./deps/os-package-installed.txt)
-	@mkdir -p $(dir $@)
-	touch $@
+	$(TOUCH) $@
 
 $(PKG)/os.removed: deps/os-package-removed.txt
 	sudo dnf remove -y $(shell ./scripts/get-lines ./deps/os-package-removed.txt)
-	@touch $@
+	$(TOUCH) $@
 
 $(PKG)/python: $(MISE) deps/python-packages.txt
 	$(MISE) exec python -- pip install --user \
 		$(shell ./scripts/get-lines ./deps/python-packages.txt)
-	@mkdir -p $(dir $@)
-	@touch $@
+	$(TOUCH) $@
 
 $(PKG)/flatpak.remotes: deps/flatpak-remotes.txt
 	./scripts/setup-flatpak-remotes
-	@mkdir -p $(dir $@)
-	@touch $@
+	$(TOUCH) $@
 
 $(PKG)/flatpak.apps.installed: $(PKG)/flatpak.remotes deps/flatpak-apps.txt
 	./scripts/install-flatpak-apps
-	@mkdir -p $(dir $@)
-	@touch $@
+	$(TOUCH) $@
 
 .PHONY: flatpak
 flatpak: $(PKG)/flatpak.apps.installed
@@ -112,18 +114,15 @@ flatpak: $(PKG)/flatpak.apps.installed
 
 $(NEED)/%: | .setup
 	ineed install $(notdir $@)
-	@mkdir -p $(dir $@)
-	@touch $@
+	$(TOUCH) $@
 
 $(PIP_PKG)/%:
 	pip install --user $(notdir $@)
-	@mkdir -p $(dir $@)
-	@touch $@
+	$(TOUCH) $@
 
 $(LUAROCKS_PKG)/%: $(LUAROCKS)
 	luarocks install $(notdir $@)
-	@mkdir -p $(dir $@)
-	@touch $@
+	$(TOUCH) $@
 
 
 NPM_DEP_FILE := ./deps/npm.json
@@ -156,11 +155,9 @@ $(RUSTUP): scripts/install-rust | .setup
 	./scripts/install-rust
 	@touch --reference ./scripts/install-rust $@
 
-
 $(CARGO_PKG): $(RUSTUP) scripts/install-cargo-packages
 	./scripts/install-cargo-packages
-	@mkdir -p $(dir $@)
-	@touch $@
+	$(TOUCH) $@
 
 .PHONY: rust
 rust: $(RUSTUP) $(CARGO_PKG)
@@ -180,9 +177,10 @@ os-packages-update: os-packages
 	sudo dnf update -y
 
 .PHONY: rm-old-files
+.ONESHELL:
 rm-old-files:
-	@for f in $(OLD_FILES); do \
-		rm -fv "$$f"; \
+	@for f in $(OLD_FILES); do
+		rm -fv "$${f:?}";
 	done
 
 .PRECIOUS: $(CREATE_DIRS)
@@ -214,8 +212,7 @@ mise-update: $(MISE) home/.config/mise/config.toml scripts/mise-shims
 $(MISE_DEPS): $(MISE) mise.toml home/.config/mise/config.toml scripts/mise-shims
 	$(MISE) upgrade --yes
 	./scripts/mise-shims
-	@mkdir -p $(dir $@)
-	@touch $@
+	$(TOUCH) $@
 
 .PHONY: mise
 mise: $(MISE)
@@ -224,12 +221,12 @@ mise: $(MISE)
 
 DIRCOLORS_FNAME := dircolors.256dark
 DIRCOLORS_URL := https://raw.githubusercontent.com/seebi/dircolors-solarized/master/$(DIRCOLORS_FNAME)
-build/dircolors:
+$(BUILD)/dircolors:
 	mkdir -p $(CACHE_DIR)
 	./home/.local/bin/cache-get $(DIRCOLORS_URL) $(DIRCOLORS_FNAME)
-	cp $(CACHE_DIR)/download/$(DIRCOLORS_FNAME) build/dircolors
+	cp $(CACHE_DIR)/download/$(DIRCOLORS_FNAME) $@
 
-build/home/.config/env: $(MISE_DEPS) lib/bash/* scripts/build-env.sh build/dircolors
+$(BUILD)/home/.config/env: $(MISE_DEPS) lib/bash/* scripts/build-env.sh $(BUILD)/dircolors
 	./scripts/build-env.sh
 	@-$(DIFF) $(INSTALL_PATH)/.config/env $(REPO_ROOT)/build/home/.config/env
 
@@ -238,30 +235,29 @@ ssh: | .setup
 	./scripts/update-ssh-config
 
 .PHONY: env
-env: $(MISE) build/home/.config/env | .setup
+env: $(MISE) $(BUILD)/home/.config/env | .setup
 	$(INSTALL) $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.config/env
 	$(INSTALL) $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.pam_environment
 
-BASH_BUILTINS := build/bash-builtins
+BASH_BUILTINS := $(BUILD)/bash-builtins
 $(BASH_BUILTINS): ./scripts/install-custom-bash-builtins
 	./scripts/install-custom-bash-builtins
-	@touch $@
+	$(TOUCH) $@
 
-build/bash-facts: build/home/.config/env $(BASH_BUILTINS)
+$(BUILD)/bash-facts: $(BUILD)/home/.config/env $(BASH_BUILTINS)
 	./scripts/bashrc-init-facts
-	@touch $@
+	$(TOUCH) $@
 
-build/home/.bashrc: build/bash-facts $(MISE_DEPS) lib/bash/* bash/* hooks/bashrc/* $(NEED)/bat $(NEED)/direnv $(NEED)/bash-completion
+$(BUILD)/home/.bashrc: $(BUILD)/bash-facts $(MISE_DEPS) lib/bash/* bash/* hooks/bashrc/* $(NEED)/bat $(NEED)/direnv $(NEED)/bash-completion
 	$(REPO_ROOT)/scripts/run-hooks bashrc
 	@-$(DIFF) $(INSTALL_PATH)/.bashrc $(REPO_ROOT)/build/home/.bashrc
 
-build/bash-completion: $(NEED)/bash-completion
+$(BUILD)/bash-completion: $(NEED)/bash-completion
 	$(MAKE) -C ./bash/completion all
-	@mkdir -p $(dir $@)
-	@touch $@
+	$(TOUCH) $@
 
 .PHONY: bash-completion
-bash-completion: build/bash-completion | .setup
+bash-completion: $(BUILD)/bash-completion | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.local/share/bash-completion/completions \
 		--mode '0644' \
 		$(REPO_ROOT)/build/bash-completion/*
@@ -271,7 +267,7 @@ bash-completion: build/bash-completion | .setup
 		-delete
 
 .PHONY: bashrc
-bashrc: $(MISE) build/home/.bashrc | .setup
+bashrc: $(MISE) $(BUILD)/home/.bashrc | .setup
 	$(INSTALL) $(REPO_ROOT)/build/home/.bashrc $(INSTALL_PATH)/.bashrc
 
 .PHONY: bash
@@ -297,7 +293,7 @@ language-servers: npm $(LIBEXEC) \
 
 $(PKG)/neovim: $(NEED)/neovim nvim/plugins.lock.json
 	nvim -l ./nvim/bootstrap.lua
-	@touch $@
+	$(TOUCH) $@
 
 $(INSTALL_DATA)/nvim/lazy/lazy.nvim: $(PKG)/neovim
 
@@ -324,14 +320,14 @@ alacritty: $(CARGO_BIN)/alacritty | .setup
 	./scripts/update-gsettings
 	./scripts/update-default-shell
 
-build/home/.config/curlrc: scripts/build-curlrc
-	mkdir -p $(dir $@)
+$(BUILD)/home/.config/curlrc: scripts/build-curlrc
+	$(MKPARENT) $@
 	./scripts/build-curlrc > $@
 
 $(NEED)/curl: $(PKG)/os.installed
 
 .PHONY: curl
-curl: $(NEED)/curl build/home/.config/curlrc | .setup
+curl: $(NEED)/curl $(BUILD)/home/.config/curlrc | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
 
 .PHONY: git-config
@@ -342,30 +338,30 @@ git-config: $(MISE_DEPS) | ssh .setup
 export KEYBOARD_GROUP = plugdev
 export KEYBOARD_GROUP_ID = 1003
 
-build/zsa-group:
+$(BUILD)/zsa-group:
 	if ! getent group "$(KEYBOARD_GROUP)" &>/dev/null; then \
 	    sudo groupadd --gid "$(KEYBOARD_GROUP_ID)" "$(KEYBOARD_GROUP)"; \
 	fi
 	if ! getent group "$(KEYBOARD_GROUP)" | grep -q "$(USER)" &>/dev/null; then \
 	    sudo usermod --append --groups "$(KEYBOARD_GROUP_ID)" "$(USER)"; \
 	fi
-	@touch $@
+	$(TOUCH) $@
 
-build/zsa-udev-rule: ./scripts/zsa-udev-rule
+$(BUILD)/zsa-udev-rule: ./scripts/zsa-udev-rule
 	./scripts/zsa-udev-rule > $@
 
-/etc/udev/rules.d/50-zsa.rules: build/zsa-udev-rule build/zsa-group
-	sudo install build/zsa-udev-rule $@
+/etc/udev/rules.d/50-zsa.rules: $(BUILD)/zsa-udev-rule $(BUILD)/zsa-group
+	sudo install $(BUILD)/zsa-udev-rule $@
 
-build/keymapp/%:
+$(BUILD)/keymapp/%:
 	./scripts/download-keymapp
-	@touch $@
+	$(TOUCH) $@
 
-$(INSTALL_BIN)/keymapp: build/keymapp/keymapp
-	$(INSTALL_INTO) $(INSTALL_BIN) build/keymapp/keymapp
+$(INSTALL_BIN)/keymapp: $(BUILD)/keymapp/keymapp
+	$(INSTALL_INTO) $(INSTALL_BIN) $(BUILD)/keymapp/keymapp
 
-$(INSTALL_DATA)/applications/keymapp.desktop: assets/keymapp.desktop build/keymapp/icon.png $(INSTALL_BIN)/keymapp
-	xdg-icon-resource install --size 128 build/keymapp/icon.png application-keymapp
+$(INSTALL_DATA)/applications/keymapp.desktop: assets/keymapp.desktop $(BUILD)/keymapp/icon.png $(INSTALL_BIN)/keymapp
+	xdg-icon-resource install --size 128 $(BUILD)/keymapp/icon.png application-keymapp
 	desktop-file-validate assets/keymapp.desktop
 	desktop-file-install --dir="$(INSTALL_DATA)/applications" assets/keymapp.desktop
 	update-desktop-database

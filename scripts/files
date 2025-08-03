@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+REPO=${DOTFILES_REPO_ROOT:?}
+BUILD=${REPO:?}/build
+
+shopt -s dotglob
+shopt -s nullglob
+
+_validate() {
+    local -r path=${1:?}
+    if [[ $path != "$BUILD" && $path != "${BUILD}/"* ]]; then
+        echo "ERROR - bad path: $path"
+        exit 1
+    fi
+}
+
+_remove() {
+    command rm -rfv "$@"
+}
+
+_mkdir() {
+    command mkdir -vp "$@"
+}
+
+_cleandir() {
+    _mkdir "$@"
+
+    local dir
+    for dir in "$@"; do
+        _remove "${dir:?}"/*
+    done
+}
+
+_mkparent() {
+    local path
+    local parent
+    local -a dirs=()
+    for path in "$@"; do
+        parent=$(dirname "$path")
+        _validate "$parent"
+        dirs+=("$parent")
+    done
+    _mkdir "${dirs[@]}"
+}
+
+_touch() {
+    _mkparent "$@"
+    command touch "$@"
+}
+
+
+main() {
+    local action=${1:?}
+    shift
+
+    local -a paths=()
+    local name
+    for name in "$@"; do
+        case $name in
+            /*) ;;
+            *) name=${REPO}/${name} ;;
+        esac
+        name=$(realpath --canonicalize-missing --no-symlinks "$name")
+
+        _validate "$name"
+        paths+=("$name")
+    done
+
+    set -- "${paths[@]}"
+
+    case $action in
+        rm|unlink|remove) _remove "$@";;
+        cleandir) _cleandir "$@";;
+        touch) _touch "$@";;
+        mkparent) _mkparent "$@";;
+        mkdir) _mkdir "$@";;
+        *)
+            echo "ERROR - unknown action: $action"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
