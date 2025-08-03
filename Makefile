@@ -20,6 +20,7 @@ CACHE_DIR := $(INSTALL_PATH)/.cache
 MISE := $(INSTALL_BIN)/mise
 LUAROCKS := $(INSTALL_BIN)/luarocks
 LIBEXEC := home/.local/libexec
+NPM := $(MISE) exec node -- npm
 
 INSTALL := install --verbose --compare --no-target-directory
 INSTALL_INTO := install --verbose --compare --target-directory
@@ -124,15 +125,32 @@ $(LUAROCKS_PKG)/%: $(LUAROCKS)
 	@mkdir -p $(dir $@)
 	@touch $@
 
-$(NPM_PKG): $(MISE) ./deps/package.json
-	$(MISE) exec node -- npm install -g ./deps
-	$(MISE) reshim
-	@mkdir -p $(dir $@)
-	@touch $@
+
+NPM_DEP_FILE := ./deps/npm.json
+NPM_WANTED    = $(shell jq -r '.dependencies | to_entries | .[] | "\(.key)@\(.value)"' < $(NPM_DEP_FILE))
+NPM_INSTALLED = $(shell $(NPM) list -g --json | jq -r '.dependencies | to_entries | .[] | "\(.key)@\(.value.version)"')
+NPM_NEEDED    = $(strip $(filter-out $(NPM_INSTALLED),$(NPM_WANTED)))
+
+.PHONY: npm
+.ONESHELL:
+npm: $(MISE) | .setup
+	@$(NPM) uninstall -g $(shell jq -r '.name' < $(NPM_DEP_FILE))
+	_needed="$(NPM_NEEDED)"
+	if [[ -n $$_needed ]]; then
+		echo "npm - install: $$_needed"
+		$(NPM) install -g $$_needed
+		$(MISE) reshim
+	else
+		echo "npm - all packages installed"
+	fi
+
+.PHONY: __npm-check-updates
+__npm-check-updates: $(MISE)
+	command -v ncu || $(NPM) install -g npm-check-updates@latest
+	ncu --upgrade --packageFile $(NPM_DEP_FILE)
 
 .PHONY: npm-update
-npm-update: $(NPM_PKG)
-	ncu --global --install always --upgrade --packageFile ./deps/package.json
+npm-update: __npm-check-updates .WAIT npm
 
 $(RUSTUP): scripts/install-rust | .setup
 	./scripts/install-rust
@@ -264,14 +282,13 @@ $(LUAROCKS_PKG)/teal-language-server: $(LUAROCKS_PKG)/tl
 
 $(HASHICORP_PKG)/%:
 	get-hashicorp-binary $(notdir $@) latest
-	@mkdir -p $(dir $@)
-	@touch $@
+	$(TOUCH) $@
 
 .PHONY: golang
 golang: $(NEED)/gopls $(NEED)/gotags | .setup
 
 .PHONY: language-servers
-language-servers: $(NPM_PKG) $(LIBEXEC) \
+language-servers: npm $(LIBEXEC) \
 	$(LUAROCKS_PKG)/teal-language-server \
 	$(NEED)/gopls \
 	$(PIP_PKG)/systemd-language-server \
@@ -365,10 +382,10 @@ COMMON = \
 	golang \
 	lua \
 	mise \
-	rust \
 	neovim \
-	ssh \
-	$(NPM_PKG)
+	npm \
+	rust \
+	ssh
 
 COMMON_UPDATE = \
 		mise-update \
