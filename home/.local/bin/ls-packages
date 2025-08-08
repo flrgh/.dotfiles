@@ -23,7 +23,7 @@ if command-exists rpm; then
 
     if (( NAME_ONLY == 1 )); then
         if [[ -e $RPM_DB ]] && command-exists sqlite3; then
-            sqlite3 -readonly -safe "$RPM_DB" 'SELECT key FROM Name'
+            sqlite3 -readonly -safe "$RPM_DB" 'SELECT DISTINCT key FROM Name'
             exit "$?"
         fi
         format='%{NAME}\n'
