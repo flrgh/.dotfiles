@@ -25,6 +25,7 @@
   auto_hide = false,
   closable = true,
   clickable = true,
+  focus_on_close = "previous",
   maximum_padding = 4,
   maximum_length = 30,
   semantic_letters = true,
@@ -33,9 +34,35 @@
   insert_at_start = false,
 })
 
-local km = require "my.keymap"
-local nnoremap = km.nnoremap
+local ev = require("my.event")
 
-nnoremap[km.Ctrl.PageUp]   = { ":BufferPrevious", "Previous buffer" }
-nnoremap[km.Ctrl.PageDown] = { ":BufferNext", "Next buffer" }
-nnoremap[km.Leader.w]      = { ":BufferWipeout", "Close buffer" }
+ev.on(ev.VimEnter)
+  :group("user-barbar-keybinds")
+  :pattern("*")
+  :once(true)
+  :desc("Create barbar buffer key bindings")
+  :callback(function()
+    local km = require "my.keymap"
+    local Ctrl = km.Ctrl
+    local Leader = km.Leader
+
+    km.nnoremap(Ctrl.PageUp)
+      :desc("Previous buffer [barbar]")
+      :cmd("BufferPrevious")
+
+    km.nnoremap(Ctrl.PageDown)
+      :desc("Next buffer [barbar]")
+      :cmd("BufferNext")
+
+    km.nnoremap(Leader.w)
+      :desc("Close buffer [barbar]")
+      :cmd("BufferWipeout")
+
+    km.nnoremap(Ctrl.Shift.PageUp)
+      :desc("Move buffer to the left")
+      :cmd("BufferMovePrevious")
+
+    km.nnoremap(Ctrl.Shift.PageDown)
+      :desc("Move buffer to the right")
+      :cmd("BufferMoveNext")
+  end)

@@ -19,26 +19,36 @@ nnoremap[Ctrl.K] = Ctrl.W .. Ctrl.K -- <C-W><C-K>
 nnoremap[Ctrl.L] = Ctrl.W .. Ctrl.L -- <C-W><C-L>
 nnoremap[Ctrl.H] = Ctrl.W .. Ctrl.H -- <C-W><C-H>
 
+
 -- window nav
-noremap[Ctrl.j] = "<C-w>j"
-noremap[Ctrl.k] = "<C-w>k"
-noremap[Ctrl.l] = "<C-w>l"
-noremap[Ctrl.h] = "<C-w>h"
+noremap[Ctrl.j] = Ctrl.w .. "j"
+noremap[Ctrl.k] = Ctrl.w .. "k"
+noremap[Ctrl.l] = Ctrl.w .. "l"
+noremap[Ctrl.h] = Ctrl.w .. "h"
 
--- buffer nav
--- NOTE: these might be overwritten by a plugin, such as `barbar.nvim`
-nnoremap[Ctrl.PageUp]   = { ":bprev", "Previous buffer", silent = true }
-nnoremap[Ctrl.PageDown] = { ":bnext", "Next buffer", silent = true }
+nnoremap(Ctrl.PageUp)
+  :desc("Previous buffer")
+  :cmd("bprev")
 
-nnoremap[Leader.Dot] = { ":lcd %:p:h", "Set working directory from current file" }
+nnoremap(Ctrl.PageDown)
+  :desc("Next buffer")
+  :cmd("bnext")
 
-nnoremap[Leader.cf] = {
-  ':let @+=expand("%:p")',
-  "Copy the current file path to the clipboard (unnamedplus register)"
-}
+nnoremap(Leader.w)
+  :desc("Delete buffer")
+  :cmd("bdelete")
 
-noremap.YY        = '"+y<CR>'
-noremap[Leader.p] = '+gP<CR>'
+nnoremap(Leader.Dot)
+  :desc("Set working dirctory from file")
+  :raw(":lcd %:p:h<CR>")
+
+nnoremap(Leader.cf)
+  :desc("Copy the current file path to the clipboard (unnamedplus register)")
+  :raw(':let @+=expand("%:p")<CR>')
+
+-- TODO: what do these do?
+noremap.YY        = [["+y<CR>]]
+noremap[Leader.p] = [[+gP<CR>]]
 
 -- maintain Visual Mode after shifting > and <
 vmap["<"] = "<gv"

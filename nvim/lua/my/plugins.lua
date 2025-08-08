@@ -251,6 +251,9 @@ local plugins_by_category = {
         "nvim-tree/nvim-web-devicons",
         "lewis6991/gitsigns.nvim",
       },
+      init = function()
+        vim.g.barbar_auto_setup = false
+      end,
       config = file_config("barbar"),
     },
 
@@ -271,7 +274,9 @@ local plugins_by_category = {
       -- 2. lazy.nvim doesn't load the plugin until TagbarToggle is invoked
       lazy = true,
       init = function()
-        km.nmap[km.F4] = { ":TagbarToggle", "Toggle Tag Bar", silent = true }
+        km.nmap(km.F4)
+          :desc("Toggle Tag Bar")
+          :cmd("TagbarToggle")
         vim.g.tagbar_autofocus = 1
       end,
       cmd = { "TagbarToggle" },
@@ -315,11 +320,11 @@ local plugins_by_category = {
       -- FIXME: figure out how to make this work with my lua module search autocommand
       -- event = evt.VeryLazy,
       build = function()
-        require("my.config.treesitter").bootstrap()
+        require("my.treesitter").bootstrap()
         cmd "TSUpdateSync"
       end,
       config = function()
-        require("my.config.treesitter").setup()
+        require("my.treesitter").setup()
       end,
     },
     {
@@ -367,15 +372,13 @@ local plugins_by_category = {
         "tpope/vim-rhubarb",
       },
       config = function()
-        km.nnoremap[Leader.o] = {
-          ":.GBrowse",
-          "Open current line in github browser"
-        }
+        km.nnoremap(Leader.o)
+          :desc("Open current line in github browser")
+          :cmd(".GBrowse")
 
-        km.nnoremap[Leader.g] = {
-          ":G",
-          "fuGITive",
-        }
+        km.nnoremap(Leader.g)
+          :desc("fuGITive")
+          :cmd("G")
       end,
     },
 
@@ -478,9 +481,14 @@ local plugins_by_category = {
         vim.g.easy_align_ignore_groups = "[]"
 
         -- Start interactive EasyAlign in visual mode (e.g. vipga)
-        km.xmap.ga = { "<Plug>(EasyAlign)", "Easy Align" }
+        km.xmap("ga")
+          :desc("Easy Align (v)")
+          :plugin("EasyAlign")
+
         -- Start interactive EasyAlign for a motion/text object (e.g. gaip)
-        km.nmap.ga = { "<Plug>(EasyAlign)", "Easy Align" }
+        km.nmap("ga")
+          :desc("Easy Align (n)")
+          :plugin("EasyAlign")
       end,
     },
 

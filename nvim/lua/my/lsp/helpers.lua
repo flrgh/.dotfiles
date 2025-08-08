@@ -63,24 +63,18 @@ end
 local function register(evt, client_name, fn)
   local name, pattern = event.user_event(evt, client_name)
 
-  local group = api.nvim_create_augroup(name .. "." .. pattern,
-                                        { clear = true })
+  event.on(name)
+    :group(name .. "." .. pattern)
+    :pattern(pattern)
+    :callback(vim.schedule_wrap(function(e)
+      local client = get_client(e, client_name)
+      if not client then
+        return
+      end
 
-  local function callback(e)
-    local client = get_client(e, client_name)
-    if not client then
-      return
-    end
-
-    local buf = e.data and e.data.buffer or e.buf
-    fn(client, buf)
-  end
-
-  api.nvim_create_autocmd(name, {
-    group = group,
-    pattern = pattern,
-    callback = vim.schedule_wrap(callback),
-  })
+      local buf = e.data and e.data.buffer or e.buf
+      fn(client, buf)
+    end))
 end
 
 
@@ -108,10 +102,10 @@ function _M.route_event(e)
   local buf = e.buf
 
   if e.event == event.LspAttach then
-    require("my.config.lsp").on_attach(client_id, buf)
+    require("my.lsp").on_attach(client_id, buf)
 
   elseif e.event == event.LspDetach then
-    require("my.config.lsp").on_detach(client_id, buf)
+    require("my.lsp").on_detach(client_id, buf)
 
   else
     vim.notify("unknown event: " .. e.event, vim.log.levels.WARN)

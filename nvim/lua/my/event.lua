@@ -1,15 +1,17 @@
 --- vim event constants
 ---
----@type table<string, my.vim.event>
+---@class my.event
+---
+---@field [string] string
 local e = {}
-
----@alias my.vim.event string
 
 setmetatable(e, {
   __index = function(_, key)
     error("unknown vim event: " .. tostring(key))
   end,
 })
+
+local is_callable = require("my.utils").is_callable
 
 --- Just after creating a new buffer which is added to the buffer list, or adding a buffer to the buffer list, a buffer in the buffer list was renamed.
 ---
@@ -1142,9 +1144,9 @@ e.LspRequest = "LspRequest"
 
 --- Creates a namespaced User event pattern
 ---
----@param evt my.vim.event
+---@param evt string
 ---@param name? string|string[]
----@return my.vim.event event
+---@return string event
 ---@return string pattern
 function e.user_event(evt, name)
   name = name or "*"
@@ -1157,5 +1159,122 @@ function e.user_event(evt, name)
   return e.User, e.User .. "." .. evt .. "." .. name
 end
 
+do
+  local vim = vim
+  local api = vim.api
+  local create_augroup = api.nvim_create_augroup
+  local create_autocmd = api.nvim_create_autocmd
+  local clear = require("table.clear")
+
+  ---@type my.event.ctx
+  local ctx = {
+    ---@type string|string[]
+    event = nil,
+
+    ---@type vim.api.keyset.create_autocmd
+    opts = {},
+
+    ---@type boolean|nil
+    started = nil,
+
+    group_opts = {
+      clear = nil,
+    },
+  }
+
+  ---@param group string|integer[]
+  ---@param clear? boolean
+  ---@return my.event.ctx
+  function ctx:group(group, clear)
+    assert(self == ctx and self.started)
+    assert(type(group) == "string" or type(group) == "number")
+    if clear ~= nil then
+      assert(type(clear) == "boolean")
+      self.group_opts.clear = true
+    end
+    self.opts.group = group
+    return self
+  end
+
+  ---@param once boolean
+  ---@return my.event.ctx
+  function ctx:once(once)
+    assert(type(once) == "boolean")
+    assert(self == ctx and self.started)
+    self.opts.once = once
+    return self
+  end
+
+  ---@param nested boolean
+  ---@return my.event.ctx
+  function ctx:nested(nested)
+    assert(type(nested) == "boolean")
+    assert(self == ctx and self.started)
+    self.opts.nested = nested
+    return self
+  end
+
+  ---@param buffer integer
+  ---@return my.event.ctx
+  function ctx:buffer(buffer)
+    assert(type(buffer) == "number")
+    assert(self == ctx and self.started)
+    self.opts.buffer = buffer
+    return self
+  end
+
+  ---@param pattern string
+  ---@return my.event.ctx
+  function ctx:pattern(pattern)
+    assert(type(pattern) == "string")
+    assert(self == ctx and self.started)
+    self.opts.pattern = pattern
+    return self
+  end
+
+  ---@param desc string
+  ---@return my.event.ctx
+  function ctx:desc(desc)
+    assert(type(desc) == "string")
+    assert(self == ctx and self.started)
+    self.opts.desc = desc
+    return self
+  end
+
+  ---@return integer id
+  local function create()
+    assert(ctx.started)
+    local group = assert(ctx.opts.group)
+    if type(group) == "string" then
+      ctx.opts.group = assert(create_augroup(group, ctx.group_opts))
+    end
+
+    local id = assert(create_autocmd(ctx.event, ctx.opts))
+
+    ctx.started = nil
+    ctx.event = nil
+    clear(ctx.opts)
+    clear(ctx.group_opts)
+
+    return id
+  end
+
+  ---@param callback function
+  function ctx:callback(callback)
+    assert(is_callable(callback))
+    assert(self == ctx and self.started)
+    self.opts.callback = callback
+    return create()
+  end
+
+  ---@param evt string|string[]
+  ---@return my.event.ctx
+  function e.on(evt)
+    assert(not ctx.started)
+    ctx.started = true
+    ctx.event = evt
+    return ctx
+  end
+end
 
 return e

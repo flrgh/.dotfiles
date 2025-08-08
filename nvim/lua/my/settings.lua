@@ -84,8 +84,6 @@ o.modelines  = 10
 -- no folding
 o.foldenable = false
 
-o.tagfunc = 'v:lua.vim.lsp.tagfunc'
-
 -- explicitly disabling these keeps :checkhealth output clean
 g.loaded_node_provider = 0
 g.loaded_perl_provider = 0

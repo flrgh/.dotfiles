@@ -900,8 +900,8 @@ end
 
 do
   ---@param client vim.lsp.Client
-  ---@param buf integer
-  local function on_attach(client, buf)
+  ---@param _buf integer
+  local function on_attach(client, _buf)
     local attach_done = sw.new("lua-lsp.on-attach", 1000)
 
     local ws = get_merged_settings()
@@ -1046,22 +1046,18 @@ do
     schedule_handler()
   end
 
-  local group = api.nvim_create_augroup("user-lua-buf-event", { clear = true })
-  api.nvim_create_autocmd({
-      event.BufNew,
-      event.BufNewFile,
-      event.BufAdd,
-      event.BufRead,
-      event.BufWinEnter,
-      event.TextChanged,
-      event.TextChangedI
-    }, {
-      group    = group,
-      pattern  = "*.lua",
-      desc     = "Lua buffer event handler",
-      callback = on_buf_event,
-    }
-  )
+  event.on({
+    event.BufNew,
+    event.BufNewFile,
+    event.BufAdd,
+    event.BufRead,
+    event.BufWinEnter,
+    event.TextChanged,
+    event.TextChangedI
+  }):group("user-lua-buf-event")
+    :pattern("*.lua")
+    :desc("Lua buffer event handler")
+    :callback(on_buf_event)
 end
 
 do
@@ -1137,12 +1133,10 @@ do
     end
   end
 
-  local group = api.nvim_create_augroup("user-lua-diagnostic", { clear = true })
-  api.nvim_create_autocmd(event.DiagnosticChanged, {
-    group = group,
-    pattern = "*",
-    callback = diagnostic_changed,
-  })
+  event.on(event.DiagnosticChanged)
+    :group("user-lua-diagnostic")
+    :pattern("*")
+    :callback(diagnostic_changed)
 end
 
 

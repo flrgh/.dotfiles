@@ -3,6 +3,7 @@ local _M = {}
 local plugin = require "my.utils.plugin"
 local km = require("my.keymap")
 local const = require("my.constants")
+local event = require("my.event")
 
 local executable = vim.fn.executable
 local api = vim.api
@@ -80,9 +81,12 @@ do
     configured = true
 
     if plugin.installed("lspsaga.nvim") then
+      local saga = require("lspsaga")
+      local command = require("lspsaga.command")
       local cmd = function(s)
         return ("<cmd>Lspsaga %s<CR>"):format(s)
       end
+
 
       maps.references = cmd("finder")
 
@@ -127,29 +131,37 @@ do
   end
 
   local Leader = km.Leader
+  local nnoremap = km.buf.nnoremap
+  local vnoremap = km.buf.vnoremap
 
+  -- set up key bindings
   function attach_keymaps()
     configure()
 
-    -- set up key bindings
-    km.buf.nnoremap.gD           = { maps.declaration, "Go to declaration", KEYMAP_TAG }
-    km.buf.nnoremap.gd           = { maps.type_definition, "Go to type definition", KEYMAP_TAG }
-    km.buf.nnoremap.gi           = { maps.implementation, "Go to implementation", KEYMAP_TAG }
+    nnoremap({
+      gD          = { maps.declaration,        "[g]o to [Declaration" },
+      gd          = { maps.type_definition,    "[g]o to type [d]efinition" },
+      gi          = { maps.implementation,     "[g]o to [i]mplementation" },
+      K           = { maps.hover,              "hover info" },
+    })
 
-    km.buf.nnoremap.K            = { maps.hover, "Hover info", KEYMAP_TAG }
+    nnoremap({
+      [Leader.ca] = { maps.code_action,        "[c]ode [a]ction" },
+      [Leader.nd] = { maps.next_diagnostic,    "[n]ext [d]iagnostic" },
+      [Leader.pd] = { maps.prev_diagnostic,    "[p]revious [d]iagnostic" },
+      [Leader.sd] = { maps.show_diagnostic,    "[s]how [d]iagnostics" },
+      [Leader.td] = { maps.toggle_diagnostics, "[t]oggle [d]diagnostics" },
+      [Leader.ti] = { maps.toggle_inlay_hints, "[t]oggle [i]nlay hints" },
+      [Leader.rn] = { maps.rename,             "[r]e[n]ame variable" },
+      [Leader.vr] = { maps.references,         "[v]iew [r]eferences" },
+    }, { tag = KEYMAP_TAG })
 
-    km.buf.nnoremap[Leader.ca]   = { maps.code_action, "Code action", KEYMAP_TAG }
-    km.buf.vnoremap[Leader.ca]   = { maps.range_code_action, "Code action (ranged)", KEYMAP_TAG }
-
-    km.buf.nnoremap[Leader.nd]   = { maps.next_diagnostic, "Next diagnostic", KEYMAP_TAG }
-    km.buf.nnoremap[Leader.pd]   = { maps.prev_diagnostic, "Previous diagnostic", KEYMAP_TAG }
-    km.buf.nnoremap[Leader.sd]   = { maps.show_diagnostic, "Show diagnistics", KEYMAP_TAG }
-    km.buf.nnoremap[Leader.td]   = { maps.toggle_diagnostics, "Toggle diagnistics", KEYMAP_TAG }
-    km.buf.nnoremap[Leader.ti]   = { maps.toggle_inlay_hints, "Toggle inlay hints", KEYMAP_TAG }
-
-    km.buf.nnoremap[Leader.rn]   = { maps.rename, "Rename variable", KEYMAP_TAG }
-
-    km.buf.nnoremap[Leader.vr]   = { maps.references, "[V]iew [R]eferences", KEYMAP_TAG }
+    if maps.range_code_action then
+      vnoremap(Leader.ca)
+        :tag(KEYMAP_TAG)
+        :desc("[c]ode [a]ction (ranged)")
+        :action(maps.range_code_action)
+    end
   end
 end
 
@@ -317,6 +329,12 @@ function _M.init()
   for _, server in ipairs(SERVERS) do
     setup_server(server)
   end
+
+  event.on({ event.LspAttach, event.LspDetach })
+    :group("user-lsp")
+    :desc("forward LSP attach/detach events")
+    :pattern("*")
+    :callback(require("my.lsp.helpers").route_event)
 end
 
 

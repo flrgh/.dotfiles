@@ -1,6 +1,7 @@
 local km = require "my.keymap"
 local actions = require "telescope.actions"
 local plugin = require "my.utils.plugin"
+local const = require "my.constants"
 
 -- turn on line numbers for previewers
 --
@@ -103,51 +104,42 @@ if fzf then
   ts.load_extension('fzf')
 end
 
-km.nnoremap[km.Ctrl.p] = {
-  ":Telescope git_files",
-  "Fuzzy-find git-files w/ telescope",
-  silent = true
-}
+local Ctrl = km.Ctrl
+local Leader = km.Leader
+local nnoremap = km.nnoremap
 
-km.nnoremap[km.Leader.rg] = {
-  ":Telescope live_grep",
-  "Live Grep (rg)",
-  silent = true,
-}
+nnoremap(Ctrl.p)
+  :desc("Fuzzy-find git-files w/ telescope")
+  :cmd("Telescope git_files")
 
-km.nnoremap[km.Leader.pf] = {
-  function()
+nnoremap(Leader.rg)
+  :desc("Live Grep (rg)")
+  :cmd("Telescope live_grep")
+
+nnoremap(Leader.pf)
+  :desc("Find neovim [p]lugin [f]iles")
+  :callback(function()
     require("telescope.builtin").find_files({
-      cwd = "~/.local/share/nvim/lazy",
+      cwd = const.nvim.plugins,
     })
-  end,
-  "Find neovim [p]lugin [f]iles",
-  silent = true,
-}
+  end)
 
-km.nnoremap[km.Leader.prg] = {
-  function()
+nnoremap(Leader.prg)
+  :desc("[p]lugin [f]ile [g]rep")
+  :callback(function()
     require("telescope.builtin").live_grep({
-      cwd = "~/.local/share/nvim/lazy",
+      cwd = const.nvim.plugins,
     })
-  end,
-  "[p]lugin [f]ile [g]rep",
-  silent = true,
-}
+  end)
 
-
-km.nnoremap[km.Leader.vf] = {
-  function()
+nnoremap(Leader.vf)
+  :desc("Find neovim runtime files")
+  :callback(function()
     require("telescope.builtin").find_files({
-      cwd = "~/.local/share/nvim/runtime/",
+      cwd = const.nvim.runtime,
     })
-  end,
-  "Find neovim runtime files",
-  silent = true,
-}
+  end)
 
-km.nnoremap[km.Leader.b] = {
-  ":Telescope buffers",
-  "Search buffers",
-  silent = true,
-}
+nnoremap(Leader.b)
+  :desc("Search buffers")
+  :cmd("Telescope buffers")

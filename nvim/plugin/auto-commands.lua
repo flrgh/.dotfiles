@@ -89,16 +89,3 @@ do
     },
   })
 end
-
-do
-  create("user-lsp", {
-    {
-      desc = "forward LSP attach/detach events",
-      events = { event.LspAttach, event.LspDetach },
-      pattern = "*",
-      callback = function(e)
-        require("my.lsp.helpers").route_event(e)
-      end,
-    },
-  })
-end
