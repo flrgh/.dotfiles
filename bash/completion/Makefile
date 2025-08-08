@@ -11,6 +11,7 @@ COMMANDS := \
 	cargo \
 	deck \
 	delta \
+	docker-language-server \
 	files-in-package \
 	gh \
 	gh-helper \
@@ -192,3 +193,7 @@ package-deps:
 aws: CMD = $(shell mise which aws_completer)
 aws:
 	$(completion-command)
+
+docker-language-server: CMD = docker-language-server completion bash
+docker-language-server:
+	$(from-command)

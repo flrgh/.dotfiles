@@ -286,6 +286,7 @@ golang: $(NEED)/gopls $(NEED)/gotags | .setup
 .PHONY: language-servers
 language-servers: npm $(LIBEXEC) \
 	$(LUAROCKS_PKG)/teal-language-server \
+	$(NEED)/docker-language-server \
 	$(NEED)/gopls \
 	$(PIP_PKG)/systemd-language-server \
 	$(MISE_DEPS) \
