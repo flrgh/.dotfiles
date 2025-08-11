@@ -11,11 +11,9 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "1.0.67",
-    "@microsoft/compose-language-service": "0.4.0",
     "@tree-sitter-grammars/tree-sitter-lua": "0.2.0",
     "awk-language-server": "0.10.6",
     "bash-language-server": "5.6.0",
-    "dockerfile-language-server-nodejs": "0.14.1",
     "gh-actions-language-server": "0.0.3",
     "live-server": "1.2.2",
     "pyright": "1.1.403",
