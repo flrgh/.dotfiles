@@ -34,18 +34,6 @@ install-from-asset() {
     local -r asset=$1
     local -r version=$2
 
-    echo "Fetching checksum for bitwarden $version"
-    # https://github.com/bitwarden/clients/releases/download/cli-v2024.4.1/bw-linux-sha256-2024.4.1.txt
-    local sum_file
-    sum_file=$(cache-get "${BASE_URL}/cli-v${version}/bw-linux-sha256-${version}.txt")
-    local checksum
-    checksum=$(tr -d $'\r' < "$sum_file")
-
-    echo "Validating download checksum"
-
-    printf "%q %q\n" "$checksum" "$asset" \
-        | sha256sum --check --strict
-
     local tmp; tmp=$(mktemp -d)
     cd "$tmp"
     unzip "$asset"
