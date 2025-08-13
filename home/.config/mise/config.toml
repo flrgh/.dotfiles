@@ -18,6 +18,7 @@ cargo-binstall = "latest"
 fzf = { version = "latest", postinstall = "~/.config/mise/post-install fzf" }
 git-cliff = { version = "latest", postinstall = "~/.config/mise/post-install git-cliff" }
 terraform-ls = "latest"
+ripgrep = { version = "latest", postinstall = "~/.config/mise/post-install ripgrep" }
 
 [settings]
 # everything but aqua is disabled until I actually need something from

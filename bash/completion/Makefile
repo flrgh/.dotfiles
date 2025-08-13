@@ -27,6 +27,7 @@ COMMANDS := \
 	package-info \
 	pip \
 	pip3 \
+	rg \
 	rustup \
 	sg \
 	tree-sitter \
@@ -196,4 +197,8 @@ aws:
 
 docker-language-server: CMD = docker-language-server completion bash
 docker-language-server:
+	$(from-command)
+
+rg: CMD = mise exec ripgrep -- rg --generate complete-bash
+rg:
 	$(from-command)
