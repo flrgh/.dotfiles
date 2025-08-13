@@ -169,8 +169,12 @@ rust-update: $(RUSTUP)
 	$(RUSTUP) update
 	./scripts/install-cargo-packages
 
+
+/etc/.git: | $(PKG)/os.installed
+	sudo etckeeper init
+
 .PHONY: os-packages
-os-packages: $(PKG)/os.installed $(PKG)/os.removed
+os-packages: $(PKG)/os.installed $(PKG)/os.removed /etc/.git
 
 .PHONY: os-packages-update
 os-packages-update: os-packages
@@ -381,6 +385,7 @@ COMMON = \
 	mise \
 	neovim \
 	npm \
+	os-packages \
 	rust \
 	ssh
 
