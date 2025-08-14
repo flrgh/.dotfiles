@@ -113,6 +113,27 @@ get-installed-timestamp() {
     fi
 }
 
+is-pinned() {
+    local -r name=$1
+
+    if app-state::get "$name" pinned; then
+        return
+    else
+        return 1
+    fi
+}
+
+set-pinned() {
+    local -r name=$1
+    local version=$2
+    normalize-version "$version"
+    app-state::set "$name" pinned "$version"
+}
+
+remove-pin() {
+    local -r name=$1
+    app-state::remove "$name" pinned
+}
 
 set-installed-version() {
     local -r name=$1
@@ -291,6 +312,15 @@ install::cmd() {
     local -r name=$1
     local version=${2:-latest}
 
+    if is-pinned "$name"; then
+        local pin=${INEED_REPLY:?}
+
+        if [[ "$pin" != "${version:-}" ]]; then
+            echo "Forcing pinned version ($pin)"
+        fi
+        version=$pin
+    fi
+
     if [[ $version == latest ]]; then
         get-latest-version "$name"
         version=$INEED_REPLY
@@ -337,6 +367,59 @@ install::complete() {
     done
 
     complete-from-drivers
+}
+
+pin::cmd() {
+    local -r name=$1
+    local version=${2:-}
+
+    if [[ -n ${version:-} ]]; then
+        if is-pinned "$name"; then
+            local pin=${INEED_REPLY:?}
+
+            if [[ "$pin" != "$version" ]]; then
+                echo "Updating pinned version from ${INEED_REPLY} to ${version}"
+            fi
+        fi
+
+        set-pinned "$name" "$version"
+
+        if is-installed "$name"; then
+            get-installed-version "$name"
+            local current=${INEED_REPLY:?}
+
+            if [[ "$current" == "$version" ]]; then
+                echo "Pinning ${name} to the currently installed version (${version})"
+                return
+            else
+                echo "Re-installing ${name} with the desired version (${version})"
+                install::cmd "$name" "$version"
+            fi
+
+        else
+            echo "Installing ${name} and pinning to the desired version (${version})"
+            install::cmd "$name" "$version"
+        fi
+
+    else
+        if is-installed "$name"; then
+            version=$(get-installed-version "$name")
+            echo "Pinning ${name} to the currently installed version (${version})"
+            set-pinned "$name" "${version:?}"
+
+        else
+            echo "Installing ${name} and pinning to the latest version"
+
+            version=$(get-latest-version "$name")
+            set-pinned "$name" "${version:?}"
+
+            install::cmd "$name" "${version:?}"
+        fi
+    fi
+}
+
+pin::complete() {
+    install::complete "$@"
 }
 
 

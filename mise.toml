@@ -2,3 +2,4 @@
 node = "latest"
 shfmt = "latest"
 fzf = "latest"
+nfpm = "latest"

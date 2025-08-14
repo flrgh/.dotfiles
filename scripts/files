@@ -5,10 +5,12 @@ set -euo pipefail
 REPO=${DOTFILES_REPO_ROOT:?}
 BUILD=${REPO:?}/build
 
+declare -ga PATHS=()
+
 shopt -s dotglob
 shopt -s nullglob
 
-_validate() {
+_validate_path() {
     local -r path=${1:?}
     if [[ $path != "$BUILD" && $path != "${BUILD}/"* ]]; then
         echo "ERROR - bad path: $path"
@@ -16,59 +18,101 @@ _validate() {
     fi
 }
 
+_validate() {
+    PATHS=()
+
+    local path
+    for path in "$@"; do
+        case $path in
+            /*) ;;
+            *) path=${REPO}/${path} ;;
+        esac
+
+        path=$(realpath --canonicalize-missing --no-symlinks "$path")
+        _validate_path "$path"
+        PATHS+=("$path")
+    done
+}
+
 _remove() {
-    command rm -rfv "$@"
+    _validate "$@"
+    command rm -rfv "${PATHS[@]}"
 }
 
 _mkdir() {
-    command mkdir -vp "$@"
+    _validate "$@"
+    command mkdir -vp "${PATHS[@]}"
 }
 
 _cleandir() {
     _mkdir "$@"
 
+    _validate "$@"
     local dir
-    for dir in "$@"; do
+    for dir in "${PATHS[@]}"; do
         _remove "${dir:?}"/*
     done
 }
 
 _mkparent() {
+    _validate "$@"
+
     local path
     local parent
     local -a dirs=()
-    for path in "$@"; do
+    for path in "${PATHS[@]}"; do
         parent=$(dirname "$path")
-        _validate "$parent"
+        _validate_path "$parent"
         dirs+=("$parent")
     done
     _mkdir "${dirs[@]}"
 }
 
 _touch() {
-    _mkparent "$@"
-    command touch "$@"
+    local -a targs=()
+    local -a topts=()
+    local -a pargs=()
+
+    while [[ -n ${1:-} ]]; do
+        case $1 in
+            # touch -<opt> <arg>
+            # touch --<opt> <arg>
+            -d|--date|-r|--reference|-t|--time)
+                topts+=("$1" "$2")
+                shift 2
+                ;;
+
+            # touch -<flag>
+            # touch --<flag>
+            -a|-c|--no-create|-h|-m|--no-dereference)
+                topts+=("$1")
+                shift
+                ;;
+
+            # touch --<opt>=<arg>
+            --date=*|--reference=*|--time=*)
+                topts+=("$1")
+                shift
+                ;;
+
+            *)
+                targs+=("$1")
+                pargs+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    _mkparent "${pargs[@]}"
+
+    _validate "${targs[@]}"
+    command touch "${topts[@]}" "${PATHS[@]}"
 }
 
 
 main() {
     local action=${1:?}
     shift
-
-    local -a paths=()
-    local name
-    for name in "$@"; do
-        case $name in
-            /*) ;;
-            *) name=${REPO}/${name} ;;
-        esac
-        name=$(realpath --canonicalize-missing --no-symlinks "$name")
-
-        _validate "$name"
-        paths+=("$name")
-    done
-
-    set -- "${paths[@]}"
 
     case $action in
         rm|unlink|remove) _remove "$@";;

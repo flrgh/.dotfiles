@@ -173,6 +173,13 @@ state::set() {
     printf '%s' "$value" > "$fname"
 }
 
+state::remove() {
+    local -r name=$1
+
+    local -r fname="$INEED_STATE/$name"
+    rm -f "$fname"
+}
+
 app-state::get() {
     local -r app=$1
     local -r key=$2
@@ -186,6 +193,13 @@ app-state::set() {
     local -r value=$3
 
     state::set "${app}.${key}" "$value"
+}
+
+app-state::remove() {
+    local -r app=$1
+    local -r key=$2
+
+    state::remove "${app}.${key}"
 }
 
 app-state::list() {

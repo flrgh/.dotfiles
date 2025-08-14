@@ -1,3 +1,16 @@
+# things that are bad and I don't want
 PackageKit-command-not-found
-bash-completion
 nano-default-editor
+
+# things I maintain in $HOME
+bash-completion
+cargo
+fd-find
+golang
+httpie
+ninja-build
+
+# things I think I don't need anymore
+libtool
+hub
+bc

@@ -2,6 +2,8 @@ INSTALL_PATH := $(HOME)
 INSTALL_BIN := $(INSTALL_PATH)/.local/bin
 INSTALL_DATA := $(INSTALL_PATH)/.local/share
 INSTALL_STATE := $(INSTALL_PATH)/.local/state
+INSTALL_LIB := $(INSTALL_PATH)/.local/lib
+USER_REPOS := $(HOME)/git/flrgh
 REPO_ROOT = $(PWD)
 DEBUG := $(DEBUG)
 
@@ -21,15 +23,20 @@ MISE := $(INSTALL_BIN)/mise
 LUAROCKS := $(INSTALL_BIN)/luarocks
 LIBEXEC := home/.local/libexec
 NPM := $(MISE) exec node -- npm
+NFPM := $(MISE) exec nfpm -- nfpm
 
 INSTALL := install --verbose --compare --no-target-directory
 INSTALL_INTO := install --verbose --compare --target-directory
+COPY := install --verbose --preserve-timestamps --no-target-directory
 
-RM := ./scripts/files rm
-CLEANDIR := ./scripts/files cleandir
-MKPARENT := ./scripts/files mkparent
-MKDIR := ./scripts/files mkdir
-TOUCH := ./scripts/files touch
+SCRIPT := ./scripts
+RM := $(SCRIPT)/files rm
+CLEANDIR := $(SCRIPT)/files cleandir
+MKPARENT := $(SCRIPT)/files mkparent
+MKDIR := $(SCRIPT)/files mkdir
+TOUCH := $(SCRIPT)/files touch
+
+LINES = $(shell $(SCRIPT)/get-lines "$<")
 
 DIFF := diff --suppress-common-lines --suppress-blank-empty \
 	--ignore-tab-expansion --ignore-all-space --minimal
@@ -49,17 +56,18 @@ CREATE_DIRS := \
 
 BUILD := build
 PKG := $(BUILD)/pkg
+DEP := $(BUILD)/dep
 NEED := $(PKG)/need
 CARGO_PKG := $(PKG)/cargo
 PIP_PKG := $(PKG)/pip
 LUAROCKS_PKG := $(PKG)/luarocks
 HASHICORP_PKG := $(PKG)/hashicorp
 MISE_PKG := $(PKG)/mise
-MISE_DEPS := $(MISE_PKG)/.default
 
 CARGO_HOME := $(INSTALL_PATH)/.local/cargo
 CARGO_BIN := $(CARGO_HOME)/bin
-RUSTUP := $(CARGO_HOME)/bin/rustup
+RUSTUP := $(CARGO_BIN)/rustup
+CARGO := $(CARGO_BIN)/cargo
 
 # gnome-software seems to be doing some weirdness if this directory
 # doesn't exist
@@ -79,6 +87,8 @@ install: ssh env rust lua bash docker alacritty golang curl git-config
 debug:
 	@echo REPO_ROOT: $(REPO_ROOT)
 	@echo INSTALL_PATH: $(INSTALL_PATH)
+	@echo PIP_DEPS: $(PIP_DEPS)
+	@echo NEED_DEPS: $(NEED_DEPS)
 
 .PHONY: clean
 clean:
@@ -87,17 +97,38 @@ clean:
 .PHONY: update
 update: clean os-packages-update mise-update rust-update
 
-$(PKG)/os.installed: deps/os-package-installed.txt
-	sudo dnf install -y $(shell ./scripts/get-lines ./deps/os-package-installed.txt)
-	$(TOUCH) $@
+define nfpm-build =
+	$(MKPARENT) "$@"
+	$(NFPM) package \
+		--packager rpm \
+		--config "$<" \
+		--target "$@"
+	$(TOUCH) --reference "$<" "$@"
+endef
+
+define dnf-install =
+	sudo dnf install -y "$<"
+	$(TOUCH) --reference "$<" "$@"
+endef
+
+$(PKG)/os.common.rpm: deps/nfpm-common.yaml | $(MISE) .setup
+	$(nfpm-build)
+
+$(PKG)/os.common: $(PKG)/os.common.rpm | $(PKG)/os.removed
+	$(dnf-install)
+
+$(PKG)/os.workstation.rpm: deps/nfpm-workstation.yaml | $(PKG)/os.common
+	$(nfpm-build)
+
+$(PKG)/os.workstation: $(PKG)/os.workstation.rpm
+	$(dnf-install)
 
 $(PKG)/os.removed: deps/os-package-removed.txt
-	sudo dnf remove -y $(shell ./scripts/get-lines ./deps/os-package-removed.txt)
+	sudo dnf remove -y $(LINES)
 	$(TOUCH) $@
 
-$(PKG)/python: $(MISE) deps/python-packages.txt
-	$(MISE) exec python -- pip install --user \
-		$(shell ./scripts/get-lines ./deps/python-packages.txt)
+$(PKG)/python: deps/python-packages.txt | $(MISE)
+	$(MISE) exec python -- pip install --user $(LINES)
 	$(TOUCH) $@
 
 $(PKG)/flatpak.remotes: deps/flatpak-remotes.txt
@@ -112,18 +143,41 @@ $(PKG)/flatpak.apps.installed: $(PKG)/flatpak.remotes deps/flatpak-apps.txt
 flatpak: $(PKG)/flatpak.apps.installed
 	@flatpak --user update --noninteractive
 
-$(NEED)/%: | .setup
+PIP_PACKAGES = $(shell $(SCRIPT)/get-lines ./deps/python-packages.txt)
+PIP_DEPS = $(addprefix $(DEP)/,$(PIP_PACKAGES))
+$(PIP_DEPS): | $(PKG)/python
+	$(TOUCH) "$@"
+
+NEED_PACKAGES = $(notdir $(basename $(wildcard $(REPO_ROOT)/home/.local/share/ineed/drivers/*.sh)))
+NEED_DEPS = $(addprefix $(DEP)/,$(NEED_PACKAGES))
+$(NEED_DEPS): | .setup
 	ineed install $(notdir $@)
-	$(TOUCH) $@
+	$(TOUCH) --reference "$(INSTALL_STATE)/ineed/$(notdir $@).installed-timestamp" "$@"
 
-$(PIP_PKG)/%:
-	pip install --user $(notdir $@)
-	$(TOUCH) $@
-
-$(LUAROCKS_PKG)/%: $(LUAROCKS)
+LUAROCKS_PACKAGES = teal-language-server tl
+LUAROCKS_DEPS = $(addprefix $(DEP)/,$(LUAROCKS_PACKAGES))
+$(LUAROCKS_DEPS): | $(LUAROCKS)
 	luarocks install $(notdir $@)
 	$(TOUCH) $@
 
+MISE_PACKAGES = $(shell $(MISE) ls --yes --current --no-header | awk '{print $$1}')
+MISE_DEPS = $(addprefix $(DEP)/,$(MISE_PACKAGES))
+MISE_ALL = $(PKG)/mise-all
+
+#OS_COMMON_PACKAGES := $(shell yq < deps/nfpm-common.yaml '.depends[]' | sort -u)
+#OS_COMMON_PACKAGES := $(filter-out $(NEED_PACKAGES),$(OS_COMMON_PACKAGES))
+#OS_COMMON_DEPS = $(addprefix $(DEP)/,$(OS_COMMON_PACKAGES))
+#$(OS_COMMON_DEPS): | $(PKG)/os.common
+#	$(TOUCH) "$@"
+#
+#OS_WORKSTATION_PACKAGES := $(shell yq < deps/nfpm-workstation.yaml '.depends[]' | sort -u)
+#OS_WORKSTATION_PACKAGES := $(filter-out $(NEED_PACKAGES),$(OS_WORKSTATION_PACKAGES))
+#OS_WORKSTATION_DEPS = $(addprefix $(DEP)/,$(OS_WORKSTATION_PACKAGES))
+#$(OS_WORKSTATION_DEPS): | $(PKG)/os.workstation
+#	$(TOUCH) "$@"
+#
+#$(DEP)/dircolors: | $(DEP)/coreutils
+#	$(TOUCH) --reference "$<" "$@"
 
 NPM_DEP_FILE := ./deps/npm.json
 NPM_WANTED    = $(shell jq -r '.dependencies | to_entries | .[] | "\(.key)@\(.value)"' < $(NPM_DEP_FILE))
@@ -132,7 +186,7 @@ NPM_NEEDED    = $(strip $(filter-out $(NPM_INSTALLED),$(NPM_WANTED)))
 
 .PHONY: npm
 .ONESHELL:
-npm: $(MISE) | .setup
+npm: | $(MISE) .setup
 	@$(NPM) uninstall -g $(shell jq -r '.name' < $(NPM_DEP_FILE))
 	_needed="$(NPM_NEEDED)"
 	if [[ -n $$_needed ]]; then
@@ -144,7 +198,7 @@ npm: $(MISE) | .setup
 	fi
 
 .PHONY: __npm-check-updates
-__npm-check-updates: $(MISE)
+__npm-check-updates: | $(MISE)
 	command -v ncu || $(NPM) install -g npm-check-updates@latest
 	ncu --upgrade --packageFile $(NPM_DEP_FILE)
 
@@ -153,7 +207,7 @@ npm-update: __npm-check-updates .WAIT npm
 
 $(RUSTUP): scripts/install-rust | .setup
 	./scripts/install-rust
-	@touch --reference ./scripts/install-rust $@
+	$(TOUCH) --reference ./scripts/install-rust $@
 
 $(CARGO_PKG): $(RUSTUP) scripts/install-cargo-packages
 	./scripts/install-cargo-packages
@@ -169,12 +223,8 @@ rust-update: $(RUSTUP)
 	$(RUSTUP) update
 	./scripts/install-cargo-packages
 
-
-/etc/.git: | $(PKG)/os.installed
-	sudo etckeeper init
-
 .PHONY: os-packages
-os-packages: $(PKG)/os.installed $(PKG)/os.removed /etc/.git
+os-packages: $(PKG)/os.common $(PKG)/os.removed
 
 .PHONY: os-packages-update
 os-packages-update: os-packages
@@ -202,33 +252,36 @@ symlinks:
 .PRECIOUS: $(MISE)
 $(MISE): scripts/install-mise | .setup
 	./scripts/install-mise
-	touch --reference ./scripts/install-mise $(MISE)
+	$(TOUCH) --reference ./scripts/install-mise $(MISE)
 
 .PRECIOUS: $(LUAROCKS)
-$(LUAROCKS): $(NEED)/luarocks
+$(LUAROCKS): $(DEP)/lua $(DEP)/luarocks
 
-.PHONY: mise-update
-mise-update: $(MISE) home/.config/mise/config.toml scripts/mise-shims
-	$(MISE) self-update --yes
+$(MISE_ALL): $(MISE) mise.toml home/.config/mise/config.toml scripts/mise-shims
 	$(MISE) upgrade --yes
 	./scripts/mise-shims
+	$(TOUCH) "$@"
 
-$(MISE_DEPS): $(MISE) mise.toml home/.config/mise/config.toml scripts/mise-shims
-	$(MISE) upgrade --yes
-	./scripts/mise-shims
-	$(TOUCH) $@
+$(MISE_DEPS): | $(MISE_ALL)
+	$(TOUCH) --reference $(shell $(MISE) where $(notdir $@)) $@
 
 .PHONY: mise
 mise: $(MISE)
 	$(MISE) install --yes
 	./scripts/mise-shims
 
-DIRCOLORS_FNAME := dircolors.256dark
-DIRCOLORS_URL := https://raw.githubusercontent.com/seebi/dircolors-solarized/master/$(DIRCOLORS_FNAME)
-$(BUILD)/dircolors:
-	mkdir -p $(CACHE_DIR)
-	./home/.local/bin/cache-get $(DIRCOLORS_URL) $(DIRCOLORS_FNAME)
-	cp $(CACHE_DIR)/download/$(DIRCOLORS_FNAME) $@
+.PHONY: .mise-self-update
+.mise-self-update: | $(MISE)
+	$(MISE) self-update --yes
+	./scripts/mise-shims
+
+.PHONY: mise-update
+mise-update: .mise-self-update .WAIT $(MISE_ALL)
+
+$(BUILD)/dircolors: private URL := https://raw.githubusercontent.com/seebi/dircolors-solarized/master/dircolors.256dark
+$(BUILD)/dircolors: private BASENAME = $(notdir $(URL))
+$(BUILD)/dircolors: | $(PKG)/os.common
+	$(COPY) $(shell ./home/.local/bin/cache-get "$(URL)" "$(BASENAME)") $@
 
 $(BUILD)/home/.config/env: $(MISE_DEPS) lib/bash/* scripts/build-env.sh $(BUILD)/dircolors
 	./scripts/build-env.sh
@@ -239,24 +292,63 @@ ssh: | .setup
 	./scripts/update-ssh-config
 
 .PHONY: env
-env: $(MISE) $(BUILD)/home/.config/env | .setup
+env: $(BUILD)/home/.config/env | $(MISE) .setup
 	$(INSTALL) $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.config/env
 	$(INSTALL) $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.pam_environment
 
-BASH_BUILTINS := $(BUILD)/bash-builtins
-$(BASH_BUILTINS): ./scripts/install-custom-bash-builtins
-	./scripts/install-custom-bash-builtins
-	$(TOUCH) $@
+BASH_BUILTIN_CLONE := $(USER_REPOS)/bash-builtin-extras
+$(BASH_BUILTIN_CLONE): private REPO := git@github.com:flrgh/bash-builtins.git
+$(BASH_BUILTIN_CLONE):
+	git clone "$(REPO)" "$@"
+
+BASH_BUILTIN_SRCS = $(shell fd \
+	--type file \
+	--exclude tests \
+	'(\.rs|Cargo\.lock|Cargo\.toml)$$' \
+	"$(BASH_BUILTIN_CLONE)" \
+)
+
+BASH_BUILTIN_NAMES = varsplice timer version
+BASH_BUILTIN_LIBS = $(addsuffix .so,$(addprefix $(BASH_BUILTIN_CLONE)/target/release/lib,$(BASH_BUILTIN_NAMES)))
+
+.PHONY: .bash-builtin-pull
+.bash-builtin-pull: $(BASH_BUILTIN_CLONE)
+	git -C "$(BASH_BUILTIN_CLONE)" pull
+
+$(BASH_BUILTIN_SRCS): .bash-builtin-pull
+
+$(BASH_BUILTIN_LIBS): $(RUSTUP) $(BASH_BUILTIN_CLONE) .WAIT $(BASH_BUILTIN_SRCS)
+	cargo build \
+	    --quiet \
+	    --keep-going \
+	    --manifest-path "$(BASH_BUILTIN_CLONE)"/Cargo.toml \
+	    --release \
+	    --workspace
+	touch $(BASH_BUILTIN_LIBS)
+
+BASH_BUILTINS = $(addprefix $(INSTALL_LIB)/bash/loadables/,$(BASH_BUILTIN_NAMES))
+$(BASH_BUILTINS): $(BASH_BUILTIN_LIBS)
+	$(INSTALL) "$(BASH_BUILTIN_CLONE)/target/release/lib$(notdir $@).so" \
+		"$@"
 
 $(BUILD)/bash-facts: $(BUILD)/home/.config/env $(BASH_BUILTINS)
-	./scripts/bashrc-init-facts
 	$(TOUCH) $@
 
-$(BUILD)/home/.bashrc: $(BUILD)/bash-facts $(MISE_DEPS) lib/bash/* bash/* hooks/bashrc/* $(NEED)/bat $(NEED)/direnv $(NEED)/bash-completion
-	$(REPO_ROOT)/scripts/run-hooks bashrc
-	@-$(DIFF) $(INSTALL_PATH)/.bashrc $(REPO_ROOT)/build/home/.bashrc
+$(BUILD)/home/.bashrc: \
+	lib/bash/* bash/* hooks/bashrc/* \
+	$(DEP)/bash-completion \
+	$(DEP)/bat \
+	$(DEP)/direnv \
+	$(DEP)/fd \
+	$(DEP)/fzf \
+	$(MISE_DEPS) \
+	| .setup \
+	$(BUILD)/home/.config/env
 
-$(BUILD)/bash-completion: $(NEED)/bash-completion
+	$(SCRIPT)/run-hooks bashrc
+	@-$(DIFF) $(INSTALL_PATH)/.bashrc "$@"
+
+$(BUILD)/bash-completion: | $(DEP)/bash-completion
 	$(MAKE) -C ./bash/completion all
 	$(TOUCH) $@
 
@@ -271,32 +363,31 @@ bash-completion: $(BUILD)/bash-completion | .setup
 		-delete
 
 .PHONY: bashrc
-bashrc: $(MISE) $(BUILD)/home/.bashrc | .setup
+bashrc: $(BUILD)/home/.bashrc | $(MISE) .setup
 	$(INSTALL) $(REPO_ROOT)/build/home/.bashrc $(INSTALL_PATH)/.bashrc
 
 .PHONY: bash
-bash: bash-completion bashrc | .setup
+bash: $(DEP)/bash .WAIT bash-completion bashrc | .setup
 	./scripts/update-default-shell
-
-$(LUAROCKS_PKG)/teal-language-server: $(LUAROCKS_PKG)/tl
 
 $(HASHICORP_PKG)/%:
 	get-hashicorp-binary $(notdir $@) latest
 	$(TOUCH) $@
 
 .PHONY: golang
-golang: $(NEED)/gopls $(NEED)/gotags | .setup
+golang: $(DEP)/gopls $(DEP)/gotags | .setup
 
 .PHONY: language-servers
 language-servers: npm $(LIBEXEC) \
-	$(LUAROCKS_PKG)/teal-language-server \
-	$(NEED)/docker-language-server \
-	$(NEED)/gopls \
-	$(PIP_PKG)/systemd-language-server \
+	$(DEP)/teal-language-server \
+	$(DEP)/docker-language-server \
+	$(DEP)/gopls \
 	$(MISE_DEPS) \
+	$(DEP)/compiledb \
+	$(DEP)/systemd-language-server \
 	| .setup
 
-$(PKG)/neovim: $(NEED)/neovim nvim/plugins.lock.json
+$(PKG)/neovim: $(DEP)/neovim nvim/plugins.lock.json
 	nvim -l ./nvim/bootstrap.lua
 	$(TOUCH) $@
 
@@ -304,9 +395,9 @@ $(INSTALL_DATA)/nvim/lazy/lazy.nvim: $(PKG)/neovim
 
 .PHONY: neovim
 neovim: language-servers \
-	$(NEED)/neovim \
+	$(DEP)/neovim \
 	$(INSTALL_DATA)/nvim/lazy/lazy.nvim \
-	$(NEED)/tree-sitter \
+	$(DEP)/tree-sitter \
 	$(MISE_DEPS) \
 	| .setup
 
@@ -314,7 +405,7 @@ neovim: language-servers \
 lua: $(LUAROCKS)
 
 .PHONY: docker
-docker: scripts/update-docker-config $(NEED)/docker-buildx | .setup
+docker: scripts/update-docker-config $(DEP)/docker-buildx | .setup
 	./scripts/update-docker-config
 
 .PRECIOUS: $(CARGO_BIN)/alacritty
@@ -329,10 +420,8 @@ $(BUILD)/home/.config/curlrc: scripts/build-curlrc
 	$(MKPARENT) $@
 	./scripts/build-curlrc > $@
 
-$(NEED)/curl: $(PKG)/os.installed
-
 .PHONY: curl
-curl: $(NEED)/curl $(BUILD)/home/.config/curlrc | .setup
+curl: $(PKG)/os.common .WAIT $(DEP)/curl $(BUILD)/home/.config/curlrc | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
 
 .PHONY: git-config
@@ -396,7 +485,7 @@ COMMON_UPDATE = \
 		rust-update
 
 .PHONY: server
-server: $(COMMON) $(NEED)/signalbackup-tools
+server: $(COMMON) $(DEP)/signalbackup-tools
 
 .PHONY: server-update
 server-update: $(COMMON_UPDATE) | server
@@ -404,6 +493,7 @@ server-update: $(COMMON_UPDATE) | server
 .PHONY: workstation
 workstation: \
 	$(COMMON) \
+	$(PKG)/os.workstation \
 	alacritty \
 	flatpak \
 	keymapp

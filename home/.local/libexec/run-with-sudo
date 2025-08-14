@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+readonly ARG0=${0:?}
+readonly PARENT=${ARG0%/*}
+readonly NAME=${ARG0##*/}
+
+readonly _IFS=$IFS
+IFS=':'
+
+_PATH=""
+
+while read -d ':' -r elem; do
+    if [[ "$elem" != "$PARENT" ]]; then
+        _PATH=${_PATH:+"$_PATH":}${elem}
+    fi
+done <<< "$PATH"
+IFS=$_IFS
+
+export PATH="$_PATH"
+
+BIN=$(command -v "$NAME" 2>/dev/null || echo "$NAME")
+
+exec sudo "$BIN" "$@"

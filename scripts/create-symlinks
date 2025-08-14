@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
-from os import path, walk, getlogin, getenv
+from os import path, walk, getenv
 
 DEFAULT_INSTALL_PATH = Path(path.expanduser("~"))
 REPO_ROOT = Path(getenv("DOTFILES_REPO_ROOT"))
@@ -15,21 +15,27 @@ def list_tree(tree):
             yield Path(path.join(root, f))
 
 
-def is_deleted(fname):
-    return fname.resolve().name == DELETE_MARKER
+def is_deleted(fname: Path):
+    return fname.resolve(strict=False).name == DELETE_MARKER
+
+def target_exists(path: Path):
+    return path.resolve().exists()
 
 
-def already_linked(target, link):
+def already_linked(target: Path, link: Path):
     if not target.exists() and not is_deleted(target):
         raise IOError(f"Target {target} does not exist!")
 
     if link.exists() and not link.is_symlink():
         raise IOError(f"Link path ({link}) already exists but is not a symlink")
 
-    return link.resolve() == target.resolve()
+    if not link.resolve().exists():
+        return False
+
+    return link.readlink() == target.resolve()
 
 
-def symlink(target, link, isdir=False):
+def symlink(target: Path, link: Path):
     if already_linked(target, link):
         if is_deleted(target):
             print(f"Unlinking deleted: {link}")
@@ -38,23 +44,25 @@ def symlink(target, link, isdir=False):
     elif is_deleted(target):
         return
 
+    target = target.resolve(strict=True)
+
     print(f"Symlink {link} -> {target}")
 
     if link.exists() and link.is_symlink():
         link.unlink()
 
     link.parent.mkdir(parents=True, exist_ok=True)
-    link.symlink_to(target, target_is_directory=isdir)
+    link.symlink_to(target, target_is_directory=False)
 
 
-def homedir(path):
+def homedir(path: Path):
     dirname = Path(REPO_ROOT / 'home')
     for filename in list_tree(dirname):
         link = path  / filename.relative_to(dirname)
         symlink(filename, link)
 
 
-def nvim(path):
+def nvim(path: Path):
     path = path / Path('.config/nvim')
     dirname = Path(REPO_ROOT / 'nvim')
     for filename in list_tree(dirname):
@@ -62,48 +70,8 @@ def nvim(path):
         symlink(filename, link)
 
 
-def mine(path):
-    return path.owner() == getlogin()
-
-
-def ignore_dir(path):
-    if not path.is_dir():
-        return False
-
-    strpath = str(path).lower().rstrip('/')
-
-    suffixes = [
-        '/node_modules',
-        '/go/pkg/mod',
-        '/cache',
-        '/site-packages',
-        '/flatpak/repo',
-        '/flatpak/runtime',
-        '/flatpak/app',
-        '/webkitgtk',
-        '/dist',
-    ]
-
-    for s in suffixes:
-        if strpath.endswith(s):
-            return True
-
-    if (path / '.git').exists():
-        return True
-
-    return False
-
-
-def non_repo_target(path):
-    return not str(path.resolve()).startswith(str(REPO_ROOT))
-
-
-def target_exists(path):
-    return path.resolve().exists()
-
-
 def main():
-    install_path = getenv("DOTFILES_INSTALL_PATH") or DEFAULT_INSTALL_PATH
+    install_path = Path(getenv("DOTFILES_INSTALL_PATH") or DEFAULT_INSTALL_PATH)
     homedir(install_path)
     nvim(install_path)
 
