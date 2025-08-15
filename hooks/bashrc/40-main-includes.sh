@@ -165,10 +165,6 @@ add-man-path() {
         shopt -s failglob
         ln -sfv -t "$MAN/man1" \
             "${where}"/*/man/git-cliff.1
-
-        ln -sfv -T "${where}"/*/completions/git-cliff.bash \
-            "$COMPLETIONS/git-cliff"
-
     }
 
     setup_git_cliff
