@@ -256,7 +256,7 @@ $(MISE): scripts/install-mise | .setup
 	$(TOUCH) --reference ./scripts/install-mise $(MISE)
 
 .PRECIOUS: $(LUAROCKS)
-$(LUAROCKS): $(DEP)/lua $(DEP)/luarocks
+$(LUAROCKS): $(DEP)/lua $(DEP)/luajit .WAIT $(DEP)/luarocks
 
 $(MISE_ALL): $(MISE) mise.toml home/.config/mise/config.toml scripts/mise-shims
 	$(MISE) upgrade --yes
