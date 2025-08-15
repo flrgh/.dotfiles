@@ -13,12 +13,12 @@ yq = "latest"
 ast-grep = "latest"
 jq = "latest"
 shellcheck = "latest"
-gh = { version = "latest", postinstall = "~/.config/mise/post-install gh" }
+gh = "latest"
 cargo-binstall = "latest"
-fzf = { version = "latest", postinstall = "~/.config/mise/post-install fzf" }
-git-cliff = { version = "latest", postinstall = "~/.config/mise/post-install git-cliff" }
+fzf = "latest"
+git-cliff = "latest"
 terraform-ls = "latest"
-ripgrep = { version = "latest", postinstall = "~/.config/mise/post-install ripgrep" }
+ripgrep = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from

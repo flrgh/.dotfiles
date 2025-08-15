@@ -15,6 +15,7 @@ COMMANDS := \
 	files-in-package \
 	gh \
 	gh-helper \
+	git-cliff \
 	hugo \
 	ineed \
 	kubectl \
@@ -202,3 +203,8 @@ docker-language-server:
 rg: CMD = mise exec ripgrep -- rg --generate complete-bash
 rg:
 	$(from-command)
+
+git-cliff: private WHERE = $(shell mise where git-cliff)
+git-cliff: private COMP = $(wildcard $(WHERE)/*/completions)
+git-cliff:
+	cat "$(COMP)"/git-cliff.bash > $(COMP_SCRIPT)

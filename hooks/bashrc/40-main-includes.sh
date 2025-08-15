@@ -3,8 +3,58 @@
 set -euo pipefail
 
 source ./lib/bash/generate.bash
+source ./home/.local/lib/bash/array.bash
 
 rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
+
+declare -a _mps=()
+declare -A _seen_mp=()
+
+readonly MAN=$HOME/.local/share/man
+
+add-man-path() {
+    local -r mp=$1
+    if [[ -n ${_seen_mp[$mp]:-} ]]; then
+        return
+    fi
+
+    if [[ ! -d $mp ]]; then
+        return
+    fi
+
+    _seen_mp[$mp]=1
+    local subdir
+    local rel
+
+    case $mp in
+        "$MAN")
+            _mps=("$mp" "${_mps[@]}")
+            rc-add-path --prepend MANPATH "$mp"
+            ;;
+
+        "$HOME"/*)
+            shopt -s nullglob
+            shopt -u failglob
+
+            for subdir in "$mp"/man[0-9]; do
+                rel=${MAN}${subdir#"$mp"}
+                ./scripts/symlink-tree "$subdir" "$rel"
+            done
+
+            # clean up cruft
+            rm -rfv \
+                "$mp"/cat[0-9] \
+                "$mp"/index.db \
+                "$mp"/cs
+            ;;
+
+        *)
+            _mps+=("$mp")
+            rc-add-path --append MANPATH "$mp"
+            ;;
+    esac
+}
+
 
 {
     rc-new-workfile user-lib
@@ -43,34 +93,7 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
     rc-add-path --prepend PATH "$HOME/.local/bin"
     rc-rm-path PATH /usr/share/Modules/bin
     rc-rm-path PATH "$HOME/.composer/vendor/bin"
-}
 
-# MANPATH
-{
-    man_paths=(
-        "$HOME/.local/share/man"
-        "$HOME/.local/man"
-    )
-
-    for path in "${man_paths[@]}"; do
-        [[ -e $path ]] || continue
-        rc-add-path --prepend MANPATH "$path"
-    done
-
-    if [[ -e /etc/man_db.conf ]]; then
-        awk '/^MANPATH_MAP/ {print $3}' /etc/man_db.conf \
-            | sort -u \
-            | while read -r dir; do
-                [[ -e $dir ]] || continue
-                rc-add-path --append  MANPATH "$dir"
-            done
-    else
-        rc-add-path --append  MANPATH /usr/local/share/man
-        rc-add-path --append  MANPATH /usr/share/man
-    fi
-}
-
-{
     if rc-command-exists mise; then
         mise reshim
         shims=$HOME/.local/share/mise/shims
@@ -80,18 +103,111 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
     fi
 }
 
+
+# MANPATH
+{
+    add-man-path "$HOME/.local/share/man"
+
+    if rc-command-exists manpath; then
+        while read -d ":" -r path; do
+            add-man-path "$path"
+        done < <(manpath --global)
+        unset path
+
+    else
+        add-man-path /usr/local/share/man
+        add-man-path /usr/share/man
+    fi
+
+    rc-set-exported MANPATH
+}
+
 # aliases
 {
     rc-alias grep 'grep --color=auto'
     rc-alias .. 'cd ..'
-    if command -v lsd &>/dev/null; then
+    if rc-command-exists lsd; then
         rc-alias ls "lsd -l"
     fi
 }
 
+# gh / github cli
+{
+    setup_gh() {
+        if ! rc-command-exists gh; then
+            log "gh is not installed"
+            return
+        fi
+
+        local where; where=$(mise where gh)
+        if [[ -z ${where:-} || ! -d $where ]]; then
+            return
+        fi
+
+        shopt -s failglob
+        add-man-path "$where"/*/share/man
+    }
+    setup_gh
+}
+
+{
+    setup_git_cliff() {
+        if ! rc-command-exists git-cliff; then
+            log "git-cliff is not installed"
+            return
+        fi
+
+        local where; where=$(mise where git-cliff)
+        if [[ -z ${where:-} || ! -d $where ]]; then
+            return
+        fi
+
+        shopt -s failglob
+        ln -sfv -t "$MAN/man1" \
+            "${where}"/*/man/git-cliff.1
+
+        ln -sfv -T "${where}"/*/completions/git-cliff.bash \
+            "$COMPLETIONS/git-cliff"
+
+    }
+
+    setup_git_cliff
+}
+
+{
+    setup_fzf() {
+        if ! rc-command-exists fzf; then
+            log "fzf not found"
+            return
+        fi
+
+        local bin; bin=$(mise which fzf)
+
+        # -R tells `man` to re-encode the input rather than formatting it for display
+        MANOPT='-R' "$bin" --man > "$MAN/man1/fzf.1"
+    }
+
+    setup_fzf
+}
+
+{
+    setup_ripgrep() {
+        if ! rc-command-exists rg; then
+            log "ripgrep (rg) not found"
+            return
+        fi
+
+        mise exec ripgrep -- \
+            rg --generate man \
+        > "$MAN/man1/rg.1"
+    }
+
+    setup_ripgrep
+}
+
 # neovim
 {
-    if command -v nvim &>/dev/null; then
+    if rc-command-exists nvim; then
         rc-alias vim nvim
         rc-export EDITOR nvim
     fi
@@ -108,12 +224,25 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
 # rust
 {
     CARGO_HOME=$HOME/.local/cargo
+    RUSTUP_HOME="$HOME/.local/rustup"
+
     rc-export CARGO_HOME
     rc-add-path PATH "$CARGO_HOME"/bin
-    rc-export RUSTUP_HOME "$HOME/.local/rustup"
+    rc-export RUSTUP_HOME
 
     # https://blog.rust-lang.org/2023/03/09/Rust-1.68.0.html#cargos-sparse-protocol
     rc-export CARGO_REGISTRIES_CRATES_IO_PROTOCOL sparse
+
+    if rc-command-exists rustup; then
+        active=$(rustup show active-toolchain | awk '{print $1}')
+        tc=${RUSTUP_HOME:?}/toolchains/${active:?}
+
+        if [[ -d ${tc}/share/man ]]; then
+            add-man-path "${tc}/share/man"
+        fi
+
+        unset active tc
+    fi
 }
 
 # python
@@ -133,12 +262,14 @@ rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
     rc-export NPM_CONFIG_USERCONFIG "$HOME/.config/npm/npmrc"
 
     if rc-command-exists mise; then
-        rc-new-workfile node
         NODE=$(mise where node)
-        if [[ -d $NODE/man ]]; then
-            rc-add-path MANPATH "${NODE}/man"
+        if [[ -d $NODE/share/man ]]; then
+            add-man-path "${NODE}/share/man"
         fi
-        rc-workfile-close
+    fi
+
+    if [[ -d $HOME/.local/lib/node_modules/npm/man ]]; then
+        add-man-path "$HOME/.local/lib/node_modules/npm/man"
     fi
 
     # clean up old nvm things

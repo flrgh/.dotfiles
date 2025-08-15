@@ -111,6 +111,7 @@ _read_list() {
     _reset_fact_value
 
     shopt -s nullglob dotglob
+    shopt -u failglob
     local -a arr=( "$FACT_PATH"/* )
     FACT_LIST=( "${arr[@]##*/}" )
 }

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+err() {
+    echo "ERROR: $1" >&2
+    exit 1
+}
+
+main() {
+    local -r target=$1
+    local links=$2
+
+    if [[ ! -d $target ]]; then
+        err "target ($target) does not exist or is not a directory"
+    fi
+
+    if [[ ! -d $links ]]; then
+        err "links ($links) does not exist or is not a directory"
+    fi
+
+    local _target; _target=$(realpath "$target")
+    links=$(realpath "$links")
+
+    if [[ $_target == "$links" ]]; then
+        err "target and link directories are the same ($links)"
+    fi
+
+    local dir
+    local rel
+    local fname
+
+    fd \
+        --min-depth 1 \
+        --type d \
+        --glob '*' \
+        "$target" \
+    | while read -r dir; do
+        dir=${dir%/}
+        rel=${dir#"$target"/}
+        mkdir -v -p "${links}/${rel}"
+    done
+
+    fd \
+        --min-depth 1 \
+        --type f \
+        --glob '*' \
+        "$target" \
+    | while read -r fname; do
+        dir=${fname%/*}
+        rel=${dir#"$target"}
+        ln -v -sf -t "${links}${rel}" "$fname"
+    done
+
+
+    symlinks -c -r -d "$links"
+}
+
+main "$@"

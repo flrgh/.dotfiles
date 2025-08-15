@@ -3,6 +3,7 @@ INSTALL_BIN := $(INSTALL_PATH)/.local/bin
 INSTALL_DATA := $(INSTALL_PATH)/.local/share
 INSTALL_STATE := $(INSTALL_PATH)/.local/state
 INSTALL_LIB := $(INSTALL_PATH)/.local/lib
+INSTALL_MAN := $(INSTALL_DATA)/man
 USER_REPOS := $(HOME)/git/flrgh
 REPO_ROOT = $(PWD)
 DEBUG := $(DEBUG)
@@ -346,11 +347,26 @@ $(BUILD)/home/.bashrc: \
 	$(BUILD)/home/.config/env
 
 	$(SCRIPT)/run-hooks bashrc
-	@-$(DIFF) $(INSTALL_PATH)/.bashrc "$@"
+	$(DIFF) $(INSTALL_PATH)/.bashrc "$@" || true
 
 $(BUILD)/bash-completion: | $(DEP)/bash-completion
 	$(MAKE) -C ./bash/completion all
 	$(TOUCH) $@
+
+$(INSTALL_MAN)/index.db: MAN1 := $(INSTALL_MAN)/man1
+$(INSTALL_MAN)/index.db: \
+	$(DEP)/fzf \
+	$(DEP)/gh \
+	$(DEP)/git-cliff \
+	$(DEP)/node \
+	$(DEP)/python \
+	$(DEP)/ripgrep
+
+	mkdir -p "$(dir $@)"
+	mandb --user-db
+
+.PHONY: man
+man: $(INSTALL_MAN)/index.db
 
 .PHONY: bash-completion
 bash-completion: $(BUILD)/bash-completion | .setup
