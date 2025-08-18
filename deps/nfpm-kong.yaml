@@ -1,27 +1,23 @@
 # yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
-name: flrgh-dotfiles-workstation
+name: flrgh-dotfiles-kong
 arch: amd64
 platform: linux
 version: "1.0.0"
 maintainer: "Michael Martin <flrgh@protonmail.com>"
-description: OS workstation dependencies
+description: OS workstation dependencies for Kong
 vendor: "flrgh"
 homepage: "https://github.com/flrgh/.dotfiles"
 license: "MIT"
 
 depends:
-  - adobe-source-code-pro-fonts
-  - fontconfig
-  - liberation-fonts
-  - wireshark
-  - wl-clipboard
-
-  # BEGIN - alacritty
-  - alacritty
-  - fontconfig-devel  # currently required to build alacritty
-  # END - alacritty
+  - libpasswdqc-devel
+  - libyaml-devel
+  - lld
+  - m4
+  - perl-FindBin
+  - zlib-devel
 
 recommends: []
 suggests: []

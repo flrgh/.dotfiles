@@ -108,7 +108,12 @@ define nfpm-build =
 endef
 
 define dnf-install =
-	sudo dnf install -y "$<"
+	name=$$(dnf repoquery --queryformat '%{NAME}' "$<" 2>/dev/null); \
+	if ./home/.local/bin/ls-packages --name-only | grep -qxF "$$name"; then \
+		sudo dnf reinstall -y "$<"; \
+	else \
+		sudo dnf install -y "$<"; \
+	fi
 	$(TOUCH) --reference "$<" "$@"
 endef
 
@@ -122,6 +127,12 @@ $(PKG)/os.workstation.rpm: deps/nfpm-workstation.yaml | $(PKG)/os.common
 	$(nfpm-build)
 
 $(PKG)/os.workstation: $(PKG)/os.workstation.rpm
+	$(dnf-install)
+
+$(PKG)/os.kong.rpm: deps/nfpm-kong.yaml | $(MISE) .setup
+	$(nfpm-build)
+
+$(PKG)/os.kong: $(PKG)/os.kong.rpm | $(PKG)/os.removed
 	$(dnf-install)
 
 $(PKG)/os.removed: deps/os-package-removed.txt
@@ -227,9 +238,15 @@ rust-update: $(RUSTUP)
 .PHONY: os-packages
 os-packages: $(PKG)/os.common $(PKG)/os.removed
 
+.PHONY: os-packages-workstation
+os-packages-workstation: $(PKG)/os.common $(PKG)/os.workstation $(PKG)/os.removed
+
 .PHONY: os-packages-update
 os-packages-update: os-packages
 	sudo dnf update -y
+
+.PHONY: kong
+kong: $(PKG)/os.kong | .setup
 
 .PHONY: rm-old-files
 .ONESHELL:
