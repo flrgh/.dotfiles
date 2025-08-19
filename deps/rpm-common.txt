@@ -1,0 +1,91 @@
+automake
+bash
+bear              # database generator for clang
+bind-utils        # DNS cli tools
+clang
+clang-tools-extra # provides clangd
+cmake
+coreutils
+ctags
+curl
+diffutils
+dos2unix
+duf               # modern version of df
+etckeeper         # /etc as a git repo
+file
+gcc
+gcc-c++
+git
+git-extras
+gzip
+htop
+iftop
+inotify-tools
+iotop
+irqbalance
+jc                # convert text output from common tools to JSON
+jo                # command-line JSON object creation
+jq
+jwhois
+libyaml
+libyaml-devel
+litecli           # nicer SQLite CLI
+lnav              # log file navigator
+lsd               # modern ls replacement
+lshw
+lsof
+man-db
+mkpasswd
+moreutils
+musl-gcc
+mycli             # nicer MySQL CLI
+net-tools         # netstat
+nmap
+nmap-ncat
+openssl-devel
+openssl-libs
+pandoc
+patch
+pcre
+pcre-devel
+pcre2
+pgcli             # nicer Postgres CLI
+plocate
+pre-commit        # fancy git pre-commit framework
+psutils
+readline-devel
+rpmconf           # handles .rpmnew files after upgrading packages
+rsync
+scdoc             # man-page/doc generator
+sd                # find+replace (simpler, faster sed)
+sed
+sqlite
+sqlite-devel
+strace
+sysstat
+taglib
+tcpdump
+telnet
+tmux
+traceroute
+tree
+unzip
+util-linux
+valgrind
+valgrind-devel
+vim-common
+wabt              # WebAssembly Binary Toolkit: https://github.com/WebAssembly/wabt
+wget
+xdg-user-dirs
+xdg-utils
+zip
+zlib
+zlib-devel
+
+# BEGIN - openresty build deps
+axel
+# END - openresty build deps
+
+# BEGIN - bash build deps
+bash-devel
+# END - bash build deps

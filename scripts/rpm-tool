@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly PKG_BASE='{
+  "name": null,
+  "description": null,
+  "arch": "amd64",
+  "platform": "linux",
+  "version": "1.0.0",
+  "maintainer": "Michael Martin <flrgh@protonmail.com>",
+  "vendor": "flrgh",
+  "homepage": "https://github.com/flrgh/.dotfiles",
+  "license": "MIT",
+  "depends": null
+}'
+
+
+nfpm() {
+    mise exec nfpm -- nfpm "$@"
+}
+
+yq() {
+    mise exec yq -- yq "$@"
+}
+
+jq() {
+    mise exec jq -- jq "$@"
+}
+
+list-packages() {
+    local -r fname=${1:?filename required}
+    ./scripts/get-lines "$fname" | sort -u
+}
+
+generate-nfpm() {
+    local -r deps=${1:?}
+    local out=${2:-/dev/stdout}
+
+    local slug=$deps
+    slug=${slug%*.txt}
+    slug=${slug##*/rpm-}
+
+    local -r pkg=flrgh-dotfiles-${slug}
+
+    jq <<< "$PKG_BASE" \
+        --arg NAME "$pkg" \
+        --arg DESC "flrgh/.dotfiles $slug" \
+        --rawfile DEPS <(list-packages "$deps") \
+        '
+        .name = $NAME
+        | .description = $DESC
+        | .depends = ($DEPS
+            | split("\n")
+            | map(select(. != ""))
+        )
+        ' \
+    | yq -P -o yaml - \
+    > "$out"
+}
+
+build-rpm() {
+    local -r conf=${1:-?}
+    local -r out=${2:-?}
+
+    nfpm package \
+        --packager rpm \
+        --config "$conf" \
+        --target "$out"
+}
+
+is-installed() {
+    local -r rpm=${1:-?}
+
+    local name; name=$(dnf repoquery \
+        --queryformat '%{NAME}' \
+        "$rpm" \
+        2>/dev/null
+    )
+
+    ls-packages \
+        --name-only \
+    | grep \
+        --quiet \
+        --line-regexp \
+        --fixed-strings \
+        "$name"
+}
+
+install-rpm() {
+    local -r rpm=${1:-?}
+
+    if is-installed "$rpm"; then
+        echo "Re-install $rpm"
+		sudo dnf reinstall -y "$rpm"
+	else
+        echo "Install $rpm"
+		sudo dnf install -y "$rpm"
+	fi
+}
+
+main() {
+    local -r cmd=${1:?}
+    shift
+
+    case $cmd in
+        list)
+            list-packages "$@";;
+
+        rpm)
+            build-rpm "$@";;
+
+        nfpm)
+            generate-nfpm "$@";;
+
+        install)
+            install-rpm "$@";;
+
+        is-installed)
+            is-installed "$@";;
+
+        *)
+            echo "invalid command: $cmd"
+            exit 1
+            ;;
+    esac
+}
+
+
+main "$@"

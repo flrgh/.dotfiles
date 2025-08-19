@@ -1,0 +1,16 @@
+libgsasl
+libgsasl-devel
+libidn
+libidn-devel
+libidn2
+libidn2-devel
+libnghttp2
+libnghttp2-devel
+libpsl
+libpsl-devel
+librtmp
+librtmp-devel
+libssh2
+libssh2-devel
+libzstd
+libzstd-devel

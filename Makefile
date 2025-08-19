@@ -24,7 +24,6 @@ MISE := $(INSTALL_BIN)/mise
 LUAROCKS := $(INSTALL_BIN)/luarocks
 LIBEXEC := home/.local/libexec
 NPM := $(MISE) exec node -- npm
-NFPM := $(MISE) exec nfpm -- nfpm
 
 INSTALL := install --verbose --compare --no-target-directory
 INSTALL_INTO := install --verbose --compare --target-directory
@@ -88,8 +87,10 @@ install: ssh env rust lua bash docker alacritty golang curl git-config
 debug:
 	@echo REPO_ROOT: $(REPO_ROOT)
 	@echo INSTALL_PATH: $(INSTALL_PATH)
-	@echo PIP_DEPS: $(PIP_DEPS)
-	@echo NEED_DEPS: $(NEED_DEPS)
+	@echo PIP_PACKAGES: $(PIP_PACKAGES)
+	@echo NEED_PACKAGES: $(NEED_PACKAGES)
+	@echo OS_COMMON_PACKAGES: $(OS_COMMON_PACKAGES)
+	@echo ALL_DEPS: $(ALL_DEPS)
 
 .PHONY: clean
 clean:
@@ -98,42 +99,66 @@ clean:
 .PHONY: update
 update: clean os-packages-update mise-update rust-update
 
-define nfpm-build =
+$(PKG)/os.common.nfpm.yaml: ./deps/rpm-common.txt
 	$(MKPARENT) "$@"
-	$(NFPM) package \
-		--packager rpm \
-		--config "$<" \
-		--target "$@"
+	$(SCRIPT)/rpm-tool nfpm "$<" "$@"
 	$(TOUCH) --reference "$<" "$@"
-endef
 
-define dnf-install =
-	name=$$(dnf repoquery --queryformat '%{NAME}' "$<" 2>/dev/null); \
-	if ./home/.local/bin/ls-packages --name-only | grep -qxF "$$name"; then \
-		sudo dnf reinstall -y "$<"; \
-	else \
-		sudo dnf install -y "$<"; \
-	fi
+$(PKG)/os.common.rpm: $(PKG)/os.common.nfpm.yaml
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool rpm "$<" "$@"
 	$(TOUCH) --reference "$<" "$@"
-endef
 
-$(PKG)/os.common.rpm: deps/nfpm-common.yaml | $(MISE) .setup
-	$(nfpm-build)
+$(PKG)/os.common: $(PKG)/os.common.rpm
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool install "$<"
+	$(TOUCH) --reference "$<" "$@"
 
-$(PKG)/os.common: $(PKG)/os.common.rpm | $(PKG)/os.removed
-	$(dnf-install)
 
-$(PKG)/os.workstation.rpm: deps/nfpm-workstation.yaml | $(PKG)/os.common
-	$(nfpm-build)
+$(PKG)/os.workstation.nfpm.yaml: ./deps/rpm-workstation.txt
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool nfpm "$<" "$@"
+	$(TOUCH) --reference "$<" "$@"
+
+$(PKG)/os.workstation.rpm: $(PKG)/os.workstation.nfpm.yaml
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool rpm "$<" "$@"
+	$(TOUCH) --reference "$<" "$@"
 
 $(PKG)/os.workstation: $(PKG)/os.workstation.rpm
-	$(dnf-install)
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool install "$<"
+	$(TOUCH) --reference "$<" "$@"
 
-$(PKG)/os.kong.rpm: deps/nfpm-kong.yaml | $(MISE) .setup
-	$(nfpm-build)
+$(PKG)/os.kong.nfpm.yaml: ./deps/rpm-kong.txt
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool nfpm "$<" "$@"
+	$(TOUCH) --reference "$<" "$@"
 
-$(PKG)/os.kong: $(PKG)/os.kong.rpm | $(PKG)/os.removed
-	$(dnf-install)
+$(PKG)/os.kong.rpm: $(PKG)/os.kong.nfpm.yaml
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool rpm "$<" "$@"
+	$(TOUCH) --reference "$<" "$@"
+
+$(PKG)/os.kong: $(PKG)/os.kong.rpm
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool install "$<"
+	$(TOUCH) --reference "$<" "$@"
+
+$(PKG)/os.curl-build-deps.nfpm.yaml: ./deps/rpm-curl-build-deps.txt
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool nfpm "$<" "$@"
+	$(TOUCH) --reference "$<" "$@"
+
+$(PKG)/os.curl-build-deps.rpm: $(PKG)/os.curl-build-deps.nfpm.yaml
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool rpm "$<" "$@"
+	$(TOUCH) --reference "$<" "$@"
+
+$(PKG)/os.curl-build-deps: $(PKG)/os.curl-build-deps.rpm
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool install "$<"
+	$(TOUCH) --reference "$<" "$@"
 
 $(PKG)/os.removed: deps/os-package-removed.txt
 	sudo dnf remove -y $(LINES)
@@ -155,41 +180,49 @@ $(PKG)/flatpak.apps.installed: $(PKG)/flatpak.remotes deps/flatpak-apps.txt
 flatpak: $(PKG)/flatpak.apps.installed
 	@flatpak --user update --noninteractive
 
+ALL_DEPS =
+
 PIP_PACKAGES = $(shell $(SCRIPT)/get-lines ./deps/python-packages.txt)
+ALL_DEPS += $(PIP_PACKAGES)
 PIP_DEPS = $(addprefix $(DEP)/,$(PIP_PACKAGES))
 $(PIP_DEPS): | $(PKG)/python
 	$(TOUCH) "$@"
 
 NEED_PACKAGES = $(notdir $(basename $(wildcard $(REPO_ROOT)/home/.local/share/ineed/drivers/*.sh)))
 NEED_DEPS = $(addprefix $(DEP)/,$(NEED_PACKAGES))
+ALL_DEPS += $(NEED_PACKAGES)
 $(NEED_DEPS): | .setup
 	ineed install $(notdir $@)
 	$(TOUCH) --reference "$(INSTALL_STATE)/ineed/$(notdir $@).installed-timestamp" "$@"
 
 LUAROCKS_PACKAGES = teal-language-server tl
+ALL_DEPS += $(LUAROCKS_PACKAGES)
 LUAROCKS_DEPS = $(addprefix $(DEP)/,$(LUAROCKS_PACKAGES))
 $(LUAROCKS_DEPS): | $(LUAROCKS)
 	luarocks install $(notdir $@)
 	$(TOUCH) $@
 
 MISE_PACKAGES = $(shell $(MISE) ls --yes --current --no-header | awk '{print $$1}')
+ALL_DEPS += $(MISE_PACKAGES)
 MISE_DEPS = $(addprefix $(DEP)/,$(MISE_PACKAGES))
 MISE_ALL = $(PKG)/mise-all
 
-#OS_COMMON_PACKAGES := $(shell yq < deps/nfpm-common.yaml '.depends[]' | sort -u)
-#OS_COMMON_PACKAGES := $(filter-out $(NEED_PACKAGES),$(OS_COMMON_PACKAGES))
-#OS_COMMON_DEPS = $(addprefix $(DEP)/,$(OS_COMMON_PACKAGES))
-#$(OS_COMMON_DEPS): | $(PKG)/os.common
-#	$(TOUCH) "$@"
-#
-#OS_WORKSTATION_PACKAGES := $(shell yq < deps/nfpm-workstation.yaml '.depends[]' | sort -u)
-#OS_WORKSTATION_PACKAGES := $(filter-out $(NEED_PACKAGES),$(OS_WORKSTATION_PACKAGES))
-#OS_WORKSTATION_DEPS = $(addprefix $(DEP)/,$(OS_WORKSTATION_PACKAGES))
-#$(OS_WORKSTATION_DEPS): | $(PKG)/os.workstation
-#	$(TOUCH) "$@"
-#
-#$(DEP)/dircolors: | $(DEP)/coreutils
-#	$(TOUCH) --reference "$<" "$@"
+OS_COMMON_PACKAGES := $(shell $(SCRIPT)/get-lines ./deps/rpm-common.txt | sort -u)
+OS_COMMON_PACKAGES := $(filter-out $(ALL_DEPS),$(OS_COMMON_PACKAGES))
+ALL_DEPS += $(OS_COMMON_PACKAGES)
+OS_COMMON_DEPS = $(addprefix $(DEP)/,$(OS_COMMON_PACKAGES))
+$(OS_COMMON_DEPS): | $(PKG)/os.common
+	$(TOUCH) "$@"
+
+OS_WORKSTATION_PACKAGES := $(shell $(SCRIPT)/get-lines ./deps/rpm-workstation.txt | sort -u)
+OS_WORKSTATION_PACKAGES := $(filter-out $(ALL_DEPS),$(OS_WORKSTATION_PACKAGES))
+ALL_DEPS += $(OS_WORKSTATION_PACKAGES)
+OS_WORKSTATION_DEPS = $(addprefix $(DEP)/,$(OS_WORKSTATION_PACKAGES))
+$(OS_WORKSTATION_DEPS): | $(PKG)/os.workstation
+	$(TOUCH) "$@"
+
+$(DEP)/dircolors: $(DEP)/coreutils
+	$(TOUCH) --reference "$<" "$@"
 
 NPM_DEP_FILE := ./deps/npm.json
 NPM_WANTED    = $(shell jq -r '.dependencies | to_entries | .[] | "\(.key)@\(.value)"' < $(NPM_DEP_FILE))
@@ -246,7 +279,7 @@ os-packages-update: os-packages
 	sudo dnf update -y
 
 .PHONY: kong
-kong: $(PKG)/os.kong | .setup
+kong: $(PKG)/os.kong $(DEP)/bazelisk | .setup
 
 .PHONY: rm-old-files
 .ONESHELL:
@@ -359,6 +392,10 @@ $(BUILD)/home/.bashrc: \
 	$(DEP)/direnv \
 	$(DEP)/fd \
 	$(DEP)/fzf \
+	$(DEP)/gh \
+	$(DEP)/ripgrep \
+	$(DEP)/shellcheck \
+	$(DEP)/shfmt \
 	$(MISE_DEPS) \
 	| .setup \
 	$(BUILD)/home/.config/env
@@ -453,8 +490,9 @@ $(BUILD)/home/.config/curlrc: scripts/build-curlrc
 	$(MKPARENT) $@
 	./scripts/build-curlrc > $@
 
+$(DEP)/curl: | $(PKG)/os.curl-build-deps
 .PHONY: curl
-curl: $(PKG)/os.common .WAIT $(DEP)/curl $(BUILD)/home/.config/curlrc | .setup
+curl: $(DEP)/curl $(BUILD)/home/.config/curlrc | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
 
 .PHONY: git-config

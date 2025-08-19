@@ -1,0 +1,10 @@
+adobe-source-code-pro-fonts
+fontconfig
+liberation-fonts
+wireshark
+wl-clipboard
+
+# BEGIN - alacritty
+alacritty
+fontconfig-devel  # currently required to build alacritty
+# END - alacritty
