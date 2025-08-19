@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -eu
+set -eu -o pipefail
+trap "" SIGPIPE
 
 readonly RPM_DB=/var/lib/rpm/rpmdb.sqlite
 
@@ -23,8 +24,7 @@ if command-exists rpm; then
 
     if (( NAME_ONLY == 1 )); then
         if [[ -e $RPM_DB ]] && command-exists sqlite3; then
-            sqlite3 -readonly -safe "$RPM_DB" 'SELECT DISTINCT key FROM Name'
-            exit "$?"
+            exec sqlite3 -readonly -safe "$RPM_DB" 'SELECT DISTINCT key FROM Name'
         fi
         format='%{NAME}\n'
     fi
