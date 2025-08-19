@@ -61,7 +61,6 @@ NEED := $(PKG)/need
 CARGO_PKG := $(PKG)/cargo
 PIP_PKG := $(PKG)/pip
 LUAROCKS_PKG := $(PKG)/luarocks
-HASHICORP_PKG := $(PKG)/hashicorp
 MISE_PKG := $(PKG)/mise
 
 CARGO_HOME := $(INSTALL_PATH)/.local/cargo
@@ -88,6 +87,7 @@ debug:
 	@echo REPO_ROOT: $(REPO_ROOT)
 	@echo INSTALL_PATH: $(INSTALL_PATH)
 	@echo PIP_PACKAGES: $(PIP_PACKAGES)
+	@echo CARGO_PACKAGES: $(CARGO_PACKAGES)
 	@echo NEED_PACKAGES: $(NEED_PACKAGES)
 	@echo OS_COMMON_PACKAGES: $(OS_COMMON_PACKAGES)
 	@echo ALL_DEPS: $(ALL_DEPS)
@@ -207,6 +207,10 @@ ALL_DEPS += $(MISE_PACKAGES)
 MISE_DEPS = $(addprefix $(DEP)/,$(MISE_PACKAGES))
 MISE_ALL = $(PKG)/mise-all
 
+CARGO_PACKAGES = $(shell $(SCRIPT)/get-lines ./deps/cargo-packages.txt | sort -u)
+ALL_DEPS += $(CARGO_PACKAGES)
+CARGO_DEPS = $(addprefix $(DEP)/,$(CARGO_PACKAGES))
+
 OS_COMMON_PACKAGES := $(shell $(SCRIPT)/get-lines ./deps/rpm-common.txt | sort -u)
 OS_COMMON_PACKAGES := $(filter-out $(ALL_DEPS),$(OS_COMMON_PACKAGES))
 ALL_DEPS += $(OS_COMMON_PACKAGES)
@@ -252,11 +256,14 @@ npm-update: __npm-check-updates .WAIT npm
 
 $(RUSTUP): scripts/install-rust | .setup
 	./scripts/install-rust
-	$(TOUCH) --reference ./scripts/install-rust $@
+	touch --reference ./scripts/install-rust $@
 
 $(CARGO_PKG): $(RUSTUP) scripts/install-cargo-packages
 	./scripts/install-cargo-packages
 	$(TOUCH) $@
+
+$(CARGO_DEPS): $(CARGO_PKG)
+	$(TOUCH) --reference "$<" "$@"
 
 .PHONY: rust
 rust: $(RUSTUP) $(CARGO_PKG)
@@ -393,9 +400,11 @@ $(BUILD)/home/.bashrc: \
 	$(DEP)/fd \
 	$(DEP)/fzf \
 	$(DEP)/gh \
+	$(DEP)/lsd \
 	$(DEP)/ripgrep \
 	$(DEP)/shellcheck \
 	$(DEP)/shfmt \
+	$(DEP)/xh \
 	$(MISE_DEPS) \
 	| .setup \
 	$(BUILD)/home/.config/env
@@ -440,10 +449,6 @@ bashrc: $(BUILD)/home/.bashrc | $(MISE) .setup
 bash: $(DEP)/bash .WAIT bash-completion bashrc | .setup
 	./scripts/update-default-shell
 
-$(HASHICORP_PKG)/%:
-	get-hashicorp-binary $(notdir $@) latest
-	$(TOUCH) $@
-
 .PHONY: golang
 golang: $(DEP)/gopls $(DEP)/gotags | .setup
 
@@ -478,11 +483,8 @@ lua: $(LUAROCKS)
 docker: scripts/update-docker-config $(DEP)/docker-buildx | .setup
 	./scripts/update-docker-config
 
-.PRECIOUS: $(CARGO_BIN)/alacritty
-$(CARGO_BIN)/alacritty: $(CARGO_PKG)
-
 .PHONY: alacritty
-alacritty: $(CARGO_BIN)/alacritty | .setup
+alacritty: $(DEP)/alacritty | .setup
 	./scripts/update-gsettings
 	./scripts/update-default-shell
 
@@ -496,7 +498,7 @@ curl: $(DEP)/curl $(BUILD)/home/.config/curlrc | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
 
 .PHONY: git-config
-git-config: $(MISE_DEPS) | ssh .setup
+git-config: $(MISE_DEPS) $(DEP)/git-delta | ssh .setup
 	./scripts/update-git-config
 
 

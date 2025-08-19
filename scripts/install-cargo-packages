@@ -7,30 +7,10 @@ source ./home/.local/lib/bash/github-helper-token.bash
 export CARGO_HOME=${CARGO_HOME:-$HOME/.local/cargo}
 export RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.local/rustup}
 
-readonly PACKAGES=(
-    alacritty      # terminal emulator
-    bindgen-cli
-    cargo-bloat
-    cargo-cache
-    cargo-dist
-    cargo-edit
-    cargo-expand
-    cargo-modules
-    cargo-release
-    cargo-update
-    cbindgen
-    cross          # cargo cross-compilation helper
-    git-delta      # pager for git with nice colors and such
-    inferno        # rust port of flamegraph.pl
-    lsd            # fancier version of `ls`
-    minijinja-cli  # template renderer
-    stylua
-    usage-cli
-    wasm-pack
-    wasmtime-cli
-    worker-build   # for cloudflare workers
-    xh             # httpie but written in rust
-)
+declare -ga PACKAGES=()
+while read -r pkg; do
+    PACKAGES+=("$pkg")
+done < <(./scripts/get-lines ./deps/cargo-packages.txt)
 
 if command -v cargo-binstall &>/dev/null; then
     echo "checking for updates to cargo-binstall"
