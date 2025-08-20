@@ -416,16 +416,20 @@ $(BUILD)/bash-completion: | $(DEP)/bash-completion
 	$(MAKE) -C ./bash/completion all
 	$(TOUCH) $@
 
-$(INSTALL_MAN)/index.db: MAN1 := $(INSTALL_MAN)/man1
 $(INSTALL_MAN)/index.db: \
+	$(DEP)/fd \
 	$(DEP)/fzf \
 	$(DEP)/gh \
 	$(DEP)/git-cliff \
+	$(DEP)/nfpm \
 	$(DEP)/node \
+	$(DEP)/pandoc \
 	$(DEP)/python \
-	$(DEP)/ripgrep
+	$(DEP)/ripgrep \
+	$(SCRIPT)/install-man-pages
 
 	mkdir -p "$(dir $@)"
+	$(SCRIPT)/install-man-pages
 	mandb --user-db
 
 .PHONY: man

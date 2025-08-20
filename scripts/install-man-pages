@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly MAN=$HOME/.local/share/man
+readonly MAN1="$MAN"/man1
+
+exists() {
+    command -v "$@" &>/dev/null
+}
+
+log() {
+    echo "$@"
+}
+
+
+add-man-path() {
+    local -r mp=${1:?}
+
+    if [[ ! -d $mp ]]; then
+        echo "error: $mp not found or not a directory"
+        return 1
+    fi
+
+    local rel subdir
+
+    shopt -s failglob
+
+    for subdir in "$mp"/man[0-9]; do
+        rel=${MAN}${subdir#"$mp"}
+        ./scripts/symlink-tree "$subdir" "$rel"
+    done
+}
+
+add-man-1() {
+    if (( $# == 0 )); then
+        echo "error: no paths provided"
+        return 1
+    fi
+
+    local p
+    for p in "$@"; do
+        if [[ ! -e $p ]]; then
+            echo "error: path $p does not exist"
+            return 1
+        fi
+    done
+
+    install -p -t "$MAN1" "$@"
+}
+
+_git_cliff() {
+    if ! exists git-cliff; then
+        log "git-cliff is not installed"
+        return
+    fi
+
+    local where; where=$(mise where git-cliff)
+    shopt -s failglob
+
+    local man=("${where}"/*/man/git-cliff.1)
+    add-man-1 "$MAN1" "${man[0]}"
+}
+
+_fzf() {
+    if ! exists fzf; then
+        log "fzf not found"
+        return
+    fi
+
+    local bin; bin=$(mise which fzf)
+
+    # -R tells `man` to re-encode the input rather than formatting it for display
+    MANOPT='-R' "$bin" --man > "$MAN1/fzf.1"
+}
+
+_gh() {
+    if ! exists gh; then
+        log "gh is not installed"
+        return
+    fi
+
+    local where; where=$(mise where gh)
+    shopt -s failglob
+    local man=("${where}"/*/share/man)
+
+    add-man-path "${man[0]}"
+}
+
+_ripgrep() {
+    if ! exists rg; then
+        log "ripgrep (rg) not found"
+        return
+    fi
+
+    mise exec ripgrep -- \
+        rg --generate man \
+    > "$MAN1/rg.1"
+}
+
+_rustup() {
+    if ! exists rustup; then
+        log "rustup not found"
+        return
+    fi
+
+    local active
+    active=$(rustup show active-toolchain | awk '{print $1}')
+
+    local tc
+    tc=${RUSTUP_HOME:?}/toolchains/${active:?}
+
+    if [[ -d ${tc}/share/man ]]; then
+        add-man-path "${tc}/share/man"
+    fi
+}
+
+_node() {
+    local node; node=$(mise where node)
+
+    if [[ -d $node/share/man ]]; then
+        add-man-path "${node}/share/man"
+    fi
+}
+
+_npm() {
+    if [[ -d $HOME/.local/lib/node_modules/npm/man ]]; then
+        add-man-path "$HOME/.local/lib/node_modules/npm/man"
+    fi
+}
+
+_fd() {
+    if ! exists fd; then
+        log "fd not found"
+    fi
+
+    local bin; bin=$(mise which fd)
+    add-man-1 "$MAN1" "${bin}.1"
+}
+
+_nfpm() {
+    if ! exists nfpm; then
+        log "nfpm not found"
+    fi
+
+    local where; where=$(mise where nfpm)
+
+    shopt -s failglob
+    add-man-1 "$MAN1" "${where}"/manpages/*
+}
+
+_python() {
+    local where; where=$(mise where python)
+    add-man-path "$where"/share/man
+}
+
+main() {
+    mkdir -p "$MAN" "$MAN1"
+
+    _fd
+    _fzf
+    _gh
+    _git_cliff
+    _nfpm
+    _node
+    _npm
+    _python
+    _ripgrep
+    _rustup
+}
+
+main "$@"

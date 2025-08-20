@@ -38,7 +38,7 @@ main() {
     | while read -r dir; do
         dir=${dir%/}
         rel=${dir#"$target"/}
-        mkdir -v -p "${links}/${rel}"
+        mkdir -p "${links}/${rel}"
     done
 
     fd \
@@ -49,9 +49,8 @@ main() {
     | while read -r fname; do
         dir=${fname%/*}
         rel=${dir#"$target"}
-        ln -v -sf -t "${links}${rel}" "$fname"
+        ln -srf -t "${links}${rel}" "$fname"
     done
-
 
     symlinks -c -r -d "$links"
 }

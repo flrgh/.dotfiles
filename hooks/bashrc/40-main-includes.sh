@@ -131,61 +131,6 @@ add-man-path() {
     fi
 }
 
-# gh / github cli
-{
-    setup_gh() {
-        if ! rc-command-exists gh; then
-            log "gh is not installed"
-            return
-        fi
-
-        local where; where=$(mise where gh)
-        if [[ -z ${where:-} || ! -d $where ]]; then
-            return
-        fi
-
-        shopt -s failglob
-        add-man-path "$where"/*/share/man
-    }
-    setup_gh
-}
-
-{
-    setup_git_cliff() {
-        if ! rc-command-exists git-cliff; then
-            log "git-cliff is not installed"
-            return
-        fi
-
-        local where; where=$(mise where git-cliff)
-        if [[ -z ${where:-} || ! -d $where ]]; then
-            return
-        fi
-
-        shopt -s failglob
-        ln -sfv -t "$MAN/man1" \
-            "${where}"/*/man/git-cliff.1
-    }
-
-    setup_git_cliff
-}
-
-{
-    setup_fzf() {
-        if ! rc-command-exists fzf; then
-            log "fzf not found"
-            return
-        fi
-
-        local bin; bin=$(mise which fzf)
-
-        # -R tells `man` to re-encode the input rather than formatting it for display
-        MANOPT='-R' "$bin" --man > "$MAN/man1/fzf.1"
-    }
-
-    setup_fzf
-}
-
 {
     setup_ripgrep() {
         if ! rc-command-exists rg; then
@@ -228,17 +173,6 @@ add-man-path() {
 
     # https://blog.rust-lang.org/2023/03/09/Rust-1.68.0.html#cargos-sparse-protocol
     rc-export CARGO_REGISTRIES_CRATES_IO_PROTOCOL sparse
-
-    if rc-command-exists rustup; then
-        active=$(rustup show active-toolchain | awk '{print $1}')
-        tc=${RUSTUP_HOME:?}/toolchains/${active:?}
-
-        if [[ -d ${tc}/share/man ]]; then
-            add-man-path "${tc}/share/man"
-        fi
-
-        unset active tc
-    fi
 }
 
 # python
@@ -256,17 +190,6 @@ add-man-path() {
 # node / npm
 {
     rc-export NPM_CONFIG_USERCONFIG "$HOME/.config/npm/npmrc"
-
-    if rc-command-exists mise; then
-        NODE=$(mise where node)
-        if [[ -d $NODE/share/man ]]; then
-            add-man-path "${NODE}/share/man"
-        fi
-    fi
-
-    if [[ -d $HOME/.local/lib/node_modules/npm/man ]]; then
-        add-man-path "$HOME/.local/lib/node_modules/npm/man"
-    fi
 
     # clean up old nvm things
     rc-unset NVM_BIN
