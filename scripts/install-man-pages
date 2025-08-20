@@ -49,6 +49,17 @@ add-man-1() {
     install -p -t "$MAN1" "$@"
 }
 
+man-1-from-cmd() {
+    local -r bin=${1:-}
+
+    if ! exists "$bin"; then
+        echo "$bin not found"
+        return
+    fi
+
+    "$@" > "${MAN1}/${bin##*/}.1"
+}
+
 _git_cliff() {
     if ! exists git-cliff; then
         log "git-cliff is not installed"
@@ -59,7 +70,7 @@ _git_cliff() {
     shopt -s failglob
 
     local man=("${where}"/*/man/git-cliff.1)
-    add-man-1 "$MAN1" "${man[0]}"
+    add-man-1 "${man[0]}"
 }
 
 _fzf() {
@@ -93,9 +104,8 @@ _ripgrep() {
         return
     fi
 
-    mise exec ripgrep -- \
-        rg --generate man \
-    > "$MAN1/rg.1"
+    local rg; rg=$(mise which rg)
+    man-1-from-cmd "$rg" --generate man
 }
 
 _rustup() {
@@ -135,7 +145,7 @@ _fd() {
     fi
 
     local bin; bin=$(mise which fd)
-    add-man-1 "$MAN1" "${bin}.1"
+    add-man-1 "${bin}.1"
 }
 
 _nfpm() {
@@ -146,13 +156,26 @@ _nfpm() {
     local where; where=$(mise where nfpm)
 
     shopt -s failglob
-    add-man-1 "$MAN1" "${where}"/manpages/*
+    add-man-1 "${where}"/manpages/*
 }
 
 _python() {
     local where; where=$(mise where python)
     add-man-path "$where"/share/man
 }
+
+_http() {
+    if ! exists http && exists xh; then
+        alias http=xh
+    fi
+
+    man-1-from-cmd http --generate man
+}
+
+_xh() {
+    man-1-from-cmd xh --generate man
+}
+
 
 main() {
     mkdir -p "$MAN" "$MAN1"
@@ -161,12 +184,14 @@ main() {
     _fzf
     _gh
     _git_cliff
+    _http
     _nfpm
     _node
     _npm
     _python
     _ripgrep
     _rustup
+    _xh
 }
 
 main "$@"

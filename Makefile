@@ -421,6 +421,7 @@ $(INSTALL_MAN)/index.db: \
 	$(DEP)/fzf \
 	$(DEP)/gh \
 	$(DEP)/git-cliff \
+	$(DEP)/xh \
 	$(DEP)/nfpm \
 	$(DEP)/node \
 	$(DEP)/pandoc \
