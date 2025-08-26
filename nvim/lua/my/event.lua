@@ -1135,11 +1135,31 @@ e.VeryLazy = "VeryLazy"
 --- Useful to update the startuptime on your dashboard.
 e.LazyVimStarted = "LazyVimStarted"
 
+-- Triggered when `lazy restore` starts
+e.LazyRestorePre = "LazyRestorePre"
+
+-- Triggered when `lazy restore` finishes
+e.LazyRestore = "LazyRestore"
+
 e.LspAttach = "LspAttach"
 e.LspDetach = "LspDetach"
 e.LspNotify = "LspNotify"
 e.LspProgress = "LspProgress"
 e.LspRequest = "LspRequest"
+
+
+---@class my.event.payload : vim.api.keyset.create_autocmd.callback_args
+---
+---@field id      number       # autocommand id
+---@field event   string       # name of the triggered event
+---@field group   number|nil   # group id, if any
+---@field file    string       # <afile> file, not expanded
+---@field match   string       # <amatch> pattern, expanded
+---@field buf     number       # buffer
+---@field data    table?       # data passed from nvim_exec_autocmds()
+
+
+---@alias my.event.callback fun(e: my.event.payload):boolean?
 
 
 --- Creates a namespaced User event pattern
@@ -1166,7 +1186,7 @@ do
   local create_autocmd = api.nvim_create_autocmd
   local clear = require("table.clear")
 
-  ---@type my.event.ctx
+  ---@class my.event.ctx
   local ctx = {
     ---@type string|string[]
     event = nil,
@@ -1190,7 +1210,7 @@ do
     assert(type(group) == "string" or type(group) == "number")
     if clear ~= nil then
       assert(type(clear) == "boolean")
-      self.group_opts.clear = true
+      self.group_opts.clear = clear
     end
     self.opts.group = group
     return self
@@ -1223,10 +1243,19 @@ do
     return self
   end
 
-  ---@param pattern string
+  ---@param pattern string|string[]
   ---@return my.event.ctx
   function ctx:pattern(pattern)
-    assert(type(pattern) == "string")
+    local ty = type(pattern)
+    if ty == "table" then
+      assert(#pattern > 0, "empty pattern list")
+      for i = 1, #pattern do
+        assert(type(pattern[i]) == "string")
+      end
+    else
+      assert(ty == "string")
+    end
+
     assert(self == ctx and self.started)
     self.opts.pattern = pattern
     return self
@@ -1259,7 +1288,7 @@ do
     return id
   end
 
-  ---@param callback function
+  ---@param callback my.event.callback
   function ctx:callback(callback)
     assert(is_callable(callback))
     assert(self == ctx and self.started)
