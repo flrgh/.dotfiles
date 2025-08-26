@@ -1,5 +1,6 @@
 INSTALL_PATH := $(HOME)
 INSTALL_BIN := $(INSTALL_PATH)/.local/bin
+INSTALL_VBIN := $(INSTALL_PATH)/.local/vbin
 INSTALL_DATA := $(INSTALL_PATH)/.local/share
 INSTALL_STATE := $(INSTALL_PATH)/.local/state
 INSTALL_LIB := $(INSTALL_PATH)/.local/lib
@@ -44,7 +45,9 @@ DIFF := diff --suppress-common-lines --suppress-blank-empty \
 OLD_FILES := $(INSTALL_PATH)/.bash_profile \
 	$(INSTALL_PATH)/.bash_logout \
 	$(INSTALL_BIN)/*~ \
-	$(INSTALL_STATE)/ineed/aws-cli.*
+	$(INSTALL_STATE)/ineed/aws-cli.* \
+	$(INSTALL_BIN)/tl_* \
+	$(INSTALL_BIN)/marksman-linux
 
 CREATE_DIRS := \
 	.cache .cache/download \
@@ -285,14 +288,18 @@ os-packages-workstation: $(PKG)/os.common $(PKG)/os.workstation $(PKG)/os.remove
 os-packages-update: os-packages
 	sudo dnf update -y
 
+$(DEP)/bazel: $(DEP)/bazelisk
+	ln -sfv $(shell $(MISE) which bazelisk) $(INSTALL_BIN)/bazel
+	$(TOUCH) --reference "$<" "$@"
+
 .PHONY: kong
-kong: $(PKG)/os.kong $(DEP)/bazelisk | .setup
+kong: $(PKG)/os.kong $(DEP)/bazel | .setup
 
 .PHONY: rm-old-files
 .ONESHELL:
 rm-old-files:
 	@for f in $(OLD_FILES); do
-		rm -fv "$${f:?}";
+		rm -rfv "$${f:?}";
 	done
 
 .PRECIOUS: $(CREATE_DIRS)
@@ -465,6 +472,8 @@ language-servers: npm $(LIBEXEC) \
 	$(MISE_DEPS) \
 	$(DEP)/compiledb \
 	$(DEP)/systemd-language-server \
+	$(DEP)/marksman \
+	$(DEP)/zls \
 	| .setup
 
 $(PKG)/neovim: $(DEP)/neovim nvim/plugins.lock.json

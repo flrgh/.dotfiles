@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 
-# removes any files from ~/.local/bin which are present in ~/.local/share/mise/shims
+# removes any files which are present in ~/.local/share/mise/shims
 
 set -euo pipefail
 
-readonly BIN=${HOME}/.local/bin
+readonly BINS=(
+    "$HOME/.local/bin"
+    "$HOME/.local/cargo/bin"
+    "$HOME/.local/go/bin"
+)
+readonly VBIN=$HOME/.local/vbin
+
 readonly SHIMS=${XDG_DATA_HOME:-${HOME}/.local/share}/mise/shims
 
 shopt -s nullglob
@@ -13,4 +19,8 @@ mise reshim --force
 
 FILES=( "${SHIMS}"/* )
 
-rm -fv "${FILES[@]/#"$SHIMS"/"$BIN"}"
+rm -rfv "${FILES[@]/#"$SHIMS"/"${VBIN}"}"
+
+for dir in "${BINS[@]}"; do
+    rm -fv "${FILES[@]/#"$SHIMS"/"${dir}"}"
+done
