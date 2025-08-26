@@ -351,7 +351,7 @@ $(BUILD)/LS_COLORS: $(DEP)/vivid
 
 $(BUILD)/home/.config/env: $(MISE_DEPS) lib/bash/* scripts/build-env.sh $(BUILD)/LS_COLORS
 	./scripts/build-env.sh
-	@-$(DIFF) $(INSTALL_PATH)/.config/env $(REPO_ROOT)/build/home/.config/env
+	$(DIFF) $(INSTALL_PATH)/.config/env $(REPO_ROOT)/build/home/.config/env || true
 
 .PHONY: ssh
 ssh: | .setup
