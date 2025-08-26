@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DOTFILES_REPO_ROOT=${DOTFILES_REPO_ROOT:-$HOME/git/flrgh/.dotfiles}
+
+source "$DOTFILES_REPO_ROOT"/home/.local/lib/bash/functions/bin-path.bash
+
+bin-path "$@"

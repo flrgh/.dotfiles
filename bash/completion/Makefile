@@ -1,4 +1,6 @@
-BUILD := ../../build/bash-completion
+export DOTFILES_REPO_ROOT ?= $(CURDIR)/../..
+BUILD := $(DOTFILES_REPO_ROOT)/build/bash-completion
+SCRIPT := $(DOTFILES_REPO_ROOT)/scripts
 
 COMMANDS := \
 	ast-grep \
@@ -40,20 +42,26 @@ COMMANDS := \
 COMMANDS := $(foreach cmd, $(COMMANDS), $(shell command -v $(cmd)))
 COMMANDS := $(foreach cmd, $(COMMANDS), $(notdir $(cmd)))
 
+TOUCH := $(SCRIPT)/files touch
+
 COMP_FUNCNAME = __complete_$(subst -,_,$(notdir $@))
 COMP_LIST_CMD = $$($(CMD))
 COMP_SCRIPT = $(BUILD)/$(notdir $@)
 COMP_TEST = bash -n $(COMP_SCRIPT)
+COMP_BIN = $(shell $(SCRIPT)/bin-path $(notdir $(@)))
+COMP_TOUCH = $(TOUCH) --reference $(COMP_BIN) $(COMP_SCRIPT)
 
 define from-command =
 	$(CMD) > $(COMP_SCRIPT)
 	@$(COMP_TEST)
+	$(COMP_TOUCH)
 endef
 
 define from-url =
 	cat $(shell cache-get $(URL) "bash-completion-$(notdir $@)") \
 		> $(COMP_SCRIPT)
 	@$(COMP_TEST)
+	@$(COMP_TOUCH)
 endef
 
 define from-candidate-list-command =
@@ -64,12 +72,22 @@ define from-candidate-list-command =
 	@echo '}'                                                     >> $(COMP_SCRIPT)
 	@echo 'complete -F $(COMP_FUNCNAME) $(notdir $@)'             >> $(COMP_SCRIPT)
 	@$(COMP_TEST)
+	@$(COMP_TOUCH)
 endef
 
 define completion-command =
 	@echo 'complete -C "$(CMD)" $@' > $(COMP_SCRIPT)
 	@$(COMP_TEST)
+	@$(COMP_TOUCH)
 endef
+
+
+define from-file =
+	cat $(FILE) > $(COMP_SCRIPT)
+	@$(COMP_TEST)
+	$(TOUCH) --reference $(FILE) $(COMP_SCRIPT)
+endef
+
 
 $(BUILD):
 	mkdir $(BUILD)
@@ -86,63 +104,83 @@ clean:
 pip: CMD = pip completion --bash
 pip:
 	$(from-command)
+
 pip3: CMD = pip3 completion --bash
 pip3:
 	$(from-command)
+
 hugo: CMD = hugo completion bash
 hugo:
 	$(from-command)
+
 openstack: CMD = openstack complete --shell bash
 openstack:
 	$(from-command)
+
 kubectl: CMD = kubectl completion bash
 kubectl:
 	$(from-command)
+
 luarocks: CMD = luarocks completion bash
 luarocks:
 	$(from-command)
+
 gh: CMD = gh completion --shell bash # github cli
 gh:
 	$(from-command)
+
 op: CMD = op completion bash         # 1password
 op:
 	$(from-command)
+
 ineed: CMD = ineed _bash_completion
 ineed:
 	$(from-command)
+
 rustup: CMD = rustup completions bash rustup
 rustup:
 	$(from-command)
+
 gitsign: CMD = gitsign completion bash
 gitsign:
 	$(from-command)
+
 deck: CMD = deck completion bash
 deck:
 	$(from-command)
+
 gh-helper: CMD = gh-helper generate-bash-completion
 gh-helper:
 	$(from-command)
+
 bindgen: CMD = bindgen --generate-shell-completions bash DUMMY_HEADER_FILE_ARG
 bindgen:
 	$(from-command)
+
 wasmtime: CMD = wasmtime completion bash
 wasmtime:
 	$(from-command)
+
 tree-sitter: CMD = tree-sitter complete --shell bash
 tree-sitter:
 	$(from-command)
+
 varlink: CMD = varlink completions bash
 varlink:
 	$(from-command)
+
 bat: CMD = bat --completion bash
 bat:
 	$(from-command)
+
 minijinja-cli: CMD = minijinja-cli --generate-completion bash
 minijinja-cli:
 	$(from-command)
+
 mise: CMD = mise completion bash
 mise:
 	$(from-command)
+
 usage: CMD = usage --completions bash
 usage:
 	$(from-command)
@@ -157,6 +195,7 @@ bazel:
 
 delta: CMD = delta --generate-completion bash
 delta:
+	$(from-command)
 
 yq: CMD = yq shell-completion bash
 yq:
@@ -206,5 +245,6 @@ rg:
 
 git-cliff: private WHERE = $(shell mise where git-cliff)
 git-cliff: private COMP = $(wildcard $(WHERE)/*/completions)
+git-cliff: FILE = $(COMP)/git-cliff.bash
 git-cliff:
-	cat "$(COMP)"/git-cliff.bash > $(COMP_SCRIPT)
+	$(from-file)

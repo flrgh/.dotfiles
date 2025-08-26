@@ -4,6 +4,7 @@ set -euo pipefail
 
 REPO=${DOTFILES_REPO_ROOT:?}
 BUILD=${REPO:?}/build
+BUILD=$(realpath "$BUILD")
 
 declare -ga PATHS=()
 
