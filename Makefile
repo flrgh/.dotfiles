@@ -171,12 +171,13 @@ $(PKG)/python.cleanup: $(DEP)/python | $(MISE)
 	$(SCRIPT)/python-cleanup
 	$(TOUCH) --reference "$<" "$@"
 
+PIP_REQUIREMENTS = ./deps/requirements.txt
 $(PKG)/python.reinstall: $(DEP)/python $(PKG)/python.cleanup | $(MISE)
-	$(MISE) exec python -- pip install --force-reinstall --user $(shell $(SCRIPT)/get-lines ./deps/python-packages.txt)
+	$(MISE) exec python -- pip install --force-reinstall --user -r $(PIP_REQUIREMENTS)
 	$(TOUCH) --reference "$<" "$@"
 
-$(PKG)/python: deps/python-packages.txt | $(PKG)/python.reinstall $(MISE)
-	$(MISE) exec python -- pip install --user $(LINES)
+$(PKG)/python: $(PIP_REQUIREMENTS) | $(PKG)/python.reinstall $(MISE)
+	$(MISE) exec python -- pip install --user -r $(PIP_REQUIREMENTS)
 	$(TOUCH) $@
 
 $(PKG)/flatpak.remotes: deps/flatpak-remotes.txt
@@ -239,7 +240,7 @@ $(OS_WORKSTATION_DEPS): | $(PKG)/os.workstation
 $(DEP)/dircolors: $(DEP)/coreutils
 	$(TOUCH) --reference "$<" "$@"
 
-NPM_DEP_FILE := ./deps/npm.json
+NPM_DEP_FILE := ./deps/package.json
 NPM_WANTED    = $(shell jq -r '.dependencies | to_entries | .[] | "\(.key)@\(.value)"' < $(NPM_DEP_FILE))
 NPM_INSTALLED = $(shell $(NPM) list -g --json | jq -r '.dependencies | to_entries | .[] | "\(.key)@\(.value.version)"')
 NPM_NEEDED    = $(strip $(filter-out $(NPM_INSTALLED),$(NPM_WANTED)))
