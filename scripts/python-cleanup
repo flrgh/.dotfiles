@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+shopt -s nullglob
+
+readonly BIN=${HOME}/.local/bin
+
+INFO_JSON=$(mise ls --json python | jq -r '.[0]')
+readonly INFO_JSON
+
+PIP=$(mise which pip)
+readonly PIP
+
+# path to ~/.local/share/mise/installs/python[...]
+WHERE=$(jq -r '.install_path' <<< "$INFO_JSON")
+readonly WHERE
+
+# current python semver
+VERSION=$(jq -r '.version' <<< "$INFO_JSON")
+readonly VERSION
+
+readonly MAJ_MIN=${VERSION%.*}
+
+# current python lib dir
+readonly CURRENT_LIB=${HOME}/.local/lib/python${MAJ_MIN}
+
+# files in ~/.local/bin to remove
+declare -a REMOVE_BINS=()
+
+# packages that should be reinstalled
+declare -A REINSTALL=()
+
+# directories in ~/.local/lib to remove
+declare -a REMOVE_LIBS=()
+
+# list of currently-installed packages
+declare -a CURRENT_PACKAGES=()
+mapfile -t CURRENT_PACKAGES < <("$PIP" list --user --format json | jq '.[].name' -r)
+readonly CURRENT_PACKAGES
+
+
+# map binary names to package names
+declare -A CURRENT_BINS=()
+while read -r pkg bin; do
+    CURRENT_BINS[$bin]=$pkg
+done < <(
+    "$PIP" show --files "${CURRENT_PACKAGES[@]}" \
+    | awk '
+        /^Name:/ {
+            name = $2;
+        }
+
+        /\/bin\/.+/ {
+            bin = $1;
+            sub(/.*\/bin\//, "", bin);
+            print name, bin
+        }
+        '
+    )
+
+
+for bin in "$BIN"/*; do
+    # not a file
+    if [[ ! -f $bin ]]; then
+        continue
+    fi
+
+    # not a text file / no shebang present
+    if [[ $(head -c 2 "$bin") != "#!" ]]; then
+        continue
+    fi
+
+    shebang=$(head -n 1 "$bin")
+    shebang=${shebang#'#!'}
+
+    base=${bin##*/}
+
+    case $shebang in
+        # probably one of my own scripts
+        /usr/bin/env\ *)
+            continue;;
+
+        # already belongs to the current install
+        "$WHERE"/*)
+            continue;;
+
+        # very old
+        /usr/bin/python*)
+            ;;
+
+        # old and of unknown origin
+        /opt/python/*)
+            ;;
+
+        # from an old mise install of python
+        */mise/installs/python/*)
+            if [[ -n ${CURRENT_BINS[$base]:-} ]]; then
+                REINSTALL[${CURRENT_BINS[$base]}]=1
+            fi
+            ;;
+
+        *python*)
+            echo "UNKNOWN python: $shebang in $bin"
+            continue;;
+
+        *)
+            continue;;
+    esac
+
+    REMOVE_BINS+=("$bin")
+done
+
+for dir in "$HOME"/.local/lib/python*; do
+    if [[ $dir == "$CURRENT_LIB" ]]; then
+        continue
+    fi
+
+    REMOVE_LIBS+=("$dir")
+done
+
+if (( ${#REMOVE_BINS[@]} > 0 )); then
+    echo "removing old files in ~/.local/bin"
+    rm -f "${REMOVE_BINS[@]}"
+else
+    echo "nothing in ~/.local/bin to cleanup"
+fi
+
+if (( ${#REMOVE_LIBS[@]} > 0 )); then
+    echo "removing old python lib directories in ~/.local/lib"
+    rm -rf "${REMOVE_LIBS[@]}"
+else
+    echo "nothing in ~/.local/lib to cleanup"
+fi
+
+if (( ${#REINSTALL[@]} > 0 )); then
+    echo "re-installing broken pip packages"
+    "$PIP" install --user --force-reinstall "${!REINSTALL[@]}"
+else
+    echo "no pip packages to reinstall"
+fi

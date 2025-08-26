@@ -167,7 +167,15 @@ $(PKG)/os.removed: deps/os-package-removed.txt
 	sudo dnf remove -y $(LINES)
 	$(TOUCH) $@
 
-$(PKG)/python: deps/python-packages.txt | $(MISE)
+$(PKG)/python.cleanup: $(DEP)/python | $(MISE)
+	$(SCRIPT)/python-cleanup
+	$(TOUCH) --reference "$<" "$@"
+
+$(PKG)/python.reinstall: $(DEP)/python $(PKG)/python.cleanup | $(MISE)
+	$(MISE) exec python -- pip install --force-reinstall --user $(shell $(SCRIPT)/get-lines ./deps/python-packages.txt)
+	$(TOUCH) --reference "$<" "$@"
+
+$(PKG)/python: deps/python-packages.txt | $(PKG)/python.reinstall $(MISE)
 	$(MISE) exec python -- pip install --user $(LINES)
 	$(TOUCH) $@
 
