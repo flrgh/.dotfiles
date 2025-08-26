@@ -343,12 +343,11 @@ mise: $(MISE)
 .PHONY: mise-update
 mise-update: .mise-self-update .WAIT $(MISE_ALL)
 
-$(BUILD)/dircolors: private URL := https://raw.githubusercontent.com/seebi/dircolors-solarized/master/dircolors.256dark
-$(BUILD)/dircolors: private BASENAME = $(notdir $(URL))
-$(BUILD)/dircolors: | $(PKG)/os.common
-	$(COPY) $(shell ./home/.local/bin/cache-get "$(URL)" "$(BASENAME)") $@
+$(BUILD)/LS_COLORS: $(DEP)/vivid
+	$(MISE) exec vivid -- vivid generate catppuccin-mocha >"$@"
+	$(TOUCH) --reference "$<" "$@"
 
-$(BUILD)/home/.config/env: $(MISE_DEPS) lib/bash/* scripts/build-env.sh $(BUILD)/dircolors
+$(BUILD)/home/.config/env: $(MISE_DEPS) lib/bash/* scripts/build-env.sh $(BUILD)/LS_COLORS
 	./scripts/build-env.sh
 	@-$(DIFF) $(INSTALL_PATH)/.config/env $(REPO_ROOT)/build/home/.config/env
 

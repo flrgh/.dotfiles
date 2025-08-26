@@ -48,21 +48,12 @@ emit-app-config() {
 }
 
 emit-ls-colors() {
-    if ! command -v dircolors &>/dev/null; then
-        return
-    fi
-
-    if [[ ! -e build/dircolors ]]; then
-        echo "build/dircolors is missing"
+    if [[ ! -e build/LS_COLORS ]]; then
+        echo "error: build/LS_COLORS is missing"
         return 1
     fi
-
-    # dircolors emits an expression for us to eval
-    local colors
-    colors=$(dircolors build/dircolors)
-    unset LS_COLORS
-    eval "$colors"
-    add-export LS_COLORS "${LS_COLORS:?}"
+    local colors; colors=$(< build/LS_COLORS)
+    add-export LS_COLORS "${colors:?}"
 }
 
 emit-pkg-config() {
