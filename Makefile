@@ -6,7 +6,7 @@ INSTALL_STATE := $(INSTALL_PATH)/.local/state
 INSTALL_LIB := $(INSTALL_PATH)/.local/lib
 INSTALL_MAN := $(INSTALL_DATA)/man
 USER_REPOS := $(HOME)/git/flrgh
-REPO_ROOT = $(PWD)
+REPO_ROOT = $(CURDIR)
 DEBUG := $(DEBUG)
 
 # namespace exported vars so that they don't interfere with other build tools
@@ -102,66 +102,59 @@ clean:
 .PHONY: update
 update: clean os-packages-update mise-update rust-update
 
-$(PKG)/os.common.nfpm.yaml: ./deps/rpm-common.txt
+define nfpm-yaml
 	$(MKPARENT) "$@"
 	$(SCRIPT)/rpm-tool nfpm "$<" "$@"
 	$(TOUCH) --reference "$<" "$@"
+endef
+
+define build-rpm
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool rpm "$<" "$@"
+	$(TOUCH) --reference "$<" "$@"
+endef
+
+define install-rpm
+	$(MKPARENT) "$@"
+	$(SCRIPT)/rpm-tool install "$<"
+	$(TOUCH) --reference "$<" "$@"
+endef
+
+$(PKG)/os.common.nfpm.yaml: ./deps/rpm-common.txt
+	$(nfpm-yaml)
 
 $(PKG)/os.common.rpm: $(PKG)/os.common.nfpm.yaml
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool rpm "$<" "$@"
-	$(TOUCH) --reference "$<" "$@"
+	$(build-rpm)
 
 $(PKG)/os.common: $(PKG)/os.common.rpm
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool install "$<"
-	$(TOUCH) --reference "$<" "$@"
-
+	$(install-rpm)
 
 $(PKG)/os.workstation.nfpm.yaml: ./deps/rpm-workstation.txt
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool nfpm "$<" "$@"
-	$(TOUCH) --reference "$<" "$@"
+	$(nfpm-yaml)
 
 $(PKG)/os.workstation.rpm: $(PKG)/os.workstation.nfpm.yaml
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool rpm "$<" "$@"
-	$(TOUCH) --reference "$<" "$@"
+	$(build-rpm)
 
 $(PKG)/os.workstation: $(PKG)/os.workstation.rpm
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool install "$<"
-	$(TOUCH) --reference "$<" "$@"
+	$(install-rpm)
 
 $(PKG)/os.kong.nfpm.yaml: ./deps/rpm-kong.txt
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool nfpm "$<" "$@"
-	$(TOUCH) --reference "$<" "$@"
+	$(nfpm-yaml)
 
 $(PKG)/os.kong.rpm: $(PKG)/os.kong.nfpm.yaml
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool rpm "$<" "$@"
-	$(TOUCH) --reference "$<" "$@"
+	$(build-rpm)
 
 $(PKG)/os.kong: $(PKG)/os.kong.rpm
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool install "$<"
-	$(TOUCH) --reference "$<" "$@"
+	$(install-rpm)
 
 $(PKG)/os.curl-build-deps.nfpm.yaml: ./deps/rpm-curl-build-deps.txt
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool nfpm "$<" "$@"
-	$(TOUCH) --reference "$<" "$@"
+	$(nfpm-yaml)
 
 $(PKG)/os.curl-build-deps.rpm: $(PKG)/os.curl-build-deps.nfpm.yaml
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool rpm "$<" "$@"
-	$(TOUCH) --reference "$<" "$@"
+	$(build-rpm)
 
 $(PKG)/os.curl-build-deps: $(PKG)/os.curl-build-deps.rpm
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool install "$<"
-	$(TOUCH) --reference "$<" "$@"
+	$(install-rpm)
 
 $(PKG)/os.removed: deps/os-package-removed.txt
 	sudo dnf remove -y $(LINES)
