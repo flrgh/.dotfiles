@@ -16,7 +16,7 @@ httpx-sse==0.4.1
 idna==3.10
 jsonschema-specifications==2025.4.1
 lsprotocol==2023.0.1
-lxml==5.4.0
+lxml==6.0.1
 pydantic==2.11.7
 pydantic-settings==2.10.1
 pydantic_core==2.33.2
