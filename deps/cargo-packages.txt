@@ -10,13 +10,8 @@ cargo-release
 cargo-update
 cbindgen
 cross          # cargo cross-compilation helper
-git-delta      # pager for git with nice colors and such
 inferno        # rust port of flamegraph.pl
-lsd            # fancier version of `ls`
 minijinja-cli  # template renderer
-stylua
-usage-cli
 wasm-pack
 wasmtime-cli
 worker-build   # for cloudflare workers
-xh             # httpie but written in rust

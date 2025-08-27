@@ -7,30 +7,15 @@ source ./home/.local/lib/bash/github-helper-token.bash
 export CARGO_HOME=${CARGO_HOME:-$HOME/.local/cargo}
 export RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.local/rustup}
 
-declare -ga PACKAGES=()
-while read -r pkg; do
-    PACKAGES+=("$pkg")
-done < <(./scripts/get-lines ./deps/cargo-packages.txt)
-
-if command -v cargo-binstall &>/dev/null; then
-    echo "checking for updates to cargo-binstall"
-    cargo binstall \
-        --no-confirm \
-        --only-signed \
-        cargo-binstall
-
-else
-    echo "installing cargo-binstall from source"
-    cargo install cargo-binstall
+if ! command -v cargo-binstall &>/dev/null; then
+    echo "error: cargo-binstall not found"
+    exit 1
 fi
+
+declare -a PACKAGES=()
+mapfile -t PACKAGES < <(./scripts/get-lines ./deps/cargo-packages.txt)
 
 cargo binstall \
     --no-confirm \
     --continue-on-failure \
     "${PACKAGES[@]}"
-
-
-if XH=$(command -v xh 2>/dev/null); then
-    echo "symlinking http(ie) to xh"
-    ln --no-target-directory -sfv "$XH" "$HOME/.local/bin/http"
-fi

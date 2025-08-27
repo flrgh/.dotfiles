@@ -102,63 +102,27 @@ clean:
 .PHONY: update
 update: clean os-packages-update mise-update rust-update
 
-define nfpm-yaml
+# generate an nfpm.yaml file for a dep list
+$(PKG)/os.%.nfpm.yaml: ./deps/rpm-%.txt
 	$(MKPARENT) "$@"
 	$(SCRIPT)/rpm-tool nfpm "$<" "$@"
 	$(TOUCH) --reference "$<" "$@"
-endef
 
-define build-rpm
+# build an .rpm file for a given nfpm.yaml
+$(PKG)/os.%.rpm: $(PKG)/os.%.nfpm.yaml
 	$(MKPARENT) "$@"
 	$(SCRIPT)/rpm-tool rpm "$<" "$@"
 	$(TOUCH) --reference "$<" "$@"
-endef
 
-define install-rpm
+# install an .rpm package
+$(PKG)/os/%: $(PKG)/os.%.rpm
 	$(MKPARENT) "$@"
 	$(SCRIPT)/rpm-tool install "$<"
 	$(TOUCH) --reference "$<" "$@"
-endef
 
-$(PKG)/os.common.nfpm.yaml: ./deps/rpm-common.txt
-	$(nfpm-yaml)
-
-$(PKG)/os.common.rpm: $(PKG)/os.common.nfpm.yaml
-	$(build-rpm)
-
-$(PKG)/os.common: $(PKG)/os.common.rpm
-	$(install-rpm)
-
-$(PKG)/os.workstation.nfpm.yaml: ./deps/rpm-workstation.txt
-	$(nfpm-yaml)
-
-$(PKG)/os.workstation.rpm: $(PKG)/os.workstation.nfpm.yaml
-	$(build-rpm)
-
-$(PKG)/os.workstation: $(PKG)/os.workstation.rpm
-	$(install-rpm)
-
-$(PKG)/os.kong.nfpm.yaml: ./deps/rpm-kong.txt
-	$(nfpm-yaml)
-
-$(PKG)/os.kong.rpm: $(PKG)/os.kong.nfpm.yaml
-	$(build-rpm)
-
-$(PKG)/os.kong: $(PKG)/os.kong.rpm
-	$(install-rpm)
-
-$(PKG)/os.curl-build-deps.nfpm.yaml: ./deps/rpm-curl-build-deps.txt
-	$(nfpm-yaml)
-
-$(PKG)/os.curl-build-deps.rpm: $(PKG)/os.curl-build-deps.nfpm.yaml
-	$(build-rpm)
-
-$(PKG)/os.curl-build-deps: $(PKG)/os.curl-build-deps.rpm
-	$(install-rpm)
-
-$(PKG)/os.removed: deps/os-package-removed.txt
+$(PKG)/os/removed: deps/os-package-removed.txt
 	sudo dnf remove -y $(LINES)
-	$(TOUCH) $@
+	$(TOUCH) --reference "$<" "$@"
 
 $(PKG)/python.cleanup: $(DEP)/python | $(MISE)
 	$(SCRIPT)/python-cleanup
@@ -220,14 +184,14 @@ OS_COMMON_PACKAGES := $(shell $(SCRIPT)/get-lines ./deps/rpm-common.txt | sort -
 OS_COMMON_PACKAGES := $(filter-out $(ALL_DEPS),$(OS_COMMON_PACKAGES))
 ALL_DEPS += $(OS_COMMON_PACKAGES)
 OS_COMMON_DEPS = $(addprefix $(DEP)/,$(OS_COMMON_PACKAGES))
-$(OS_COMMON_DEPS): | $(PKG)/os.common
+$(OS_COMMON_DEPS): | $(PKG)/os/common
 	$(TOUCH) "$@"
 
 OS_WORKSTATION_PACKAGES := $(shell $(SCRIPT)/get-lines ./deps/rpm-workstation.txt | sort -u)
 OS_WORKSTATION_PACKAGES := $(filter-out $(ALL_DEPS),$(OS_WORKSTATION_PACKAGES))
 ALL_DEPS += $(OS_WORKSTATION_PACKAGES)
 OS_WORKSTATION_DEPS = $(addprefix $(DEP)/,$(OS_WORKSTATION_PACKAGES))
-$(OS_WORKSTATION_DEPS): | $(PKG)/os.workstation
+$(OS_WORKSTATION_DEPS): | $(PKG)/os/workstation
 	$(TOUCH) "$@"
 
 $(DEP)/dircolors: $(DEP)/coreutils
@@ -281,10 +245,10 @@ rust-update: $(RUSTUP)
 	./scripts/install-cargo-packages
 
 .PHONY: os-packages
-os-packages: $(PKG)/os.common $(PKG)/os.removed
+os-packages: $(PKG)/os/common $(PKG)/os/removed
 
 .PHONY: os-packages-workstation
-os-packages-workstation: $(PKG)/os.common $(PKG)/os.workstation $(PKG)/os.removed
+os-packages-workstation: $(PKG)/os/common $(PKG)/os/workstation $(PKG)/os/removed
 
 .PHONY: os-packages-update
 os-packages-update: os-packages
@@ -295,7 +259,7 @@ $(DEP)/bazel: $(DEP)/bazelisk
 	$(TOUCH) --reference "$<" "$@"
 
 .PHONY: kong
-kong: $(PKG)/os.kong $(DEP)/bazel | .setup
+kong: $(PKG)/os/kong $(DEP)/bazel | .setup
 
 .PHONY: rm-old-files
 .ONESHELL:
@@ -408,10 +372,12 @@ $(BUILD)/home/.bashrc: \
 	$(DEP)/fd \
 	$(DEP)/fzf \
 	$(DEP)/gh \
+	$(DEP)/http \
 	$(DEP)/lsd \
 	$(DEP)/ripgrep \
 	$(DEP)/shellcheck \
 	$(DEP)/shfmt \
+	$(DEP)/usage \
 	$(DEP)/xh \
 	$(MISE_DEPS) \
 	| .setup \
@@ -507,7 +473,7 @@ $(BUILD)/home/.config/curlrc: scripts/build-curlrc
 	$(MKPARENT) $@
 	./scripts/build-curlrc > $@
 
-$(DEP)/curl: | $(PKG)/os.curl-build-deps
+$(DEP)/curl: | $(PKG)/os/curl-build-deps
 .PHONY: curl
 curl: $(DEP)/curl $(BUILD)/home/.config/curlrc | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
@@ -581,10 +547,15 @@ server-update: $(COMMON_UPDATE) | server
 .PHONY: workstation
 workstation: \
 	$(COMMON) \
-	$(PKG)/os.workstation \
+	$(PKG)/os/workstation \
 	alacritty \
 	flatpak \
 	keymapp
 
 .PHONY: workstation-update
 workstation-update: server-update | workstation
+
+$(DEP)/http: XH := $(shell command -v xh)
+$(DEP)/http: $(DEP)/xh
+	ln --no-target-directory -sfv "$(XH)" "$(INSTALL_BIN)"/http
+	$(TOUCH) --reference "$<" "$@"
