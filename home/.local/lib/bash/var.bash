@@ -13,7 +13,7 @@ is-valid-identifier() {
 declare -g VAR_FLAGS
 declare -g VAR_VALUE
 
-if (( BASH_USER_5_3 == 1 )); then
+if (( BASH_USER_MODERN == 1 )); then
     var-dec() {
         local -r name=${1:?var name is required}
         local -r dest=${2:?dest var is required}

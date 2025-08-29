@@ -1,6 +1,18 @@
+if (( BASH_USER_MODERN == 1 )); then
+    __type_P() {
+        path=${ builtin type -P "$1";}
+    }
+else
+    __type_P() {
+        path=$(builtin type -P "$1")
+    }
+fi
+
+
 bin-path() {
     local -r name=${1?binary name is required}
-    local path; path=$(builtin type -P "$name")
+
+    local path; __type_P "$name"
 
     if [[ -z ${path:-} ]]; then
         return 1

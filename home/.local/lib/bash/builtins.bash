@@ -15,7 +15,7 @@ declare -gxA BASH_USER_BUILTINS_SOURCE=(
     [version]="$BASH_USER_BUILTINS_PATH/version"
 )
 
-if (( BASH_USER_5_3 == 1 )); then
+if (( BASH_USER_MODERN == 1 )); then
     # shellcheck disable=SC2127
     __have_builtin() {
         local -r name=$1

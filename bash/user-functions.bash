@@ -34,31 +34,15 @@ dump-var() {
 complete -A variable dump-var
 
 dump-prefix() {
-    local arg v
-    for arg in "$@"; do
-        for v in $(compgen -v "$arg"); do
-            dump-var "$v"
-        done
-    done
+    __function_dispatch "$@"
 }
-
-dump-exported() {
-    local v
-    for v in $(compgen -e); do
-        dump-var "$v"
-    done
-}
-
 
 complete -A variable dump-prefix
 
-dump-matching() {
-    local -r pat=${1?pattern or substring required}
+dump-exported() {
+    __function_dispatch "$@"
+}
 
-    local v
-    for var in $(compgen -v); do
-        if [[ $var = *${pat}* ]]; then
-            dump-var "$var"
-        fi
-    done
+dump-matching() {
+    __function_dispatch "$@"
 }

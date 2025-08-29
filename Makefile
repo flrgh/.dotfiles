@@ -566,7 +566,7 @@ workstation: \
 .PHONY: workstation-update
 workstation-update: server-update | workstation
 
-$(DEP)/http: XH := $(shell command -v xh)
+$(DEP)/http: XH := $(shell $(MISE) which xh)
 $(DEP)/http: $(DEP)/xh
 	ln --no-target-directory -sfv "$(XH)" "$(INSTALL_BIN)"/http
 	$(TOUCH) --reference "$<" "$@"

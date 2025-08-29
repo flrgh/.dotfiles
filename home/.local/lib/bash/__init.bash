@@ -10,7 +10,10 @@ if ! declare -p BASH_USER_LIB_SOURCED &>/dev/null; then
     declare -gA BASH_USER_LIB_SOURCED=()
 fi
 
-declare -gi BASH_USER_5_3=0
-if (( BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 3 )); then
-    BASH_USER_5_3=1
+# set to 1 if our version of bash has nice, new features like
+# command substitution as `${c command;}`
+declare -gi BASH_USER_MODERN=0
+
+if (( BASH_VERSINFO[0] > 5 || BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 3 )); then
+    BASH_USER_MODERN=1
 fi
