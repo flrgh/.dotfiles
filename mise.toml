@@ -1,4 +1,5 @@
 [tools]
+cosign = "latest"
 node = "latest"
 shfmt = "latest"
 fzf = "latest"
