@@ -36,6 +36,10 @@ install-from-asset() {
         --strip-components 1 \
         --file "$asset"
 
+
+    shopt -s nullglob
+    rm -vf "$HOME"/.local/share/man/man*/pandoc*
+
     shopt -s failglob
     shopt -s globstar
     for elem in ./**; do
@@ -45,11 +49,23 @@ install-from-asset() {
 
         local dest=$HOME/.local/${elem#./}
 
-        install \
-            --verbose \
-            --preserve-timestamps \
-            --no-target-directory \
-            "$elem" \
-            "$dest"
+        # install adds the execute bit by default, so we gotta branch on
+        # bin vs not bin
+        if [[ $dest == */bin/* ]]; then
+            install \
+                --verbose \
+                --preserve-timestamps \
+                --no-target-directory \
+                "$elem" \
+                "$dest"
+        else
+            install \
+                --mode 0664 \
+                --verbose \
+                --preserve-timestamps \
+                --no-target-directory \
+                "$elem" \
+                "$dest"
+        fi
     done
 }

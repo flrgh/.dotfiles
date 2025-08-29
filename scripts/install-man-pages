@@ -5,6 +5,11 @@ set -euo pipefail
 readonly MAN=$HOME/.local/share/man
 readonly MAN1="$MAN"/man1
 
+
+setup() {
+    mkdir -p "$MAN" "$MAN1"
+}
+
 exists() {
     command -v "$@" &>/dev/null
 }
@@ -46,7 +51,11 @@ add-man-1() {
         fi
     done
 
-    install -p -t "$MAN1" "$@"
+    install \
+        --mode 0664 \
+        --preserve-timestamps \
+        --target-directory "$MAN1" \
+        "$@"
 }
 
 man-1-from-cmd() {
@@ -58,6 +67,17 @@ man-1-from-cmd() {
     fi
 
     "$@" > "${MAN1}/${bin##*/}.1"
+}
+
+# chmod 0664 all regular files (not symlinks) in the man page dirs
+fix-perms() {
+    shopt -s failglob
+    local f
+    for f in "${MAN}"/man[1-9]/*; do
+        if [[ -f $f && ! -L $f ]]; then
+            chmod 0664 "$f"
+        fi
+    done
 }
 
 _git_cliff() {
@@ -178,7 +198,7 @@ _xh() {
 
 
 main() {
-    mkdir -p "$MAN" "$MAN1"
+    setup
 
     _fd
     _fzf
@@ -192,6 +212,8 @@ main() {
     _ripgrep
     _rustup
     _xh
+
+    fix-perms
 }
 
 main "$@"
