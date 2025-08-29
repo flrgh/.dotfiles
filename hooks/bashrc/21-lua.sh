@@ -71,8 +71,49 @@ unset-lua-init() {
     rc-unset LUA_INIT
 }
 
+emit-lua-repl() {
+    if ! luarocks show flrgh &>/dev/null; then
+        echo "flrgh/lua-utils not found, skipping"
+        return
+    fi
+
+    rc-alias lua-repl "command lua -l flrgh.repl"
+    rc-alias luajit-repl "command luajit -l flrgh.repl"
+
+    rc-new-workfile lua
+    rc-workfile-add-dep "$RC_DEP_ALIAS_SET"
+
+
+    # shellcheck disable=SC2329
+    lua() {
+        if (( $# == 0 )); then
+            lua-repl
+        else
+            builtin command lua "$@"
+        fi
+    }
+
+    rc-workfile-if-interactive \
+        rc-workfile-add-function lua
+    unset -f lua
+
+    # shellcheck disable=SC2329
+    luajit() {
+        if (( $# == 0 )); then
+            luajit-repl
+        else
+            builtin command luajit "$@"
+        fi
+    }
+
+    rc-workfile-if-interactive \
+        rc-workfile-add-function luajit
+    unset -f luajit
+}
+
 emit-lua-vars
 emit-luarocks
 emit-lua-utils
 emit-luajit-path
 unset-lua-init
+emit-lua-repl
