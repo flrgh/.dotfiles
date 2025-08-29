@@ -203,16 +203,15 @@ NPM_INSTALLED = $(shell $(NPM) list -g --json | jq -r '.dependencies | to_entrie
 NPM_NEEDED    = $(strip $(filter-out $(NPM_INSTALLED),$(NPM_WANTED)))
 
 .PHONY: npm
-.ONESHELL:
 npm: | $(MISE) .setup
-	@$(NPM) uninstall -g $(shell jq -r '.name' < $(NPM_DEP_FILE))
-	_needed="$(NPM_NEEDED)"
-	if [[ -n $$_needed ]]; then
-		echo "npm - install: $$_needed"
-		$(NPM) install -g $$_needed
-		$(MISE) reshim
-	else
-		echo "npm - all packages installed"
+	@$(NPM) uninstall -g $(shell jq -r '.name' < $(NPM_DEP_FILE)); \
+	_needed="$(NPM_NEEDED)"; \
+	if [[ -n $$_needed ]]; then \
+		echo "npm - install: $$_needed"; \
+		$(NPM) install -g $$_needed; \
+		$(MISE) reshim; \
+	else \
+		echo "npm - all packages installed"; \
 	fi
 
 .PHONY: __npm-check-updates
@@ -262,10 +261,9 @@ $(DEP)/bazel: $(DEP)/bazelisk
 kong: $(PKG)/os/kong $(DEP)/bazel | .setup
 
 .PHONY: rm-old-files
-.ONESHELL:
 rm-old-files:
-	@for f in $(OLD_FILES); do
-		rm -rfv "$${f:?}";
+	@for f in $(OLD_FILES); do \
+		rm -rfv "$${f:?}"; \
 	done
 
 .PRECIOUS: $(CREATE_DIRS)
@@ -374,6 +372,7 @@ $(BUILD)/home/.bashrc: \
 	$(DEP)/gh \
 	$(DEP)/http \
 	$(DEP)/lsd \
+	$(DEP)/lua-utils\
 	$(DEP)/ripgrep \
 	$(DEP)/shellcheck \
 	$(DEP)/shfmt \
@@ -457,8 +456,20 @@ neovim: language-servers \
 	$(MISE_DEPS) \
 	| .setup
 
+$(USER_REPOS)/lua-utils:
+	$(MKPARENT) "$@"
+	git clone git@github.com:flrgh/lua-utils.git "$@"
+
+.NOTINTERMEDIATE:
+$(USER_REPOS)/lua-utils/.git/refs/heads/main: $(USER_REPOS)/lua-utils
+
+$(DEP)/lua-utils: $(USER_REPOS)/lua-utils/.git/refs/heads/main $(LUAROCKS)
+	cd ~/git/flrgh/lua-utils && luarocks build --force-fast
+	$(MKPARENT) "$@"
+	$(TOUCH) --reference "$<" "$@"
+
 .PHONY: lua
-lua: $(LUAROCKS)
+lua: $(LUAROCKS) $(DEP)/lua-utils
 
 .PHONY: docker
 docker: scripts/update-docker-config $(DEP)/docker-buildx | .setup

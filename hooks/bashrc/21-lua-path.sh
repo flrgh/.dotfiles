@@ -39,6 +39,11 @@ emit-luarocks() {
 }
 
 emit-lua-utils() {
+    if luarocks show flrgh &>/dev/null; then
+        echo "lua utils installed via luarocks--no need for this"
+        return
+    fi
+
     local -r lua_utils=$HOME/git/flrgh/lua-utils
 
     if [[ ! -d $lua_utils ]]; then
@@ -61,17 +66,13 @@ emit-luajit-path() {
     fi
 }
 
-emit-lua-init() {
-    # init script for the lua REPL
-    local fname=$INSTALL_PATH/.config/lua/repl.lua
-
-    if [[ -f $fname ]]; then
-        rc-export LUA_INIT "@$fname"
-    fi
+unset-lua-init() {
+    # not using this anymore
+    rc-unset LUA_INIT
 }
 
 emit-lua-vars
 emit-luarocks
 emit-lua-utils
 emit-luajit-path
-emit-lua-init
+unset-lua-init
