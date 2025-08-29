@@ -1,0 +1,33 @@
+#!/usr/bin/env luajit
+
+local BR = assert(tonumber(_G.arg[1]))
+
+local io = io
+local stdin = io.stdin
+local stdout = io.stdout
+local write = io.stdout.write
+
+local fmt = string.format
+local byte = string.byte
+local sub = string.sub
+
+local TAB = byte("\t")
+
+local seen = {}
+local N = 0
+
+for line in stdin:lines() do
+  if not line then
+    break
+  end
+
+  if byte(line, 1) == TAB then
+    line = sub(line, 3)
+    N = N + 1
+
+    if not seen[line] then
+      seen[line] = true
+      write(stdout, fmt("%d\t%s\0", BR - N, line))
+    end
+  end
+end

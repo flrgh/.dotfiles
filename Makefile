@@ -364,6 +364,7 @@ $(BUILD)/bash-facts: $(BUILD)/home/.config/env $(BASH_BUILTINS)
 
 $(BUILD)/home/.bashrc: \
 	lib/bash/* bash/* hooks/bashrc/* \
+	patch/fzf-key-bindings.bash.patch \
 	$(DEP)/bash-completion \
 	$(DEP)/bat \
 	$(DEP)/direnv \

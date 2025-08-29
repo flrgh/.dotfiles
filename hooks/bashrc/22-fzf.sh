@@ -42,7 +42,7 @@ fi
 
     fzf --bash \
         | sed -n '/### key-bindings.bash ###/,/### end: key-bindings.bash ###/p' \
-        > "$BINDINGS"\
+        > "$BINDINGS"
 
         patch "$BINDINGS" ./patch/fzf-key-bindings.bash.patch
 

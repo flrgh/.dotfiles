@@ -1,4 +1,4 @@
-1,26c1
+1,25d0
 < ### key-bindings.bash ###
 < #     ____      ____
 < #    / __/___  / __/
@@ -24,12 +24,16 @@
 < # To modify it, one can edit "common.sh" and run "./update-common.sh" to apply
 < # the changes. See code comments in "common.sh" for the implementation details.
 < 
-< __fzf_defaults() {
----
->  __fzf_defaults() {
-28d2
+27,29c2,5
+<   printf '%s\n' "--height ${FZF_TMUX_HEIGHT:-40%} --min-height 20+ --bind=ctrl-z:ignore $1"
 <   command cat "${FZF_DEFAULT_OPTS_FILE-}" 2> /dev/null
-32,46d5
+<   printf '%s\n' "${FZF_DEFAULT_OPTS-} $2"
+---
+>     printf -v __fzf_defaults__ \
+>         '%s\n%s\n' \
+>         "--height ${FZF_TMUX_HEIGHT:-40%} --min-height 20+ --bind=ctrl-z:ignore ${1:-}" \
+>         "${FZF_DEFAULT_OPTS-} ${2:-}"
+32,46d7
 < __fzf_exec_awk() {
 <   if [[ -z ${__fzf_awk-} ]]; then
 <     __fzf_awk=awk
@@ -45,17 +49,37 @@
 < }
 < #----END INCLUDE
 < 
-50c9
+48,54c9,10
+<   FZF_DEFAULT_COMMAND=${FZF_CTRL_T_COMMAND:-} \
+<   FZF_DEFAULT_OPTS=$(__fzf_defaults "--reverse --walker=file,dir,follow,hidden --scheme=path" "${FZF_CTRL_T_OPTS-} -m") \
 <   FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd) "$@" |
+<     while read -r item; do
+<       printf '%q ' "$item"  # escape special chars
+<     done
+< }
 ---
->   FZF_DEFAULT_OPTS_FILE='' fzf "$@" |
-56,60d14
+>     local __fzf_defaults__
+>     __fzf_defaults "--reverse --walker=file,dir,follow,hidden --scheme=path" "${FZF_CTRL_T_OPTS-} -m"
+56,58c12,17
 < __fzfcmd() {
 <   [[ -n "${TMUX_PANE-}" ]] && { [[ "${FZF_TMUX:-0}" != 0 ]] || [[ -n "${FZF_TMUX_OPTS-}" ]]; } &&
 <     echo "fzf-tmux ${FZF_TMUX_OPTS:--d${FZF_TMUX_HEIGHT:-40%}} -- " || echo "fzf"
-< }
-< 
-67,74c21,54
+---
+>     FZF_DEFAULT_COMMAND=${FZF_CTRL_T_COMMAND:-} \
+>         FZF_DEFAULT_OPTS="$__fzf_defaults__" \
+>         FZF_DEFAULT_OPTS_FILE='' fzf "$@" \
+>         | while read -r item; do
+>             printf '%q ' "$item" # escape special chars
+>         done
+62,64c21,23
+<   local selected="$(__fzf_select__ "$@")"
+<   READLINE_LINE="${READLINE_LINE:0:$READLINE_POINT}$selected${READLINE_LINE:$READLINE_POINT}"
+<   READLINE_POINT=$(( READLINE_POINT + ${#selected} ))
+---
+>     local selected="$(__fzf_select__ "$@")"
+>     READLINE_LINE="${READLINE_LINE:0:READLINE_POINT}$selected${READLINE_LINE:READLINE_POINT}"
+>     READLINE_POINT=$((READLINE_POINT + ${#selected}))
+67,74c26
 < __fzf_cd__() {
 <   local dir
 <   dir=$(
@@ -65,48 +89,14 @@
 <   ) && printf 'builtin cd -- %q' "$(builtin unset CDPATH && builtin cd -- "$dir" && builtin pwd)"
 < }
 ---
-> __fzf_lua_history='
-> local io = io
-> local stdin = io.stdin
-> local stdout = io.stdout
-> local write = io.stdout.write
-> 
-> local fmt = string.format
-> local byte = string.byte
-> local sub = string.sub
-> 
-> local TAB = byte("\t")
-> 
-> local seen = {}
-> local N = 0
-> 
-> for line in stdin:lines() do
->   if not line then
->     break
->   end
-> 
->   if byte(line, 1) == TAB then
->     line = sub(line, 3)
->     N = N + 1
-> 
->     if not seen[line] then
->       seen[line] = true
->       write(stdout, fmt("%d\t%s\0", BR - N, line))
->     end
->   end
-> end
-> '
-> __fzf_history__() {
->     [[ $(HISTTIMEFORMAT='' builtin history 1) =~ [[:digit:]]+ ]] # how many history entries
->     local -i n=$((BASH_REMATCH + 1))
-76,79c56
+> __fzf_lua_history=${HOME}/.local/libexec/fzf-lua-history
+76,102c28,38
 < if command -v perl > /dev/null; then
 <   __fzf_history__() {
 <     local output script
 <     script='BEGIN { getc; $/ = "\n\t"; $HISTCOUNT = $ENV{last_hist} + 1 } s/^[ *]//; s/\n/\n\t/gm; print $HISTCOUNT - $. . "\t$_" if !$seen{$_}++'
----
->     local output
-82,117c59,80
+<     output=$(
+<       set +o pipefail
 <       builtin fc -lnr -2147483648 |
 <         last_hist=$(HISTTIMEFORMAT='' builtin history 1) command perl -n -l0 -e "$script" |
 <         FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '"$'\t'"↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} +m --read0") \
@@ -128,45 +118,47 @@
 <     /^\t/ { P(b); b = substr($0, 2); next }
 <     { b = b RS $0 }
 <     END { if (NR) P(b) }'
-<     output=$(
+---
+> __fzf_history__() {
+>     # TODO: replace this with new command substitution
+>     local len; len=$(HISTTIMEFORMAT='' builtin history 1)
+>     local -i n=${len%% *}
+> 
+>     local __fzf_defaults__
+>     __fzf_defaults \
+>         "" \
+>         "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '"$'\t'"↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} +m --read0"
+> 
+>     local output
+104,108c40,45
 <       set +o pipefail
 <       builtin fc -lnr -2147483648 2> /dev/null |   # ( $'\t '<lines>$'\n' )* ; <lines> ::= [^\n]* ( $'\n'<lines> )*
 <         __fzf_exec_awk "$script"               |   # ( <counter>$'\t'<lines>$'\000' )*
 <         FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '"$'\t'"↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} +m --read0") \
 <         FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd) --query "$READLINE_LINE"
-<     ) || return
-<     READLINE_LINE=${output#*$'\t'}
+---
+>         set +o pipefail
+>         builtin fc -lnr -2147483648 2>/dev/null \
+>             | "$__fzf_lua_history" "$n" \
+>             | FZF_DEFAULT_OPTS="$__fzf_defaults__" \
+>             FZF_DEFAULT_OPTS_FILE='' \
+>                 fzf --query "$READLINE_LINE"
+111,112c48,49
 <     if [[ -z "$READLINE_POINT" ]]; then
 <       echo "$READLINE_LINE"
-<     else
+---
+>     if [[ -z $READLINE_POINT ]]; then
+>         echo "$READLINE_LINE"
+114c51
 <       READLINE_POINT=0x7fffffff
-<     fi
+---
+>         READLINE_POINT=0x7fffffff
+116,117c53
 <   }
 < fi
 ---
->       builtin fc -lnr -2147483648 2>/dev/null \
->       | # ( $'\t '<lines>$'\n' )* ; <lines> ::= [^\n]* ( $'\n'<lines> )*
->         LUA_INIT='' \
->         command luajit \
->         -e 'BR = assert(tonumber('$n'))' \
->         -e "$__fzf_lua_history" \
->       | # ( <counter>$'\t'<lines>$'\000' )*
->         FZF_DEFAULT_OPTS=$(__fzf_defaults \
->                          "" \
->                          "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '"$'\t'"↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} +m --read0"
->         ) \
->         FZF_DEFAULT_OPTS_FILE='' \
->         fzf --query "$READLINE_LINE"
->       ) || return
->       READLINE_LINE=${output#*$'\t'}
->       if [[ -z $READLINE_POINT ]]; then
->         echo "$READLINE_LINE"
->       else
->         READLINE_POINT=0x7fffffff
->       fi
->     }
-> 
-126,149c89,93
+> }
+126,140c62,63
 < if (( BASH_VERSINFO[0] < 4 )); then
 <   # CTRL-T - Paste the selected file path into the command line
 <   if [[ "${FZF_CTRL_T_COMMAND-x}" != "" ]]; then
@@ -182,29 +174,24 @@
 < else
 <   # CTRL-T - Paste the selected file path into the command line
 <   if [[ "${FZF_CTRL_T_COMMAND-x}" != "" ]]; then
-<     bind -m emacs-standard -x '"\C-t": fzf-file-widget'
-<     bind -m vi-command -x '"\C-t": fzf-file-widget'
-<     bind -m vi-insert -x '"\C-t": fzf-file-widget'
+---
+> # CTRL-T - Paste the selected file path into the command line
+> if [[ ${FZF_CTRL_T_COMMAND-x} != "" ]]; then
+144,156d66
 <   fi
 < 
 <   # CTRL-R - Paste the selected command from history into the command line
 <   bind -m emacs-standard -x '"\C-r": __fzf_history__'
 <   bind -m vi-command -x '"\C-r": __fzf_history__'
 <   bind -m vi-insert -x '"\C-r": __fzf_history__'
----
-> # CTRL-T - Paste the selected file path into the command line
-> if [[ "${FZF_CTRL_T_COMMAND-x}" != "" ]]; then
-> bind -m emacs-standard -x '"\C-t": fzf-file-widget'
-> bind -m vi-command -x '"\C-t": fzf-file-widget'
-> bind -m vi-insert -x '"\C-t": fzf-file-widget'
-152,160c96,99
+< fi
+< 
 < # ALT-C - cd into the selected directory
 < if [[ "${FZF_ALT_C_COMMAND-x}" != "" ]]; then
 <   bind -m emacs-standard '"\ec": " \C-b\C-k \C-u`__fzf_cd__`\e\C-e\er\C-m\C-y\C-h\e \C-y\ey\C-x\C-x\C-d"'
 <   bind -m vi-command '"\ec": "\C-z\ec\C-z"'
 <   bind -m vi-insert '"\ec": "\C-z\ec\C-z"'
-< fi
-< 
+159,160c69,72
 < fi
 < ### end: key-bindings.bash ###
 ---
