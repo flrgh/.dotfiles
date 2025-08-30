@@ -5,25 +5,53 @@ set -euo pipefail
 readonly MAN=$HOME/.local/share/man
 readonly MAN1="$MAN"/man1
 
+log() {
+    echo "$@"
+}
 
 setup() {
     mkdir -p "$MAN" "$MAN1"
+
+    # cleanup cat directories
+    shopt -s nullglob
+    rm -rf "$MAN"/cat[1-9]
 }
 
 exists() {
     command -v "$@" &>/dev/null
 }
 
-log() {
-    echo "$@"
+check-exists() {
+    local -r cmd=${1:?}
+    if ! exists "$cmd"; then
+        log "$cmd not found"
+        return 1
+    fi
 }
 
+mtime() {
+    local ref=${1:?}
+    local -r target=${2:?}
+
+    if [[ $ref != */* ]]; then
+        # $ref is the name of a command
+        if exists "$ref"; then
+            ref=$(./scripts/bin-path "$ref")
+        else
+            ref=$(realpath "$ref")
+        fi
+    fi
+
+    touch --no-create \
+        --reference "$ref" \
+        "$target"
+}
 
 add-man-path() {
     local -r mp=${1:?}
 
     if [[ ! -d $mp ]]; then
-        echo "error: $mp not found or not a directory"
+        log "error: $mp not found or not a directory"
         return 1
     fi
 
@@ -39,14 +67,14 @@ add-man-path() {
 
 add-man-1() {
     if (( $# == 0 )); then
-        echo "error: no paths provided"
+        log "error: no paths provided"
         return 1
     fi
 
     local p
     for p in "$@"; do
         if [[ ! -e $p ]]; then
-            echo "error: path $p does not exist"
+            log "error: path $p does not exist"
             return 1
         fi
     done
@@ -58,15 +86,26 @@ add-man-1() {
         "$@"
 }
 
-man-1-from-cmd() {
+man-1-from-cmd-named() {
+    local -r name=${1:?}
+    shift
+
     local -r bin=${1:-}
 
     if ! exists "$bin"; then
-        echo "$bin not found"
-        return
+        log "$name / $bin not found"
+        return 1
     fi
 
-    "$@" > "${MAN1}/${bin##*/}.1"
+    local -r dest="${MAN1}/${name}.1"
+    "$@" > "$dest"
+    mtime "$bin" "$dest"
+}
+
+
+man-1-from-cmd() {
+    local -r bin=${1:?}
+    man-1-from-cmd-named "${bin##*/}" "$@"
 }
 
 # chmod 0664 all regular files (not symlinks) in the man page dirs
@@ -81,10 +120,7 @@ fix-perms() {
 }
 
 _git_cliff() {
-    if ! exists git-cliff; then
-        log "git-cliff is not installed"
-        return
-    fi
+    check-exists git-cliff || return
 
     local where; where=$(mise where git-cliff)
     shopt -s failglob
@@ -94,22 +130,17 @@ _git_cliff() {
 }
 
 _fzf() {
-    if ! exists fzf; then
-        log "fzf not found"
-        return
-    fi
+    check-exists fzf || return
 
     local bin; bin=$(mise which fzf)
 
     # -R tells `man` to re-encode the input rather than formatting it for display
     MANOPT='-R' "$bin" --man > "$MAN1/fzf.1"
+    mtime "$bin" "$MAN1/fzf.1"
 }
 
 _gh() {
-    if ! exists gh; then
-        log "gh is not installed"
-        return
-    fi
+    check-exists gh || return
 
     local where; where=$(mise where gh)
     shopt -s failglob
@@ -119,59 +150,40 @@ _gh() {
 }
 
 _ripgrep() {
-    if ! exists rg; then
-        log "ripgrep (rg) not found"
-        return
-    fi
+    check-exists rg || return
 
     local rg; rg=$(mise which rg)
     man-1-from-cmd "$rg" --generate man
 }
 
 _rustup() {
-    if ! exists rustup; then
-        log "rustup not found"
-        return
-    fi
+    check-exists rustup || return
 
     local active
     active=$(rustup show active-toolchain | awk '{print $1}')
 
-    local tc
-    tc=${RUSTUP_HOME:?}/toolchains/${active:?}
-
-    if [[ -d ${tc}/share/man ]]; then
-        add-man-path "${tc}/share/man"
-    fi
+    add-man-path "${RUSTUP_HOME:?}/toolchains/${active:?}/share/man"
 }
 
 _node() {
     local node; node=$(mise where node)
-
-    if [[ -d $node/share/man ]]; then
-        add-man-path "${node}/share/man"
-    fi
+    add-man-path "${node}/share/man"
 }
 
 _npm() {
-    if [[ -d $HOME/.local/lib/node_modules/npm/man ]]; then
-        add-man-path "$HOME/.local/lib/node_modules/npm/man"
-    fi
+    check-exists npm || return
+    add-man-path "$HOME/.local/lib/node_modules/npm/man"
 }
 
 _fd() {
-    if ! exists fd; then
-        log "fd not found"
-    fi
+    check-exists fd || return
 
     local bin; bin=$(mise which fd)
     add-man-1 "${bin}.1"
 }
 
 _nfpm() {
-    if ! exists nfpm; then
-        log "nfpm not found"
-    fi
+    check-exists nfpm || return
 
     local where; where=$(mise where nfpm)
 
@@ -185,14 +197,19 @@ _python() {
 }
 
 _http() {
-    if ! exists http && exists xh; then
-        alias http=xh
+    if exists http; then
+        man-1-from-cmd http --generate man
+        return
     fi
 
-    man-1-from-cmd http --generate man
+    if exists xh; then
+        log "generating http man page with xh"
+        man-1-from-cmd-named http xh --generate man
+    fi
 }
 
 _xh() {
+    check-exists xh || return
     man-1-from-cmd xh --generate man
 }
 
