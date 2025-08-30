@@ -491,7 +491,7 @@ curl: $(DEP)/curl $(BUILD)/home/.config/curlrc | .setup
 	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
 
 .PHONY: git-config
-git-config: $(MISE_DEPS) $(DEP)/git-delta | ssh .setup
+git-config: $(MISE_DEPS) $(DEP)/delta | ssh .setup
 	./scripts/update-git-config
 
 
