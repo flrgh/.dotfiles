@@ -1,0 +1,1090 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export REPO_ROOT=${DOTFILES_REPO_ROOT:="$HOME/git/flrgh/.dotfiles"}
+export INSTALL_PATH=${DOTFILES_INSTALL_PATH:="$HOME"}
+export DEBUG=${DOTFILES_DEBUG:-0}
+
+source ./lib/bash/generate.bash
+source ./home/.local/lib/bash/array.bash
+source ./home/.local/lib/bash/ansi.bash
+
+rc-init
+
+__init_facts() {
+    shopt -s extglob
+    shopt -s nullglob
+
+    declare -g REPLY
+
+    make_version_command() {
+        local -r var=${1:?}
+        local cmd="printf '%s.%s.%s'"
+        local -i i
+        for i in {0..2}; do
+            printf -v cmd '%s "${%s[%s]:?}"' \
+                "$cmd" "$var" "$i"
+        done
+
+        REPLY=$cmd
+    }
+
+    builtin_is_loadable() {
+        local -r bash=${1:?}
+        local -r path=${2:?}
+        local -r name=${3:?}
+
+        local cmd
+        printf -v cmd \
+            'enable -f %q %s' \
+            "$path" \
+            "$name"
+
+        "$bash" -c "$cmd" &>/dev/null
+    }
+
+    get_builtin_version() {
+        local -r bash=${1:?}
+        local -r path=${2:?}
+        local -r name=${3:?}
+
+        local cmd
+        printf -v cmd \
+            'enable -f %q %s' \
+            "$path" \
+            "$name"
+
+        make_version_command "${name^^}_VERSION"
+        cmd="${cmd}; ${REPLY}"
+
+        "$bash" -c "$cmd" 2>/dev/null || echo "0.0.0"
+    }
+
+    bash_facts() {
+        local -r lib=$HOME/.local/lib/bash
+        local bin
+
+        if [[ -x $HOME/.local/bin/bash ]]; then
+            set-have local-bash
+            bin=$HOME/.local/bin/bash
+        else
+            set-not-have local-bash
+            bin=$(command -v -p bash)
+        fi
+
+        set-location bash "${bin:?}"
+
+        local cmd
+        make_version_command BASH_VERSINFO
+        cmd=$REPLY
+
+        local version; version=$("$bin" -c "$cmd")
+
+        set-have bash "$version"
+
+        local builtins
+        if [[ -d $lib/loadables ]]; then
+            builtins="$lib/loadables"
+
+        elif [[ -d $lib/builtins ]]; then
+            builtins="$lib/builtins"
+        fi
+
+        set-not-have builtins-timer
+        set-not-have builtins-version
+        set-not-have builtins-varsplice
+        set-not-have builtins-stat
+
+        if [[ -n ${builtins:-} ]]; then
+            set-location bash-builtins "$lib/loadables"
+
+            for path in "$builtins"/*; do
+                local name=${path##*/}
+
+                if [[ $name = *.so ]]; then
+                    # handle old `lib{name}.so` files
+                    name=${name#lib}
+                    name=${name%.so}
+                fi
+
+                if ! builtin_is_loadable "$bin" "$path" "$name"; then
+                    set-not-have "builtins-${name}"
+                    continue
+                fi
+
+                version=$(get_builtin_version "$bin" "$path" "$name")
+                set-have "builtins-${name}" "$version"
+                set-location "builtins-${name}" "$path"
+            done
+        fi
+    }
+
+    bash_facts
+}
+__init_facts
+
+__rc_init() {
+    rc-new-workfile "$RC_DEP_INIT"
+
+    rc-workfile-append-line '# shellcheck enable=deprecate-which'
+    rc-workfile-append-line '# shellcheck disable=SC1090'
+    rc-workfile-append-line '# shellcheck disable=SC1091'
+    rc-workfile-append-line '# shellcheck disable=SC2059'
+
+    if have local-bash && get-location bash; then
+        rc-workfile-var __RC_BASH "${FACT:?}"
+        rc-workfile-include ./bash/ssh-shell-check.bash
+    fi
+
+    if have-builtin timer && get-builtin-location timer; then
+        rc-workfile-add-exec enable -f "${FACT:?}" timer
+        rc-workfile-include ./bash/rc-timer-new.bash
+    else
+        rc-workfile-include ./bash/rc-timer-old.bash
+    fi
+
+    rc-workfile-include ./bash/rc-preamble.bash
+
+    rc-workfile-close
+}
+__rc_init
+
+__rc_timer() {
+    rc-new-workfile "$RC_DEP_TIMER"
+    rc-workfile-add-dep "$RC_DEP_INIT"
+    rc-workfile-close
+}
+__rc_timer
+
+__rc_env() {
+    rc-new-workfile "$RC_DEP_ENV"
+    rc-workfile-add-dep "$RC_DEP_INIT"
+    rc-workfile-add-dep "$RC_DEP_TIMER"
+    rc-workfile-add-exec source "${HOME:?}/.config/env"
+    rc-workfile-close
+}
+__rc_env
+
+__init_rc_debug() {
+    rc-new-workfile "$RC_DEP_DEBUG"
+    rc-workfile-add-dep "$RC_DEP_ENV"
+    rc-workfile-include ./bash/rc-debug.bash
+    rc-workfile-close
+}
+__init_rc_debug
+
+__rc_builtins() {
+    rc-new-workfile "$RC_DEP_BUILTINS"
+    rc-workfile-add-dep "$RC_DEP_ENV"
+
+    if have-builtin stat; then
+        get-builtin-location stat
+        rc-workfile-add-exec enable -f "${FACT:?}" stat
+
+        # disable stat immediately so that callers expecting the
+        # stat binary don't get confused
+        rc-workfile-add-exec enable -n stat
+    fi
+
+    if have-builtin varsplice; then
+        get-builtin-location varsplice
+        rc-workfile-add-exec enable -f "${FACT:?}" varsplice
+    fi
+
+    rc-workfile-close
+}
+__rc_builtins
+
+__rc_pathset() {
+    rc-new-workfile "$RC_DEP_PATHSET"
+    rc-workfile-add-dep "$RC_DEP_DEBUG"
+    rc-workfile-add-dep "$RC_DEP_TIMER"
+    rc-workfile-add-dep "$RC_DEP_BUILTINS"
+
+    if have-builtin varsplice; then
+        delim_vars=(
+            PATH=':'
+            MANPATH=':'
+            CDPATH=':'
+            LUA_PATH=';'
+            LUA_CPATH=';'
+            EXECIGNORE=':'
+            FIGNORE=':'
+            GLOBIGNORE=':'
+            HISTIGNORE=':'
+            XDG_DATA_DIRS=':'
+            XDG_CONFIG_DIRS=':'
+        )
+
+        rc-workfile-timer-start "configure-delimited-vars"
+        for elem in "${delim_vars[@]}"; do
+            var=${elem%%=*}
+            delim=${elem##*=}
+            rc-workfile-add-exec builtin varsplice --default -s "${var:?}" "${delim:?}"
+        done
+        rc-workfile-timer-stop
+
+        norm_vars=(
+            PATH
+            MANPATH
+            CDPATH
+            LUA_PATH
+            LUA_CPATH
+        )
+
+        array-join-var default_path ':' \
+            "$HOME/.local/bin" \
+            /usr/local/bin \
+            /usr/local/sbin \
+            /usr/bin \
+            /usr/sbin \
+
+        rc-workfile-append-line 'if (( __RC_LOGIN_SHELL == 1 )); then'
+        rc-workfile-append 'export PATH=%q\n' "${default_path:?}"
+        rc-workfile-append-line 'fi'
+
+        rc-workfile-timer-start "normalize-path-vars"
+        for var in "${norm_vars[@]}"; do
+            rc-workfile-add-exec builtin varsplice --normalize "$var"
+        done
+        rc-workfile-timer-stop
+
+    else
+        rc-workfile-include ./bash/rc-compat-pathset.bash
+    fi
+
+    rc-workfile-close
+}
+__rc_pathset
+
+__rc_log() {
+    local -r logdir="$HOME/.local/var/log"
+
+    rc-new-workfile "$RC_DEP_LOG"
+    rc-workfile-add-dep "$RC_DEP_ENV"
+
+    rc-workfile-var __RC_LOG_DIR "$logdir"
+    rc-workfile-var __RC_LOG_FILE "$logdir/bashrc.log"
+    rc-workfile-var __RC_LOG_FD 0
+
+    __rc_log_init() {
+        [[ -d $__RC_LOG_DIR ]] || mkdir -p "$__RC_LOG_DIR"
+        exec {__RC_LOG_FD}>>"$__RC_LOG_FILE"
+    }
+
+    rc-workfile-add-function __rc_log_init
+    rc-workfile-add-exec __rc_log_init
+
+    __rc_fmt() {
+        local -r ctx=$1
+
+        local -r ts=$EPOCHREALTIME
+        local -r t_sec=${ts%.*}
+        local -r t_ms=${ts#*.}
+
+        declare -g REPLY
+
+        printf -v REPLY '[%(%F %T)T.%s] %s (%s) - %%s\n' \
+            "$t_sec" \
+            "${t_ms:0:3}" \
+            "$__RC_PID" \
+            "$ctx"
+    }
+
+    rc-workfile-add-function __rc_fmt
+
+    __rc_print() {
+        local -r ctx=$1
+        shift
+
+        __rc_fmt "$ctx"
+        printf "$REPLY" "$@"
+    }
+    rc-workfile-add-function __rc_print
+
+    __rc_log() {
+        __rc_print "$@" >&"$__RC_LOG_FD"
+    }
+    rc-workfile-add-function __rc_log
+
+    __rc_log_and_print() {
+        local -r ctx=$1
+        shift
+
+        __rc_fmt "$ctx"
+        printf "$REPLY" "$@" >&"$__RC_LOG_FD"
+        printf "$REPLY" "$@"
+    }
+    rc-workfile-add-function __rc_log_and_print
+
+    __rc_warn() {
+        __rc_print "WARN" "$@"
+    }
+
+    rc-workfile-add-function __rc_warn
+
+    rc-workfile-close
+}
+__rc_log
+
+# hooks/bashrc/03-rc-post-init.sh
+__rc_post_init() {
+    rc-new-workfile "$RC_DEP_POST_INIT"
+    rc-workfile-add-dep "$RC_DEP_TIMER"
+}
+__rc_post_init
+
+__rc_env_files() {
+    rc-new-workfile "$RC_DEP_RESET_VAR"
+    rc-workfile-add-dep "$RC_DEP_ENV"
+
+    rc-new-workfile "$RC_DEP_SET_VAR"
+    rc-workfile-add-dep "$RC_DEP_RESET_VAR"
+
+    rc-new-workfile "$RC_DEP_CLEAR_VAR"
+    rc-workfile-add-dep "$RC_DEP_ENV"
+    rc-workfile-add-dep "$RC_DEP_SET_VAR"
+}
+__rc_env_files
+
+__rc_alias_files() {
+    rc-new-workfile "$RC_DEP_ALIAS_RESET"
+    rc-workfile-add-dep "$RC_DEP_ENV"
+    rc-workfile-append-line 'unalias -a'
+
+    rc-new-workfile "$RC_DEP_ALIAS_SET"
+    rc-workfile-add-dep "$RC_DEP_ALIAS_RESET"
+}
+__rc_alias_files
+
+__rc_func_files() {
+    rc-new-workfile "$RC_DEP_RESET_FUNCTION"
+    rc-workfile-add-dep "$RC_DEP_ENV"
+
+    rc-new-workfile "$RC_DEP_SET_FUNCTION"
+    rc-workfile-add-dep "$RC_DEP_RESET_FUNCTION"
+
+    rc-new-workfile "$RC_DEP_CLEAR_FUNCTION"
+    rc-workfile-add-dep "$RC_DEP_SET_FUNCTION"
+}
+__rc_func_files
+
+__rc_post_env() {
+    rc-new-workfile "$RC_DEP_ENV_POST"
+    rc-workfile-add-dep "$RC_DEP_CLEAR_VAR"
+    rc-workfile-add-dep "$RC_DEP_ALIAS_SET"
+}
+__rc_post_env
+
+# hooks/bashrc/04-ansi-prompt-vars.sh
+__rc_prompt_vars() {
+    # When  executing  interactively, bash displays the primary prompt PS1 when it is
+    # ready to read a command, and the secondary prompt PS2 when it needs more input
+    # to complete a command.  Bash displays PS0 after it reads a command but before
+    # executing it.  Bash displays PS4 as described above before tracing each command
+    # when the -x option is enabled.  Bash allows these prompt strings to be customized
+    # by inserting a number of backslash-escaped special characters that are decoded as
+    # follows:
+    #
+    #  \a     an ASCII bell character (07)
+    #  \d     the date in "Weekday Month Date" format (e.g., "Tue May 26")
+    #  \D{format}
+    #         the format is passed to strftime(3) and the result is inserted into the
+    #         prompt string; an empty format results in a locale-specific time
+    #         representation.  The braces are required
+    #  \e     an ASCII escape character (033)
+    #  \h     the hostname up to the first `.'
+    #  \H     the hostname
+    #  \j     the number of jobs currently managed by the shell
+    #  \l     the basename of the shell's terminal device name
+    #  \n     newline
+    #  \r     carriage return
+    #  \s     the name of the shell, the basename of $0 (the portion following the final slash)
+    #  \t     the current time in 24-hour HH:MM:SS format
+    #  \T     the current time in 12-hour HH:MM:SS format
+    #  \@     the current time in 12-hour am/pm format
+    #  \A     the current time in 24-hour HH:MM format
+    #  \u     the username of the current user
+    #  \v     the version of bash (e.g., 2.00)
+    #  \V     the release of bash, version + patch level (e.g., 2.00.0)
+    #  \w     the value of the PWD shell variable ($PWD), with $HOME abbreviated with
+    #         a tilde (uses the value of the PROMPT_DIRTRIM variable)
+    #  \W     the basename of $PWD, with $HOME abbreviated with a tilde
+    #  \!     the history number of this command
+    #  \#     the command number of this command
+    #  \$     if the effective UID is 0, a #, otherwise a $
+    #  \nnn   the character corresponding to the octal number nnn
+    #  \\     a backslash
+    #  \[     begin a sequence of non-printing characters, which could be used to
+    #         embed a terminal control sequence into the prompt
+    #  \]     end a sequence of non-printing characters
+
+    local _args=(--prompt --reset)
+
+    local _cyan=; ansi-style "${_args[@]}" -v _cyan  --cyan
+    local _blue=; ansi-style "${_args[@]}" -v _blue  --blue
+    local _yellow=; ansi-style "${_args[@]}" -v _yellow --bright-yellow
+
+    declare -g __prompt_alert=; ansi-style "${_args[@]}" -v __prompt_alert --bold --color bright-red
+    declare -g __prompt_reset=; ansi-style "${_args[@]}" -v __prompt_reset
+
+    rc-declare __prompt_alert
+    rc-declare __prompt_reset
+
+    local _prompt_host='\h'
+    local _prompt_pwd='\w'
+    local _prompt_user_at_host="${_cyan}@${_prompt_host}${__prompt_reset}"
+    local _prompt_pwd="${_blue}${_prompt_pwd}${__prompt_reset}"
+    local _prompt_stale="${_yellow}(!)${__prompt_reset}"
+
+    declare -g __ps1_prefix="${_prompt_user_at_host} ${_prompt_pwd}"
+    rc-declare __ps1_prefix
+
+    declare -g __ps1_stale_prefix="${_prompt_stale} ${__ps1_prefix}"
+    rc-declare __ps1_stale_prefix
+
+    rc-new-workfile ps1
+    rc-workfile-close
+}
+__rc_prompt_vars
+
+# hooks/bashrc/05-prompt-command.sh
+__rc_prompt_command() {
+    declare -ga PROMPT_COMMAND=()
+
+    _dump_func() {
+        local -r name=${1:?}
+        local -r body=${2:?}
+        bash \
+            --norc \
+            --noprofile \
+            -c "$body; declare -f ${name}"
+    }
+
+    __fc_mtime_func() {
+        if have-builtin stat; then
+            __get_mtime() {
+                local -r fname=${1:?}
+                declare -g REPLY=0
+                builtin stat "$fname" || return 1
+                REPLY=${STAT[mtime]:-0}
+            }
+        else
+            __get_mtime() {
+                local -r fname=${1:?}
+                declare -g REPLY=0
+                local mtime
+                if mtime=$(stat -c '%Y' "$fname"); then
+                    REPLY=${mtime}
+                else
+                    return 1
+                fi
+            }
+        fi
+        rc-workfile-add-function __get_mtime
+    }
+
+    __rc_prompt_stale_check() {
+        rc-workfile-include ./bash/rc-hash.bash
+        PROMPT_COMMAND+=(__check_rc_hash)
+    }
+
+    __rc_prompt_update_history() {
+        rc-workfile-include ./bash/update-history.bash
+        PROMPT_COMMAND+=(__check_history)
+    }
+
+    __rc_prompt_status_code() {
+        rc-workfile-include ./bash/conf-color-prompt.sh
+        PROMPT_COMMAND+=(__last_status)
+    }
+
+    __rc_prompt_direnv() {
+        rc-if-command direnv || return 0
+
+        local _direnv_hook
+        _direnv_hook=$(_dump_func _direnv_hook "$(direnv hook bash)")
+
+        rc-workfile-append-line "$_direnv_hook"
+        PROMPT_COMMAND+=(_direnv_hook)
+    }
+
+    rc-new-workfile prompt-command
+    rc-workfile-add-dep "$RC_DEP_POST_INIT"
+    rc-workfile-add-dep "$RC_DEP_SET_VAR"
+
+    rc-workfile-if-interactive
+    __fc_mtime_func
+    __rc_prompt_stale_check
+    __rc_prompt_update_history
+    __rc_prompt_status_code
+    __rc_prompt_direnv
+    rc-workfile-append-line "${PROMPT_COMMAND[*]@A}"
+    rc-workfile-fi
+
+    rc-workfile-close
+}
+__rc_prompt_command
+
+# hooks/bashrc/06-function-dispatch.sh
+__rc_func_dispatch() {
+    rc-new-workfile "function-dispatch"
+    rc-workfile-add-dep "$RC_DEP_SET_VAR"
+    source ./home/.local/lib/bash/dispatch.bash
+    rc-workfile-add-function __function_dispatch
+    rc-workfile-close
+}
+__rc_func_dispatch
+
+
+# hooks/bashrc/15-completion.sh
+__rc_completion() {
+    rc-new-workfile "completion"
+    rc-workfile-add-dep "$RC_DEP_SET_VAR"
+
+    BASH_COMPLETION_USER_DIR="$HOME/.local/share/bash-completion"
+    rc-export BASH_COMPLETION_USER_DIR "$BASH_COMPLETION_USER_DIR"
+
+    BASH_COMPLETION_COMPAT_DIR="$HOME/.local/etc/bash_completion.d"
+    rc-export BASH_COMPLETION_COMPAT_DIR "$BASH_COMPLETION_COMPAT_DIR"
+
+    rc-unset BASH_COMPLETION_COMPAT_IGNORE
+
+    if [[ -f $BASH_COMPLETION_USER_DIR/bash_completion ]]; then
+        __lazy_compgen() {
+            complete -r -D
+            unset -f __lazy_compgen
+
+            source "${BASH_COMPLETION_USER_DIR:?}"/bash_completion
+
+            _comp_complete_load "$@" && return 124
+        }
+
+        rc-workfile-if-interactive
+        rc-workfile-add-function __lazy_compgen
+        rc-workfile-add-exec complete -D -F __lazy_compgen
+        rc-workfile-fi
+    fi
+
+    rc-workfile-close
+}
+__rc_completion
+
+# hooks/bashrc/20-bat.sh
+__rc_app_bat() {
+    rc-if-command bat || return 0
+    rc-export MANPAGER "sh -c 'col -bx | bat -l man -p'"
+    rc-export MANROFFOPT "-c"
+}
+__rc_app_bat
+
+# hooks/bashrc/21-lua.sh
+__rc_app_lua() {
+    emit-lua-vars() {
+        rc-set-exported LUA_PATH
+        rc-set-exported LUA_CPATH
+    }
+
+    emit-luarocks() {
+        local conf=$INSTALL_PATH/.config/luarocks/config.lua
+        if [[ -f $conf ]]; then
+            rc-export LUAROCKS_CONFIG "$conf"
+        fi
+
+        if ! command -v luarocks &>/dev/null; then
+            echo "luarocks not installed, exiting"
+            return 0
+        fi
+
+        luarocks path --lr-path | tr ';' '\n' | while read -r elem; do
+            if [[ "$elem" = */init.lua ]]; then
+                other=${elem%/init.lua}.lua
+                rc-add-path LUA_PATH --append --after "$other" "$elem"
+            else
+                other=${elem%.lua}/init.lua
+                rc-add-path LUA_PATH --append --before "$other" "$elem"
+            fi
+        done
+
+        luarocks path --lr-cpath | tr ';' '\n' | while read -r elem; do
+            rc-add-path LUA_CPATH --append "$elem"
+        done
+
+        luarocks path --lr-bin | tr ';' '\n' | while read -r elem; do
+            rc-add-path PATH "$elem"
+        done
+    }
+
+    emit-lua-utils() {
+        if luarocks show flrgh &>/dev/null; then
+            echo "lua utils installed via luarocks--no need for this"
+            return
+        fi
+
+        local -r lua_utils=$HOME/git/flrgh/lua-utils
+
+        if [[ ! -d $lua_utils ]]; then
+            echo "lua utils ($lua_utils) not found, exiting"
+            exit 0
+        fi
+
+        rc-add-path --prepend LUA_PATH \
+            "$lua_utils/lib/?/init.lua"
+
+        rc-add-path --prepend LUA_PATH \
+            "$lua_utils/lib/?.lua"
+    }
+
+    emit-luajit-path() {
+        local path=$HOME/.local/share/luajit-2.1
+
+        if [[ -d $path ]]; then
+            rc-add-path LUA_PATH "${path}/?.lua"
+        fi
+    }
+
+    unset-lua-init() {
+        # not using this anymore
+        rc-unset LUA_INIT
+    }
+
+    emit-lua-repl() {
+        if ! luarocks show flrgh &>/dev/null; then
+            echo "flrgh/lua-utils not found, skipping"
+            return
+        fi
+
+        rc-alias lua-repl "command lua -l flrgh.repl"
+        rc-alias luajit-repl "command luajit -l flrgh.repl"
+
+        rc-new-workfile lua
+        rc-workfile-add-dep "$RC_DEP_ALIAS_SET"
+
+
+        # shellcheck disable=SC2329
+        lua() {
+            if (( $# == 0 )); then
+                lua-repl
+            else
+                builtin command lua "$@"
+            fi
+        }
+
+        rc-workfile-if-interactive \
+            rc-workfile-add-function lua
+        unset -f lua
+
+        # shellcheck disable=SC2329
+        luajit() {
+            if (( $# == 0 )); then
+                luajit-repl
+            else
+                builtin command luajit "$@"
+            fi
+        }
+
+        rc-workfile-if-interactive \
+            rc-workfile-add-function luajit
+
+        unset -f luajit
+    }
+
+    emit-lua-vars
+    emit-luarocks
+    emit-lua-utils
+    emit-luajit-path
+    unset-lua-init
+    emit-lua-repl
+
+}
+__rc_app_lua
+
+# hooks/bashrc/22-fzf.sh
+__rc_app_fzf() {
+    rc-if-command fzf || return 0
+
+    rc-new-workfile fzf
+    rc-workfile-add-dep "$RC_DEP_POST_INIT"
+    rc-workfile-add-dep "$RC_DEP_SET_VAR"
+
+    rc-export FZF_DEFAULT_OPTS "--info=default --height=80% --border=sharp --tabstop=4"
+
+    rc-workfile-if-interactive
+
+    if rc-command-exists fd; then
+        log "fd is installed, adding some fzf support functions"
+
+        cmd='fd --hidden --type f --color=never --exclude ".git"'
+        rc-export FZF_DEFAULT_COMMAND "$cmd"
+        rc-export FZF_CTRL_T_COMMAND "$cmd"
+
+        _fzf_compgen_path() {
+            command fd --hidden --follow --exclude ".git" . "$1"
+        }
+        rc-workfile-add-function _fzf_compgen_path
+
+        _fzf_compgen_dir() {
+            command fd --type d --hidden --follow --exclude ".git" . "$1"
+        }
+        rc-workfile-add-function _fzf_compgen_dir
+    fi
+
+    {
+        log "extracting bash key bindings"
+
+        BINDINGS=$BUILD_ROOT/fzf/key-bindings.bash
+        mkdir -p "$(dirname "$BINDINGS")"
+
+        fzf --bash \
+            | sed -n '/### key-bindings.bash ###/,/### end: key-bindings.bash ###/p' \
+            > "$BINDINGS"
+
+            patch "$BINDINGS" ./patch/fzf-key-bindings.bash.patch
+
+        log "patching bash key bindings"
+        rc-workfile-include-external "$BINDINGS"
+    }
+
+    rc-workfile-fi
+
+    rc-workfile-close
+}
+__rc_app_fzf
+
+# hooks/bashrc/23-fd.sh
+__rc_app_fd() {
+    rc-if-command fd || return 0
+
+    # I have `find /some/path` permanently stored in muscle memory. This is an
+    # issue as I try using fd as a replacement, because the same invocation yields
+    # a "you're doing it wrong!" error:
+    #
+    #
+    # > [fd error]: The search pattern './' contains a path-separation character ('/') and will not lead to any search results.
+    # >
+    # > If you want to search for all files inside the './' directory, use a match-all pattern:
+    # >
+    # >  fd . './'
+    # >
+    # > If nstead, if you want your pattern to match the full file path, use:
+    # >
+    # >  fd --full-path './'
+    #
+    #
+    # This little function exists to handle that case so that I don't have to
+    # relearn anything
+    #
+    fd() {
+        if (( $# == 1 )) && [[ $1 != . ]]; then
+            command fd . "$1"
+        else
+            command fd "$@"
+        fi
+    }
+    rc-new-workfile fd
+    rc-workfile-add-dep "$RC_DEP_POST_INIT"
+    rc-workfile-add-function fd
+    rc-workfile-close
+}
+__rc_app_fd
+
+# hooks/bashrc/24-openresty.sh
+__rc_app_openresty() {
+    local -r locations=(
+        "$HOME"/.local/openresty/current
+        "$HOME"/.local/openresty
+        /usr/local/openresty
+    )
+
+    local loc
+
+    if have-builtin varsplice gte "0.2"; then
+        for loc in "${locations[@]}"; do
+            rc-varsplice --remove -g PATH "${loc}/*"
+        done
+    else
+        for loc in "${locations[@]}"; do
+            rc-rm-path PATH "$loc/bin"
+            rc-rm-path PATH "$loc/nginx/sbin"
+        done
+    fi
+}
+__rc_app_openresty
+
+# hooks/bashrc/40-main-includes.sh
+__rc_bash_user_lib() {
+    rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
+    rc-new-workfile user-lib
+    rc-workfile-add-dep "$RC_DEP_SET_VAR"
+    rc-workfile-add-exec source "${BASH_USER_LIB:?}/__init.bash"
+    rc-workfile-close
+}
+__rc_bash_user_lib
+
+__rc_key_bindings() {
+    if rc-command-exists stty; then
+        rc-new-workfile key-bindings
+
+        rc-workfile-if-interactive \
+            rc-workfile-add-exec stty werase undef
+
+        rc-workfile-close
+    fi
+}
+__rc_key_bindings
+
+__rc_user_functions() {
+    rc-new-workfile user-functions
+    rc-workfile-add-dep function-dispatch
+    rc-workfile-include ./bash/user-functions.bash
+    rc-workfile-close
+}
+__rc_user_functions
+
+__rc_config() {
+    rc-new-workfile config
+    rc-workfile-add-dep "$RC_DEP_ENV"
+    rc-workfile-include ./bash/conf-shell.sh
+    rc-workfile-close
+}
+__rc_config
+
+# PATH
+__rc_PATH() {
+    rc-add-path --prepend PATH "$HOME/.local/bin"
+    rc-rm-path PATH /usr/share/Modules/bin
+    rc-rm-path PATH "$HOME/.composer/vendor/bin"
+
+    if rc-command-exists mise; then
+        mise reshim
+        shims=$HOME/.local/share/mise/shims
+        if [[ -d $shims ]]; then
+            rc-add-path PATH "$shims" --prepend --after "$HOME/.local/bin"
+        fi
+    fi
+}
+__rc_PATH
+
+
+# MANPATH
+__rc_MANPATH() {
+    declare -a _mps=()
+    declare -A _seen_mp=()
+
+    readonly MAN=$HOME/.local/share/man
+
+    _add_man_path() {
+        local -r mp=$1
+        if [[ -n ${_seen_mp[$mp]:-} ]]; then
+            return
+        fi
+
+        if [[ ! -d $mp ]]; then
+            return
+        fi
+
+        _seen_mp[$mp]=1
+        local subdir
+        local rel
+
+        case $mp in
+            "$MAN")
+                _mps=("$mp" "${_mps[@]}")
+                rc-add-path --prepend MANPATH "$mp"
+                ;;
+
+            "$HOME"/*)
+                shopt -s nullglob
+                shopt -u failglob
+
+                for subdir in "$mp"/man[0-9]; do
+                    rel=${MAN}${subdir#"$mp"}
+                    ./scripts/symlink-tree "$subdir" "$rel"
+                done
+
+                # clean up cruft
+                rm -rfv \
+                    "$mp"/cat[0-9] \
+                    "$mp"/index.db \
+                    "$mp"/cs
+                ;;
+
+            *)
+                _mps+=("$mp")
+                rc-add-path --append MANPATH "$mp"
+                ;;
+        esac
+    }
+
+    _add_man_path "$HOME/.local/share/man"
+
+    if rc-command-exists manpath; then
+        while read -d ":" -r path; do
+            _add_man_path "$path"
+        done < <(manpath --global)
+        unset path
+
+    else
+        _add_man_path /usr/local/share/man
+        _add_man_path /usr/share/man
+    fi
+
+    rc-set-exported MANPATH
+}
+__rc_MANPATH
+
+# aliases
+__rc_aliases() {
+    rc-alias grep 'grep --color=auto'
+    rc-alias .. 'cd ..'
+    if rc-command-exists lsd; then
+        rc-alias ls "lsd -l"
+    fi
+}
+__rc_aliases
+
+__rc_app_neovim() {
+    rc-command-exists nvim || return 0
+    rc-alias vim nvim
+    rc-export EDITOR nvim
+}
+__rc_app_neovim
+
+__rc_golang() {
+    # https://github.com/golang/go/wiki/GOPATH
+    local path=$HOME/.local/go
+    rc-export GOPATH "$path"
+    rc-add-path PATH "$path/bin"
+}
+__rc_golang
+
+__rc_rust() {
+    CARGO_HOME=$HOME/.local/cargo
+    RUSTUP_HOME="$HOME/.local/rustup"
+
+    rc-export CARGO_HOME
+    rc-add-path PATH "$CARGO_HOME"/bin
+    rc-export RUSTUP_HOME
+
+    # https://blog.rust-lang.org/2023/03/09/Rust-1.68.0.html#cargos-sparse-protocol
+    rc-export CARGO_REGISTRIES_CRATES_IO_PROTOCOL sparse
+}
+__rc_rust
+
+# python
+__rc_python() {
+    PYTHONSTARTUP=$HOME/.local/.startup.py
+    if [[ -f $PYTHONSTARTUP ]]; then
+        rc-export PYTHONSTARTUP
+    fi
+
+    IPYTHONDIR="$HOME/.config/ipython"
+    mkdir -p "$IPYTHONDIR"
+    rc-export IPYTHONDIR
+}
+__rc_python
+
+# node / npm
+__rc_app_npm() {
+    rc-export NPM_CONFIG_USERCONFIG "$HOME/.config/npm/npmrc"
+
+    # clean up old nvm things
+    rc-unset NVM_BIN
+    rc-unset NVM_DIR
+    rc-unset NVM_INC
+    if have-builtin varsplice; then
+        rc-varsplice --remove -g PATH "$HOME/.config/nvm/*"
+    fi
+}
+__rc_app_npm
+
+# docker
+__rc_app_docker() {
+    # https://docs.docker.com/reference/cli/docker/
+    rc-export DOCKER_CONFIG "${XDG_CONFIG_HOME:?}/docker"
+
+    # OpenTelemetry (just a placeholder to remind future me to check this out)
+    rc-unset DOCKER_CLI_OTEL_EXPORTER_OTLP_ENDPOINT
+
+    rc-export DOCKER_SCOUT_CACHE_DIR "${XDG_CACHE_HOME:?}/docker-scout"
+}
+__rc_app_docker
+
+# azure CLI
+__rc_app_azure() {
+    # azure cli configuration
+    #
+    # see https://docs.microsoft.com/en-us/cli/azure/azure-cli-configuration
+    rc-export AZURE_CONFIG_DIR "$HOME/.config/azure"
+}
+__rc_app_azure
+
+# ssh
+__rc_app_ssh() {
+    rc-new-workfile ssh
+    rc-workfile-add-dep "$RC_DEP_DEBUG"
+    rc-workfile-add-dep user-lib
+    rc-workfile-include ./bash/app-ssh.sh
+    rc-workfile-close
+}
+__rc_app_ssh
+
+# minijinja CLI
+__rc_app_minijinja() {
+    rc-new-workfile app-config-minijinja
+    rc-export MINIJINJA_CONFIG_FILE "${XDG_CONFIG_HOME:-"$HOME/.config"}/minijinja.toml"
+    rc-workfile-close
+}
+__rc_app_minijinja
+
+# wezterm
+__rc_app_wezterm() {
+    rc-if-command wezterm || return 0
+
+    rc-new-workfile wezterm
+    rc-workfile-add-dep "$RC_DEP_DEBUG"
+    rc-workfile-include ./bash/app-wezterm.sh
+    rc-workfile-close
+}
+__rc_app_wezterm
+
+# history
+__rc_config_history() {
+    rc-new-workfile history
+    rc-workfile-include ./bash/conf-history.sh
+    rc-workfile-close
+}
+__rc_config_history
+
+# systemd
+__rc_app_systemd() {
+    # this must be an empty string and not unset
+    rc-workfile-open "$RC_DEP_RESET_VAR"
+    rc-workfile-append-line 'export SYSTEMD_PAGER=""'
+    rc-workfile-close
+}
+__rc_app_systemd
+
+# hooks/bashrc/99-finalize.sh
+__rc_finalize() {
+    rc-new-workfile "rc-timer-post"
+    rc-new-workfile "rc-cleanup"
+    rc-workfile-add-dep "rc-timer-post"
+
+    get-list-items "$_ALL_FILES"
+
+    declare -a ALL=("${FACT_LIST[@]}")
+    for item in "${ALL[@]}"; do
+        if [[ $item = rc-* ]]; then
+            continue
+        fi
+        rc-workfile-add-dep "$item"
+    done
+
+    rc-workfile-include ./bash/rc-cleanup.bash
+    rc-workfile-close
+
+    rc-finalize
+}
+__rc_finalize

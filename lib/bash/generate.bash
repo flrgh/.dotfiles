@@ -9,6 +9,7 @@ export BUILD_BASHRC_INC=$BUILD_BASHRC_DIR/rc.d
 export BUILD_BASHRC_PRE=$BUILD_BASHRC_DIR/rc.pre.d
 export BUILD_BASHRC_DEPS=$BUILD_BASHRC_DIR/deps
 export BUILD_BASHRC_FILE=${BUILD_ROOT}/home/.bashrc
+export BUILD_BASHRC_SUM=${BUILD_ROOT}/bashrc.md5
 
 init-namespace bash
 
@@ -652,6 +653,18 @@ rc-command-exists() {
     command -v "$1" &>/dev/null
 }
 
+rc-if-command() {
+    if [[ -z ${1:-} ]]; then
+        log "ERROR: empty input to rc-if-command()"
+        exit 1
+    fi
+
+    if ! rc-command-exists "${1:?}"; then
+        log "skipping ($1 not found)"
+        return 1
+    fi
+}
+
 rc-add-path() {
     _save_workfile
 
@@ -888,4 +901,8 @@ rc-finalize() {
             fatal "'shellcheck .bashrc' returned non-zero"
         }
     fi
+
+    md5sum "$BUILD_BASHRC_FILE" \
+        | awk '{print $1}' \
+        > "$BUILD_BASHRC_SUM"
 }

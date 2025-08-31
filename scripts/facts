@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export DOTFILES_REPO_ROOT=${DOTFILES_REPO_ROOT:-$HOME/git/flrgh/.dotfiles}
+export DOTFILES_INSTALL_PATH=${DOTFILES_INSTALL_PATH:-$HOME}
+
+source ./lib/bash/facts.bash
+
+
+readonly FACT_LOCKFILE=${FACT_ROOT}/.lock
+declare -gi FACT_LOCKFD=0
+
+_lock() {
+    if (( FACT_LOCKFD == 0 )); then
+        exec {FACT_LOCKFD}<>"$FACT_LOCKFILE"
+    fi
+
+    if flock --wait 1 --exclusive "$FACT_LOCKFD"; then
+        echo "$$" >"$FACT_LOCKFILE"
+    else
+        echo "ERROR: failed to lock $FACT_LOCKFILE"
+        if [[ -s $FACT_LOCKFILE ]]; then
+            echo "...already locked by $(< "$FACT_LOCKFILE")"
+        fi
+        exit 1
+    fi
+}
+
+_unlock() {
+    if (( FACT_LOCKFD > 0 )); then
+        flock --unlock "$FACT_LOCKFD"
+        exec {FACT_LOCKFD}>&-
+        FACT_LOCKFD=0
+    fi
+
+}
+
+_cleanup() {
+    local -r ec=$?
+    _unlock || true
+    exit "$ec"
+}
+
+usage() {
+    local -r ec=${1:-0}
+    echo "USAGE: $0 <ns> <cmd> [...arg]"
+    exit "$ec"
+}
+
+cmd::ls() {
+    shopt -s nullglob
+
+    if (( $# == 0 )); then
+        show-namespaces
+        return
+
+    else
+        show-facts "${1:?}"
+    fi
+}
+
+cmd::get() {
+    local -r ns=${1:?}
+    local -r fact=${2:?}
+    local -r type=${3:?}
+
+    show-fact "$ns" "$fact" "$type"
+}
+
+main() {
+    if (( $# == 0 )); then
+        usage
+    fi
+
+    local -r cmd=cmd::${1:-}
+    shift || usage 127
+
+    if [[ $(type -t "${cmd:-}" 2>/dev/null) != "function" ]]; then
+        usage 127
+    fi
+
+    trap _cleanup ERR EXIT
+
+    _lock
+    "$cmd" "$@"
+    _unlock
+}
+
+main "$@"

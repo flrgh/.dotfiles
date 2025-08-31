@@ -1,25 +1,19 @@
-if [[ -z $__prompt_reset ]]; then
-    readonly __prompt_reset=""
-fi
-
-if [[ -z $__prompt_alert ]]; then
-    readonly __prompt_alert=""
-fi
-
-if [[ -z $__ps1_prefix ]]; then
-    readonly __ps1_prefix='@\h \w'
-fi
+__prompt_reset=${__prompt_reset:-""}
+__prompt_alert=${__prompt_alert:-""}
+__ps1_prefix=${__ps1_prefix:-"@\h \w"}
 
 if (( DEBUG_BASHRC > 0 )); then
-    readonly __ps1_suffix='(# \#) (! \!) \$ '
+    __ps1_suffix='(# \#) (! \!) \$ '
 else
-    readonly __ps1_suffix='\$ '
+    __ps1_suffix='\$ '
 fi
 
-readonly __ps1_default="${__ps1_prefix} ${__ps1_suffix}"
+__ps1_default="${__ps1_prefix} ${__ps1_suffix}"
+__ps1_default_stale="${__ps1_stale_prefix} ${__ps1_suffix}"
+
 PS1="$__ps1_default"
 
-readonly __prompt_cmd="\#"
+__prompt_cmd="\#"
 declare -gi __need_prompt_reset=0
 declare -gi __last_cmd_number=0
 

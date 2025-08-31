@@ -131,6 +131,10 @@ __is_rgb() {
 
     local c
     for c in "$@"; do
+        if [[ -z ${c:-} ]]; then
+            return 1
+        fi
+
         if [[ $c != +([0-9]) ]]; then
             return 1
         fi
@@ -201,8 +205,8 @@ ansi-style() {
 
 
             --fg|--color)
-                if __is_rgb "$1" "$2" "$3"; then
-                    elems+=("$ANSI_RGB_FG" "$1" "$2" "$3")
+                if __is_rgb "${1:-}" "${2:-}" "${3:-}"; then
+                    elems+=("$ANSI_RGB_FG" "${1:-}" "${2:-}" "${3:-}")
                     shift 3
                     continue
                 fi
@@ -227,8 +231,8 @@ ansi-style() {
                 ;;
 
             --rgb|--rgb-fg)
-                if __is_rgb "$1" "$2" "$3"; then
-                    elems+=("$ANSI_RGB_FG" "$1" "$2" "$3")
+                if __is_rgb "${1:-}" "${2:-}" "${3:-}"; then
+                    elems+=("$ANSI_RGB_FG" "${1:-}" "${2:-}" "${3:-}")
                     shift 3
                 else
                     return 1
@@ -236,8 +240,8 @@ ansi-style() {
                 ;;
 
             --rgb-bg)
-                if __is_rgb "$1" "$2" "$3"; then
-                    elems+=("$ANSI_RGB_BG" "$1" "$2" "$3")
+                if __is_rgb "${1:-}" "${2:-}" "${3:-}"; then
+                    elems+=("$ANSI_RGB_BG" "${1:-}" "${2:-}" "${3:-}")
                     shift 3
                 else
                     return 1

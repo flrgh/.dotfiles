@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+NEWEST=$(stat -c '%Y %n' "$@" \
+    | sort -nr -k1 \
+    | head -1
+)
+
+echo "${NEWEST#* }"

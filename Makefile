@@ -321,8 +321,8 @@ ssh: | .setup
 
 .PHONY: env
 env: $(BUILD)/home/.config/env | $(MISE) .setup
-	$(INSTALL) $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.config/env
-	$(INSTALL) $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.pam_environment
+	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.config/env
+	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.pam_environment
 
 BASH_BUILTIN_CLONE := $(USER_REPOS)/bash-builtin-extras
 $(BASH_BUILTIN_CLONE): private REPO := git@github.com:flrgh/bash-builtins.git
@@ -363,7 +363,7 @@ $(BUILD)/bash-facts: $(BUILD)/home/.config/env $(BASH_BUILTINS)
 	$(TOUCH) $@
 
 $(BUILD)/home/.bashrc: \
-	lib/bash/* bash/* hooks/bashrc/* \
+	lib/bash/* bash/* $(SCRIPT)/generate-bashrc \
 	patch/fzf-key-bindings.bash.patch \
 	$(DEP)/bash-completion \
 	$(DEP)/bat \
@@ -383,8 +383,14 @@ $(BUILD)/home/.bashrc: \
 	| .setup \
 	$(BUILD)/home/.config/env
 
-	$(SCRIPT)/run-hooks bashrc
+	$(SCRIPT)/generate-bashrc
 	$(DIFF) $(INSTALL_PATH)/.bashrc "$@" || true
+
+$(BUILD)/bashrc.md5: $(BUILD)/home/.bashrc
+	md5sum "$<" \
+		| awk '{print $$1}' \
+		> "$@"
+	$(TOUCH) --reference "$<" "$@"
 
 $(BUILD)/bash-completion: | $(DEP)/bash-completion
 	$(MAKE) -C ./bash/completion all
@@ -421,8 +427,9 @@ bash-completion: $(BUILD)/bash-completion | .setup
 		-delete
 
 .PHONY: bashrc
-bashrc: $(BUILD)/home/.bashrc | $(MISE) .setup
-	$(INSTALL) $(REPO_ROOT)/build/home/.bashrc $(INSTALL_PATH)/.bashrc
+bashrc: $(BUILD)/home/.bashrc $(BUILD)/bashrc.md5 | $(MISE) .setup
+	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.bashrc $(INSTALL_PATH)/.bashrc
+	$(INSTALL) --mode 0644 $(BUILD)/bashrc.md5 $(INSTALL_STATE)/bashrc.md5
 
 .PHONY: bash
 bash: $(DEP)/bash .WAIT bash-completion bashrc | .setup
@@ -488,7 +495,7 @@ $(BUILD)/home/.config/curlrc: scripts/build-curlrc
 $(DEP)/curl: | $(PKG)/os/curl-build-deps
 .PHONY: curl
 curl: $(DEP)/curl $(BUILD)/home/.config/curlrc | .setup
-	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc
+	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc --mode 0644
 
 .PHONY: git-config
 git-config: $(MISE_DEPS) $(DEP)/delta | ssh .setup
