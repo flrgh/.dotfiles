@@ -151,7 +151,7 @@ local plugins_by_category = {
         require("tokyonight").setup()
       end,
       dependencies = {
-        "echasnovski/mini.hipatterns",
+        "nvim-mini/mini.hipatterns",
       },
     },
 
