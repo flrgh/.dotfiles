@@ -37,16 +37,13 @@ install_config() {
         "${BASE_URL}/${tag}/10-nerd-font-symbols.conf" \
         "$fname"
 
-    if (( CACHE_GET_CACHED == 1 )); then
-        printf '%s was already installed\n' "$fname"
-        return
+    if (( CACHE_GET_CACHED != 1 )); then
+        ANY_INSTALLED=1
     fi
-
-    ANY_INSTALLED=1
 
     local dest=$CACHE_GET_DEST
     mkdir -p "$FONT_CONFIG"
-    install -t "$FONT_CONFIG" "$dest"
+    install --mode 0644 -t "$FONT_CONFIG" "$dest"
 }
 
 install_font() {

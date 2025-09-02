@@ -536,6 +536,10 @@ $(INSTALL_DATA)/applications/keymapp.desktop: assets/keymapp.desktop $(BUILD)/ke
 .PHONY: keymapp
 keymapp: /etc/udev/rules.d/50-zsa.rules $(INSTALL_DATA)/applications/keymapp.desktop
 
+$(DEP)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
+	$(SCRIPT)/install-nerd-fonts
+	touch --reference "$<" "$@"
+
 COMMON = \
 	bash \
 	curl \
@@ -567,6 +571,7 @@ server-update: $(COMMON_UPDATE) | server
 workstation: \
 	$(COMMON) \
 	$(PKG)/os/workstation \
+	$(DEP)/nerd-fonts \
 	alacritty \
 	flatpak \
 	keymapp
