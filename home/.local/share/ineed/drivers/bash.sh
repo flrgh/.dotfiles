@@ -13,10 +13,6 @@ readonly BIN=${PREFIX}/bin/${NAME}
 
 SYSTEM_BASH=$(PATH="" command -v -p bash)
 
-readonly BUILTINS=(
-    stat
-)
-
 readonly BINDIR=$PREFIX/bin
 readonly INCDIR=$PREFIX/include
 readonly LIBDIR=$PREFIX/lib
@@ -200,15 +196,47 @@ get-asset-download-url() {
     echo "${MIRROR}/bash-${version}.tar.gz"
 }
 
+download-patches() {
+    local -r version=$1
+
+    # 5.3 => 5
+    # 5.3.1 => 5
+    local -r maj=${version%%.*}
+
+    # 5.3 => 3
+    # 5.3.1 => 3.1
+    local -r min_patch=${version#"$maj".}
+
+    # 3 => 3
+    # 3.1 => 3
+    local -r min=${min_patch%.*}
+
+    local -r base=${MIRROR}/bash-${maj}.${min}-patches
+    local -r index=${base}/
+    local html; html=$(cache-get -q "$index" "bash-${maj}.${min}-patches.html")
+
+    mkdir ./patches
+    local name path
+    sed -n -r \
+        -e 's/.*href="(bash[0-9]+-[0-9]+)".*/\1/p' \
+        < "$html" \
+    | while read -r name; do
+        path=$(cache-get -q "${base}/${name}" "${name}")
+        if [[ ! -s $path ]]; then
+            echo "failed downloading patch $name"
+            exit 1
+        fi
+        cat "$path" > "./patches/${name}"
+    done
+}
+
 install-from-asset() {
     local -r asset=$1
     local -r version=$2
 
     # keep source code around since I commonly reference it
     local -r src=$HOME/.local/src/bash/${version}
-    if [[ -e $src ]]; then
-        rm -rf "${src:?}"
-    fi
+    rm -rf "${src:?}" || true
     mkdir -p "$src"
 
     tar -C "$src" --strip-components 1 \
@@ -216,6 +244,21 @@ install-from-asset() {
 
     cd "$(mktemp -d)"
     rsync -a "$src/" "$PWD/"
+
+    download-patches "$version"
+    local -r patches=${src}-patches
+    rm -rf "${patches:?}" || true
+    mkdir -p "$patches"
+    rsync -a "./patches/" "${patches}/"
+
+    local p
+    for p in ./patches/*; do
+        # patch in workdir
+        patch -p2 < "$p"
+
+        # patch in src
+        patch -d "$src" -p2 < "$p"
+    done
 
     cp -a ./config-top.h{,.bak}
 
@@ -264,26 +307,37 @@ install-from-asset() {
         "${WITHOUT[@]/#/--without-}" \
         "CFLAGS=${CFLAGS}"
 
-    make
-    make loadables
-    make install
-    make install-headers
+    local -i n; n=$(nproc || echo 1)
+    make -j "$n"
+    make -j "$n" loadables
+    make -j "$n" install
+    make -j "$n" install-headers
+
+    local loadables=${PWD}/examples/loadables
 
     # the bash install plumbing builds and installs _all_ example
     # loadables in ~/.local/lib/bash, so we need to do some cleanup
+    local -a cleanup=(
+        "$LIBBASH"/truefalse
+        "$LOADABLES"/truefalse
+    )
+
     for elem in "${LIBBASH}"/*; do
         local base=${elem##*/}
         if [[ $base = *.sh || $base = *.bash || ! -f $elem ]]; then
             continue
-        fi
-        rm -v "$elem"
-    done
 
-    local loadables=${PWD}/examples/loadables/
-    mkdir -p "$LOADABLES"
-    install -v \
-        -t "$LOADABLES" \
-        "${BUILTINS[@]/#/"${loadables}"}"
+        elif [[ -e ${loadables}/${base} && -e ${loadables}/${base}.c ]]; then
+            install -v \
+                --mode 0644 \
+                --compare \
+                -t "$LOADABLES" \
+                "$elem"
+        fi
+
+        cleanup+=("$elem")
+    done
+    rm -v -f "${cleanup[@]}" || true
 
     mkdir -p "$PREFIX"/var/log
     cat ./config.log > "$PREFIX"/var/log/bash.config.log
