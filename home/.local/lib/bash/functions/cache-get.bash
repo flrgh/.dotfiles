@@ -1,11 +1,32 @@
+# set to 1 to enable --quiet
+CACHE_GET_QUIET=${CACHE_GET_QUIET:-0}
+declare -gi CACHE_GET_QUIET
+
+# set to 1 to enable --silent
+CACHE_GET_SILENT=${CACHE_GET_SILENT:-0}
+declare -gi CACHE_GET_SILENT
+
+# the HTTP status code of the response
+CACHE_GET_STATUS=0
+declare -gi CACHE_GET_STATUS
+
+# 1 if cached, 0 otherwise
+CACHE_GET_CACHED=-1
+declare -gi CACHE_GET_CACHED
+
+# path to the downloaded asset
+CACHE_GET_DEST=
+declare -g CACHE_GET_DEST
+
 cache-get() {
     local -i quiet=${CACHE_GET_QUIET:-0}
     local -i silent=${CACHE_GET_SILENT:-0}
 
-    unset CACHE_GET_STATUS
-    unset CACHE_GET_CACHED
-    unset CACHE_GET_DEST
+    declare -gi CACHE_GET_STATUS=0
+    declare -gi CACHE_GET_CACHED=-1
+    declare -g CACHE_GET_DEST=""
 
+    local arg
     while [[ $1 ]]; do
         arg=$1
         case $arg in
@@ -15,19 +36,63 @@ cache-get() {
         esac
     done
 
-    local -r url=${1?URL required}
+    local -r url=${1:?URL required}
 
-    local fname=${2:-}
-    if [[ -z $fname ]]; then
-        fname=${url##*//}
-        fname=${fname%\?*}
+    local basedir=$HOME/.cache/download
+
+    local dest
+
+    case ${2:-auto} in
+        # cache-get <url>
+        # cache-get <url> auto
+        auto)
+            local fname=$url
+
+            # remove scheme
+            fname=${fname#*'://'}
+
+            # remove the query string and fragment
+            fname=${fname%'?'*}
+            fname=${fname%'#'*}
+
+            dest=${basedir}/${fname}
+            ;;
+
+        # cache-get <url> ${HOME}/.cache/download/filename
+        # cache-get <url> ${HOME}/.cache/download/path/to/filename
+        "$basedir"/*)
+            dest=${2}
+            ;;
+
+        # cache-get <url> /path/to/filename
+        # cache-get <url> ./path/to/filename
+        # cache-get <url> ../path/to/filename
+        #
+        # absolute or relative path => download and copy
+        /|/*|.|./|./*|..|../|../*)
+            echo "Invalid dest filename" >&2
+            return 127
+            ;;
+
+        # cache-get <url> filename
+        # cache-get <url> path/to/filename
+        *)
+            dest=${basedir}/${2}
+            ;;
+    esac
+
+    # normalize the destination path
+    dest=$(command realpath --canonicalize-missing "$dest")
+
+    # re-check
+    if [[ $dest != "$basedir"/* ]]; then
+        echo "Invalid dest filename" >&2
+        return 127
     fi
 
-    local -r dir=$HOME/.cache/download
-    mkdir -p "$dir"
-
-    local -r dest="${dir}/${fname}"
+    local -r dest=${dest}
     local -r etag=${dest}.etag
+    local -r last_url=${dest}.url
 
     local log=printf
     if (( quiet == 1 )); then
@@ -37,72 +102,118 @@ cache-get() {
     "$log" "URL: $url\n" >&2
     "$log" "Destination: $dest\n" >&2
 
-    "$log" "Fetching ... " >&2
+    mkdir -p "${dest%/*}"
 
-    local tmp; tmp=$(mktemp)
+    local wtmp; wtmp=$(mktemp)
+    local dtmp; dtmp=$(mktemp)
+    local etmp; etmp=$(mktemp)
 
     local -a args=(
         --silent
         --fail
         --location
         --compressed
+        --create-dirs
         --referer ';auto'
-        --etag-save "$etag"
-        --etag-compare "$etag"
+        --etag-save "$etmp"
         --remote-time
         --remove-on-error
         --retry 3
         --speed-limit 1024
         --speed-time 10
-        --output "$dest"
+        --output "$dtmp"
         --url "$url"
-        --write-out "%output{$tmp}%{response_code}/%{size_download}"
+        --write-out "%output{$wtmp}%{response_code}/%{size_download}"
     )
 
-    if [[ -e $dest ]]; then
-        "$log" "File is cached locally; using If-Modified-Since\n" >&2
+    if [[ -e $last_url && $(< "$last_url") != "$url" ]]; then
+        "$log" "Download url has changed\n" >&2
 
+    elif [[ -s $dest ]]; then
+        "$log" "File is cached locally; using If-Modified-Since\n" >&2
         args+=(--time-cond "$dest")
+
+        if [[ -s $etag ]]; then
+            "$log" "ETag file exists; using If-None-Match\n" >&2
+            args+=(--etag-compare "$etag")
+        fi
     fi
 
-    command curl "${args[@]}"
+    "$log" "Fetching ... " >&2
+
+    if ! command curl "${args[@]}"; then
+        echo "error: 'curl ${args[*]}' returned $?" >&2
+
+        cat "$wtmp" || true
+        head "$dtmp" || true
+        rm -f "${wtmp:?}" "${dtmp:?}" "${etmp:?}"
+
+        return 2
+    fi
 
     "$log" "done.\n" >&2
 
-    local res; res=$(< "$tmp")
+    local res; res=$(< "$wtmp")
+    rm -f "${wtmp:?}"
+
     local -i status=${res%%/*}
     local -i bytes=${res##*/}
 
     "$log" "HTTP status: %s\n" "$status" >&2
     "$log" "Downloaded bytes: %s\n" "$bytes" >&2
 
-    declare -gi CACHE_GET_STATUS=$status
-    declare -gi CACHE_GET_CACHED=0
-
-    if (( status < 200 || status > 399 )); then
-        "$log" "download failed!\n" >&2
-        return 2
-    fi
+    CACHE_GET_STATUS=$status
+    CACHE_GET_CACHED=0
 
     if (( status == 304 && bytes == 0 )); then
+        rm -f "${dtmp:?}" "${etmp:?}"
+
+        if [[ ! -s $dest ]]; then
+            echo "error: server indicated a cache hit, but we don't have a local copy" >&2
+            return 2
+        fi
+
         "$log" "file was cached\n" >&2
         CACHE_GET_CACHED=1
+
     else
         "$log" "file was not cached\n" >&2
-        CACHE_GET_CACHED=0
+
+        if (( status < 200 || status > 399 )); then
+            echo "error: unexpected server status code $status" >&2
+            rm -f "${dtmp:?}" "${etmp:?}"
+            return 2
+        fi
+
+        if [[ ! -s $dtmp ]]; then
+            echo "error: server returned an empty response" >&2
+            rm -f "${dtmp:?}" "${etmp:?}"
+            return 2
+        fi
+
+        mv "$dtmp" "$dest"
+
+        if [[ -s $etmp ]]; then
+            mv "$etmp" "$etag"
+        else
+            rm -f "${etmp:?}" "${etag:?}"
+        fi
     fi
 
     # update atime
     touch -a "$dest"
 
-    if [[ -e $etag ]]; then
+    if [[ -s $etag ]]; then
         # etag file should match mtime and atime of dest file
         touch --reference "$dest" "$etag"
     fi
 
-    declare -g CACHE_GET_DEST=$dest
+    echo "$url" > "$last_url"
+    touch --reference "$dest" "$last_url"
+
+    CACHE_GET_DEST=$dest
 
     if (( silent == 0 )); then
-        printf "%s\n" "$dest"
+        echo "$dest"
     fi
 }
