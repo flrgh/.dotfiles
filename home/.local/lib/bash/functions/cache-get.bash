@@ -110,7 +110,6 @@ cache-get() {
 
     local -a args=(
         --silent
-        --fail
         --location
         --compressed
         --create-dirs
@@ -141,15 +140,16 @@ cache-get() {
 
     "$log" "Fetching ... " >&2
 
-    if ! command curl "${args[@]}"; then
-        echo "error: 'curl ${args[*]}' returned $?" >&2
+    command curl "${args[@]}" || {
+        local ec=$?
+        echo "error: 'curl ${args[*]}' returned ${ec}" >&2
 
         cat "$wtmp" || true
         head "$dtmp" || true
         rm -f "${wtmp:?}" "${dtmp:?}" "${etmp:?}"
 
         return 2
-    fi
+    }
 
     "$log" "done.\n" >&2
 
@@ -169,7 +169,7 @@ cache-get() {
         rm -f "${dtmp:?}" "${etmp:?}"
 
         if [[ ! -s $dest ]]; then
-            echo "error: server indicated a cache hit, but we don't have a local copy" >&2
+            echo "error: server indicated a cache hit, but we don't have a local copy ($url)" >&2
             return 2
         fi
 
@@ -180,13 +180,13 @@ cache-get() {
         "$log" "file was not cached\n" >&2
 
         if (( status < 200 || status > 399 )); then
-            echo "error: unexpected server status code $status" >&2
+            echo "error: unexpected server status code $status ($url)" >&2
             rm -f "${dtmp:?}" "${etmp:?}"
             return 2
         fi
 
         if [[ ! -s $dtmp ]]; then
-            echo "error: server returned an empty response" >&2
+            echo "error: server returned an empty response ($url)" >&2
             rm -f "${dtmp:?}" "${etmp:?}"
             return 2
         fi
