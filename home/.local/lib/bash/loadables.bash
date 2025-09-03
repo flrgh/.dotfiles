@@ -9,60 +9,6 @@ sleep() {
     sleep "$@"
 }
 
-mkdir() {
-    unset -f mkdir
-
-    if ! enable mkdir &>/dev/null; then
-        mkdir "$@"
-        return $?
-    fi
-
-    enable -n mkdir
-
-    mkdir() {
-        local -a oargs=("$@")
-        local -a args=()
-
-        local arg
-        while (( $# > 0 )); do
-            arg=$1
-            shift
-
-            case $arg in
-                -p|--parents)
-                    args+=(-p)
-                    ;;
-
-                -m|--mode)
-                    args+=(-m)
-                    ;;
-
-                --mode=*)
-                    args+=(-m "${arg#*=}")
-                    ;;
-
-                --)
-                    args+=(-- "$@")
-                    break
-                    ;;
-
-                -*)
-                    command mkdir "${oargs[@]}"
-                    return $?
-                    ;;
-
-                *)
-                    args+=("$arg")
-                    ;;
-            esac
-        done
-
-        builtin mkdir "${args[@]}"
-    }
-
-    mkdir "$@"
-}
-
 head() {
     unset -f head
 
