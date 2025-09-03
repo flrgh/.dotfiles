@@ -35,6 +35,16 @@ is-set() {
     declare -p "$var" &>/dev/null
 }
 
+if enable dsv &>/dev/null; then
+    __split() {
+        dsv -a ARR -d "$1" "$2"
+    }
+else
+    __split() {
+        mapfile -t -d "$1" ARR <<< "$2"
+    }
+fi
+
 __dump_delimited_var() {
     local -r name=$1
 
@@ -52,13 +62,13 @@ __dump_delimited_var() {
     local -r default=':'
     local sep=${__DELIMITED_VARS[$name]:-"${default}"}
 
-    local -a arr
-    mapfile -t -d "$sep" arr <<< "${!name}"
+    local -a ARR=()
+    __split "$sep" "${!name}"
 
     local -i offset=0
 
     local part
-    for part in "${arr[@]}"; do
+    for part in "${ARR[@]}"; do
         strip-whitespace part
 
         printf '%-32s => %s\n' \

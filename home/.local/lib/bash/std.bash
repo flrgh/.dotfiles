@@ -15,3 +15,6 @@ source "$BASH_USER_LIB"/array.bash
 
 # shellcheck source=home/.local/lib/bash/string.bash
 source "$BASH_USER_LIB"/string.bash
+
+# shellcheck source=home/.local/lib/bash/loadables.bash
+source "$BASH_USER_LIB"/loadables.bash

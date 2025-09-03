@@ -320,6 +320,8 @@ install-from-asset() {
     local -a cleanup=(
         "$LIBBASH"/truefalse
         "$LOADABLES"/truefalse
+        "$LIBBASH"/mypid
+        "$LOADABLES"/mypid
     )
 
     for elem in "${LIBBASH}"/*; do

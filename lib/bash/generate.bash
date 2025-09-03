@@ -653,6 +653,10 @@ rc-command-exists() {
     command -v "$1" &>/dev/null
 }
 
+rc-binary-exists() {
+    [[ $(type -p "$1" 2>/dev/null) == "file" ]]
+}
+
 rc-if-command() {
     if [[ -z ${1:-} ]]; then
         log "ERROR: empty input to rc-if-command()"

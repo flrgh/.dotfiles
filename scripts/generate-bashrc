@@ -818,6 +818,7 @@ __rc_bash_user_lib() {
     rc-new-workfile user-lib
     rc-workfile-add-dep "$RC_DEP_SET_VAR"
     rc-workfile-add-exec source "${BASH_USER_LIB:?}/__init.bash"
+    rc-workfile-add-exec source "${BASH_USER_LIB:?}/loadables.bash"
     rc-workfile-close
 }
 __rc_bash_user_lib
@@ -950,6 +951,20 @@ __rc_app_neovim() {
     rc-export EDITOR nvim
 }
 __rc_app_neovim
+
+__rc_app_vim() {
+    if rc-command-exists nvim; then
+        return 0
+    fi
+
+    if rc-binary-exists vim; then
+        rc-export EDITOR vim
+
+    elif rc-binary-exists vi; then
+        rc-export EDITOR vi
+    fi
+}
+__rc_app_vim
 
 __rc_golang() {
     # https://github.com/golang/go/wiki/GOPATH
