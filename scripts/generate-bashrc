@@ -132,10 +132,14 @@ __rc_init() {
     rc-workfile-append-line '# shellcheck disable=SC1091'
     rc-workfile-append-line '# shellcheck disable=SC2059'
 
+    rc-workfile-var __RC_LOCAL_BASH "$HOME/.local/bin/bash"
+
     if have local-bash && get-location bash; then
-        rc-workfile-var __RC_BASH "${FACT:?}"
-        rc-workfile-include ./bash/ssh-shell-check.bash
+        rc-workfile-var __EXE "${FACT:?}"
+    else
+        rc-workfile-var __EXE "$(command -v bash)"
     fi
+    rc-workfile-include ./bash/check-exe.bash
 
     if have-builtin timer && get-builtin-location timer; then
         rc-workfile-add-exec enable -f "${FACT:?}" timer
@@ -377,8 +381,7 @@ __rc_post_env() {
 }
 __rc_post_env
 
-# hooks/bashrc/04-ansi-prompt-vars.sh
-__rc_prompt_vars() {
+__rc_prompt() {
     # When  executing  interactively, bash displays the primary prompt PS1 when it is
     # ready to read a command, and the secondary prompt PS2 when it needs more input
     # to complete a command.  Bash displays PS0 after it reads a command but before
@@ -436,89 +439,69 @@ __rc_prompt_vars() {
     local _prompt_pwd='\w'
     local _prompt_user_at_host="${_cyan}@${_prompt_host}${__prompt_reset}"
     local _prompt_pwd="${_blue}${_prompt_pwd}${__prompt_reset}"
-    local _prompt_stale="${_yellow}(!)${__prompt_reset}"
 
-    declare -g __ps1_prefix="${_prompt_user_at_host} ${_prompt_pwd}"
-    rc-declare __ps1_prefix
+    declare -g __ps1_stale="${_yellow}(!)${__prompt_reset}"
+    rc-declare __ps1_stale
 
-    declare -g __ps1_stale_prefix="${_prompt_stale} ${__ps1_prefix}"
-    rc-declare __ps1_stale_prefix
+    declare -g __ps1_default_prefix="${_prompt_user_at_host} ${_prompt_pwd}"
+    rc-declare __ps1_default_prefix
 
-    rc-new-workfile ps1
-    rc-workfile-close
-}
-__rc_prompt_vars
+    declare -g __hash_file=${XDG_RUNTIME_DIR:?}/bashrc.md5
+    rc-declare __hash_file
 
-# hooks/bashrc/05-prompt-command.sh
-__rc_prompt_command() {
-    declare -ga PROMPT_COMMAND=()
+    declare -g __hash_rcfile="$HOME"/.bashrc
+    rc-declare __hash_rcfile
 
-    __rc_prompt() {
-        local direnv; direnv=$(mise which direnv || true)
-
-        if [[ -n ${direnv:-} ]]; then
-            rc-workfile-append '%s\n' 'declare -g __last_pwd'
-            rc-workfile-append '%s\n' '__direnv() {'
-            rc-workfile-append '%s\n' '  if [[ -n ${!DIRENV_*} || ${__last_pwd:-} != "$PWD" ]]; then'
-            rc-workfile-append '%s\n' '    __last_pwd=$PWD'
-            rc-workfile-append '%s\n' '    eval "$("'$direnv'" export bash)"'
-            rc-workfile-append '%s\n' '  fi'
-            rc-workfile-append '%s\n' '}'
-
-#             __direnv="
-# __direnv() {
-#     if [[ -n \${!DIRENV_*} || \${__last_pwd:-} != \"\$PWD\" ]]; then
-#         __last_pwd=\$PWD
-#         eval \"\$(\"$direnv\" export bash)\"
-#     fi
-# }
-# "
-#             rc-workfile-append "$__direnv"
-
-            __prompt() {
-                local ec=$?
-                trap -- '' SIGINT
-
-                __last_status "$ec"
-                __check_rc_hash
-                __check_history
-                __direnv
-
-                trap - SIGINT
-                return "$ec"
-            }
-        else
-            __prompt() {
-                local ec=$?
-                trap -- '' SIGINT
-
-                __last_status "$ec"
-                __check_rc_hash
-                __check_history
-
-                trap - SIGINT
-                return "$ec"
-            }
-        fi
-
-        rc-workfile-add-function __prompt
-        rc-workfile-append "%s\n" 'declare -g PROMPT_COMMAND=__prompt'
-    }
-
-    rc-new-workfile prompt-command
+    rc-new-workfile prompt
     rc-workfile-add-dep "$RC_DEP_POST_INIT"
     rc-workfile-add-dep "$RC_DEP_SET_VAR"
 
     rc-workfile-if-interactive
-    rc-workfile-include ./bash/conf-color-prompt.sh
-    rc-workfile-include ./bash/rc-hash.bash
-    rc-workfile-include ./bash/update-history.bash
-    __rc_prompt
-    rc-workfile-fi
+    rc-workfile-include ./bash/prompt.bash
 
+    local direnv
+    if direnv=$(mise which direnv 2>/dev/null); then
+        rc-workfile-append '%s\n' 'declare -g __last_pwd'
+        rc-workfile-append '%s\n' '__direnv() {'
+        rc-workfile-append '%s\n' '  if [[ -n ${!DIRENV_*} || ${__last_pwd:-} != "$PWD" ]]; then'
+        rc-workfile-append '%s\n' '    __last_pwd=$PWD'
+        rc-workfile-append '%s\n' '    eval "$("'$direnv'" export bash)"'
+        rc-workfile-append '%s\n' '  fi'
+        rc-workfile-append '%s\n' '}'
+
+        __prompt() {
+            local ec=$?
+            trap -- '' SIGINT
+
+            __last_status "$ec"
+            __check_stale
+            __check_history
+            __direnv
+
+            trap - SIGINT
+            return "$ec"
+        }
+    else
+        __prompt() {
+            local ec=$?
+            trap -- '' SIGINT
+
+            __last_status "$ec"
+            __check_stale
+            __check_history
+
+            trap - SIGINT
+            return "$ec"
+        }
+    fi
+
+    rc-workfile-add-function __prompt
+    rc-workfile-append "%s\n" 'declare -g PROMPT_COMMAND=__prompt'
+
+    rc-workfile-fi
     rc-workfile-close
 }
-__rc_prompt_command
+__rc_prompt
 
 # hooks/bashrc/06-function-dispatch.sh
 __rc_func_dispatch() {

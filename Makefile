@@ -1,10 +1,24 @@
+USER ?= $(shell logname)
+UID ?= $(shell id -u)
+GID ?= $(shell id -g)
+HOME ?= /home/$(USER)
+
 INSTALL_PATH := $(HOME)
-INSTALL_BIN := $(INSTALL_PATH)/.local/bin
-INSTALL_VBIN := $(INSTALL_PATH)/.local/vbin
-INSTALL_DATA := $(INSTALL_PATH)/.local/share
-INSTALL_STATE := $(INSTALL_PATH)/.local/state
-INSTALL_LIB := $(INSTALL_PATH)/.local/lib
+INSTALL_PREFIX := $(HOME)/.local
+INSTALL_BIN := $(INSTALL_PREFIX)/bin
+INSTALL_VBIN := $(INSTALL_PREFIX)/vbin
+INSTALL_LIB := $(INSTALL_PREFIX)/lib
+
+XDG_RUNTIME_DIR ?= /run/user/$(UID)
+INSTALL_RUNTIME := $(XDG_RUNTIME_DIR)
+
+XDG_DATA_HOME := $(INSTALL_PREFIX)/share
+INSTALL_DATA := $(XDG_DATA_HOME)
 INSTALL_MAN := $(INSTALL_DATA)/man
+
+XDG_STATE_HOME := $(INSTALL_PREFIX)/state
+INSTALL_STATE := $(XDG_STATE_HOME)
+
 USER_REPOS := $(HOME)/git/flrgh
 REPO_ROOT = $(CURDIR)
 DEBUG := $(DEBUG)
@@ -14,6 +28,7 @@ export DOTFILES_INSTALL_PATH := $(INSTALL_PATH)
 export DOTFILES_INSTALL_BIN := $(INSTALL_BIN)
 export DOTFILES_INSTALL_DATA := $(INSTALL_DATA)
 export DOTFILES_INSTALL_STATE := $(INSTALL_STATE)
+export DOTFILES_INSTALL_RUNTIME := $(INSTALL_RUNTIME)
 export DOTFILES_REPO_ROOT := $(REPO_ROOT)
 export DOTFILES_DEBUG := $(DEBUG)
 
@@ -430,6 +445,7 @@ bash-completion: $(BUILD)/bash-completion | .setup
 bashrc: $(BUILD)/home/.bashrc $(BUILD)/bashrc.md5 | $(MISE) .setup
 	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.bashrc $(INSTALL_PATH)/.bashrc
 	$(INSTALL) --mode 0644 $(BUILD)/bashrc.md5 $(INSTALL_STATE)/bashrc.md5
+	$(INSTALL) --mode 0644 $(BUILD)/bashrc.md5 $(INSTALL_RUNTIME)/bashrc.md5
 
 .PHONY: bash
 bash: $(DEP)/bash .WAIT bash-completion bashrc | .setup

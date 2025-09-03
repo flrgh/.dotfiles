@@ -12,3 +12,8 @@ declare -gi __RC_INTERACTIVE_SHELL=0
 if [[ $- == *i* ]]; then
     __RC_INTERACTIVE_SHELL=1
 fi
+
+
+if [[ -n ${__RC_REPLACED:-} ]]; then
+    echo "[replaced bash session ($__RC_REPLACED)]" >&2
+fi
