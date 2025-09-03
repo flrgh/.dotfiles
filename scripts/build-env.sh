@@ -13,6 +13,16 @@ emit-xdg() {
     add-export XDG_CACHE_HOME  "$HOME/.cache"
 }
 
+emit-shell() {
+    local bash=$HOME/.local/bin/bash
+    if [[ -s $bash && -x $bash ]]; then
+        add-export SHELL "$bash"
+
+    elif bash=$(command -v bash); then
+        add-export SHELL "$bash"
+    fi
+}
+
 emit-common() {
     add-export CONFIG_HOME "$XDG_CONFIG_HOME"
     add-export CACHE_DIR   "$XDG_CACHE_HOME"
@@ -105,6 +115,7 @@ main() {
     : "${HOME:?}"
 
     emit-xdg
+    emit-shell
     emit-common
     emit-locale
     emit-editor

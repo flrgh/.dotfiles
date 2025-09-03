@@ -335,7 +335,7 @@ ssh: | .setup
 	./scripts/update-ssh-config
 
 .PHONY: env
-env: $(BUILD)/home/.config/env | $(MISE) .setup
+env: $(BUILD)/home/.config/env $(DEP)/bash | $(MISE) .setup
 	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.config/env
 	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.pam_environment
 
