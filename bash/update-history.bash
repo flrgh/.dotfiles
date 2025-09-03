@@ -17,9 +17,8 @@ toggle_update_history() {
 # save+reload history after every command
 # this could get expensive and slow when the history file gets big
 __check_history() {
-    local ec=$?
     if (( __history_saving_enabled == 0 )); then
-        return "$ec"
+        return
     fi
 
     local -ri idx=${__history_prompt@P}
@@ -55,6 +54,4 @@ __check_history() {
         __history_index=${__history_prompt@P}
         __history_saved=$EPOCHSECONDS
     fi
-
-    return "$ec"
 }

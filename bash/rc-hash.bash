@@ -1,6 +1,6 @@
 __hashfile=${XDG_STATE_HOME:?}/bashrc.md5
 __loaded_hash=$(< "$__hashfile")
-__loaded_at=${EPOCHSECONDS:?}
+__loaded_at=$(( ${EPOCHREALTIME/.} / 1000 ))
 __rcfile=${HOME}/.bashrc
 declare -gi __rc_is_stale=0
 
@@ -13,23 +13,21 @@ __rehash() {
 }
 
 __check_rc_hash() {
-    local ec=$?
-
     if (( __rc_is_stale )); then
-        return "$ec"
+        return
     fi
 
-    if [[ ! -e $__hashfile || $__rcfile -nt $__hashfile ]]; then
+    if [[ -z $__loaded_hash ]]; then
         __rehash
+        __loaded_at=${EPOCHSECONDS:?}
+        return
     fi
 
     __get_mtime "$__hashfile"
-    local -i hash_mtime=$REPLY
+    local -i hash_mtime=$(( REPLY * 1000))
 
     if (( hash_mtime > __loaded_at )); then
-        local hash; hash=$(< "$__hashfile")
-
-        if [[ $__loaded_hash == "$hash" ]]; then
+        if [[ $(< "$__hashfile") == "$__loaded_hash" ]]; then
             # the hash file was updated but didn't change
             # kinda weird but okay
             __loaded_at=$hash_mtime
@@ -41,6 +39,4 @@ __check_rc_hash() {
             PS1=$__ps1_default
         fi
     fi
-
-    return "$ec"
 }

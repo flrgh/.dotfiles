@@ -180,3 +180,31 @@ ln() {
 
     ln "$@"
 }
+
+__get_mtime() {
+    unset -f __get_mtime
+
+    if enable stat &>/dev/null; then
+        enable -n stat
+
+        __get_mtime() {
+            local -r fname=${1:?}
+            declare -g REPLY=0
+            builtin stat "$fname" || return 1
+            REPLY=${STAT[mtime]:-0}
+        }
+    else
+        __get_mtime() {
+            local -r fname=${1:?}
+            declare -g REPLY=0
+            local mtime
+            if mtime=$(stat -c '%Y' "$fname"); then
+                REPLY=${mtime}
+            else
+                return 1
+            fi
+        }
+    fi
+
+    __get_mtime "$@"
+}

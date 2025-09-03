@@ -453,61 +453,56 @@ __rc_prompt_vars
 __rc_prompt_command() {
     declare -ga PROMPT_COMMAND=()
 
-    _dump_func() {
-        local -r name=${1:?}
-        local -r body=${2:?}
-        bash \
-            --norc \
-            --noprofile \
-            -c "$body; declare -f ${name}"
-    }
+    __rc_prompt() {
+        local direnv; direnv=$(mise which direnv || true)
 
-    __fc_mtime_func() {
-        if have-builtin stat; then
-            __get_mtime() {
-                local -r fname=${1:?}
-                declare -g REPLY=0
-                builtin stat "$fname" || return 1
-                REPLY=${STAT[mtime]:-0}
+        if [[ -n ${direnv:-} ]]; then
+            rc-workfile-append '%s\n' 'declare -g __last_pwd'
+            rc-workfile-append '%s\n' '__direnv() {'
+            rc-workfile-append '%s\n' '  if [[ -n ${!DIRENV_*} || ${__last_pwd:-} != "$PWD" ]]; then'
+            rc-workfile-append '%s\n' '    __last_pwd=$PWD'
+            rc-workfile-append '%s\n' '    eval "$("'$direnv'" export bash)"'
+            rc-workfile-append '%s\n' '  fi'
+            rc-workfile-append '%s\n' '}'
+
+#             __direnv="
+# __direnv() {
+#     if [[ -n \${!DIRENV_*} || \${__last_pwd:-} != \"\$PWD\" ]]; then
+#         __last_pwd=\$PWD
+#         eval \"\$(\"$direnv\" export bash)\"
+#     fi
+# }
+# "
+#             rc-workfile-append "$__direnv"
+
+            __prompt() {
+                local ec=$?
+                trap -- '' SIGINT
+
+                __last_status "$ec"
+                __check_rc_hash
+                __check_history
+                __direnv
+
+                trap - SIGINT
+                return "$ec"
             }
         else
-            __get_mtime() {
-                local -r fname=${1:?}
-                declare -g REPLY=0
-                local mtime
-                if mtime=$(stat -c '%Y' "$fname"); then
-                    REPLY=${mtime}
-                else
-                    return 1
-                fi
+            __prompt() {
+                local ec=$?
+                trap -- '' SIGINT
+
+                __last_status "$ec"
+                __check_rc_hash
+                __check_history
+
+                trap - SIGINT
+                return "$ec"
             }
         fi
-        rc-workfile-add-function __get_mtime
-    }
 
-    __rc_prompt_stale_check() {
-        rc-workfile-include ./bash/rc-hash.bash
-        PROMPT_COMMAND+=(__check_rc_hash)
-    }
-
-    __rc_prompt_update_history() {
-        rc-workfile-include ./bash/update-history.bash
-        PROMPT_COMMAND+=(__check_history)
-    }
-
-    __rc_prompt_status_code() {
-        rc-workfile-include ./bash/conf-color-prompt.sh
-        PROMPT_COMMAND+=(__last_status)
-    }
-
-    __rc_prompt_direnv() {
-        rc-if-command direnv || return 0
-
-        local _direnv_hook
-        _direnv_hook=$(_dump_func _direnv_hook "$(direnv hook bash)")
-
-        rc-workfile-append-line "$_direnv_hook"
-        PROMPT_COMMAND+=(_direnv_hook)
+        rc-workfile-add-function __prompt
+        rc-workfile-append "%s\n" 'declare -g PROMPT_COMMAND=__prompt'
     }
 
     rc-new-workfile prompt-command
@@ -515,12 +510,10 @@ __rc_prompt_command() {
     rc-workfile-add-dep "$RC_DEP_SET_VAR"
 
     rc-workfile-if-interactive
-    __fc_mtime_func
-    __rc_prompt_stale_check
-    __rc_prompt_update_history
-    __rc_prompt_status_code
-    __rc_prompt_direnv
-    rc-workfile-append-line "${PROMPT_COMMAND[*]@A}"
+    rc-workfile-include ./bash/conf-color-prompt.sh
+    rc-workfile-include ./bash/rc-hash.bash
+    rc-workfile-include ./bash/update-history.bash
+    __rc_prompt
     rc-workfile-fi
 
     rc-workfile-close

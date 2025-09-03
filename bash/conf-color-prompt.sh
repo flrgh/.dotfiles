@@ -19,7 +19,7 @@ declare -gi __last_cmd_number=0
 
 # update PS1 when a command returns a non-zero exit code
 __last_status() {
-    local -i ec=$?
+    local -i ec=$1
 
     # we check the command counter so that we can only consider the exit code
     # from "new" commands and reset the state otherwise
@@ -39,6 +39,4 @@ __last_status() {
         PS1="$__ps1_default"
         __need_prompt_reset=0
     fi
-
-    return "$ec"
 }
