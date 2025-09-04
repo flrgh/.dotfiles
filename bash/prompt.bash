@@ -204,7 +204,7 @@ __set_stale() {
     __ps1_set_prefix "${__ps1_stale} ${__ps1_default_prefix}"
 
     # no use listening for more of these events
-    events_on_conf
+    events_on "$EVENT_ID_CONF"
 }
 
 __check_stale() {
