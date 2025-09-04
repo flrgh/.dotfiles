@@ -72,9 +72,7 @@ __last_status() {
 }
 
 
-declare -gi __history_saved=0
 declare -gi __history_index=0
-declare -gi __history_checked=0
 declare -gr __history_prompt='\!'
 declare -gi __history_saving_enabled=1
 
@@ -88,45 +86,41 @@ toggle_update_history() {
     fi
 }
 
-# save+reload history after every command
-# this could get expensive and slow when the history file gets big
-__check_history() {
+__read_history() {
+    builtin history -r
+    __history_index=${__history_prompt@P}
+}
+
+__save_history() {
     if (( __history_saving_enabled == 0 )); then
         return
     fi
 
+    # -a => persist in-memory history items to the HISTFILE
+    # -c => clear the in-memory history list
+    builtin history -a
+    builtin history -c
+    sync "$HISTFILE"
+}
+
+__reload_history() {
+    __save_history
+    __read_history
+}
+
+__check_history() {
+    # re-load
+    if (( __history_index == 0 )); then
+        __read_history
+        return 0
+    fi
+
     local -ri idx=${__history_prompt@P}
-    local -i update=0
 
     # we executed a new command: update the histfile
     if (( idx > __history_index )); then
-        update=1
-
-    elif (( (EPOCHSECONDS - __history_checked) > 5 )); then
-        __history_checked=$EPOCHSECONDS
-
-        __get_mtime "$HISTFILE" || true
-        local -i stat=$REPLY
-
-        # the histfile hast been updated by somebody else--update!
-        if (( stat > __history_saved )); then
-            update=1
-        fi
-    fi
-
-    if (( update == 1 )); then
-        # persist in-memory history items to the HISTFILE
-        builtin history -a
-
-        # clear the in-memory history list
-        builtin history -c
-
-        # re-read the HISTFILE into memory
-        builtin history -r
-
-        #__history_index=$1
-        __history_index=${__history_prompt@P}
-        __history_saved=$EPOCHSECONDS
+        __reload_history
+        events_publish "$EVENT_ID_HISTORY"
     fi
 }
 
@@ -141,6 +135,8 @@ declare -gi __is_stale=0
 
 replace() {
     local bash; bash=$(realpath "/proc/$$/exe")
+
+    __teardown
 
     if [[ ! -x $bash ]]; then
         bash=${bash%" (deleted)"}
@@ -206,6 +202,9 @@ __set_stale() {
     fi
     __is_stale=1
     __ps1_set_prefix "${__ps1_stale} ${__ps1_default_prefix}"
+
+    # no use listening for more of these events
+    events_on_conf
 }
 
 __check_stale() {
@@ -225,3 +224,15 @@ __check_stale() {
         __set_stale
     fi
 }
+
+__teardown() {
+    trap -- "" EXIT
+    events_teardown || true
+    __save_history || true
+}
+
+events_init
+events_on "$EVENT_ID_CONF" __check_stale
+events_on "$EVENT_ID_HISTORY" __reload_history
+
+trap __teardown EXIT

@@ -14,7 +14,8 @@ shopt -s cmdhist
 export HISTCONTROL=ignorespace:ignoredups
 #
 # Don't save history commands
-export HISTIGNORE='history:history *'
+# or the 'replace' command
+export HISTIGNORE='history:history *:replace'
 
 # History is valuable; let's keep lots of it
 #

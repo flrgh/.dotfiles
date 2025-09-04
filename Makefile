@@ -442,10 +442,11 @@ bash-completion: $(BUILD)/bash-completion | .setup
 		-delete
 
 .PHONY: bashrc
-bashrc: $(BUILD)/home/.bashrc $(BUILD)/bashrc.md5 | $(MISE) .setup
+bashrc: $(BUILD)/home/.bashrc $(BUILD)/bashrc.md5 $(SCRIPT)/notify-bash | $(MISE) .setup
 	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.bashrc $(INSTALL_PATH)/.bashrc
 	$(INSTALL) --mode 0644 $(BUILD)/bashrc.md5 $(INSTALL_STATE)/bashrc.md5
 	$(INSTALL) --mode 0644 $(BUILD)/bashrc.md5 $(INSTALL_RUNTIME)/bashrc.md5
+	$(SCRIPT)/notify-bash
 
 .PHONY: bash
 bash: $(DEP)/bash .WAIT bash-completion bashrc | .setup
