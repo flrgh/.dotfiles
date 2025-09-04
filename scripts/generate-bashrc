@@ -461,32 +461,37 @@ __rc_prompt() {
 
     local direnv
     if direnv=$(mise which direnv 2>/dev/null); then
+        local direnv_fn; direnv_fn=$(
+            bash \
+                --norc \
+                --noprofile \
+                -c "$($direnv hook bash); declare -f _direnv_hook"
+        )
+
+        rc-workfile-append '%s\n' "$direnv_fn"
         rc-workfile-append '%s\n' 'declare -g __last_pwd'
-        rc-workfile-append '%s\n' '__direnv() {'
-        rc-workfile-append '%s\n' '  if [[ -n ${!DIRENV_*} || ${__last_pwd:-} != "$PWD" ]]; then'
-        rc-workfile-append '%s\n' '    __last_pwd=$PWD'
-        rc-workfile-append '%s\n' '    eval "$("'$direnv'" export bash)"'
-        rc-workfile-append '%s\n' '  fi'
-        rc-workfile-append '%s\n' '}'
+        __direnv() {
+          if [[ -n ${!DIRENV_*} || ${__last_pwd:-} != "$PWD" ]]; then
+            __last_pwd=$PWD
+            _direnv_hook
+          fi
+        }
+        rc-workfile-add-function __direnv
 
         __prompt() {
             local ec=$?
-            trap -- '' SIGINT
             __last_status "$ec"
             __check_history
             events_flush
             __direnv
-            trap - SIGINT
             return "$ec"
         }
     else
         __prompt() {
             local ec=$?
-            trap -- '' SIGINT
             __last_status "$ec"
             __check_history
             events_flush
-            trap - SIGINT
             return "$ec"
         }
     fi
