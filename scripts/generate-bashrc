@@ -471,7 +471,7 @@ __rc_prompt() {
         rc-workfile-append '%s\n' "$direnv_fn"
         rc-workfile-append '%s\n' 'declare -g __last_pwd'
         __direnv() {
-          if [[ -n ${!DIRENV_*} || ${__last_pwd:-} != "$PWD" ]]; then
+          if [[ -n ${!DIRENV_*} || ${__last_pwd:-} != "$PWD" || -e $PWD/.envrc ]]; then
             __last_pwd=$PWD
             _direnv_hook
           fi
