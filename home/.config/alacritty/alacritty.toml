@@ -43,32 +43,37 @@ family = "LiterationMono Nerd Font"
 x = 0
 y = 0
 
+# hyperlinks
 [[hints.enabled]]
+regex = "(ipfs:|ipns:|magnet:|mailto:|gemini://|gopher://|https://|http://|news:|file:|git://|ssh:|ftp://)[^\u0000-\u001F\u007F-\u009F<>\"\\s{-}\\^⟨⟩`\\\\]+"
 action = "Select"
 post_processing = true
-regex = "(ipfs:|ipns:|magnet:|mailto:|gemini:|gopher:|https:|http:|news:|file:|git:|ssh:|ftp:)[^\u0000-\u001F\u007F-<>\"\\s{-}\\^⟨⟩`]+"
+mouse.enabled = true
+mouse.mods = "None"
 
-[hints.enabled.mouse]
-enabled = true
-mods = "None"
-
+# [long] git commit shas
 [[hints.enabled]]
-action = "Select"
-post_processing = true
 regex = "[0-9a-f]{40}"
-
-[hints.enabled.mouse]
-enabled = true
-mods = "None"
-
-[[hints.enabled]]
 action = "Select"
 post_processing = true
-regex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+mouse.enabled = true
+mouse.mods = "None"
 
-[hints.enabled.mouse]
-enabled = true
-mods = "None"
+# UUIDs
+[[hints.enabled]]
+regex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+action = "Select"
+post_processing = true
+mouse.enabled = true
+mouse.mods = "None"
+
+# email addresses
+[[hints.enabled]]
+regex = "[_+a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+"
+action = "Select"
+post_processing = true
+mouse.enabled = true
+mouse.mods = "None"
 
 [[keyboard.bindings]]
 action = "Paste"
@@ -90,6 +95,7 @@ action = "Quit"
 key = "W"
 mods = "Control|Shift"
 
+# opens a new window in tmux
 [[keyboard.bindings]]
 chars = "\u0006c"
 key = "T"
