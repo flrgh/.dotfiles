@@ -52,7 +52,10 @@ MKPARENT := $(SCRIPT)/files mkparent
 MKDIR := $(SCRIPT)/files mkdir
 TOUCH := $(SCRIPT)/files touch
 
-LINES = $(shell $(SCRIPT)/get-lines "$<")
+getbin = $(firstword $(wildcard $(addsuffix /$(1),$(subst :, ,$(PATH)))))
+SED := $(call getbin,sed)
+
+getlines = $(sort $(shell $(SED) -n -r -e 's/^[ ]*([^ #]+).*/\1/p' < "$(1)"))
 
 DIFF := diff --suppress-common-lines --suppress-blank-empty \
 	--ignore-tab-expansion --ignore-all-space --minimal
@@ -129,7 +132,7 @@ $(PKG)/os/%: $(PKG)/os.%.rpm
 	$(TOUCH) --reference "$<" "$@"
 
 $(PKG)/os/removed: deps/os-package-removed.txt
-	sudo dnf remove -y $(LINES)
+	sudo dnf remove -y $(call getlines,$<)
 	$(TOUCH) --reference "$<" "$@"
 
 $(PKG)/python.cleanup: $(DEP)/python | $(MISE)
@@ -153,53 +156,53 @@ flatpak: $(PKG)/flatpak.apps.installed
 
 ALL_DEPS =
 
-UV_PACKAGES := $(shell $(SCRIPT)/get-lines ./deps/uv.txt)
+UV_PACKAGES := $(call getlines,./deps/uv.txt)
 ALL_DEPS += $(UV_PACKAGES)
 UV_DEPS := $(addprefix $(DEP)/,$(UV_PACKAGES))
 UV := $(MISE) exec uv -- uv
-UV_TOOLS := $(shell $(UV) tool dir)
+UV_TOOLS = $(shell $(UV) tool dir)
 $(UV_DEPS): $(DEP)/uv $(DEP)/python $(PKG)/python.cleanup
 	$(UV) tool install $(notdir $@)
 	$(TOUCH) --reference $(UV_TOOLS)/$(notdir $@) "$@"
 
 .PHONY: uv-update
-uv-update: ./deps/uv.txt $(UV_TOOLS) | $(MISE)
+uv-update: ./deps/uv.txt | $(MISE)
 	$(UV) tool upgrade --no-managed-python --all
 
-NEED_PACKAGES = $(notdir $(basename $(wildcard $(REPO_ROOT)/home/.local/share/ineed/drivers/*.sh)))
-NEED_DEPS = $(addprefix $(DEP)/,$(NEED_PACKAGES))
+NEED_PACKAGES := $(notdir $(basename $(wildcard $(REPO_ROOT)/home/.local/share/ineed/drivers/*.sh)))
+NEED_DEPS := $(addprefix $(DEP)/,$(NEED_PACKAGES))
 ALL_DEPS += $(NEED_PACKAGES)
 $(NEED_DEPS): | .setup
 	ineed install $(notdir $@)
 	$(TOUCH) --reference "$(INSTALL_STATE)/ineed/$(notdir $@).installed-timestamp" "$@"
 
-LUAROCKS_PACKAGES = teal-language-server tl
+LUAROCKS_PACKAGES := teal-language-server tl
 ALL_DEPS += $(LUAROCKS_PACKAGES)
-LUAROCKS_DEPS = $(addprefix $(DEP)/,$(LUAROCKS_PACKAGES))
+LUAROCKS_DEPS := $(addprefix $(DEP)/,$(LUAROCKS_PACKAGES))
 $(LUAROCKS_DEPS): | $(LUAROCKS)
 	luarocks install $(notdir $@)
 	$(TOUCH) $@
 
-MISE_PACKAGES = $(shell $(MISE) ls --yes --current --no-header | awk '{print $$1}')
+MISE_PACKAGES := $(shell $(MISE) ls --yes --current --no-header | awk '{print $$1}')
 ALL_DEPS += $(MISE_PACKAGES)
-MISE_DEPS = $(addprefix $(DEP)/,$(MISE_PACKAGES))
-MISE_ALL = $(PKG)/mise-all
+MISE_DEPS := $(addprefix $(DEP)/,$(MISE_PACKAGES))
+MISE_ALL := $(PKG)/mise-all
 
-CARGO_PACKAGES = $(shell $(SCRIPT)/get-lines ./deps/cargo-packages.txt | sort -u)
+CARGO_PACKAGES := $(call getlines,./deps/cargo-packages.txt)
 ALL_DEPS += $(CARGO_PACKAGES)
-CARGO_DEPS = $(addprefix $(DEP)/,$(CARGO_PACKAGES))
+CARGO_DEPS := $(addprefix $(DEP)/,$(CARGO_PACKAGES))
 
-OS_COMMON_PACKAGES := $(shell $(SCRIPT)/get-lines ./deps/rpm-common.txt | sort -u)
+OS_COMMON_PACKAGES := $(call getlines,./deps/rpm-common.txt)
 OS_COMMON_PACKAGES := $(filter-out $(ALL_DEPS),$(OS_COMMON_PACKAGES))
 ALL_DEPS += $(OS_COMMON_PACKAGES)
-OS_COMMON_DEPS = $(addprefix $(DEP)/,$(OS_COMMON_PACKAGES))
+OS_COMMON_DEPS := $(addprefix $(DEP)/,$(OS_COMMON_PACKAGES))
 $(OS_COMMON_DEPS): | $(PKG)/os/common
 	$(TOUCH) "$@"
 
-OS_WORKSTATION_PACKAGES := $(shell $(SCRIPT)/get-lines ./deps/rpm-workstation.txt | sort -u)
+OS_WORKSTATION_PACKAGES := $(call getlines,./deps/rpm-workstation.txt)
 OS_WORKSTATION_PACKAGES := $(filter-out $(ALL_DEPS),$(OS_WORKSTATION_PACKAGES))
 ALL_DEPS += $(OS_WORKSTATION_PACKAGES)
-OS_WORKSTATION_DEPS = $(addprefix $(DEP)/,$(OS_WORKSTATION_PACKAGES))
+OS_WORKSTATION_DEPS := $(addprefix $(DEP)/,$(OS_WORKSTATION_PACKAGES))
 $(OS_WORKSTATION_DEPS): | $(PKG)/os/workstation
 	$(TOUCH) "$@"
 
@@ -338,15 +341,15 @@ $(BASH_BUILTIN_CLONE): private REPO := git@github.com:flrgh/bash-builtins.git
 $(BASH_BUILTIN_CLONE):
 	git clone "$(REPO)" "$@"
 
-BASH_BUILTIN_SRCS = $(shell fd \
+BASH_BUILTIN_SRCS := $(shell fd \
 	--type file \
 	--exclude tests \
 	'(\.rs|Cargo\.lock|Cargo\.toml)$$' \
 	"$(BASH_BUILTIN_CLONE)" \
 )
 
-BASH_BUILTIN_NAMES = varsplice timer version
-BASH_BUILTIN_LIBS = $(addsuffix .so,$(addprefix $(BASH_BUILTIN_CLONE)/target/release/lib,$(BASH_BUILTIN_NAMES)))
+BASH_BUILTIN_NAMES := varsplice timer version
+BASH_BUILTIN_LIBS := $(addsuffix .so,$(addprefix $(BASH_BUILTIN_CLONE)/target/release/lib,$(BASH_BUILTIN_NAMES)))
 
 .PHONY: .bash-builtin-pull
 .bash-builtin-pull: $(BASH_BUILTIN_CLONE)
@@ -363,7 +366,7 @@ $(BASH_BUILTIN_LIBS): $(RUSTUP) $(BASH_BUILTIN_CLONE) .WAIT $(BASH_BUILTIN_SRCS)
 	    --workspace
 	touch $(BASH_BUILTIN_LIBS)
 
-BASH_BUILTINS = $(addprefix $(INSTALL_LIB)/bash/loadables/,$(BASH_BUILTIN_NAMES))
+BASH_BUILTINS := $(addprefix $(INSTALL_LIB)/bash/loadables/,$(BASH_BUILTIN_NAMES))
 $(BASH_BUILTINS): $(BASH_BUILTIN_LIBS)
 	$(INSTALL) "$(BASH_BUILTIN_CLONE)/target/release/lib$(notdir $@).so" \
 		"$@"
@@ -513,8 +516,8 @@ git-config: $(MISE_DEPS) $(DEP)/delta | ssh .setup
 	./scripts/update-git-config
 
 
-export KEYBOARD_GROUP = plugdev
-export KEYBOARD_GROUP_ID = 1003
+export KEYBOARD_GROUP := plugdev
+export KEYBOARD_GROUP_ID := 1003
 
 $(BUILD)/zsa-group:
 	if ! getent group "$(KEYBOARD_GROUP)" &>/dev/null; then \
@@ -551,7 +554,7 @@ $(DEP)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
 	$(SCRIPT)/install-nerd-fonts
 	touch --reference "$<" "$@"
 
-COMMON = \
+COMMON := \
 	bash \
 	curl \
 	docker \
@@ -566,7 +569,7 @@ COMMON = \
 	rust \
 	ssh
 
-COMMON_UPDATE = \
+COMMON_UPDATE := \
 		mise-update \
 		npm-update \
 		os-packages-update \
