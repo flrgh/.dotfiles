@@ -11,9 +11,11 @@ readonly INFO_JSON
 PIP=$(mise which pip)
 readonly PIP
 
-# path to ~/.local/share/mise/installs/python[...]
-WHERE=$(jq -r '.install_path' <<< "$INFO_JSON")
-readonly WHERE
+UV=$(mise which uv)
+readonly UV
+
+UV_DIR=$("$UV" tool dir)
+readonly UV_DIR
 
 # current python semver
 VERSION=$(jq -r '.version' <<< "$INFO_JSON")
@@ -24,39 +26,15 @@ readonly MAJ_MIN=${VERSION%.*}
 # current python lib dir
 readonly CURRENT_LIB=${HOME}/.local/lib/python${MAJ_MIN}
 
-# files in ~/.local/bin to remove
-declare -a REMOVE_BINS=()
-
-# packages that should be reinstalled
-declare -A REINSTALL=()
-
-# directories in ~/.local/lib to remove
-declare -a REMOVE_LIBS=()
-
 # list of currently-installed packages
-declare -a CURRENT_PACKAGES=()
-mapfile -t CURRENT_PACKAGES < <("$PIP" list --user --format json | jq '.[].name' -r)
-readonly CURRENT_PACKAGES
+declare -a PIP_PACKAGES=()
+mapfile -t PIP_PACKAGES < <("$PIP" list --user --format json | jq '.[].name' -r)
+readonly PIP_PACKAGES
 
-
-# map binary names to package names
-declare -A CURRENT_BINS=()
-while read -r pkg bin; do
-    CURRENT_BINS[$bin]=$pkg
-done < <(
-    "$PIP" show --files "${CURRENT_PACKAGES[@]}" \
-    | awk '
-        /^Name:/ {
-            name = $2;
-        }
-
-        /\/bin\/.+/ {
-            bin = $1;
-            sub(/.*\/bin\//, "", bin);
-            print name, bin
-        }
-        '
-    )
+if (( ${#PIP_PACKAGES[@]} > 0 )); then
+    echo "removing old pip packages: ${PIP_PACKAGES[*]}"
+    "$PIP" uninstall --yes "${PIP_PACKAGES[@]}"
+fi
 
 
 for bin in "$BIN"/*; do
@@ -73,15 +51,13 @@ for bin in "$BIN"/*; do
     shebang=$(head -n 1 "$bin")
     shebang=${shebang#'#!'}
 
-    base=${bin##*/}
-
     case $shebang in
         # probably one of my own scripts
         /usr/bin/env\ *)
             continue;;
 
-        # already belongs to the current install
-        "$WHERE"/*)
+        # correctly installed/managed by uv
+        "$UV_DIR"/*/bin/python*)
             continue;;
 
         # very old
@@ -92,11 +68,8 @@ for bin in "$BIN"/*; do
         /opt/python/*)
             ;;
 
-        # from an old mise install of python
+        # installed via pip w/ mise
         */mise/installs/python/*)
-            if [[ -n ${CURRENT_BINS[$base]:-} ]]; then
-                REINSTALL[${CURRENT_BINS[$base]}]=1
-            fi
             ;;
 
         *python*)
@@ -107,7 +80,9 @@ for bin in "$BIN"/*; do
             continue;;
     esac
 
-    REMOVE_BINS+=("$bin")
+    base=${bin##*/}
+    echo "removing binary $base (using #!$shebang)"
+    rm -fv "$bin"
 done
 
 for dir in "$HOME"/.local/lib/python*; do
@@ -115,26 +90,6 @@ for dir in "$HOME"/.local/lib/python*; do
         continue
     fi
 
-    REMOVE_LIBS+=("$dir")
+    echo "removing old lib dir ($dir)"
+    rm -rf "${dir:?}"
 done
-
-if (( ${#REMOVE_BINS[@]} > 0 )); then
-    echo "removing old files in ~/.local/bin"
-    rm -f "${REMOVE_BINS[@]}"
-else
-    echo "nothing in ~/.local/bin to cleanup"
-fi
-
-if (( ${#REMOVE_LIBS[@]} > 0 )); then
-    echo "removing old python lib directories in ~/.local/lib"
-    rm -rf "${REMOVE_LIBS[@]}"
-else
-    echo "nothing in ~/.local/lib to cleanup"
-fi
-
-if (( ${#REINSTALL[@]} > 0 )); then
-    echo "re-installing broken pip packages"
-    "$PIP" install --user --force-reinstall "${!REINSTALL[@]}"
-else
-    echo "no pip packages to reinstall"
-fi

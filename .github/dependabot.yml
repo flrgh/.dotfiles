@@ -9,8 +9,3 @@ updates:
     directory: "/deps"
     schedule:
       interval: "weekly"
-
-  - package-ecosystem: "pip"
-    directory: "/deps"
-    schedule:
-      interval: "weekly"

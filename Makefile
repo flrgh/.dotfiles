@@ -77,7 +77,6 @@ PKG := $(BUILD)/pkg
 DEP := $(BUILD)/dep
 NEED := $(PKG)/need
 CARGO_PKG := $(PKG)/cargo
-PIP_PKG := $(PKG)/pip
 LUAROCKS_PKG := $(PKG)/luarocks
 MISE_PKG := $(PKG)/mise
 
@@ -92,19 +91,13 @@ CREATE_DIRS += .local/share/xdg-desktop-portal/applications
 
 CREATE_DIRS := $(addprefix $(INSTALL_PATH)/,$(CREATE_DIRS))
 
-.DEFAULT: all
-
-.PHONY: all
-all: install
-
-.PHONY: install
-install: ssh env rust lua bash docker alacritty golang curl git-config
+.DEFAULT: common
 
 .PHONY: debug
 debug:
 	@echo REPO_ROOT: $(REPO_ROOT)
 	@echo INSTALL_PATH: $(INSTALL_PATH)
-	@echo PIP_PACKAGES: $(PIP_PACKAGES)
+	@echo UV_PACKAGES: $(UV_PACKAGES)
 	@echo CARGO_PACKAGES: $(CARGO_PACKAGES)
 	@echo NEED_PACKAGES: $(NEED_PACKAGES)
 	@echo OS_COMMON_PACKAGES: $(OS_COMMON_PACKAGES)
@@ -143,14 +136,8 @@ $(PKG)/python.cleanup: $(DEP)/python | $(MISE)
 	$(SCRIPT)/python-cleanup
 	$(TOUCH) --reference "$<" "$@"
 
-PIP_REQUIREMENTS = ./deps/requirements.txt
-$(PKG)/python.reinstall: $(DEP)/python $(PKG)/python.cleanup | $(MISE)
-	$(MISE) exec python -- pip install --force-reinstall --user -r $(PIP_REQUIREMENTS)
+$(PKG)/python: $(DEP)/python | $(PKG)/python.cleanup $(MISE)
 	$(TOUCH) --reference "$<" "$@"
-
-$(PKG)/python: $(PIP_REQUIREMENTS) | $(PKG)/python.reinstall $(MISE)
-	$(MISE) exec python -- pip install --user -r $(PIP_REQUIREMENTS)
-	$(TOUCH) $@
 
 $(PKG)/flatpak.remotes: deps/flatpak-remotes.txt
 	./scripts/setup-flatpak-remotes
@@ -166,11 +153,18 @@ flatpak: $(PKG)/flatpak.apps.installed
 
 ALL_DEPS =
 
-PIP_PACKAGES = $(shell $(SCRIPT)/get-lines ./deps/python-packages.txt)
-ALL_DEPS += $(PIP_PACKAGES)
-PIP_DEPS = $(addprefix $(DEP)/,$(PIP_PACKAGES))
-$(PIP_DEPS): | $(PKG)/python
-	$(TOUCH) "$@"
+UV_PACKAGES := $(shell $(SCRIPT)/get-lines ./deps/uv.txt)
+ALL_DEPS += $(UV_PACKAGES)
+UV_DEPS := $(addprefix $(DEP)/,$(UV_PACKAGES))
+UV := $(MISE) exec uv -- uv
+UV_TOOLS := $(shell $(UV) tool dir)
+$(UV_DEPS): $(DEP)/uv $(DEP)/python $(PKG)/python.cleanup
+	$(UV) tool install $(notdir $@)
+	$(TOUCH) --reference $(UV_TOOLS)/$(notdir $@) "$@"
+
+.PHONY: uv-update
+uv-update: ./deps/uv.txt $(UV_TOOLS) | $(MISE)
+	$(UV) tool upgrade --no-managed-python --all
 
 NEED_PACKAGES = $(notdir $(basename $(wildcard $(REPO_ROOT)/home/.local/share/ineed/drivers/*.sh)))
 NEED_DEPS = $(addprefix $(DEP)/,$(NEED_PACKAGES))
@@ -482,7 +476,7 @@ neovim: language-servers \
 	| .setup
 
 $(USER_REPOS)/lua-utils:
-	$(MKPARENT) "$@"
+	mkdir -p $(dir $@)
 	git clone git@github.com:flrgh/lua-utils.git "$@"
 
 .NOTINTERMEDIATE:
@@ -576,7 +570,14 @@ COMMON_UPDATE = \
 		mise-update \
 		npm-update \
 		os-packages-update \
-		rust-update
+		rust-update \
+		uv-update
+
+.PHONY: common
+common: $(COMMON)
+
+.PHONY: common-update
+common-update: $(COMMON) .WAIT $(COMMON_UPDATE)
 
 .PHONY: server
 server: $(COMMON) $(DEP)/signalbackup-tools
