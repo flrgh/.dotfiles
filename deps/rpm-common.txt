@@ -9,6 +9,7 @@ coreutils
 ctags
 curl
 diffutils
+docker-ce
 dos2unix
 duf               # modern version of df
 etckeeper         # /etc as a git repo
@@ -61,6 +62,7 @@ sd                # find+replace (simpler, faster sed)
 sed
 sqlite
 sqlite-devel
+smartmontools
 strace
 sysstat
 taglib
