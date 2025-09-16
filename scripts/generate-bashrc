@@ -795,7 +795,7 @@ __rc_bash_user_lib() {
     rc-export BASH_USER_LIB "${HOME:?}/.local/lib/bash"
     rc-new-workfile user-lib
     rc-workfile-add-dep "$RC_DEP_SET_VAR"
-    rc-workfile-add-exec source "${BASH_USER_LIB:?}/__init.bash"
+    rc-workfile-add-exec source "${BASH_USER_LIB:?}/reload.bash"
     rc-workfile-add-exec source "${BASH_USER_LIB:?}/loadables.bash"
     rc-workfile-add-exec source "${BASH_USER_LIB:?}/events.bash"
     rc-workfile-close

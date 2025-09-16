@@ -1,19 +1,22 @@
 declare -g BASH_USER_LIB=${BASH_USER_LIB:-$HOME/.local/lib/bash}
 
-if (( ${BASH_USER_LIB_RELOAD:-0} )); then
-    unset -v BASH_USER_LIB_SOURCED
+if (( ${BASH_USER_LIB_RELOAD:-0} == 1 )); then
+    unset -v BASH_USER_LIB_SOURCED BASH_USER_MODERN
 fi
-
 unset -v BASH_USER_LIB_RELOAD
+
 
 if ! declare -p BASH_USER_LIB_SOURCED &>/dev/null; then
     declare -gA BASH_USER_LIB_SOURCED=()
 fi
 
-# set to 1 if our version of bash has nice, new features like
-# command substitution as `${c command;}`
-declare -gi BASH_USER_MODERN=0
 
-if (( BASH_VERSINFO[0] > 5 || BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 3 )); then
-    BASH_USER_MODERN=1
+if [[ ! -v BASH_USER_MODERN ]]; then
+    # set to 1 if our version of bash has nice, new features like
+    # command substitution as `${c command;}`
+    declare -gi BASH_USER_MODERN=0
+
+    if (( BASH_VERSINFO[0] > 5 || BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 3 )); then
+        BASH_USER_MODERN=1
+    fi
 fi
