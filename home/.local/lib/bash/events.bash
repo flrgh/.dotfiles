@@ -20,10 +20,10 @@ __set_event_history() {
 }
 
 events_init() {
-    [[ -d "$__pid_dir" ]] || mkdir -p "$__pid_dir"
-    touch "$__pid_file"
-    trap -- "" "$EVENT_ID_CONF"
-    trap -- "" "$EVENT_ID_HISTORY"
+    [[ -d $__pid_dir ]] || mkdir -p "$__pid_dir"
+    : >"$__pid_file"
+    builtin trap -- "" "$EVENT_ID_CONF"
+    builtin trap -- "" "$EVENT_ID_HISTORY"
 }
 
 events_on() {
@@ -38,18 +38,18 @@ events_on() {
     if [[ -z ${cb:-} ]]; then
         __event_callbacks[$evt]=""
         __event_triggers[$evt]=0
-        trap -- "" "$evt"
+        builtin trap -- "" "$evt"
         return 0
     fi
 
-    if [[ -z $(type -t "$cb" 2>/dev/null) ]]; then
+    if ! declare -F "$cb" &>/dev/null; then
         echo "ERROR: invalid callback"
         events_on "$evt"
         return 1
     fi
     __event_callbacks[$evt]="$cb"
 
-    trap -- "__event_triggers[$evt]=1" "$evt"
+    builtin trap -- "__event_triggers[$evt]=1" "$evt"
 }
 
 events_flush() {

@@ -235,4 +235,4 @@ events_init
 events_on "$EVENT_ID_CONF" __check_stale
 events_on "$EVENT_ID_HISTORY" __reload_history
 
-trap __teardown EXIT
+builtin trap __teardown EXIT
