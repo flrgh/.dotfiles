@@ -197,6 +197,18 @@ local matchers = {
       })
     end
   end,
+
+  function (ws)
+    if ws.basename == "busted" then
+      ws.meta.lua = true
+      --ws.meta.busted = true
+      extend(ws, "lua.definitions", {
+        LUA_TYPE_ANNOTATIONS .. "/say",
+        LUA_TYPE_ANNOTATIONS .. "/mediator",
+        LUA_CATS .. "/luassert" .. "/library",
+      })
+    end
+  end,
 }
 
 if not WS.dir then

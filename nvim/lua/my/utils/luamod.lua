@@ -3,6 +3,11 @@ local _M = {}
 
 local const = require("my.constants")
 local fs = require("my.utils.fs")
+local resolver = require("my.utils.luamod.resolver")
+local requires = require("my.utils.luamod.requires")
+
+_M.resolver = resolver
+_M.requires = requires
 
 local pcall = pcall
 local require = require
@@ -101,11 +106,6 @@ function _M.if_exists(name, cb)
   else
     error("Failed loading module (" .. name .. "): " .. mod)
   end
-end
-
-
-function _M.resolver()
-  return require("my.utils.luamod.resolver").new()
 end
 
 

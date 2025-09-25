@@ -43,15 +43,18 @@ local resolver = {}
 ---@return my.lua.resolver.module? mod
 ---@return string[]? tried
 function resolver:find_module(name, debug)
-  local mod_cache = self.module_cache
-  local result = mod_cache[name]
-  if result then
-    return result
-  end
-
   if debug == nil then
     debug = self.debug
   end
+
+  local mod_cache = self.module_cache
+  if not debug then
+    local result = mod_cache[name]
+    if result then
+      return result
+    end
+  end
+
 
   local done = noop
   if debug then
@@ -222,5 +225,11 @@ function _M.new()
 
   return self
 end
+
+
+function _M.default()
+  return _M.new():add_lua_package_path()
+end
+
 
 return _M

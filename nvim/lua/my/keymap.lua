@@ -273,6 +273,8 @@ function binding.new(mode_or_opts, keys)
     self.opts.mode = mode
   end
 
+  assert(type(keys) == "string")
+
   self.opts.lhs = keys
   self.started = true
   return self

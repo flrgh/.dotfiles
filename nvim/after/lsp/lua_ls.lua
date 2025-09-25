@@ -23,6 +23,7 @@ local NAME = "lua_ls"
 ---
 ---@field checkThirdParty? any
 ---@field ignoreSubmodules? boolean
+---@field ignoreDir string[]
 ---@field library string[]
 ---@field useGitIgnore? boolean
 ---@field userThirdParty? any
@@ -54,6 +55,7 @@ local WS = require "my.workspace"
 local event = require "my.event"
 local proto = require("vim.lsp.protocol")
 local clear = require("table.clear")
+local storage = require("my.storage")
 
 local endswith = vim.endswith
 local insert = table.insert
@@ -61,29 +63,11 @@ local deepcopy = vim.deepcopy
 local deep_equal = vim.deep_equal
 local workspaceDidChangeConfiguration = proto.Methods.workspace_didChangeConfiguration
 
-
 local Disable = "Disable"
 local Replace = "Replace"
 local Fallback = "Fallback"
 local Opened = "Opened!"
 local None = "None!"
-
-
----@type my.lua.resolver|nil
-local Resolver
-
-local Completion = {
-  enable           = true,
-  autoRequire      = false,
-  callSnippet      = Disable,
-  displayContext   = 0, -- disabled
-  keywordSnippet   = Disable,
-  postfix          = "@",
-  requireSeparator = ".",
-  showParams       = true,
-  showWord         = Fallback,
-  workspaceWord    = false,
-}
 
 local Diagnostics = {
   enable = false,
@@ -232,150 +216,505 @@ do
   end
 end
 
-local Doc = {
-  packageName = nil,
-  privateName = nil,
-  protectedName = nil,
-}
-
-local Format = {
-  defaultConfig = nil,
-  enable = false,
-}
-
-local Hint = {
-  enable     = true,
-  paramName  = "All",
-  paramType  = true,
-  setType    = true,
-  arrayIndex = "Enable",
-  await      = false,
-  semicolon  = Disable,
-}
-
-local Hover = {
-  enable        = true,
-  enumsLimit    = 10,
-  expandAlias   = true,
-  previewFields = 20,
-  viewNumber    = true,
-  viewString    = true,
-  viewStringMax = 1000,
-}
-
-local IntelliSense = {
-  -- https://github.com/sumneko/lua-language-server/issues/872
-  traceLocalSet    = true,
-  traceReturn      = true,
-  traceBeSetted    = true,
-  traceFieldInject = true,
-}
-
----@type string[]
-local Path = { "?.lua", "?/init.lua" }
-
-local Runtime = {
-  builtin           = "enable",
-  fileEncoding      = "utf8",
-  meta              = nil,
-  nonstandardSymbol = nil,
-  path              = Path,
-  pathStrict        = true,
-  plugin            = nil,
-  pluginArgs        = nil,
-  special = {
-    ["my.utils.luamod.reload"] = "require",
-    ["my.utils.luamod.if_exists"] = "require",
-  },
-  unicodeName       = false,
-  version           = "LuaJIT",
-}
-
----@type string[]
-local Library = {}
-
----@type string[]
-local IgnoreDir = {}
-
-local Workspace = {
-  checkThirdParty  = Disable,
-  ignoreDir        = IgnoreDir,
-  ignoreSubmodules = true,
-  library          = Library,
-  maxPreload       = nil,
-  preloadFileSize  = nil,
-  useGitIgnore     = true,
-  userThirdParty   = nil,
-}
-
-local Semantic = {
-  annotation = true,
-  enable     = true,
-  keyword    = true,
-  variable   = true,
-}
-
-local SignatureHelp = {
-  enable = false,
-}
-
-local Spell = {
-  dict = nil,
-}
-
-local Type = {
-  castNumberToInteger = true,
-  weakUnionCheck      = true,
-  weakNilCheck        = true,
-}
-
-local Window = {
-  progressBar = false,
-  statusBar   = false,
-}
-
----@type my.lsp.LuaLS
-local Lua = {}
-
----@type { Lua: my.lsp.LuaLS }
-local Settings = {}
-
----@type nil|string|function
-local RootDir
-
----@type nil|string[]
-local Cmd
 
 ---@class my.lsp.config.Lua: vim.lsp.Config
-local Config = {}
+local DEFAULT_CONFIG = {
+  cmd = nil,
+  root_dir = nil,
+  settings = {
+    ---@type my.lsp.LuaLS
+    Lua = {
+      completion = {
+        enable           = true,
+        autoRequire      = false,
+        callSnippet      = Disable,
+        displayContext   = 0, -- disabled
+        keywordSnippet   = Disable,
+        postfix          = "@",
+        requireSeparator = ".",
+        showParams       = true,
+        showWord         = Fallback,
+        workspaceWord    = false,
+      },
+
+      diagnostics = {
+        enable = false,
+        disable = nil,
+
+        globals = {
+          'vim',
+
+          -- openresty/kong globals
+          'ngx',
+          'kong',
+
+          -- busted globals
+          'after_each',
+          'before_each',
+          'describe',
+          'expose',
+          'finally',
+          'insulate',
+          'it',
+          'lazy_setup',
+          'lazy_teardown',
+          'mock',
+          'pending',
+          'pending',
+          'randomize',
+          'setup',
+          'spec',
+          'spy',
+          'strict_setup',
+          'strict_teardown',
+          'stub',
+          'teardown',
+          'test',
+
+        },
+
+        ignoredFiles = Disable,
+        libraryFiles = Disable,
+        workspaceDelay = 3000,
+        workspaceRate = 100,
+        workspaceEvent = "OnSave",
+
+        unusedLocalExclude = {
+          "self",
+        },
+
+        neededFileStatus = {
+          -- group: ambiguity
+          ["ambiguity-1"]        = Opened,
+          ["count-down-loop"]    = None,
+          ["different-requires"] = None,
+          ["newline-call"]       = None,
+          ["newfield-call"]      = None,
+
+          -- group: await
+          ["await-in-sync"] = None,
+          ["not-yieldable"] = None,
+
+          -- group: codestyle
+          ["codestyle-check"]  = None,
+          ["name-style-check"] = None,
+          ["spell-check"]      = None,
+
+          -- group: conventions
+          ["global-element"] = Opened,
+
+          -- group: duplicate
+          ["duplicate-index"]        = Opened,
+          ["duplicate-set-field"]    = Opened,
+
+          -- group: global
+          ["global-in-nil-env"]      = None,
+          ["lowercase-global"]       = None,
+          ["undefined-env-child"]    = None,
+          ["undefined-global"]       = Opened,
+
+          -- group: luadoc
+          ["cast-type-mismatch"]       = Opened,
+          ["circle-doc-class"]         = None,
+          ["doc-field-no-class"]       = Opened,
+          ["duplicate-doc-alias"]      = Opened,
+          ["duplicate-doc-field"]      = Opened,
+          ["duplicate-doc-param"]      = Opened,
+          ["incomplete-signature-doc"] = Opened,
+          ["missing-global-doc"]       = None,
+          ["missing-local-export-doc"] = None,
+          ["undefined-doc-class"]      = Opened,
+          ["undefined-doc-name"]       = Opened,
+          ["undefined-doc-param"]      = Opened,
+          ["unknown-cast-variable"]    = Opened,
+          ["unknown-diag-code"]        = Opened,
+          ["unknown-operator"]         = Opened,
+
+          -- group: redefined
+          ["redefined-local"]        = Opened,
+
+          -- group: strict
+          ["close-non-object"]       = None,
+          ["deprecated"]             = Opened,
+          ["discard-returns"]        = None,
+
+          -- group: strong
+          ["no-unknown"] = None,
+
+          -- group: type-check
+          ["assign-type-mismatch"] = Opened,
+          ["cast-local-type"]      = Opened,
+          ["inject-field"]         = Opened,
+          ["need-check-nil"]       = Opened,
+          ["param-type-mismatch"]  = Opened,
+          ["return-type-mismatch"] = Opened,
+          ["undefined-field"]      = Opened,
+
+          -- group: unbalanced
+          ["missing-fields"]         = Opened,
+          ["missing-parameter"]      = Opened,
+          ["missing-return"]         = Opened,
+          ["missing-return-value"]   = Opened,
+          ["redundant-parameter"]    = Opened,
+          ["redundant-return-value"] = Opened,
+          ["redundant-value"]        = Opened,
+          ["unbalanced-assignments"] = Opened,
+
+          -- group: unused
+          ["code-after-break"] = Opened,
+          ["empty-block"]      = None,
+          ["redundant-return"] = None,
+          ["trailing-space"]   = None,
+          ["unreachable-code"] = Opened,
+          ["unused-function"]  = Opened,
+          ["unused-label"]     = Opened,
+          ["unused-local"]     = Opened,
+          ["unused-vararg"]    = Opened,
+        }
+      },
+
+      doc = {
+        packageName = nil,
+        privateName = nil,
+        protectedName = nil,
+      },
+
+      format = {
+        defaultConfig = nil,
+        enable = false,
+      },
+
+      hint = {
+        enable     = true,
+        paramName  = "All",
+        paramType  = true,
+        setType    = true,
+        arrayIndex = "Enable",
+        await      = false,
+        semicolon  = Disable,
+      },
+
+      hover = {
+        enable        = true,
+        enumsLimit    = 10,
+        expandAlias   = true,
+        previewFields = 20,
+        viewNumber    = true,
+        viewString    = true,
+        viewStringMax = 1000,
+      },
+
+      IntelliSense = {
+        -- https://github.com/sumneko/lua-language-server/issues/872
+        traceLocalSet    = true,
+        traceReturn      = true,
+        traceBeSetted    = true,
+        traceFieldInject = true,
+      },
+
+      runtime = {
+        builtin           = "enable",
+        fileEncoding      = "utf8",
+        meta              = nil,
+        nonstandardSymbol = nil,
+        ---@type string[]
+        path              = { "?.lua", "?/init.lua" },
+        pathStrict        = true,
+        plugin            = nil,
+        pluginArgs        = nil,
+        special = {
+          ["my.utils.luamod.reload"] = "require",
+          ["my.utils.luamod.if_exists"] = "require",
+          ["busted.require"] = "require",
+        },
+        unicodeName       = false,
+        version           = "LuaJIT",
+      },
+
+      semantic = {
+        annotation = true,
+        enable     = true,
+        keyword    = true,
+        variable   = true,
+      },
+
+      signatureHelp = {
+        enable = false,
+      },
+
+      spell = {
+        dict = nil,
+      },
+
+      type = {
+        castNumberToInteger = true,
+        weakUnionCheck      = true,
+        weakNilCheck        = true,
+      },
+
+      window = {
+        progressBar = false,
+        statusBar   = false,
+      },
+
+      workspace = {
+        checkThirdParty  = Disable,
+        ---@type string[]
+        ignoreDir        = {},
+        ignoreSubmodules = true,
+        ---@type string[]
+        library          = {},
+        maxPreload       = nil,
+        preloadFileSize  = nil,
+        useGitIgnore     = true,
+        userThirdParty   = nil,
+      },
+    },
+  },
+}
+
+do
+  local diag = DEFAULT_CONFIG.settings.Lua.diagnostics
+
+  -- explicitly disable diagnostics set to `None`
+  -- idk if this has any real effect
+  diag.disable = {}
+  for name, val in pairs(diag.neededFileStatus) do
+    if val == None then
+      insert(diag.disable, name)
+    end
+  end
+end
 
 
-local function reassemble()
-  Runtime.path = Path
-  Lua.runtime  = Runtime
+---@param t string[]
+---@param extra string|string[]
+local function extend(t, extra)
+  if extra == nil then
+    return
+  end
 
-  Workspace.library = Library
-  Workspace.ignoreDir = IgnoreDir
-  Lua.workspace     = Workspace
+  if type(extra) == "table" then
+    for _, v in ipairs(extra) do
+      insert(t, v)
+    end
+  else
+    insert(t, extra)
+  end
+end
 
-  Lua.IntelliSense  = IntelliSense
-  Lua.completion    = Completion
-  Lua.diagnostics   = Diagnostics
-  Lua.doc           = Doc
-  Lua.format        = Format
-  Lua.hint          = Hint
-  Lua.hover         = Hover
-  Lua.semantic      = Semantic
-  Lua.signatureHelp = SignatureHelp
-  Lua.spell         = Spell
-  Lua.type          = Type
-  Lua.window        = Window
+---@param p string
+---@param skip_realpath? boolean
+---@return string
+local function normalize(p, skip_realpath)
+  if skip_realpath then
+    return fs.normalize(p)
+  else
+    return fs.realpath(p)
+  end
+end
 
-  Settings.Lua = Lua
+---@param paths string[]
+---@param skip_realpath? boolean
+---@return string[]
+local function dedupe(paths, skip_realpath)
+  local seen = {}
+  local new = {}
+  local i = 0
+  for _, p in ipairs(paths) do
+    p = normalize(p, skip_realpath)
+    if not seen[p] then
+      seen[p] = true
+      i = i + 1
+      new[i] = p
+    end
+  end
+  return new
+end
 
-  Config.settings = Settings
-  Config.root_dir = RootDir
-  Config.cmd = Cmd
+
+---@type { [integer|string]: my.lua.state }
+local STATES = {}
+
+---@class my.lua.state
+---
+---@field id integer
+---@field resolver my.lua.resolver
+---@field config my.lsp.config.Lua
+local State = {
+  id = nil,
+  resovler = nil,
+  config = nil,
+}
+
+local state_mt = { __index = State }
+
+
+---@param id integer|"default"
+---@param config? my.lsp.config.Lua
+---@return my.lua.state
+function State.new(id, config)
+  local self = setmetatable({
+    id = id,
+    client = nil,
+    config = deepcopy(config),
+    resolver = nil,
+  }, state_mt)
+
+  STATES[id] = self
+
+  return self
+end
+
+
+---@return my.lua.state
+function State.default()
+  return State.new("default", DEFAULT_CONFIG)
+end
+
+
+---@param id integer
+---@return my.lua.state
+function State.get_or_create(id)
+  assert(type(id) == "number")
+
+  if STATES[id] then
+    return STATES[id]
+  end
+
+  local config = STATES.default
+    and STATES.default.config
+    or DEFAULT_CONFIG
+
+  return State.new(id, config)
+end
+
+
+---@param search string
+---@param tree? my.lua.resolver.path
+---@return boolean changed
+function State:update_runtime_path(search, tree)
+  local path = self.config.settings.Lua.runtime.path
+  local npaths = #path
+
+  for i = 1, npaths do
+    if path[i] == search then
+      return false
+    end
+  end
+
+  path[npaths + 1] = search
+
+  lsp.log.info({
+    event = "insert Lua.runtime.path",
+    path = search,
+    meta = tree and tree.meta,
+  })
+
+  return true
+end
+
+
+---@param path string
+---@param tree? my.lua.resolver.path
+---@return boolean changed
+function State:update_workspace_library(path, tree)
+  local library = self.config.settings.Lua.workspace.library
+  local nlibs = #library
+
+  local ft, lt = fs.type(path)
+  local is_file = ft == "file" or lt == "file"
+
+  if is_file then
+    for i = 1, nlibs do
+      local lib = library[i]
+      if lib == path or path:find(lib, nil, true) == 1 then
+        return false
+      end
+    end
+
+  else
+    for i = 1, nlibs do
+      if library[i] == path then
+        return false
+      end
+    end
+  end
+
+  library[nlibs + 1] = path
+
+  lsp.log.info({
+    event = "insert Lua.workspace.library",
+    path = path,
+    meta = tree and tree.meta,
+  })
+
+  return true
+end
+
+
+---@param client? vim.lsp.Client
+function State:update_client_settings(client)
+  client = client or lsp.get_clients({ name = NAME })[1]
+  if not client then
+    return
+  end
+
+  local settings = self.config.settings
+  if deep_equal(client.settings, settings) then
+    return
+  end
+
+  client.settings = deepcopy(settings)
+
+  do
+    -- avoid triggering `workspace/didChangeWorkspaceFolders` by tricking
+    -- lspconfig into thinking that the client already knows about all of
+    -- our workspace directories
+
+    client.workspace_folders = client.workspace_folders or {}
+    local seen = {}
+    for _, item in ipairs(client.workspace_folders) do
+      seen[item.name] = true
+    end
+
+    local resolver = self.resolver
+    if resolver then
+      for _, tree in ipairs(resolver.paths) do
+        if tree.dir ~= "" and not seen[tree.dir] then
+          seen[tree.dir] = true
+          insert(client.workspace_folders, {
+            name = tree.dir,
+            uri = vim.uri_from_fname(tree.dir),
+          })
+        end
+      end
+    end
+  end
+
+  vim.notify("Updating LuaLS settings...")
+  local ok = client:notify(workspaceDidChangeConfiguration,
+                           { settings = settings })
+
+  if not ok then
+    vim.notify("Failed updating LuaLS settings", vim.log.levels.WARN)
+  end
+end
+
+
+---@param settings my.lsp.settings
+function State:rebuild_library(settings)
+  local libs = {}
+
+  extend(libs, settings.libraries)
+  extend(libs, settings.definitions)
+
+  libs = dedupe(libs)
+  local library = self.config.settings.Lua.workspace.library
+  clear(library)
+  for i = 1, #libs do
+    library[i] = libs[i]
+  end
 end
 
 
@@ -406,127 +745,6 @@ local SETTINGS_COMMON = {
   },
 }
 
----@param search string
----@param tree? my.lua.resolver.path
----@return boolean changed
-local function update_runtime_path(search, tree)
-  local npaths = #Path
-
-  for i = 1, npaths do
-    if Path[i] == search then
-      return false
-    end
-  end
-
-  Path[npaths + 1] = search
-
-  lsp.log.info({
-    event = "insert Lua.runtime.path",
-    path = search,
-    meta = tree and tree.meta,
-  })
-
-  return true
-end
-
----@param path string
----@param tree? my.lua.resolver.path
----@return boolean changed
-local function update_workspace_library(path, tree)
-  local nlibs = #Library
-
-  local ft, lt = fs.type(path)
-  local is_file = ft == "file" or lt == "file"
-
-  if is_file then
-    for i = 1, nlibs do
-      local lib = Library[i]
-      if lib == path or path:find(lib, nil, true) == 1 then
-        return false
-      end
-    end
-
-  else
-    for i = 1, nlibs do
-      if Library[i] == path then
-        return false
-      end
-    end
-  end
-
-  Library[nlibs + 1] = path
-
-  lsp.log.info({
-    event = "insert Lua.workspace.library",
-    path = path,
-    meta = tree and tree.meta,
-  })
-
-  return true
-end
-
-
----@param client? vim.lsp.Client
-local function update_client_settings(client)
-  client = client or lsp.get_clients({ name = NAME })[1]
-  if not client then
-    return
-  end
-
-  reassemble()
-
-  if deep_equal(client.settings, Settings) then
-    return
-  end
-
-  client.settings = deepcopy(Settings)
-
-  do
-    -- avoid triggering `workspace/didChangeWorkspaceFolders` by tricking
-    -- lspconfig into thinking that the client already knows about all of
-    -- our workspace directories
-
-    client.workspace_folders = client.workspace_folders or {}
-    local seen = {}
-    for _, item in ipairs(client.workspace_folders) do
-      seen[item.name] = true
-    end
-
-    for _, tree in ipairs(Resolver.paths) do
-      if tree.dir ~= "" and not seen[tree.dir] then
-        seen[tree.dir] = true
-        insert(client.workspace_folders, {
-          name = tree.dir,
-          uri = vim.uri_from_fname(tree.dir),
-        })
-      end
-    end
-  end
-
-  vim.notify("Updating LuaLS settings...")
-  local ok = client:notify(workspaceDidChangeConfiguration,
-                           { settings = Settings })
-
-  if not ok then
-    vim.notify("Failed updating LuaLS settings", vim.log.levels.WARN)
-  end
-end
-
----@param t string[]
----@param extra string|string[]
-local function extend(t, extra)
-  if extra == nil then
-    return
-  end
-
-  if type(extra) == "table" then
-    for _, v in ipairs(extra) do
-      insert(t, v)
-    end
-  else
-    insert(t, extra)
-  end
-end
 
 ---@param name string
 ---@return string|nil
@@ -575,17 +793,6 @@ local DEFAULT_SETTINGS = {
   root_dir = nil,
 }
 
----@param p string
----@param skip_realpath? boolean
----@return string
-local function normalize(p, skip_realpath)
-  if skip_realpath then
-    return fs.normalize(p)
-  else
-    return fs.realpath(p)
-  end
-end
-
 ---@param a table
 ---@param b table
 ---@return table|nil
@@ -605,24 +812,6 @@ local function imerge(a, b)
   end
 
   return a
-end
-
----@param paths string[]
----@param skip_realpath? boolean
----@return string[]
-local function dedupe(paths, skip_realpath)
-  local seen = {}
-  local new = {}
-  local i = 0
-  for _, p in ipairs(paths) do
-    p = normalize(p, skip_realpath)
-    if not seen[p] then
-      seen[p] = true
-      i = i + 1
-      new[i] = p
-    end
-  end
-  return new
 end
 
 ---@param current my.lsp.settings
@@ -688,20 +877,6 @@ local function get_merged_settings()
 end
 
 
----@param settings my.lsp.settings
-local function rebuild_library(settings)
-  local libs = {}
-
-  extend(libs, settings.libraries)
-  extend(libs, settings.definitions)
-
-  libs = dedupe(libs)
-  clear(Library)
-  for i = 1, #libs do
-    Library[i] = libs[i]
-  end
-end
-
 ---@param paths string[]
 ---@param dir string
 ---@param seen table<string, true>
@@ -716,8 +891,9 @@ local function add_lua_path(paths, dir, seen)
 end
 
 ---@param settings my.lsp.settings
-local function rebuild_path(settings)
-  clear(Path)
+function State:rebuild_path(settings)
+  local path = self.config.settings.Lua.runtime.path
+  clear(path)
 
   local seen = {}
 
@@ -732,38 +908,39 @@ local function rebuild_path(settings)
   --   * $PWD/?/init.lua
   --
   -- ...but `?.lua` and `?/init.lua` work, so let's use them instead
-  insert(Path, "?.lua")
-  insert(Path, "?/init.lua")
+  insert(path, "?.lua")
+  insert(path, "?/init.lua")
 
   for _, lib in ipairs(settings.libraries or EMPTY) do
     lib = fs.normalize(lib)
     -- add $path
-    add_lua_path(Path, lib, seen)
+    add_lua_path(path, lib, seen)
 
     -- add $path/lua
     if not endswith(lib, '/lua') and fs.dir_exists(lib .. '/lua') then
-      add_lua_path(Path, lib .. '/lua', seen)
+      add_lua_path(path, lib .. '/lua', seen)
     end
 
     -- add $path/src
     if not endswith(lib, '/src') and fs.dir_exists(lib .. '/src') then
-      add_lua_path(Path, lib .. '/src', seen)
+      add_lua_path(path, lib .. '/src', seen)
     end
 
     -- add $path/lib
     if not endswith(lib, '/lib') and fs.dir_exists(lib .. '/lib') then
-      add_lua_path(Path, lib .. '/lib', seen)
+      add_lua_path(path, lib .. '/lib', seen)
     end
   end
 
   for _, dir in ipairs(LUA_PATH_ENTRIES) do
-    add_lua_path(Path, dir, seen)
+    add_lua_path(path, dir, seen)
   end
 end
 
 ---@param settings my.lsp.settings
-local function rebuild_ignore(settings)
-  clear(IgnoreDir)
+function State:rebuild_ignore(settings)
+  local ignoreDir = self.config.settings.Lua.workspace.ignoreDir
+  clear(ignoreDir)
 
   local ignore = settings.ignore
   if not ignore then
@@ -771,47 +948,49 @@ local function rebuild_ignore(settings)
   end
 
   for i = 1, #ignore do
-    IgnoreDir[i] = ignore[i]
+    ignoreDir[i] = ignore[i]
   end
 end
 
 ---@param ws? my.lsp.settings
-local function init_resolver(ws)
-  Resolver = luamod.resolver()
+function State:init_resolver(ws)
+  local resolver = luamod.resolver.new()
+  self.resolver = resolver
 
   ws = ws or get_merged_settings()
 
-  Resolver:add_lua_package_path()
-  Resolver:add_env_lua_path()
+  resolver:add_lua_package_path()
+  resolver:add_env_lua_path()
 
   for _, dir in ipairs(ws.definitions or EMPTY) do
-    Resolver:add_dir(dir, { source = SRC_TYPE_DEFS })
+    resolver:add_dir(dir, { source = SRC_TYPE_DEFS })
   end
 
-  for _, p in ipairs(Path) do
-    Resolver:add_path(p, { source = SRC_RUNTIME_PATH })
+  local path = self.config.settings.Lua.runtime.path
+  for _, p in ipairs(path) do
+    resolver:add_path(p, { source = SRC_RUNTIME_PATH })
   end
 
   local libraries = ws.libraries
 
   for _, lib in ipairs(libraries) do
-    Resolver:add_dir(lib, { source = SRC_WS_LIBRARY })
+    resolver:add_dir(lib, { source = SRC_WS_LIBRARY })
   end
 
   if ws.root_dir then
-    Resolver:add_dir(ws.root_dir,
+    resolver:add_dir(ws.root_dir,
                      { source = SRC_WORKSPACE_ROOT })
   end
 
   if WS.meta.nvim then
     if fs.dir_exists(WS.dir .. "/lua") then
-      Resolver:add_dir(WS.dir .. "/lua",
+      resolver:add_dir(WS.dir .. "/lua",
                        { source = SRC_WS_LIBRARY })
     end
 
     for _, p in ipairs(plugin.list()) do
       if p.dir and p.dir ~= "" then
-        Resolver:add_dir(p.dir .. "/lua",
+        resolver:add_dir(p.dir .. "/lua",
                          {
                            source = SRC_PLUGIN,
                            plugin = p.name,
@@ -822,7 +1001,8 @@ local function init_resolver(ws)
 end
 
 ---@param found my.lua.resolver.module[]
-local function update_settings_from_requires(found)
+---@param state my.lua.state
+local function update_settings_from_requires(found, state)
   local skipped = {}
 
   ---@param tree my.lua.resolver.path
@@ -857,7 +1037,7 @@ local function update_settings_from_requires(found)
 
     for _, suf in ipairs(tree.suffixes) do
       local search = tree.dir .. "/?" .. suf
-      update_runtime_path(search, tree)
+      state:update_runtime_path(search, tree)
     end
   end
 
@@ -869,10 +1049,10 @@ local function update_settings_from_requires(found)
       or tree.meta.source == SRC_RUNTIME_PATH
     then
       local fullpath = tree.dir .. "/" .. mod.fname
-      update_workspace_library(fullpath, tree)
+      state:update_workspace_library(fullpath, tree)
 
     else
-      update_workspace_library(tree.dir, tree)
+      state:update_workspace_library(tree.dir, tree)
     end
   end
 
@@ -887,22 +1067,24 @@ local function update_settings_from_requires(found)
 end
 
 
-local function reconfigure(ws)
+---@param ws my.lsp.settings
+function State:reconfigure(ws)
   if ws.luarc_settings then
     return
   end
 
-  rebuild_library(ws)
-  rebuild_path(ws)
-  rebuild_ignore(ws)
-  RootDir = ws.root_dir
+  self:rebuild_library(ws)
+  self:rebuild_path(ws)
+  self:rebuild_ignore(ws)
+  self.config.root_dir = ws.root_dir
 end
 
 do
   ---@param client vim.lsp.Client
-  ---@param _buf integer
-  local function on_attach(client, _buf)
+  ---@param buf integer
+  local function on_attach(client, buf)
     local attach_done = sw.new("lua-lsp.on-attach", 1000)
+    local state = State.get_or_create(client.id)
 
     local ws = get_merged_settings()
 
@@ -912,21 +1094,28 @@ do
     end
 
     vim.defer_fn(function()
-      reconfigure(ws)
+      state:reconfigure(ws)
 
-      if not Resolver then
-        init_resolver(ws)
+      if not state.resolver then
+        state:init_resolver(ws)
       end
 
-      update_client_settings(client)
+      storage.buffer.lua_resolver = state.resolver
+
+      state:update_client_settings(client)
       attach_done()
     end, 0)
   end
 
-  require("my.lsp.helpers").on_attach(NAME, on_attach)
-  require("my.lsp.helpers").on_detach(NAME, function()
-    Resolver = nil
-  end)
+  ---@param client vim.lsp.Client
+  ---@param buf integer
+  local function on_detach(client, buf)
+    storage.buffer.lua_resolver = nil
+  end
+
+  local helpers = require("my.lsp.helpers")
+  helpers.on_attach(NAME, on_attach)
+  helpers.on_detach(NAME, on_detach)
 end
 
 
@@ -960,7 +1149,13 @@ do
   local function buf_update_handler()
     scheduled = false
 
-    if not Resolver then
+    local client = lsp.get_clients({ name = NAME })[1]
+    local id = client and client.id
+    if not id then
+      return
+    end
+    local state = STATES[id]
+    if not state or not state.resolver then
       return
     end
 
@@ -991,7 +1186,7 @@ do
 
     for _, modname in ipairs(modnames) do
       if not skip[modname] then
-        local mod = Resolver:find_module(modname)
+        local mod = state.resolver:find_module(modname)
         if mod then
           insert(found, mod)
 
@@ -1005,8 +1200,8 @@ do
       return
     end
 
-    update_settings_from_requires(found)
-    update_client_settings()
+    update_settings_from_requires(found, state)
+    state:update_client_settings(client)
   end
 
   local next_run = 0
@@ -1030,7 +1225,6 @@ do
     local buf = e.buf
 
     if not buf
-      or not Resolver
       or Busy[buf]
       or not WS.meta.lua
       or not api.nvim_buf_is_loaded(buf)
@@ -1077,12 +1271,18 @@ do
     local found = _find_type_defs(names, extra)
     local changed = false
 
+    local client = lsp.get_clients({ name = NAME })[1]
+    if not client then
+      return
+    end
+    local state = STATES[client.id]
+
     for _, path in ipairs(found) do
-      changed = update_workspace_library(path) or changed
+      changed = state:update_workspace_library(path) or changed
     end
 
     if changed then
-      update_client_settings()
+      state:update_client_settings(client)
     end
   end
 
@@ -1143,14 +1343,15 @@ end
 do
   if WS.meta.lua then
     local settings = get_merged_settings()
+    local state = State.get_or_create(0)
+
     vim.defer_fn(function()
-      init_resolver(settings)
+      state:init_resolver(settings)
     end, 0)
 
-    reconfigure(settings)
-    reassemble()
+    state:reconfigure(settings)
   end
 end
 
 
-return Config
+return DEFAULT_CONFIG
