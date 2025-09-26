@@ -4,3 +4,5 @@ lld
 m4
 perl-FindBin
 zlib-devel
+gcc14
+gcc14-c++
