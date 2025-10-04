@@ -261,7 +261,9 @@ local binding = {
 ---@return my.key.binding
 function binding.new(mode_or_opts, keys)
   local self = binding
-  assert(not self.started, "overwriting previous key binding")
+  if self.started then
+    error("overwriting previous key binding", 2)
+  end
 
   if type(mode_or_opts) == "table" then
     local opts = mode_or_opts
@@ -284,8 +286,14 @@ end
 ---@param desc string
 ---@return my.key.binding
 function binding:desc(desc)
-  assert(type(desc) == "string")
-  assert(self == binding and self.started)
+  if type(desc) ~= "string" then
+    error("'desc' must be a string", 2)
+  end
+
+  if self ~= binding or not self.started then
+    error("invalid binding state", 2)
+  end
+
   self.opts.desc = desc
   return self
 end
@@ -293,8 +301,14 @@ end
 ---@param tag string
 ---@return my.key.binding
 function binding:tag(tag)
-  assert(type(tag) == "string")
-  assert(self == binding and self.started)
+  if type(tag) ~= "string" then
+    error("'tag' must be a string", 2)
+  end
+
+  if self ~= binding or not self.started then
+    error("invalid binding state", 2)
+  end
+
   self.opts.tag = tag
   return self
 end
@@ -302,8 +316,15 @@ end
 ---@param buffer string
 ---@return my.key.binding
 function binding:buffer(buffer)
-  assert(self == binding and self.started)
-  assert(type(buffer) == "number" or type(buffer) == "boolean")
+  if type(buffer) ~= "number" and type(bufer) ~= "boolean" then
+    error("'buffer' must be a number or boolean", 2)
+  end
+
+  if self ~= binding or not self.started then
+    error("invalid binding state", 2)
+  end
+
+
   if buffer == false then
     buffer = nil
   end
@@ -314,8 +335,14 @@ end
 ---@param silent boolean
 ---@return my.key.binding
 function binding:silent(silent)
-  assert(type(silent) == "boolean")
-  assert(self == binding and self.started)
+  if type(silent) ~= "boolean" then
+    error("'silent' must be a boolean", 2)
+  end
+
+  if self ~= binding or not self.started then
+    error("invalid binding state", 2)
+  end
+
   self.opts.silent = silent
   return self
 end
@@ -323,18 +350,27 @@ end
 ---@param recursive boolean
 ---@return my.key.binding
 function binding:recursive(recursive)
-  assert(type(recursive) == "boolean")
-  assert(self == binding and self.started)
+  if type(recursive) ~= "boolean" then
+    error("'recursive' must be a boolean", 2)
+  end
+
+  if self ~= binding or not self.started then
+    error("invalid binding state", 2)
+  end
+
   self.opts.noremap = not recursive
   return self
 end
 
 ---@param self my.key.binding
 local function _create_binding(self)
-  assert(self == binding
-         and self.started
-         and self.opts.lhs
-         and self.opts.rhs)
+  if self ~= binding
+    or not self.started
+    or not self.opts.lhs
+    or not self.opts.rhs
+  then
+    error("invalid binding state", 2)
+  end
 
   create_keymap(self.opts)
   clear(self.opts)
@@ -343,16 +379,28 @@ end
 
 ---@param callback function|table
 function binding:callback(callback)
-  assert(is_callable(callback))
-  assert(self.opts.rhs == nil)
+  if not is_callable(callback) then
+    error("'callback' must be callable", 2)
+  end
+
+  if self.opts.rhs ~= nil then
+    error("cannot set 'callback' when binding rhs already set", 2)
+  end
+
   self.opts.rhs = callback
   return _create_binding(self)
 end
 
 ---@param raw string
 function binding:raw(raw)
-  assert(type(raw) == "string")
-  assert(self.opts.rhs == nil)
+  if type(raw) ~= "string" then
+    error("'raw' must be a string", 2)
+  end
+
+  if self.opts.rhs ~= nil then
+    error("cannot set 'raw' when binding rhs already set", 2)
+  end
+
   self.opts.rhs = raw
   return _create_binding(self)
 end
@@ -371,9 +419,11 @@ end
 function binding:action(action)
   if is_callable(action) then
     return self:callback(action)
+
   elseif action == nil then
-    vim.notify(fmt("empty %q mode key binding for %q", self.opts.mode, self.opts.lhs),
-               vim.log.levels.WARN)
+    error(fmt("empty/unset %q mode 'action' for key binding: %q",
+              self.opts.mode, self.opts.lhs), 2)
+
   else
     return self:raw(action)
   end
