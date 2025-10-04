@@ -4,8 +4,10 @@ local plugin = require "my.utils.plugin"
 local km = require("my.keymap")
 local const = require("my.constants")
 local event = require("my.event")
+local fs = require("my.utils.fs")
+local health = require("user.health")
 
-local executable = vim.fn.executable
+local executable = fs.executable
 local api = vim.api
 local lsp = vim.lsp
 local vim = vim
@@ -290,29 +292,38 @@ end
 local function setup_server(name)
   local conf = lsp.config[name]
   if not conf then
-    vim.notify("unknown LSP server: " .. name, vim.log.levels.WARN)
+    health.error("lsp", "server %q not found", name)
     return
   end
 
   local cmd = conf.cmd
-  if cmd and executable(cmd[1]) == 1 then
-    lsp.config(name, conf)
-    lsp.enable(name)
+  if not cmd then
+    health.error("lsp", "server %q has no command", name)
+    return
   end
+
+  local found, exe = executable(cmd[1], true)
+  if not found then
+    health.error("lsp", "server %q executable (%s) not found",
+                 name, cmd[1])
+    return
+  end
+
+  health.ok("lsp", "server %q installed at %q", name, exe)
+
+  lsp.config(name, conf)
+  lsp.enable(name)
 end
 
 
 function _M.init()
-  if const.headless then
-    return
-  end
-
-  if not plugin.installed("nvim-lspconfig") then
+  if plugin.installed("nvim-lspconfig") then
+    health.ok("lsp", "nvim-lspconfig plugin is installed")
+  else
+    health.warn("lsp", "nvim-lspconfig plugin is not installed")
     vim.notify("nvim-lspconfig is not installed, some things might not work",
                vim.log.levels.WARN)
   end
-
-  require("lspconfig")
 
   if const.lsp_debug then
     LOG_LEVEL = const.lsp_log_level
@@ -326,11 +337,15 @@ function _M.init()
   })
 
   for _, server in ipairs(SERVERS) do
-    setup_server(server)
+    -- server setup involves doing stat calls to check if the server executable
+    -- is installed, so do this async
+    vim.schedule(function()
+      setup_server(server)
+    end)
   end
 
   event.on({ event.LspAttach, event.LspDetach })
-    :group("user-lsp")
+    :group("user-lsp-events")
     :desc("forward LSP attach/detach events")
     :pattern("*")
     :callback(require("my.lsp.helpers").route_event)

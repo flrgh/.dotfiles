@@ -24,14 +24,11 @@ local find = string.find
 local type = type
 local tostring = tostring
 local tonumber = tonumber
+local band = bit.band
+local getenv = os.getenv
 
+local EXEC_BITS = tonumber(0111, 8)
 local SLASH = byte("/")
-
----@param n integer
----@return integer
-local function oct_to_dec(n)
-  return tonumber(tostring(n), 8)
-end
 
 
 --- Check if a file exists.
@@ -106,7 +103,7 @@ end
 function _M.read_file(fname)
   local stat, data, fd, err
 
-  fd, err = fs_open(fname, "r", oct_to_dec(666))
+  fd, err = fs_open(fname, "r", tonumber(666, 8))
   if not fd then
     return nil, err or "failed opening file"
   end
@@ -260,7 +257,7 @@ end
 ---@return integer|nil written
 ---@return string|nil error
 local function write_with_flags(path, data, mode, flags)
-  mode = mode or oct_to_dec(640)
+  mode = mode or tonumber(640, 8)
 
   local fd, err = fs_open(path, flags, mode)
   if not fd then
@@ -435,6 +432,79 @@ function _M.abbreviate(path)
   end
 
   return path
+end
+
+
+local EXE_CACHE = {}
+
+---@param path string
+---@param use_cache? boolean
+---@return boolean
+local function is_exe(path, use_cache)
+  local cached = EXE_CACHE[path]
+  if use_cache and cached ~= nil then
+    return not not cached, cached
+  end
+
+  local st = fs_stat(path)
+  local res = st
+    and st.type == "file"
+    and band(st.mode, EXEC_BITS) > 0
+    and path
+    or false
+
+  EXE_CACHE[path] = res
+  return not not res, res
+end
+
+---@type string[]
+local __PATH
+
+---@param use_cache? boolean
+---@return string[]
+local function get_PATH(use_cache)
+  if __PATH and use_cache then
+    return __PATH
+  end
+
+  __PATH = {}
+  local n = 0
+
+  local PATH = getenv("PATH")
+  if PATH then
+    for part in PATH:gmatch("[^:]+") do
+      n = n + 1
+      __PATH[n] = part
+    end
+  end
+
+  return __PATH
+end
+
+
+---@param path string
+---@param use_cache? boolean
+---@return boolean
+---@return string? abspath
+function _M.executable(path, use_cache)
+  local cached = EXE_CACHE[path]
+  if use_cache and cached ~= nil then
+    return not not cached, cached
+  end
+
+  if find(path, "/", nil, true) then
+    return is_exe(path, use_cache)
+  end
+
+  for _, dir in ipairs(get_PATH(use_cache)) do
+    local try = dir .. "/" .. path
+    if is_exe(try, use_cache) then
+      EXE_CACHE[path] = try
+      return true, try
+    end
+  end
+
+  return is_exe(path, use_cache)
 end
 
 

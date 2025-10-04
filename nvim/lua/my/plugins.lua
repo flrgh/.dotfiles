@@ -577,10 +577,13 @@ local plugins_by_category = {
     -- LSP stuff
     {
       "neovim/nvim-lspconfig",
-      event = evt.VeryLazy,
-      dependencies = {
-        "b0o/schemastore.nvim",
-      },
+      lazy = false, -- needs to be injected into rtp early on
+    },
+
+    {
+      -- JSON schema supplier for jsonls and yamlls
+      "b0o/schemastore.nvim",
+      lazy = true,
     },
 
     {
