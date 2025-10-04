@@ -451,10 +451,8 @@ bash: $(DEP)/bash .WAIT bash-completion bashrc | .setup
 
 .PHONY: golang
 golang: $(DEP)/gopls $(DEP)/gotags | .setup
-
-
-$(DEP)/gopls: $(MISE)
 	$(MISE) reshim
+	rm -rf $(HOME)/.local/go
 
 .PHONY: language-servers
 language-servers: npm $(LIBEXEC) \

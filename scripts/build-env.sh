@@ -42,7 +42,9 @@ emit-editor() {
 }
 
 emit-app-config() {
-    add-export GOPATH           "$HOME/.local/go"
+    if ! mise where go &>/dev/null; then
+        add-export GOPATH       "$HOME/.local/go"
+    fi
 
     add-export CARGO_HOME       "$HOME/.local/cargo"
     add-export MISE_CARGO_HOME  "$HOME/.local/cargo"

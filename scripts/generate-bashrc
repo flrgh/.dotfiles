@@ -947,9 +947,21 @@ __rc_app_vim
 
 __rc_golang() {
     # https://github.com/golang/go/wiki/GOPATH
-    local path=$HOME/.local/go
-    rc-export GOPATH "$path"
-    rc-add-path PATH "$path/bin"
+
+    local -r gopath=$HOME/.local/go
+
+    if mise where go &>/dev/null; then
+        # mise is managing our golang installation, so there's no need to deal
+        # with GOPATH
+
+        rc-rm-path PATH "$gopath/bin"
+
+        # https://go.dev/wiki/InstallTroubleshooting
+        rc-unset GOPATH
+
+    elif [[ -d $gopath ]]; then
+        rc-add-path PATH "$gopath/bin"
+    fi
 }
 __rc_golang
 
