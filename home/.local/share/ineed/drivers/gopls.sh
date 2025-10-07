@@ -38,5 +38,13 @@ install-from-asset() {
     local _asset=$1
     local version=$2
 
-    go install "golang.org/x/tools/gopls@v${version}"
+    local -r url="golang.org/x/tools/gopls@v${version}"
+
+    local go
+    if go=$(mise which go); then
+        "$go" install "$url"
+        mise reshim
+    else
+        go install "$url"
+    fi
 }

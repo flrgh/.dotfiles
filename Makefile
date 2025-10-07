@@ -452,6 +452,8 @@ bash: $(DEP)/bash .WAIT bash-completion bashrc | .setup
 .PHONY: golang
 golang: $(DEP)/gopls $(DEP)/gotags | .setup
 	$(MISE) reshim
+	which gopls || ineed install --reinstall gopls
+	which gotags || ineed install --reinstall gotags
 	rm -rf $(HOME)/.local/go
 
 .PHONY: language-servers
