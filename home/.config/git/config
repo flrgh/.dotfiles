@@ -9,6 +9,9 @@
 	lb = branch --sort=-authordate --format '%(align:width=18)%(authordate:format:%Y-%m-%d %H:%M)%(end) %(align:width=14,position=right)%(authordate:relative)%(end)  %(objectname:short)  %(HEAD) %(if)%(HEAD)%(then)%(color:green)%(end)%(refname:short)'
 	changed = diff --name-only
 
+	ls-dirs = "!git ls-files | cut -s -d / -f 1 | sort -u"
+	ls-dirs-recursive = "!git ls-files  | sed -nre 's|/[^/]*$||p' | sort -u"
+
 [branch]
 	sort = -committerdate
 
