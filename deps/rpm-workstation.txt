@@ -9,3 +9,13 @@ wl-clipboard
 alacritty
 fontconfig-devel  # currently required to build alacritty
 # END - alacritty
+
+
+# BEGIN - systemd-language-server
+libxml2
+libxml2-devel
+libxslt
+libxslt-devel
+python3-libxml2
+python3-libxslt
+# END - systemd-language-server
