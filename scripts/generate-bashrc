@@ -950,18 +950,30 @@ __rc_golang() {
 
     local -r gopath=$HOME/.local/go
 
-    if mise where go &>/dev/null; then
+    local -r gocache="$HOME/.cache/go-build"
+    mkdir -p "$gocache"
+    rc-export GOCACHE "$gocache"
+
+    local -r modcache="$HOME/.cache/go-mod"
+    mkdir -p "$modcache"
+    rc-export GOMODCACHE "$modcache"
+
+    local go
+    if go=$(mise where go 2>/dev/null); then
         # mise is managing our golang installation, so there's no need to deal
         # with GOPATH
-
-        rc-rm-path PATH "$gopath/bin"
-
         # https://go.dev/wiki/InstallTroubleshooting
         rc-unset GOPATH
+        rc-rm-path PATH "$gopath/bin"
+
+        rc-export GOROOT "$go"
+        rc-export GOBIN "${go}/bin"
 
     elif [[ -d $gopath ]]; then
         rc-add-path PATH "$gopath/bin"
     fi
+
+    go telemetry off
 }
 __rc_golang
 

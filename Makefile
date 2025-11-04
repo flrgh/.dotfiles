@@ -450,11 +450,22 @@ bash: $(DEP)/bash .WAIT bash-completion bashrc | .setup
 	./scripts/update-default-shell
 
 .PHONY: golang
+golang: private DIRS = \
+	$(HOME)/.local/go \
+	$(HOME)/go \
+	$(HOME)/.config/go/telemetry/local \
+	$(HOME)/.config/go/telemetry/upload
+golang: private GO = $(MISE) exec go -- go
 golang: $(DEP)/gopls $(DEP)/gotags | .setup
 	$(MISE) reshim
+	$(GO) telemetry off
 	which gopls || ineed install --reinstall gopls
 	which gotags || ineed install --reinstall gotags
-	rm -rf $(HOME)/.local/go
+	for dir in $(DIRS); do \
+		[[ -d $$dir ]] || continue; \
+		chmod -R u+w "$$dir"; \
+		rm -rf "$$dir"; \
+	done
 
 .PHONY: language-servers
 language-servers: npm $(LIBEXEC) \

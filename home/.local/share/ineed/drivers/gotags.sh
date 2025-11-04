@@ -38,12 +38,5 @@ install-from-asset() {
     local version=$2
 
     local -r url="github.com/${REPO}@v${version}"
-
-    local go
-    if go=$(mise which go); then
-        "$go" install "$url"
-        mise reshim
-    else
-        go install "$url"
-    fi
+    "$HOME/.local/libexec/golang-install-bin" "$url"
 }

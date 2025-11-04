@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+URL=${1:?}
+
+cleanup() {
+    if [[ -n ${GOPATH:-} && -d ${GOPATH:-} ]]; then
+        chmod -R u+w "${GOPATH:?}"
+        rm -rf "${GOPATH:?}"
+    fi
+}
+
+if command -v mise &>/dev/null && GO=$(mise which go); then
+    # go just caaaaaaaaan't fucking resist putting things into ~/go event if we
+    # explicitly set all of its other env vars appropriately, so the  only way
+    # to make this work is to use a temp dir for GOPATH
+    GOPATH=$(mktemp -d)
+    export GOPATH
+    echo "using temporary GOPATH '$GOPATH'"
+    trap cleanup ERR EXIT
+
+    GOROOT=$(mise where go)
+    export GOROOT
+    export GOBIN=${GOROOT:?}/bin
+    "$GO" install -modcacherw "$URL"
+
+    mise reshim
+else
+    go install "$URL"
+fi
