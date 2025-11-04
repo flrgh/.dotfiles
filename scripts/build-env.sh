@@ -14,6 +14,7 @@ emit-xdg() {
 }
 
 emit-shell() {
+    # FIXME: this is breaking login I guess?
     if true; then
         return
     fi
