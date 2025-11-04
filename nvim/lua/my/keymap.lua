@@ -316,7 +316,7 @@ end
 ---@param buffer string
 ---@return my.key.binding
 function binding:buffer(buffer)
-  if type(buffer) ~= "number" and type(bufer) ~= "boolean" then
+  if type(buffer) ~= "number" and type(buffer) ~= "boolean" then
     error("'buffer' must be a number or boolean", 2)
   end
 

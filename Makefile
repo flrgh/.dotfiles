@@ -474,12 +474,16 @@ $(PKG)/neovim: $(DEP)/neovim nvim/plugins.lock.json
 
 $(INSTALL_DATA)/nvim/lazy/lazy.nvim: $(PKG)/neovim
 
+$(INSTALL_DATA)/nvim/_bundle: $(PKG)/neovim nvim/plugins.lock.json $(SCRIPT)/neovim-bundle-plugin-files
+	$(SCRIPT)/neovim-bundle-plugin-files
+
 .PHONY: neovim
 neovim: language-servers \
 	$(DEP)/neovim \
 	$(INSTALL_DATA)/nvim/lazy/lazy.nvim \
 	$(DEP)/tree-sitter \
 	$(MISE_DEPS) \
+	$(INSTALL_DATA)/nvim/_lua_bundle \
 	| .setup
 
 $(USER_REPOS)/lua-utils:
@@ -577,8 +581,7 @@ COMMON_UPDATE := \
 		mise-update \
 		npm-update \
 		os-packages-update \
-		rust-update \
-		uv-update
+		rust-update
 
 .PHONY: common
 common: $(COMMON)

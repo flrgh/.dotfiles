@@ -1,23 +1,59 @@
-local _M = {}
-
 local fs = require "my.utils.fs"
 local sw = require "my.utils.stopwatch"
 local const = require "my.constants"
+local clear = require("table.clear")
 
 local insert = table.insert
 local find = string.find
 local sub = string.sub
 local gsub = string.gsub
-local file_exists = fs.file_exists
+local gmatch = string.gmatch
+
+---@type { [string]: boolean }
+local FS_CACHE = {}
+
+---@param path string
+---@param absolute? boolean
+local function file_exists(path, absolute)
+  if not absolute then
+    return fs.file_exists(path)
+  end
+
+  local exists = FS_CACHE[path]
+  if exists == nil then
+    exists = fs.file_exists(path) or false
+    FS_CACHE[path] = exists
+  end
+
+  return exists
+end
+
 
 local function noop() end
+
+---@return fun():string|nil
+local function package_path_entries()
+  return gmatch(package.path, "[^;]+")
+end
+
+---@return fun():string|nil
+local function env_lua_path_entries()
+  local lua_path = os.getenv("LUA_PATH")
+  return gmatch(lua_path or "", "^[^;]+")
+end
+
+local SRC_PACKAGE_PATH = "package.path"
+local SRC_LUA_PATH = "$LUA_PATH"
+
 
 ---@class my.lua.resolver.module
 ---
 ---@field tree my.lua.resolver.path
 ---@field fname string
 
+
 ---@alias my.lua.resolver.path.meta table<string, any>
+
 
 ---@class my.lua.resolver.path
 ---
@@ -26,16 +62,64 @@ local function noop() end
 ---@field absolute boolean
 ---@field meta     my.lua.resolver.path.meta
 
+
 ---@class my.lua.resolver
 ---
 ---@field paths my.lua.resolver.path[]
 ---
 ---@field module_cache table<string, my.lua.resolver.module>
 ---
----@field fs_cache table<string, boolean>
----
 ---@field dir_lookup table<string, my.lua.resolver.path>
 local resolver = {}
+local resolver_mt = { __index = resolver }
+
+resolver.package_path_entries = package_path_entries
+resolver.env_lua_path_entries = env_lua_path_entries
+resolver.SRC_PACKAGE_PATH = SRC_PACKAGE_PATH
+resolver.SRC_LUA_PATH = SRC_LUA_PATH
+
+
+---@return fun():my.lua.resolver.path|nil
+function resolver:iter_paths()
+  local i = 0
+  local paths = self.paths
+  return function()
+    i = i + 1
+    return paths[i]
+  end
+end
+
+
+---@return fun():string|nil, my.lua.resolver.path
+function resolver:iter_search_paths()
+  local path_i = 0
+  local suffix_i = 0
+  local paths = self.paths
+  local num_paths = #paths
+  local num_suffixes = 0
+
+  ---@type my.lua.resolver.path
+  local path
+
+  return function()
+    if suffix_i > num_suffixes then
+      path = nil
+      suffix_i = 0
+    end
+
+    if not path then
+      path_i = path_i + 1
+      path = paths[path_i]
+    end
+
+    if not path then
+      return
+    end
+
+    suffix_i = suffix_i + 1
+    return path.dir .. path.suffixes[suffix_i]
+  end
+end
 
 
 ---@param name string
@@ -55,7 +139,6 @@ function resolver:find_module(name, debug)
     end
   end
 
-
   local done = noop
   if debug then
     done = sw.new("luamod.resolve(" .. name .. ")", 50)
@@ -63,7 +146,6 @@ function resolver:find_module(name, debug)
 
   local slashed = gsub(name, "%.", "/")
 
-  local fs_cache = self.fs_cache
   local paths = self.paths
   local tried = debug and {} or nil
 
@@ -80,19 +162,11 @@ function resolver:find_module(name, debug)
       local fname = slashed .. suf
       local fullpath = prefix .. fname
 
-      local exists = fs_cache[fullpath]
-      if exists == nil then
-        exists = file_exists(fullpath) or false
-        if absolute then
-          fs_cache[fullpath] = exists
-        end
-      end
-
       if tried then
         insert(tried, fullpath)
       end
 
-      if exists then
+      if file_exists(fullpath, absolute) then
         local entry = {
           fname = fname,
           tree  = path,
@@ -179,46 +253,39 @@ function resolver:add_search(dir, suffix, meta)
   return self
 end
 
+---@return my.lua.resolver
 function resolver:add_env_lua_path()
-  local lua_path = os.getenv("LUA_PATH") or ""
-
-  lua_path:gsub("[^;]+", function(path)
-    if path ~= "" then
-      self:add_path(path, { source = "$LUA_PATH" })
-    end
-  end)
+  for path in env_lua_path_entries() do
+    self:add_path(path, { source = SRC_LUA_PATH })
+  end
 
   return self
 end
 
+---@return my.lua.resolver
 function resolver:add_lua_package_path()
-  package.path:gsub("[^;]+", function(path)
-    if path ~= "" then
-      self:add_path(path, { source = "package.path" })
-    end
-  end)
+  for path in package_path_entries() do
+    self:add_path(path, { source = SRC_PACKAGE_PATH })
+  end
 
   return self
 end
 
 function resolver:purge_cache()
-  self.module_cache = {}
+  clear(self.module_cache)
   self:purge_fs_cache()
 end
 
 function resolver:purge_fs_cache()
-  self.fs_cache = {}
+  clear(FS_CACHE)
 end
-
-local resolver_mt = { __index = resolver }
 
 
 ---@return my.lua.resolver
-function _M.new()
+function resolver.new()
   local self = setmetatable({
     paths = {},
     module_cache = {},
-    fs_cache = {},
     debug = const.debug or false,
     dir_lookup = {},
   }, resolver_mt)
@@ -227,9 +294,10 @@ function _M.new()
 end
 
 
-function _M.default()
-  return _M.new():add_lua_package_path()
+---@return my.lua.resolver
+function resolver.default()
+  return resolver.new():add_lua_package_path()
 end
 
 
-return _M
+return resolver

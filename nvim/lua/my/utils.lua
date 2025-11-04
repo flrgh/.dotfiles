@@ -1,31 +1,12 @@
 local _M = {}
 
-local type = type
-local getmetatable = debug.getmetatable
+_M.types = require("my.utils.types")
+_M.string = require("my.utils.string")
+_M.cmd = require("my.utils.cmd")
+_M.fs = require("my.utils.fs")
+_M.plugin = require("my.utils.plugin")
+_M.luamod = require("my.utils.luamod")
 
-local EMPTY = {}
-
-
----@param v any
----@return boolean
-function _M.is_callable(v)
-  if v == nil then
-    return false
-  end
-
-  local typ = type(v)
-
-  if typ == "function" then
-    return true
-  end
-
-  local mt = getmetatable(v)
-  if not mt then
-    return false
-  end
-
-  return type(mt.__call) == "function"
-end
-
+_M.is_callable = _M.types.callable
 
 return _M

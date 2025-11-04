@@ -5,6 +5,8 @@ local const = require("my.constants")
 local fs = require("my.utils.fs")
 local resolver = require("my.utils.luamod.resolver")
 local requires = require("my.utils.luamod.requires")
+local buffer = require("string.buffer")
+local cmd = require("my.utils.cmd")
 
 _M.resolver = resolver
 _M.requires = requires
@@ -14,8 +16,16 @@ local require = require
 local insert = table.insert
 local concat = table.concat
 local gsub = string.gsub
+local find = string.find
+local sub = string.sub
+local byte = string.byte
+local trim = vim.trim
 
 local vim = vim
+
+local LF = "\n"
+
+local function noop() end
 
 ---@type fun(string):string[]
 local split_lines
@@ -28,14 +38,20 @@ do
     buf[n] = line
   end
 
-  function split_lines(s)
+  function split_lines(s, skip_empty)
     n = 0
     gsub(s, "[^\r\n]+", add_line)
 
     local ret = {}
+    local o = 0
     for i = 1, n do
-      ret[i] = buf[i]
+      local line = buf[i]
       buf[i] = nil
+
+      if not skip_empty or #line ~= 0 then
+        o = o + 1
+        ret[o] = line
+      end
     end
 
     return ret
@@ -115,29 +131,72 @@ end
 function _M.find_type_defs(names, extra_paths)
   local namepat = "(" .. concat(names, "|") .. ")"
 
-  local cmd = {
+  local args = {
     "rg",
     "--one-file-system",
     "--files-with-matches",
     "-g", "*.lua",
-    "-e", "@alias +" .. namepat,
-    "-e", "@enum +" .. namepat,
-    "-e", "@class +" .. namepat,
+    "-e", "---[ ]*@alias .*" .. namepat,
+    "-e", "---[ ]*@enum .*" .. namepat,
+    "-e", "---[ ]*@class .*" .. namepat,
   }
 
   if extra_paths then
     for _, path in ipairs(extra_paths) do
-      insert(cmd, path)
+      insert(args, path)
     end
   end
 
   for _, lib in ipairs(LUA_PATH_ENTRIES) do
-    insert(cmd, lib)
+    insert(args, lib)
   end
 
-  local result = vim.system(cmd, { text = true }):wait()
+  local result = vim.system(args, { text = true }):wait()
 
   return split_lines(result.stdout)
+end
+
+
+---@param dir? string
+---@param cb? function
+function _M.find_all_requires(dir, cb)
+  local proc = cmd.new({
+    "rg",
+    "--one-file-system",
+    "--glob", '*.lua',
+    "--no-line-number",
+    "--no-filename",
+    "--line-buffered",
+    "--trim",
+    "--only-matching",
+    --"-e", [=[.*\brequire[\s\(]*["']([^"'\s{}]+)["'].*]=],
+    "-e", [=[.*\brequire[\s\(]*["']([a-zA-Z0-9_./-]+)["'].*]=],
+    "--replace", "$1",
+  })
+
+  local mods = {}
+  local seen = {}
+  proc:on_stdout_line(function(line, eof)
+    if eof then
+      if cb then
+        cb(mods)
+      end
+      return
+    end
+
+    line = trim(line)
+    if not seen[line] then
+      seen[line] = true
+      table.insert(mods, line)
+    end
+  end)
+
+  proc:run()
+
+  if not cb then
+    proc:wait()
+    return mods
+  end
 end
 
 

@@ -6,22 +6,6 @@ local vim = vim
 local api = vim.api
 local lsp = vim.lsp
 
-local function forward_event(src, buf, client_id, client_name)
-  local name, pattern = event.user_event(src, client_name)
-
-  api.nvim_exec_autocmds(name, {
-    pattern = pattern,
-    modeline = false,
-    data = {
-      buffer = buf,
-      client_id = client_id,
-      client_name = client_name,
-    },
-  })
-end
-forward_event = vim.schedule_wrap(forward_event)
-
-
 ---@param e _vim.autocmd.event
 ---@param client_name string
 ---@return vim.lsp.Client?
@@ -61,11 +45,9 @@ end
 ---@param client_name string
 ---@param fn fun(client: vim.lsp.Client, buf:number)
 local function register(evt, client_name, fn)
-  local name, pattern = event.user_event(evt, client_name)
-
-  event.on(name)
-    :group(name .. "." .. pattern)
-    :pattern(pattern)
+  event.on(event.User)
+    :group("lsp-forward-" .. evt .. "-" .. client_name, true)
+    :user_pattern({ evt, client_name })
     :callback(vim.schedule_wrap(function(e)
       local client = get_client(e, client_name)
       if not client then
@@ -94,6 +76,7 @@ end
 
 ---@param e _vim.autocmd.event
 function _M.route_event(e)
+  ---@type _vim.lsp.client.id
   local client_id = e.data and e.data.client_id
   if not client_id then
     return
@@ -117,7 +100,17 @@ function _M.route_event(e)
     return
   end
 
-  forward_event(e.event,  buf, client_id, client.name)
+  if not client.name then
+    vim.notify("lsp client (" .. client_id .. ") has no name",
+               vim.log.levels.WARN)
+    return
+  end
+
+  event.publish({ e.event, client.name }, {
+    buffer = buf,
+    client_id = client_id,
+    client_name = client.name,
+  })
 end
 
 return _M

@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly NVIM=${XDG_DATA_HOME:?}/nvim
+readonly BUNDLE=$NVIM/_bundle
+
+rm -rf "$BUNDLE" || true
+mkdir -p "$BUNDLE"
+
+shopt -s nullglob
+
+TYPES=(
+    "autoload" # automatically loaded scripts |autoload-functions|
+    "colors" # color scheme files |:colorscheme|
+    "compiler" # compiler files |:compiler|
+    "doc" # 	documentation |write-local-help|
+    "ftplugin" # filetype plugins |write-filetype-plugin|
+    "indent" # indent scripts |indent-expression|
+    "keymap" # key mapping files |mbyte-keymap|
+    "lang" # 	menu translations |:menutrans|
+    "lsp" # 	LSP client configurations |lsp-config|
+    "lua" # 	|Lua| plugins
+    "pack" # 	packages |:packadd|
+    "parser" # |treesitter| syntax parsers
+    "plugin" # plugin scripts |write-plugin|
+    "queries" # |treesitter| queries
+    "rplugin" # |remote-plugin| scripts
+    "spell" # spell checking files |spell|
+    "syntax" # syntax files |mysyntaxfile|
+    "tutor" # tutorial files |:Tutor|
+)
+
+for t in "${TYPES[@]}"; do
+    mkdir -p "$BUNDLE/$t" "$BUNDLE/after/$t"
+
+    echo "$t"
+    for src in "$NVIM"/lazy/*/"$t"; do
+        cp \
+            --no-clobber \
+            --verbose \
+            --recursive \
+            --link \
+            --target-directory "$BUNDLE/$t" \
+            "$src"/*
+    done
+
+    echo "after/$t"
+    for src in "$NVIM"/lazy/*/after/"$t"; do
+        cp \
+            --no-clobber \
+            --verbose \
+            --recursive \
+            --link \
+            --target-directory "$BUNDLE/after/$t" \
+            "$src"/*
+    done
+done
+
+
+rm -f "$BUNDLE/doc/tags"
+touch "$BUNDLE/doc/tags"
+for tag in "$NVIM"/lazy/*/doc/tags; do
+    cat "$tag" >> "$BUNDLE/doc/tags"
+done
+
+find "$BUNDLE" \
+    -type d \
+    -empty \
+    -delete

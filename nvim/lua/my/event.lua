@@ -1,9 +1,19 @@
 --- vim event constants
 ---
 ---@class my.event
----
----@field [string] string
 local e = {}
+
+local vim = vim
+local concat = table.concat
+local type = type
+local tostring = tostring
+local create_augroup = vim.api.nvim_create_augroup
+local create_autocmd = vim.api.nvim_create_autocmd
+local nvim_exec_autocmds = vim.api.nvim_exec_autocmds
+local clear = require("table.clear")
+local is_callable = require("my.utils").is_callable
+
+
 
 setmetatable(e, {
   __index = function(_, key)
@@ -11,7 +21,6 @@ setmetatable(e, {
   end,
 })
 
-local is_callable = require("my.utils").is_callable
 
 --- Just after creating a new buffer which is added to the buffer list, or adding a buffer to the buffer list, a buffer in the buffer list was renamed.
 ---
@@ -366,6 +375,12 @@ e.CursorHoldI = "CursorHoldI"
 ---
 --- Careful: This is triggered very often, don't do anything that the user does not expect or that is slow.
 e.CursorMoved = "CursorMoved"
+
+--- After the cursor was moved in the command line.
+--- Be careful not to mess up the command line,
+--- it may cause Vim to lock up.
+--- <afile> expands to the |cmdline-char|.
+e.CursorMovedC = "CursorMovedC"
 
 --- After the cursor was moved in Insert mode.
 ---
@@ -788,6 +803,34 @@ e.RecordingEnter = "RecordingEnter"
 ---   - regname
 e.RecordingLeave = "RecordingLeave"
 
+
+--- When nothing is pending, going to wait for the
+--- user to type a character.
+--- This will not be triggered when:
+--- - an operator is pending
+--- - a register was entered with "r
+--- - halfway executing a command
+--- - executing a mapping
+--- - there is typeahead
+--- - Insert mode completion is active
+--- - Command line completion is active
+--- You can use `mode()` to find out what state
+--- Vim is in.  That may be:
+--- - Visual mode
+--- - Normal mode
+--- - Insert mode
+--- - Command-line mode
+--- Depending on what you want to do, you may also
+--- check more with `state()`, e.g. whether the
+--- screen was scrolled for messages.
+e.SafeState = "SafeState"
+
+
+--- After writing a session file by calling
+--- the |:mksession| command.
+e.SessionWritePost = "SessionWritePost"
+
+
 --- After loading the session file created using the `:mksession` command.
 e.SessionLoadPost = "SessionLoadPost"
 
@@ -934,12 +977,50 @@ e.TermLeave = "TermLeave"
 ---   - status
 e.TermClose = "TermClose"
 
---- After the response to t_RV is received from the terminal.
+--- When a |:terminal| child process emits an OSC,
+--- DCS, or APC sequence. Sets |v:termrequest|. The
+--- |event-data| is a table with the following
+--- fields:
 ---
---- The value of `v:termresponse` can be used to do things depending on the terminal version.
+--- - sequence: the received sequence
+--- - cursor: (1,0)-indexed, buffer-relative
+--- position of the cursor when the sequence was
+--- received
 ---
---- May be triggered halfway through another event (file I/O, a shell command, or anything else that takes time).
+--- This is triggered even when inside an
+--- autocommand defined without |autocmd-nested|.
+---
+e.TermRequest = "TermRequest"
+
+--- When Nvim receives an OSC or DCS response from
+--- the host terminal. Sets |v:termresponse|. The
+--- |event-data| is a table with the following fields:
+---
+--- - sequence: the received sequence
+---
+--- This is triggered even when inside an
+--- autocommand defined without |autocmd-nested|.
+---
+--- May be triggered during another event (file
+--- I/O, a shell command, or anything else that
+--- takes time).
+---
+--- Example:
+---
+--- ```lua
+--- -- Query the terminal palette for the RGB value of color 1
+--- -- (red) using OSC 4
+--- vim.api.nvim_create_autocmd('TermResponse', {
+---   once = true,
+---   callback = function(args)
+---     local resp = args.data.sequence
+---     local r, g, b = resp:match("\027%]4;1;rgb:(%w+)/(%w+)/(%w+)")
+---   end,
+--- })
+--- io.stdout:write("\027]4;1;?\027\\")
+--- ```
 e.TermResponse = "TermResponse"
+
 
 --- After a change was made to the text in the current buffer in Normal mode.
 ---
@@ -963,6 +1044,12 @@ e.TextChangedI = "TextChangedI"
 ---
 --- Otherwise the same as TextChanged.
 e.TextChangedP = "TextChangedP"
+
+--- After a change was made to the text in the
+--- current buffer in |Terminal-mode|.  Otherwise
+--- the same as TextChanged.
+e.TextChangedT = "TextChangedT"
+
 
 --- Just after a `yank` or `deleting` command, but not if the black hole register `quote_` is used nor for `setreg()`. Pattern must be *.
 ---
@@ -992,11 +1079,6 @@ e.TextYankPost = "TextYankPost"
 --- :doautocmd User MyPlugin
 --- ```
 e.User = "User"
-
---- When the user presses the same key 42 times.
----
---- Just kidding! :-)
-e.UserGettingBored = "UserGettingBored"
 
 --- After doing all the startup stuff, including loading vimrc files, executing the "-c cmd" arguments, creating all windows and loading the buffers in them.
 ---
@@ -1102,50 +1184,99 @@ e.WinNew = "WinNew"
 --- Does not trigger when the command is added, only after the first scroll or resize.
 e.WinScrolled = "WinScrolled"
 
-
---- When lazy.nvim has finished starting up and loaded your config
-e.LazyDone = "LazyDone"
-
---- After running sync
-e.LazySync = "LazySync"
-
---- After an install
-e.LazyInstall = "LazyInstall"
-
---- After an update
-e.LazyUpdate = "LazyUpdate"
-
---- After a clean
-e.LazyClean = "LazyClean"
-
---- After checking for updates
-e.LazyCheck = "LazyCheck"
-
---- After running log
-e.LazyLog = "LazyLog"
-
---- Triggered by change detection after reloading plugin specs
-e.LazyReload = "LazyReload"
-
---- Triggered after `LazyDone` and processing `VimEnter` auto commands
-e.VeryLazy = "VeryLazy"
-
---- Triggered after `UIEnter` when `require("lazy").stats().startuptime` has been calculated.
+--- After a window in the current tab page changed
+--- width or height.
+--- See |win-scrolled-resized|.
 ---
---- Useful to update the startuptime on your dashboard.
-e.LazyVimStarted = "LazyVimStarted"
-
--- Triggered when `lazy restore` starts
-e.LazyRestorePre = "LazyRestorePre"
-
--- Triggered when `lazy restore` finishes
-e.LazyRestore = "LazyRestore"
+--- |v:event| is set with information about size
+--- changes. |WinResized-event|
+---
+--- Same behavior as |WinScrolled| for the
+--- pattern, triggering and recursiveness.
+e.WinResized = "WinResized"
 
 e.LspAttach = "LspAttach"
 e.LspDetach = "LspDetach"
 e.LspNotify = "LspNotify"
 e.LspProgress = "LspProgress"
 e.LspRequest = "LspRequest"
+e.LspTokenUpdate = "LspTokenUpdate"
+
+--- User-namespaced
+e.user = {}
+
+--- When lazy.nvim has finished starting up and loaded your config
+e.user.LazyDone = "LazyDone"
+
+--- After running sync
+e.user.LazySync = "LazySync"
+
+--- After an install
+e.user.LazyInstall = "LazyInstall"
+
+--- After an update
+e.user.LazyUpdate = "LazyUpdate"
+
+--- After a clean
+e.user.LazyClean = "LazyClean"
+
+--- After checking for updates
+e.user.LazyCheck = "LazyCheck"
+
+--- After running log
+e.user.LazyLog = "LazyLog"
+
+--- Triggered by change detection after reloading plugin specs
+e.user.LazyReload = "LazyReload"
+
+--- Triggered after `LazyDone` and processing `VimEnter` auto commands
+e.user.VeryLazy = "VeryLazy"
+
+--- Triggered after `UIEnter` when `require("lazy").stats().startuptime` has been calculated.
+---
+--- Useful to update the startuptime on your dashboard.
+e.user.LazyVimStarted = "LazyVimStarted"
+
+-- Triggered when `lazy restore` starts
+e.user.LazyRestorePre = "LazyRestorePre"
+
+-- Triggered when `lazy restore` finishes
+e.user.LazyRestore = "LazyRestore"
+
+e.user.LazyLoad = "LazyLoad"
+
+
+--- Creates a namespaced User event pattern
+---
+---@param name string|string[]
+---@return string pattern
+function e.user_event(name)
+  name = name or "*"
+  if type(name) == "table" then
+    name = concat(name, ".")
+  else
+    name = tostring(name)
+  end
+
+  -- always prefix with 'User' to differentiate from plugin events
+  return e.User .. "." .. name
+end
+
+
+--- XXX: this code is ignorant of buffers
+---
+---@param event string|string[]
+---@param data? table
+function e.publish(event, data)
+  local pattern = e.user_event(event)
+  nvim_exec_autocmds(e.User, {
+    pattern = pattern,
+    modeline = false,
+    data = data,
+  })
+end
+e.publish = vim.schedule_wrap(e.publish)
+
 
 
 ---@class my.event.payload : vim.api.keyset.create_autocmd.callback_args
@@ -1162,30 +1293,7 @@ e.LspRequest = "LspRequest"
 ---@alias my.event.callback fun(e: my.event.payload):boolean?
 
 
---- Creates a namespaced User event pattern
----
----@param evt string
----@param name? string|string[]
----@return string event
----@return string pattern
-function e.user_event(evt, name)
-  name = name or "*"
-  if type(name) == "table" then
-    name = table.concat(name, ".")
-  else
-    name = tostring(name)
-  end
-
-  return e.User, e.User .. "." .. evt .. "." .. name
-end
-
 do
-  local vim = vim
-  local api = vim.api
-  local create_augroup = api.nvim_create_augroup
-  local create_autocmd = api.nvim_create_autocmd
-  local clear = require("table.clear")
-
   ---@class my.event.ctx
   local ctx = {
     ---@type string|string[]
@@ -1206,10 +1314,18 @@ do
   ---@param clear? boolean
   ---@return my.event.ctx
   function ctx:group(group, clear)
-    assert(self == ctx and self.started)
-    assert(type(group) == "string" or type(group) == "number")
+    if self ~= ctx or not self.started then
+      error("invalid event context state", 2)
+    end
+
+    if type(group) ~= "string" and type(group) ~= "number" then
+      error("'group' must be a string or a number", 2)
+    end
+
     if clear ~= nil then
-      assert(type(clear) == "boolean")
+      if type(clear) ~= "boolean" then
+        error("'clear' must be a boolean or nil", 2)
+      end
       self.group_opts.clear = clear
     end
     self.opts.group = group
@@ -1219,8 +1335,14 @@ do
   ---@param once boolean
   ---@return my.event.ctx
   function ctx:once(once)
-    assert(type(once) == "boolean")
-    assert(self == ctx and self.started)
+    if self ~= ctx or not self.started then
+      error("invalid event context state", 2)
+    end
+
+    if type(once) ~= "boolean" then
+      error("'once' must be a boolean", 2)
+    end
+
     self.opts.once = once
     return self
   end
@@ -1228,8 +1350,14 @@ do
   ---@param nested boolean
   ---@return my.event.ctx
   function ctx:nested(nested)
-    assert(type(nested) == "boolean")
-    assert(self == ctx and self.started)
+    if self ~= ctx or not self.started then
+      error("invalid event context state", 2)
+    end
+
+    if type(nested) ~= "boolean" then
+      error("'nested' must be a boolean", 2)
+    end
+
     self.opts.nested = nested
     return self
   end
@@ -1237,8 +1365,14 @@ do
   ---@param buffer integer
   ---@return my.event.ctx
   function ctx:buffer(buffer)
-    assert(type(buffer) == "number")
-    assert(self == ctx and self.started)
+    if self ~= ctx or not self.started then
+      error("invalid event context state", 2)
+    end
+
+    if type(buffer) ~= "number" then
+      error("'buffer' must be a number", 2)
+    end
+
     self.opts.buffer = buffer
     return self
   end
@@ -1246,17 +1380,27 @@ do
   ---@param pattern string|string[]
   ---@return my.event.ctx
   function ctx:pattern(pattern)
-    local ty = type(pattern)
-    if ty == "table" then
-      assert(#pattern > 0, "empty pattern list")
-      for i = 1, #pattern do
-        assert(type(pattern[i]) == "string")
-      end
-    else
-      assert(ty == "string")
+    if self ~= ctx or not self.started then
+      error("invalid event context state", 2)
     end
 
-    assert(self == ctx and self.started)
+
+    local ty = type(pattern)
+    if ty == "table" then
+      if #pattern == 0 then
+        error("'pattern' list cannot be empty", 2)
+      end
+
+      for i = 1, #pattern do
+        if type(pattern[i]) ~= "string" then
+          error("'pattern[" .. i .. "]' must be a string", 2)
+        end
+      end
+
+    elseif ty ~= "string" then
+      error("'pattern' must be a string", 2)
+    end
+
     self.opts.pattern = pattern
     return self
   end
@@ -1264,11 +1408,42 @@ do
   ---@param desc string
   ---@return my.event.ctx
   function ctx:desc(desc)
-    assert(type(desc) == "string")
-    assert(self == ctx and self.started)
+    if self ~= ctx or not self.started then
+      error("invalid event context state", 2)
+    end
+
+    if type(desc) ~= "string" then
+      error("'desc' must be a string", 2)
+    end
+
     self.opts.desc = desc
     return self
   end
+
+
+  ---@param pattern string|string[]
+  ---@return my.event.ctx
+  function ctx:user_pattern(pattern)
+    local ty = type(pattern)
+    if ty == "table" then
+      if #pattern == 0 then
+        error("'pattern' list cannot be empty", 2)
+      end
+
+      for i = 1, #pattern do
+        if type(pattern[i]) ~= "string" then
+          error("'pattern[" .. i .. "]' must be a string", 2)
+        end
+      end
+
+    elseif ty ~= "string" then
+      error("'pattern' must be a string", 2)
+    end
+
+    pattern = e.user_event(pattern)
+    return self:pattern(pattern)
+  end
+
 
   ---@return integer id
   local function create()
@@ -1290,8 +1465,14 @@ do
 
   ---@param callback my.event.callback
   function ctx:callback(callback)
-    assert(is_callable(callback))
-    assert(self == ctx and self.started)
+    if self ~= ctx or not self.started then
+      error("invalid event context state", 2)
+    end
+
+    if not is_callable(callback) then
+      error("'callback' must be callable", 2)
+    end
+
     self.opts.callback = callback
     return create()
   end
@@ -1299,11 +1480,62 @@ do
   ---@param evt string|string[]
   ---@return my.event.ctx
   function e.on(evt)
-    assert(not ctx.started)
+    if ctx.started then
+      error("invalid event context state", 2)
+    end
+
+    local ty = type(evt)
+    if ty == "table" then
+      if #evt == 0 then
+        error("'evt' list cannot be empty", 2)
+      end
+
+      for i = 1, #evt do
+        if type(evt[i]) ~= "string" then
+          error("'evt[" .. i .. "]' must be a string", 2)
+        end
+      end
+
+    elseif ty ~= "string" then
+      error("'evt' must be a string", 2)
+    end
+
     ctx.started = true
     ctx.event = evt
     return ctx
   end
 end
+
+
+--- `Cmd-event` events
+---@type { [string]: string }
+e.CMD_EVENT = {
+  [e.BufReadCmd] = e.BufReadCmd,
+  [e.BufWriteCmd] = e.BufWriteCmd,
+  [e.FileAppendCmd] = e.FileAppendCmd,
+  [e.FileReadCmd] = e.FileReadCmd,
+  [e.FileWriteCmd] = e.FileWriteCmd,
+  [e.SourceCmd] = e.SourceCmd,
+}
+
+
+--- List of all known events
+---@type string[]
+e.ALL = {}
+
+--- List of all non cmd-event events
+---@type string[]
+e.NON_CMD_EVENTS = {}
+
+for k, v in pairs(e) do
+  if type(k) == "string" and type(v) == "string" then
+    table.insert(e.ALL, v)
+
+    if not e.CMD_EVENT[v] then
+      table.insert(e.NON_CMD_EVENTS, v)
+    end
+  end
+end
+
 
 return e

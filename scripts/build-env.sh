@@ -14,6 +14,10 @@ emit-xdg() {
 }
 
 emit-shell() {
+    if true; then
+        return
+    fi
+
     local bash=$HOME/.local/bin/bash
     if [[ -s $bash && -x $bash ]]; then
         add-export SHELL "$bash"

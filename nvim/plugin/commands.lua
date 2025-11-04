@@ -187,6 +187,7 @@ command("LuaDebug",
     replace_path(vim.env.VIMRUNTIME, "nvim.runtime")
     replace_path(vim.fn.stdpath("data") .. "/lazy", "nvim.plugins")
     replace_path(require("my.constants").workspace, "workspace")
+    replace_path(require("my.constants").nvim.bundle.root, "nvim.bundle")
 
     if luarocks then
       buf:put("luarocks:\n")
@@ -280,6 +281,15 @@ command("LuaDebug",
 
         buf:put("  workspace.library:\n")
         for _, entry in ipairs(settings.workspace.library or {}) do
+          entry = replace_common(entry)
+          buf:putf("    - %s\n", entry)
+        end
+
+        buf:put("  workspace.library.checkThirdParty: ",
+                settings.workspace.checkThirdParty, "\n")
+
+        buf:put("  workspace.library.userThirdParty:\n")
+        for _, entry in ipairs(settings.workspace.userThirdParty or {}) do
           entry = replace_common(entry)
           buf:putf("    - %s\n", entry)
         end

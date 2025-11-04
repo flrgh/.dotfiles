@@ -259,7 +259,7 @@ local plugins_by_category = {
 
     {
       "nvim-lualine/lualine.nvim",
-      event = evt.VeryLazy,
+      event = evt.user.VeryLazy,
       dependencies = { "nvim-tree/nvim-web-devicons" },
       config = file_config("lualine"),
     },
@@ -297,7 +297,7 @@ local plugins_by_category = {
     -- better vim.ui
     {
       "stevearc/dressing.nvim",
-      event = evt.VeryLazy,
+      event = evt.user.VeryLazy,
       config = function()
         require("dressing").setup({
           enabled = true,
@@ -318,7 +318,7 @@ local plugins_by_category = {
     {
       "nvim-treesitter/nvim-treesitter",
       -- FIXME: figure out how to make this work with my lua module search autocommand
-      -- event = evt.VeryLazy,
+      -- event = evt.user.VeryLazy,
       build = function()
         require("my.treesitter").bootstrap()
         cmd "TSUpdateSync"
@@ -329,7 +329,7 @@ local plugins_by_category = {
     },
     {
       "nvim-treesitter/nvim-treesitter-textobjects",
-      event = evt.VeryLazy,
+      event = evt.user.VeryLazy,
       dependencies = { "nvim-treesitter" },
     },
     {
@@ -342,7 +342,7 @@ local plugins_by_category = {
   telescope = {
     {
       "nvim-telescope/telescope.nvim",
-      event = evt.VeryLazy,
+      event = evt.user.VeryLazy,
       dependencies = {
         "nvim-lua/plenary.nvim",
         {
@@ -367,7 +367,7 @@ local plugins_by_category = {
   git = {
     {
       "tpope/vim-fugitive",
-      event = evt.VeryLazy,
+      event = evt.user.VeryLazy,
       dependencies = {
         "tpope/vim-rhubarb",
       },
@@ -418,7 +418,7 @@ local plugins_by_category = {
     -- auto hlsearch stuff
     {
       "romainl/vim-cool",
-      event = evt.VeryLazy,
+      event = evt.user.VeryLazy,
     },
 
     -- adds some common readline key bindings to insert and command mode
@@ -494,7 +494,7 @@ local plugins_by_category = {
 
     {
       "numToStr/Comment.nvim",
-      event = evt.VeryLazy,
+      event = evt.user.VeryLazy,
       config = function()
         require("Comment").setup()
       end
@@ -588,7 +588,7 @@ local plugins_by_category = {
 
     {
       "nvimdev/lspsaga.nvim",
-      event = evt.VeryLazy,
+      event = evt.user.VeryLazy,
       branch = "main",
       config = function()
         require("lspsaga").setup({

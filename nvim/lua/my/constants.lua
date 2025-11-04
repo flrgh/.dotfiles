@@ -133,6 +133,10 @@ do
 
   local xdg = const.xdg
 
+  local config_nvim = xdg.config .. "/" .. app_name
+  local share_nvim = xdg.data .. "/" .. app_name
+  local bundle = share_nvim .. "/_bundle"
+
   ---@class user.globals.nvim
   const.nvim = {
     -- $NVIM_APPNAME (default "nvim")
@@ -142,20 +146,28 @@ do
     config = xdg.config .. "/" .. app_name,
 
     -- ~/.local/share/nvim
-    share = xdg.data .. "/" .. app_name,
+    share = share_nvim,
 
     -- ~/.local/state/nvim
     state = xdg.state .. "/" .. app_name,
 
     -- ~/.local/share/nvim/runtime
-    runtime = xdg.data .. "/" .. app_name .. "/runtime",
+    runtime = share_nvim .. "/runtime",
 
     -- ~/.local/share/nvim/runtime/lua
-    runtime_lua = xdg.data .. "/" .. app_name .. "/runtime/lua",
+    runtime_lua = share_nvim .. "/runtime/lua",
 
     -- plugin install path
     -- ~/.local/share/nvim/lazy
-    plugins = xdg.data .. "/" .. app_name .. "/lazy",
+    plugins = share_nvim .. "/lazy",
+
+    bundle = {
+      -- ~/.local/share/nvim/_bundle
+      root = bundle,
+
+      -- ~/.local/share/nvim/_bundle/lua
+      lua = bundle .. "/lua",
+    },
   }
 end
 

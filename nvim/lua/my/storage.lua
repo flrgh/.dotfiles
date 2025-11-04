@@ -14,22 +14,27 @@ end
 
 ---@class my.storage.global
 ---
+---@field lua_lsp { [integer|string]: my.lua_ls.Config }
+---
 ---@field [string] any
 _M.global = {}
 
 
 ---@class my.storage.buffer
 ---
+---@field id _vim.buffer.id
+---
+---@field lua_lsp my.lua_ls.Config
 ---@field lua_resolver my.lua.resolver
 ---
 ---@field [string] any
 
 
----@type { [integer]: my.storage.buffer }
+---@type { [_vim.buffer.id]: my.storage.buffer }
 local buffers = {}
 
 ---@class my.storage.buffers : my.storage.buffer
----@field [integer] my.storage.buffer
+---@field [_vim.buffer.id] my.storage.buffer
 _M.buffer = {}
 setmetatable(_M.buffer, {
   __index = function(_, buf)
@@ -39,7 +44,7 @@ setmetatable(_M.buffer, {
 
     if is_int(buf) then
       if not buffers[buf] then
-        buffers[buf] = {}
+        buffers[buf] = { id = buf }
       end
 
       return buffers[buf]
@@ -49,7 +54,7 @@ setmetatable(_M.buffer, {
     buf = api.nvim_get_current_buf()
 
     if not buffers[buf] then
-      buffers[buf] = {}
+      buffers[buf] = { id = buf }
     end
 
     return buffers[buf][key]
@@ -58,19 +63,20 @@ setmetatable(_M.buffer, {
   __newindex = function(_, key, value)
     local buf = api.nvim_get_current_buf()
     if not buffers[buf] then
-      buffers[buf] = {}
+      buffers[buf] = { id = buf }
     end
     buffers[buf][key] = value
   end,
 })
 
 local event = require("my.event")
-event.on({ event.BufDelete })
-  :group("storage-delete-buffer")
+local DEBUG = vim.log.levels.DEBUG
+event.on(event.BufDelete)
+  :group("storage-delete-buffer", true)
   :desc("delete buffer-local storage")
   :callback(function(e)
-    vim.notify("clearing buffer-local storage for buffer: " .. tostring(e.buf))
-    buffers[e.buf] = nil
+    vim.notify("clearing buffer-local storage for buffer: " .. tostring(e.buf), DEBUG)
+    rawset(buffers, e.buf, nil)
   end)
 
 

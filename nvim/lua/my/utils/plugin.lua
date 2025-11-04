@@ -1,7 +1,23 @@
 local _M = {}
 
----@type any, Lazy
-local _, lazy = pcall(require, "lazy")
+---@type Lazy
+local lazy
+
+local function _init()
+  if lazy then
+    return true
+  end
+
+  local ok, _lazy = pcall(require, "lazy")
+  if ok then
+    lazy = _lazy
+    return true
+  end
+
+  return false
+end
+
+_init()
 
 ---@type table<string, LazyPlugin>
 local by_name
@@ -11,6 +27,10 @@ local list
 
 local function _index()
   if list then return end
+
+  if not _init() then
+    return
+  end
 
   by_name = {}
   list = {}
@@ -63,7 +83,7 @@ end
 ---@return LazyPlugin? plugin
 ---@return string? error
 function _M.get(name)
-  if not lazy then
+  if not _init() then
     return nil, "lazy.nvim is not loaded"
   end
 
@@ -85,7 +105,7 @@ end
 
 ---@return LazyPlugin[]
 function _M.list()
-  if not lazy then
+  if not _init() then
     return {}
   end
 

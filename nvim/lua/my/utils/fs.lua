@@ -4,17 +4,19 @@ local _M = {}
 
 local vim = vim
 local fn = vim.fn
-local loop = vim.uv
+local uv = vim.uv
 local json_decode = vim.json.decode
-local fs_stat = loop.fs_stat
-local fs_open = loop.fs_open
-local fs_fstat = loop.fs_fstat
-local fs_read = loop.fs_read
-local fs_close = loop.fs_close
-local fs_realpath = loop.fs_realpath
-local fs_write = loop.fs_write
-local fs_rename = loop.fs_rename
-local fs_lstat = loop.fs_lstat
+local fs_stat = uv.fs_stat
+local fs_open = uv.fs_open
+local fs_fstat = uv.fs_fstat
+local fs_read = uv.fs_read
+local fs_close = uv.fs_close
+local fs_realpath = uv.fs_realpath
+local fs_write = uv.fs_write
+local fs_rename = uv.fs_rename
+local fs_lstat = uv.fs_lstat
+local fs_readlink = uv.fs_readlink
+local get_cwd = uv.cwd
 local concat = table.concat
 local assert = assert
 local byte = string.byte
@@ -26,9 +28,17 @@ local tostring = tostring
 local tonumber = tonumber
 local band = bit.band
 local getenv = os.getenv
+local clear = require("table.clear")
 
 local EXEC_BITS = tonumber(0111, 8)
 local SLASH = byte("/")
+
+
+---@param string
+---@return boolean
+local function is_abs(path)
+  return byte(path, 1, 1) == SLASH
+end
 
 
 --- Check if a file exists.
@@ -150,7 +160,7 @@ function _M.buffer_directory()
   return fn.expand("%:p:h", true)
 end
 
-local normalize
+local _normalize
 do
   local buf = {}
   local i = 0
@@ -208,7 +218,7 @@ do
 
     return path
   end
-  normalize = _M.normalize
+  _normalize = _M.normalize
 end
 
 ---@return string?
@@ -218,7 +228,7 @@ function _M.workspace_root()
     return
   end
 
-  dir = normalize(dir)
+  dir = _normalize(dir)
 
   while not _M.dir_exists(dir .. "/.git") do
     dir = dir:gsub("/[^/]+$", "")
@@ -233,20 +243,20 @@ end
 ---@param path string
 ---@return string
 function _M.realpath(path)
-  return fs_realpath(path) or _M.normalize(path)
+  return fs_realpath(path) or _normalize(path)
 end
 
 ---@param path string
 ---@return string
 function _M.basename(path)
-  return (normalize(path):gsub("^.*/+", ""))
+  return (_normalize(path):gsub("^.*/+", ""))
 end
 
 
 ---@param path string
 ---@return string
 function _M.dirname(path)
-  return (normalize(path):gsub("/[^/]+$", ""))
+  return (_normalize(path):gsub("/[^/]+$", ""))
 end
 
 
@@ -362,7 +372,7 @@ do
   ---@return string?  error
   ---@return boolean? cached
   function _M.load_json_file(fname)
-    fname = _M.normalize(fname)
+    fname = _normalize(fname)
 
     local st = fs_stat(fname)
     if not st then
@@ -418,6 +428,7 @@ function _M.abbreviate(path)
     { const.nvim.plugins,     "{ nvim.plugins }" },
     { const.nvim.runtime,     "{ nvim.runtime }" },
     { const.nvim.config,      "{ nvim.userconfig }" },
+    { const.nvim.bundle.root, "{ nvim._bundle }" },
     { const.workspace,        "{ workspace }" },
     { const.home,             "~" },
   }
@@ -505,6 +516,31 @@ function _M.executable(path, use_cache)
   end
 
   return is_exe(path, use_cache)
+end
+
+
+---@param path string
+---@param normalize string
+---@return fun():string|nil
+function _M.iter_parents(path, normalize)
+  if normalize then
+    path = _normalize(path)
+  end
+
+  path = path:gsub("/+$", "")
+
+  return function()
+    if path == "" then
+      return nil
+    end
+
+    path = path:gsub("/[^/]+", "")
+    if path == "" then
+      return "/"
+    else
+      return path
+    end
+  end
 end
 
 
