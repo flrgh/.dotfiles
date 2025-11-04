@@ -33,7 +33,7 @@ uv = "latest"
 vivid = "latest"
 xh = "latest"
 yq = "latest"
-zls = "0.14.0" # 0.15 is broken
+zls = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
