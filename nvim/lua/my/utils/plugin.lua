@@ -114,4 +114,17 @@ function _M.list()
   return list
 end
 
+
+---@return string[]
+function _M.lua_dirs()
+  local dirs = {}
+  local n = 0
+  for _, p in ipairs(_M.list()) do
+    n = n + 1
+    dirs[n] = p.dir .. "/lua"
+  end
+
+  return dirs
+end
+
 return _M

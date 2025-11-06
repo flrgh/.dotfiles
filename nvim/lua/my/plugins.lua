@@ -543,6 +543,7 @@ local plugins_by_category = {
         "hrsh7th/cmp-cmdline",
         "ray-x/cmp-treesitter",
         "hrsh7th/cmp-nvim-lsp-signature-help",
+        "hrsh7th/cmp-nvim-lsp-document-symbol",
 
         "onsails/lspkind-nvim",
 

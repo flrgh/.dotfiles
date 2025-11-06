@@ -1,18 +1,37 @@
-vim.print("Bootstrapping plugins\n")
+---@param mode? "verbose"|"quiet"|"silent"
+return function(mode)
+  mode = mode or "verbose"
+  local silent = mode == "silent"
+  local quiet = silent or mode == "quiet"
 
-vim.go.loadplugins = true
+  if not silent then
+    vim.print("Bootstrapping plugins\n")
+  end
 
-local conf = require("my.lazy.config")
-local plugins = require("my.plugins")
-local lazy = require("lazy")
+  if quiet then
+    require("my.utils").output.pause()
+  end
+
+  vim.go.loadplugins = true
+
+  local conf = require("my.lazy.config")
+  local plugins = require("my.plugins")
+  local lazy = require("lazy")
 
 
--- block until the entire restore task completes
-conf.wait = true
+  -- block until the entire restore task completes
+  conf.wait = true
 
-conf.spec = plugins
-lazy.setup(conf)
-lazy.restore(conf)
-lazy.build(conf)
+  conf.spec = plugins
+  lazy.setup(conf)
+  lazy.restore(conf)
+  lazy.build(conf)
 
-vim.print("Plugin bootstrap complete\n")
+  if quiet then
+    require("my.utils").output.unpause()
+  end
+
+  if not silent then
+    vim.print("Plugin bootstrap complete\n")
+  end
+end

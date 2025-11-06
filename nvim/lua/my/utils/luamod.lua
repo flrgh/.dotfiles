@@ -7,6 +7,7 @@ local resolver = require("my.utils.luamod.resolver")
 local requires = require("my.utils.luamod.requires")
 local buffer = require("string.buffer")
 local cmd = require("my.utils.cmd")
+local plugin = require("my.utils.plugin")
 
 _M.resolver = resolver
 _M.requires = requires
@@ -130,15 +131,11 @@ end
 ---@return string[]
 function _M.find_type_defs(names, extra_paths)
   local namepat = "(" .. concat(names, "|") .. ")"
-
   local args = {
-    "rg",
     "--one-file-system",
     "--files-with-matches",
     "-g", "*.lua",
-    "-e", "---[ ]*@alias .*" .. namepat,
-    "-e", "---[ ]*@enum .*" .. namepat,
-    "-e", "---[ ]*@class .*" .. namepat,
+    "-e", "---\\s*@(alias|enum|class)\\s*" .. namepat .. "(\\s+|$)",
   }
 
   if extra_paths then
@@ -151,17 +148,29 @@ function _M.find_type_defs(names, extra_paths)
     insert(args, lib)
   end
 
-  local result = vim.system(args, { text = true }):wait()
+  local proc = cmd.new("rg"):args(args)
 
-  return split_lines(result.stdout)
+  local found = {}
+  proc:on_stdout_line(function(line, eof)
+    if eof then return end
+    table.insert(found, line)
+  end, true)
+
+  local res = assert(proc:run():wait())
+  -- ripgrep returns 1 if no results found
+  if res.code ~= 0 and res.code ~= 1 then
+    vim.notify(string.format("command %s returned %s, stdout: %s, stderr: %s",
+                             proc.label, res.code, res.stdout or "", res.stderr or ""))
+  end
+
+  return found
 end
 
 
 ---@param dir? string
 ---@param cb? function
 function _M.find_all_requires(dir, cb)
-  local proc = cmd.new({
-    "rg",
+  local proc = cmd.new("rg"):args({
     "--one-file-system",
     "--glob", '*.lua',
     "--no-line-number",
@@ -169,7 +178,6 @@ function _M.find_all_requires(dir, cb)
     "--line-buffered",
     "--trim",
     "--only-matching",
-    --"-e", [=[.*\brequire[\s\(]*["']([^"'\s{}]+)["'].*]=],
     "-e", [=[.*\brequire[\s\(]*["']([a-zA-Z0-9_./-]+)["'].*]=],
     "--replace", "$1",
   })
@@ -206,5 +214,132 @@ function _M.get_module_requires(buf)
   return require("my.utils.luamod.requires").get_module_requires(buf)
 end
 
+---@class my.luamod.typedef
+---
+---@field name string
+---@field label string
+---@field source string
+---@field mod string|nil
+---@field lines string
+---@field offset integer
+---@field line_number integer
+---@field tree string
+
+---@param paths string[]
+---@return my.luamod.typedef[]
+function _M.find_all_types(paths)
+  local proc = cmd.new("rg")
+    :args({
+      "--json",
+      "--one-file-system",
+      "-g", "*.lua",
+      "-e", "\\s*---\\s*(?:\\(exact|private\\)\\s*)?@(?<LABEL>alias|enum|class)\\s*(?<NAME>[^\\s]+)(\\s+.*)?"
+    })
+
+  paths = paths or { assert(vim.uv.cwd()) }
+  local seen = {}
+  for _, extra in ipairs(paths) do
+    if seen[extra] then
+      error("duplicate path: " .. extra, 2)
+    end
+    seen[extra] = true
+    proc:arg(extra)
+  end
+
+  for _, lib in ipairs(LUA_PATH_ENTRIES) do
+    if not seen[lib] then
+      seen[lib] = true
+      table.insert(paths, lib)
+      proc:arg(lib)
+    end
+  end
+
+  local decode = vim.json.decode
+
+  ---@type my.luamod.typedef[]
+  local types = {}
+  local n = 0
+
+  proc:on_stdout_line(function(line, eof)
+    if eof then return end
+
+    local json = decode(line)
+    if json.type ~= "match" then
+      return
+    end
+
+    local data = json.data
+    local fname = data.path.text
+    if not fname then return end
+
+    local text = data.submatches
+    and data.submatches[1]
+    and data.submatches[1].match
+    and data.submatches[1].match.text
+    or data.lines.text
+
+    if not text then return end
+
+    local label, mod, ty
+    label, mod, ty = text:match("@(%w+)%s+%(([%w,]+)%)%s+([^%s]+)")
+
+    if not label then
+      label, ty = text:match("@(%w+)%s+([^%s]+)")
+    end
+
+    if not ty then return end
+
+    ty = vim.trim(ty)
+
+    if ty:sub(-1) == ":" then
+      ty = ty:sub(1, -2)
+    end
+
+    -- ehhh just special case this for now
+    if ty:find("table<K,", nil, true) then
+      ty = "table<K, V>"
+    end
+
+    -- generics
+    if ty:find("<", nil, true) then
+      ty = ty:match("([^<]+)<[^>]+>$") or ty
+    end
+
+    if ty == "" then
+      return
+    end
+
+    if not ty:find("^[a-zA-Z0-9%._:%*-]+$") then
+      vim.notify("weird type name: '" .. ty .. "' in " .. fname)
+    end
+
+    local tree
+    for i = 1, #paths do
+      local path = paths[i]
+      if fname:find(path, nil, true) == 1 then
+        tree = path
+        break
+      end
+    end
+
+    assert(tree, "failed to find tree for " .. fname)
+
+    n = n + 1
+    types[n] = {
+      name = ty,
+      label = label,
+      source = fname,
+      tree = tree,
+      mod = mod,
+      lines = data.lines.text,
+      offset = data.absolute_offset,
+      line_number = data.line_number,
+    }
+  end, true)
+
+  proc:run():wait()
+
+  return types
+end
 
 return _M

@@ -29,7 +29,7 @@ local defaults = {
       },
 
       diagnostics = {
-        enable = false,
+        enable = true,
         disable = nil,
 
         globals = {

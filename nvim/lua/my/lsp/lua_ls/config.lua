@@ -1,4 +1,5 @@
 local storage = require("my.storage")
+local utils = require("my.utils")
 local fs = require("my.utils.fs")
 local luamod = require("my.utils.luamod")
 local clear = require("table.clear")
@@ -8,12 +9,14 @@ local proto = require("vim.lsp.protocol")
 local const = require("my.lsp.lua_ls.constants")
 local DEFAULTS = require("my.lsp.lua_ls.defaults")
 local Set = require("my.utils.set")
+local user_const = require("my.constants")
 
 local lsp = vim.lsp
 local endswith = vim.endswith
 local insert = table.insert
 local deepcopy = vim.deepcopy
 local deep_equal = vim.deep_equal
+local fmt = string.format
 
 ---@type string[]
 local LUA_PATH_ENTRIES = luamod.LUA_PATH_ENTRIES
@@ -33,6 +36,8 @@ storage.global.lua_lsp = storage.global.lua_lsp or {}
 local STATES = storage.global.lua_lsp
 
 local NAME = const.NAME
+
+local DEBUG = vim.log.levels.DEBUG
 
 ---@param paths my.Set
 ---@param dir string
@@ -58,6 +63,7 @@ end
 ---@field addons my.Set
 ---@field definitions my.Set
 ---@field modules my.Set
+---@field mutex my.util.mutex
 local Config = {}
 local Config_mt = { __index = Config }
 
@@ -78,6 +84,7 @@ function Config.new(id, config)
     addons = Set.new(),
     definitions = Set.new(),
     modules = Set.new(),
+    mutex = utils.mutex(),
   }, Config_mt)
 
 
@@ -190,7 +197,10 @@ function Config:add_workspace_library(path, tree)
 
   if ft == "file" or lt == "file" then
     for parent in fs.iter_parents(path) do
-      if self.workspace_library:contains(parent) then
+      if parent == "."
+        or parent == self.config.root_dir
+        or self.workspace_library:contains(parent)
+      then
         return self
       end
     end
@@ -322,5 +332,59 @@ function Config:set_root_dir(dir)
   return self
 end
 
+
+---@return string
+function Config:lls_meta_dir()
+  local rt = self.config.settings.Lua.runtime
+
+  local version = rt.version or "LuaJIT"
+  local locale = "en-us"
+  local encoding = rt.fileEncoding or "utf8"
+
+  return fmt("%s/lua-lsp/%s %s %s",
+             user_const.nvim.state,
+             version,
+             locale,
+             encoding)
+end
+
+---@param reason string
+function Config:lock(reason)
+  if type(reason) ~= "string" then
+    error("lock reason (string) is required", 2)
+  end
+
+  self:debug("locking (%s)", reason)
+  self.mutex:acquire()
+
+  self:debug("locked (%s)", reason)
+  self.lock_reason = reason
+end
+
+function Config:unlock()
+  assert(type(self.lock_reason) == "string")
+
+  self:debug("unlocking (%s)", self.lock_reason)
+  self.lock_reason = nil
+
+  self.mutex:release()
+end
+
+---@param action string
+---@param fn fun(config: my.lua_ls.Config)
+function Config:with_mutex(action, fn)
+  self:lock(action)
+  pcall(fn, self)
+  self:unlock()
+end
+Config.with_mutex = vim.schedule_wrap(Config.with_mutex)
+
+
+---@param f string
+---@param ...any
+function Config:debug(f, ...)
+  local msg = "[lua_ls(" .. self.id .. ")] " .. fmt(f, ...)
+  vim.notify(msg, DEBUG)
+end
 
 return Config

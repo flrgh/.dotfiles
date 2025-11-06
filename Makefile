@@ -494,7 +494,7 @@ neovim: language-servers \
 	$(INSTALL_DATA)/nvim/lazy/lazy.nvim \
 	$(DEP)/tree-sitter \
 	$(MISE_DEPS) \
-	$(INSTALL_DATA)/nvim/_lua_bundle \
+	$(INSTALL_DATA)/nvim/_bundle \
 	| .setup
 
 $(USER_REPOS)/lua-utils:

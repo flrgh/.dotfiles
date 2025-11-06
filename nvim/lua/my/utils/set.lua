@@ -1,4 +1,6 @@
-local clear = require("table.clear")
+local util = require("my.utils")
+local clear = util.table.clear
+local clone = util.table.clone
 
 ---@class my.Set
 ---@field items string[]
@@ -39,6 +41,14 @@ function Set:clear()
   clear(self.map)
   self.len = 0
   return self
+end
+
+
+---@return string[]
+function Set:take()
+  local items = clone(self.items)
+  self:clear()
+  return items
 end
 
 

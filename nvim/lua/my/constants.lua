@@ -161,6 +161,9 @@ do
     -- ~/.local/share/nvim/lazy
     plugins = share_nvim .. "/lazy",
 
+    -- bundle directory
+    --
+    -- at the moment this is only used for lua path things
     bundle = {
       -- ~/.local/share/nvim/_bundle
       root = bundle,

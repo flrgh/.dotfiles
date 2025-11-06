@@ -3,8 +3,9 @@ local _M = {}
 local user_const = require("my.constants")
 local const = require("my.lsp.lua_ls.constants")
 local luamod = require("my.utils.luamod")
-
+local Set = require("my.utils.set")
 local utils = require("my.utils")
+
 local fs = utils.fs
 local plugin = utils.plugin
 local contains = utils.string.contains
@@ -205,6 +206,7 @@ end
 ---@param name string
 ---@param config my.lua_ls.Config
 ---@param seen? table
+---@return boolean
 local function add_mod(name, config, seen)
   if is_path(name) then
     return add_lib(name, config)
@@ -215,13 +217,14 @@ local function add_mod(name, config, seen)
     name = sub(name, 1, dot - 1)
   end
   if name == "" then
-    return
+    return false
   end
 
   if config.modules:contains(name) then
-    return
+    return false
   end
 
+  config.meta[name] = true
   config.modules:add(name)
 
   local dir = TYPE_DIR .. "/" .. name
@@ -242,6 +245,8 @@ local function add_mod(name, config, seen)
   for _, inc in ipairs(conf.include or EMPTY) do
     add_mod(inc, config, seen)
   end
+
+  return true
 end
 
 
@@ -252,14 +257,56 @@ function _M.on_lua_module(mod, config)
 end
 
 
+local _TYPES = {}
+
+---@param config my.lua_ls.Config
+local function find_all_types(config)
+  local types = _TYPES[config.id]
+  if types then
+    return types
+  end
+
+  local extra_paths
+  if config.meta.neovim then
+    extra_paths = plugin.lua_dirs()
+    table.insert(extra_paths, user_const.nvim.runtime)
+  end
+
+  local all = luamod.find_all_types(extra_paths)
+  types = {}
+  for _, def in ipairs(all) do
+    types[def.name] = types[def.name] or {}
+    table.insert(types[def.name], def.source)
+  end
+
+  _TYPES[config.id] = types
+
+  return types
+end
+
+
 ---@param types string[]
 ---@param config my.lua_ls.Config
 function _M.on_missing_types(types, config)
-  local found = luamod.find_type_defs(types)
+  if true then return end
 
-  for _, path in ipairs(found) do
-    config:add_workspace_library(path)
-  end
+  config:with_mutex("hooks.on_missing_types", function()
+    local all = find_all_types(config)
+
+    local found = Set.new()
+    for _, ty in ipairs(types) do
+      local files = all[ty]
+      if files then
+        found:add_all(files)
+      end
+    end
+
+    found = found:take()
+
+    for _, path in ipairs(found) do
+      config:add_workspace_library(path)
+    end
+  end)
 end
 
 
@@ -269,6 +316,8 @@ function _M.on_workspace(ws, config)
   local dir = ws.dir
   local basename = ws.basename
   local lower = dir:lower()
+
+  add_lib(dir .. "/lua", config)
 
   -- detect busted projects
   if fs.file_exists(dir .. ".busted") then
@@ -320,10 +369,6 @@ function _M.on_workspace(ws, config)
     and dir:find(user_const.git_root .. "/kong")
   then
     add_mod("kong", config)
-  end
-
-  if basename == "blj" then
-    add_lib(dir .. "/lua", config)
   end
 
   do

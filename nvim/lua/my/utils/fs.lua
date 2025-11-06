@@ -32,12 +32,27 @@ local clear = require("table.clear")
 
 local EXEC_BITS = tonumber(0111, 8)
 local SLASH = byte("/")
+local DOT = byte(".")
 
 
----@param string
+---@param path string
 ---@return boolean
 local function is_abs(path)
   return byte(path, 1, 1) == SLASH
+end
+
+---@param path string
+---@return boolean
+local function is_self(path)
+  local a, b = byte(path, 1, 3)
+  return a == DOT and (b == SLASH or b == nil)
+end
+
+---@param path string
+---@return boolean
+local function is_parent(path)
+  local a, b, c = byte(path, 1, 3)
+  return a == DOT and b == DOT and (c == SLASH or c == nil)
 end
 
 
@@ -405,12 +420,13 @@ end
 
 ---@param dir string
 ---@param fname string
+---@return boolean
 function _M.is_child(dir, fname)
   if byte(dir, -1) == SLASH then
     dir = dir:gsub("/+$", "")
   end
 
-  local from, to = find(fname, dir)
+  local from, to = find(fname, dir, nil, true)
 
   return from == 1
      and byte(fname, to + 1) == SLASH
@@ -520,25 +536,33 @@ end
 
 
 ---@param path string
----@param normalize string
+---@param normalize? boolean
 ---@return fun():string|nil
 function _M.iter_parents(path, normalize)
   if normalize then
     path = _normalize(path)
   end
 
-  path = path:gsub("/+$", "")
+  ---@type string|nil
+  local chunk = path
 
   return function()
-    if path == "" then
-      return nil
+    if not chunk then
+      return
     end
 
-    path = path:gsub("/[^/]+", "")
-    if path == "" then
+    local parent = chunk:gsub("/+[^/]*$", "")
+    if parent == "" then
+      chunk = nil
       return "/"
+
+    elseif parent == chunk then
+      chunk = nil
+      return parent
+
     else
-      return path
+      chunk = parent
+      return parent
     end
   end
 end

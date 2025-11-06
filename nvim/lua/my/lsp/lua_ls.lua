@@ -10,7 +10,9 @@ local Set = require("my.utils.set")
 local vim = vim
 local lsp = vim.lsp
 local api = vim.api
-
+local defer_fn = vim.defer_fn
+local uv_now = vim.uv.now
+local math_max = math.max
 
 ---@class my.lsp.LuaLS.runtime
 ---@field version?           string
@@ -153,6 +155,7 @@ local function update_settings_from_requires(found, config)
       add_libs(data)
     end
   end
+
 end
 
 
@@ -164,17 +167,27 @@ do
   local Busy = {}
 
   local get_module_requires = luamod.get_module_requires
+  local clear = require("table.clear")
 
   local scheduled = false
 
   local function buf_update_handler()
     scheduled = false
 
+    local events = Events
+    Events = {}
+    clear(Busy)
+
+    if #events == 0 then
+      return
+    end
+
     local client = lsp.get_clients({ name = NAME })[1]
     local id = client and client.id
     if not id then
       return
     end
+
     local config = Config.get(id)
     if not config or not config.resolver then
       return
@@ -182,21 +195,28 @@ do
 
     local modnames = Set.new()
 
-    local n = #Events
-
-    while n > 0 do
-      local e = Events[n]
-      Events[n] = nil
-      n = n - 1
+    local seen = {}
+    for i = 1, #events do
+      local e = events[i]
 
       local buf = e.buf
-      if storage.buffer[buf].lua_lsp then
-        for _, mod in ipairs(get_module_requires(buf) or EMPTY) do
+      if seen[buf] then
+        goto continue
+      end
+      seen[buf] = true
+
+      local data = storage.buffer[buf]
+      if not data:is_loaded() or not data.lua_lsp then
+        goto continue
+      end
+
+      for _, mod in ipairs(get_module_requires(buf) or EMPTY) do
+        if not SKIPPED[mod] then
           modnames:add(mod)
         end
       end
 
-      Busy[buf] = nil
+      ::continue::
     end
 
     ---@type my.lua.resolver.module[]
@@ -205,52 +225,44 @@ do
 
     local any_changed = false
     for _, modname in ipairs(modnames.items) do
-      if not SKIPPED[modname] then
-        if hooks.on_lua_module(modname, config) then
-          any_changed = true
-        end
-        local mod = config.resolver:find_module(modname)
-        if mod then
-          insert(found, mod)
+      if hooks.on_lua_module(modname, config) then
+        any_changed = true
+      end
 
-        else
-          insert(missing, modname)
-        end
+      local mod = config.resolver:find_module(modname)
+      if mod then
+        any_changed = true
+        insert(found, mod)
+
+      else
+        insert(missing, modname)
       end
     end
 
-    if #found == 0 then
-      return
+    if any_changed then
+      if #found ~= 0 then
+        update_settings_from_requires(found, config)
+      end
+      config:update_client_settings(client)
     end
-
-    update_settings_from_requires(found, config)
-    config:update_client_settings(client)
   end
 
   local next_run = 0
 
-  local function schedule_handler()
-    if scheduled then
+  ---@param e _vim.autocmd.event
+  function _M.on_buf_event(e)
+    local buf = e.buf
+    if not buf then
       return
     end
 
-    scheduled = true
+    local buf_storage = storage.buffer[buf]
+    if not buf_storage:is_loaded() then
+      return
+    end
 
-    local now = vim.uv.now()
-    local delay = math.max(1, next_run - now)
-    next_run = now + 1000
-
-    vim.defer_fn(buf_update_handler, delay)
-  end
-
-  ---@param e { buf:_vim.buffer.id, event:string, file:string }
-  function _M.on_buf_event(e)
-    local buf = e.buf
-
-    if not buf
-      or Busy[buf]
-      or not storage.buffer[buf].lua_lsp
-      or not api.nvim_buf_is_loaded(buf)
+    if Busy[buf]
+      or not buf_storage.lua_lsp
       or not vim.bo[buf].buflisted
       or vim.bo[buf].buftype == "scratch"
       or vim.bo[buf].bufhidden == "hide"
@@ -260,7 +272,15 @@ do
 
     Busy[buf] = true
     insert(Events, e)
-    schedule_handler()
+    if not scheduled then
+      scheduled = true
+
+      local now = uv_now()
+      local delay = math_max(1, next_run - now)
+      next_run = now + 1000
+
+      defer_fn(buf_update_handler, delay)
+    end
   end
 end
 
@@ -308,7 +328,7 @@ function _M.on_diagnostic_changed(e)
                                            {})
 
         name = name and name[1]
-        if name then
+        if name and name ~= "" then
           names:add(name)
         end
       end
@@ -329,7 +349,7 @@ function _M.on_attach(client, buf)
 
   event.on(event.DiagnosticChanged)
     :group("user-lua-diagnostic", true)
-    :pattern("*")
+    :buffer(buf)
     :callback(_M.on_diagnostic_changed)
 
   event.on({
@@ -337,11 +357,10 @@ function _M.on_attach(client, buf)
       event.BufReadPost,
       event.TextChanged,
       event.TextChangedI,
-      event.TextChangedP,
-      event.TextChangedT,
     })
     :group("user-lua-buf-event", true)
     :desc("Lua buffer event handler")
+    :buffer(buf)
     :callback(_M.on_buf_event)
 
   local config = Config.get(client.id)
@@ -386,7 +405,7 @@ function _M.init()
     return config.config
   end
 
-  config = Config.get_or_create(0, _M.defaults)
+  config = Config.get_or_create(0)
   hooks.on_workspace(WS, config)
 
   return config.config

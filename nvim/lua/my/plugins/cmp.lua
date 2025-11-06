@@ -1,6 +1,6 @@
-local mod = require 'my.utils.luamod'
+local mod = require("my.utils.luamod")
 
-if not mod.exists('cmp') then
+if not mod.exists("cmp") then
   return
 end
 
@@ -11,9 +11,10 @@ if mod.exists("lspkind") then
 end
 
 ---@module 'cmp'
-local cmp = require 'cmp'
-local km = require 'my.keymap'
+local cmp = require("cmp")
+local km = require("my.keymap")
 local const = require "my.constants"
+local lls_types = require("my.cmp.source.lua_ls_types")
 
 local Ctrl = km.Ctrl
 local Tab = km.Tab
@@ -57,6 +58,8 @@ do
     get_cwd = function() return ws end
   end
 
+  cmp.register_source(lls_types.NAME, lls_types.new())
+
   -- https://github.com/hrsh7th/nvim-cmp/wiki/List-of-sources
   local sources = {
     -- use nvim lua API as a source
@@ -69,6 +72,9 @@ do
 
     -- LSP, displays function signature
     -- https://github.com/hrsh7th/cmp-nvim-lsp-signature-help
+    { name = "nvim_lsp_signature_help" },
+
+    -- https://github.com/hrsh7th/cmp-nvim-lsp-document-symbol
     { name = "nvim_lsp_signature_help" },
 
     -- Complete from Treesitter nodes
@@ -99,6 +105,8 @@ do
     { name = "emoji" },
 
     { name = "copilot", priority = 50 },
+
+    { name = lls_types.NAME },
   }
 
   ---@param entry cmp.Entry
@@ -143,6 +151,7 @@ if lspkind then
         nvim_lua = "[nvim]",
         path     = "[path]",
         luasnip  = "[snip]",
+        [lls_types.NAME] = "[type]",
       },
     })
   }
