@@ -1,6 +1,7 @@
 local buffer = require("string.buffer")
-local callable = require("my.utils.types").callable
+local callable = require("my.std.types").callable
 local const = require("my.constants")
+local sw = require("my.std.stopwatch")
 
 --local vim = vim
 local validate = vim.validate
@@ -62,8 +63,11 @@ end
 ---@class my.cmd
 ---
 ---@field opts my.cmd.opts
----@field inner? vim.SystemObj
+---@field inner vim.SystemObj
 ---@field result my.cmd.result
+---
+---@field spawned boolean
+---@field stop_timer? function
 local CMD = {}
 local CMD_MT = { __index = CMD }
 
@@ -208,6 +212,7 @@ end
 ---@param cmd my.cmd
 ---@param on_exit? function
 ---@param on_error? function
+---@return fun(result: vim.SystemCompleted)
 local function wrap_on_exit(cmd, on_exit, on_error)
   ---@param result vim.SystemCompleted
   return function(result)
@@ -237,6 +242,10 @@ local function wrap_on_exit(cmd, on_exit, on_error)
     if result.failed and on_error then
       on_error(cmd, result)
     end
+
+    if cmd.stop_timer then
+      cmd.stop_timer()
+    end
   end
 end
 
@@ -256,6 +265,8 @@ function CMD.new(cmd)
       stderr = false,
 
       timeout = DEFAULT_TIMEOUT,
+
+      spawned = false,
 
       -- unused
       text = nil,
@@ -576,10 +587,13 @@ function CMD:run()
     stdin_handler = nil
   end
 
+  self.stop_timer = sw.new(self.label, 100)
 
   local obj = system(cmd, opts, on_exit)
   self.inner = obj
   self.pid = obj.pid
+
+  self.spawned = true
 
   if on_spawn then
     on_spawn(self)
@@ -596,12 +610,14 @@ end
 ---@param timeout? integer
 ---@return vim.SystemCompleted
 function CMD:wait(timeout)
+  assert(self.spawned, "called cmd:wait() without spawning")
   return self.inner:wait(timeout)
 end
 
 
 ---@param signal? string|integer
 function CMD:kill(signal)
+  assert(self.spawned, "called cmd:kill() without spawning")
   return self.inner:kill(signal)
 end
 

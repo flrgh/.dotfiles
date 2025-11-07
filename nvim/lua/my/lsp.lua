@@ -1,13 +1,16 @@
 local _M = {}
 
-local plugin = require "my.utils.plugin"
+local std = require("my.std")
+
 local km = require("my.keymap")
 local const = require("my.constants")
 local event = require("my.event")
-local fs = require("my.utils.fs")
 local health = require("user.health")
 
-local executable = fs.executable
+local fs = std.fs
+local plugin = std.plugin
+
+local executable = fs.path.executable
 local api = vim.api
 local lsp = vim.lsp
 local vim = vim
@@ -302,12 +305,15 @@ local function setup_server(name)
     return
   end
 
-  local found, exe = executable(cmd[1], true)
-  if not found then
+  local exe = executable(cmd[1])
+  if not exe then
     health.error("lsp", "server %q executable (%s) not found",
                  name, cmd[1])
     return
   end
+
+  cmd[1] = exe
+  conf.cmd = cmd
 
   health.ok("lsp", "server %q installed at %q", name, exe)
 

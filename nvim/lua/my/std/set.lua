@@ -1,15 +1,15 @@
-local util = require("my.utils")
-local clear = util.table.clear
-local clone = util.table.clone
+local table = require("my.std.table")
+local clear = table.clear
+local clone = table.clone
 
----@class my.Set
+---@class my.std.Set
 ---@field items string[]
 ---@field map { [string]: boolean }
 ---@field len integer
 local Set = {}
 local Set_mt = { __index = Set }
 
----@return my.Set
+---@return my.std.Set
 function Set.new()
   local self = setmetatable({
     items = {},
@@ -35,7 +35,7 @@ function Set:add(elem)
 end
 
 
----@return my.Set
+---@return my.std.Set
 function Set:clear()
   clear(self.items)
   clear(self.map)
@@ -53,7 +53,7 @@ end
 
 
 ---@param items string[]
----@return my.Set
+---@return my.std.Set
 function Set.from(items)
   local self = Set.new()
   self:add_all(items)

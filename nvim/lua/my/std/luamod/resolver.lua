@@ -1,5 +1,5 @@
-local fs = require "my.utils.fs"
-local sw = require "my.utils.stopwatch"
+local fs = require "my.std.fs"
+local sw = require "my.std.stopwatch"
 local const = require "my.constants"
 local clear = require("table.clear")
 

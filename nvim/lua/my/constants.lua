@@ -16,7 +16,7 @@ local function expand(path)
 end
 
 local function detect_workspace()
-  local fs = require "my.utils.fs"
+  local fs = require "my.std.fs"
 
   return vim.fs.root(0, ".git")
       or fs.workspace_root()

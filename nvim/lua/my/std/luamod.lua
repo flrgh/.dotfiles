@@ -2,12 +2,11 @@
 local _M = {}
 
 local const = require("my.constants")
-local fs = require("my.utils.fs")
-local resolver = require("my.utils.luamod.resolver")
-local requires = require("my.utils.luamod.requires")
-local buffer = require("string.buffer")
-local cmd = require("my.utils.cmd")
-local plugin = require("my.utils.plugin")
+local fs = require("my.std.fs")
+local resolver = require("my.std.luamod.resolver")
+local requires = require("my.std.luamod.requires")
+local cmd = require("my.std.cmd")
+local Set = require("my.std.set")
 
 _M.resolver = resolver
 _M.requires = requires
@@ -17,48 +16,9 @@ local require = require
 local insert = table.insert
 local concat = table.concat
 local gsub = string.gsub
-local find = string.find
-local sub = string.sub
-local byte = string.byte
-local trim = vim.trim
+local trim = require("my.std.string").trim
 
 local vim = vim
-
-local LF = "\n"
-
-local function noop() end
-
----@type fun(string):string[]
-local split_lines
-do
-  local buf = {}
-  local n
-
-  local function add_line(line)
-    n = n + 1
-    buf[n] = line
-  end
-
-  function split_lines(s, skip_empty)
-    n = 0
-    gsub(s, "[^\r\n]+", add_line)
-
-    local ret = {}
-    local o = 0
-    for i = 1, n do
-      local line = buf[i]
-      buf[i] = nil
-
-      if not skip_empty or #line ~= 0 then
-        o = o + 1
-        ret[o] = line
-      end
-    end
-
-    return ret
-  end
-end
-
 
 ---@type string[]
 local LUA_PATH_ENTRIES = {}
@@ -83,9 +43,10 @@ do
     end
   end
 
-  package.path:gsub("[^;]+", add)
+  gsub(package.path, "[^;]+", add)
+
   local env_lua_path = os.getenv("LUA_PATH") or ""
-  env_lua_path:gsub("[^;]+", add)
+  gsub(env_lua_path, "[^;]+", add)
 end
 _M.LUA_PATH_ENTRIES = LUA_PATH_ENTRIES
 
@@ -169,6 +130,7 @@ end
 
 ---@param dir? string
 ---@param cb? function
+---@return nil|string[]
 function _M.find_all_requires(dir, cb)
   local proc = cmd.new("rg"):args({
     "--one-file-system",
@@ -182,28 +144,29 @@ function _M.find_all_requires(dir, cb)
     "--replace", "$1",
   })
 
-  local mods = {}
-  local seen = {}
+  if dir then
+    proc:cwd(dir)
+  end
+
+  local mods = Set.new()
+
   proc:on_stdout_line(function(line, eof)
     if eof then
-      if cb then
-        cb(mods)
-      end
       return
     end
 
     line = trim(line)
-    if not seen[line] then
-      seen[line] = true
-      table.insert(mods, line)
-    end
+    mods:add(line)
   end)
 
-  proc:run()
-
-  if not cb then
-    proc:wait()
-    return mods
+  if cb then
+    vim.defer_fn(function()
+      proc:run():wait()
+      cb(mods:take())
+    end, 0)
+  else
+    proc:run():wait()
+    return mods:take()
   end
 end
 
@@ -211,7 +174,7 @@ end
 ---@param buf integer
 ---@return string[]
 function _M.get_module_requires(buf)
-  return require("my.utils.luamod.requires").get_module_requires(buf)
+  return require("my.std.luamod.requires").get_module_requires(buf)
 end
 
 ---@class my.luamod.typedef
@@ -263,6 +226,10 @@ function _M.find_all_types(paths)
   proc:on_stdout_line(function(line, eof)
     if eof then return end
 
+    if not line:find([["match"]], nil, true) then
+      return
+    end
+
     local json = decode(line)
     if json.type ~= "match" then
       return
@@ -273,10 +240,10 @@ function _M.find_all_types(paths)
     if not fname then return end
 
     local text = data.submatches
-    and data.submatches[1]
-    and data.submatches[1].match
-    and data.submatches[1].match.text
-    or data.lines.text
+      and data.submatches[1]
+      and data.submatches[1].match
+      and data.submatches[1].match.text
+      or data.lines.text
 
     if not text then return end
 
@@ -289,7 +256,7 @@ function _M.find_all_types(paths)
 
     if not ty then return end
 
-    ty = vim.trim(ty)
+    ty = trim(ty)
 
     if ty:sub(-1) == ":" then
       ty = ty:sub(1, -2)

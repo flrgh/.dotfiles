@@ -100,7 +100,7 @@ function _M.init()
 
   local queue = assert(vim.uv.new_work(
     function(fname, entry)
-      assert(require("my.utils.fs").append_file(fname, entry .. "\n"))
+      assert(require("my.std.fs").append_file(fname, entry .. "\n"))
     end,
     function() end
   ))

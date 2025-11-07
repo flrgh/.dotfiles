@@ -5,7 +5,7 @@ _M.defaults = require("my.lsp.lua_ls.defaults")
 local hooks = require("my.lsp.lua_ls.hooks")
 local Config = require("my.lsp.lua_ls.config")
 local storage = require("my.storage")
-local Set = require("my.utils.set")
+local Set = require("my.std.set")
 
 local vim = vim
 local lsp = vim.lsp
@@ -52,11 +52,11 @@ local math_max = math.max
 ---@field window? table
 ---@field spell? table
 
-local fs = require "my.utils.fs"
-local luamod = require "my.utils.luamod"
+local fs = require "my.std.fs"
+local luamod = require "my.std.luamod"
 local const = require "my.constants"
-local plugin = require "my.utils.plugin"
-local sw = require "my.utils.stopwatch"
+local plugin = require "my.std.plugin"
+local sw = require "my.std.stopwatch"
 local WS = require "my.workspace"
 local event = require "my.event"
 local helpers = require("my.lsp.helpers")
@@ -249,7 +249,7 @@ do
 
   local next_run = 0
 
-  ---@param e _vim.autocmd.event
+  ---@param e my.event.payload
   function _M.on_buf_event(e)
     local buf = e.buf
     if not buf then
@@ -285,7 +285,7 @@ do
 end
 
 
----@param e _vim.autocmd.event
+---@param e my.event.payload
 function _M.on_diagnostic_changed(e)
   if not e.file then
     return

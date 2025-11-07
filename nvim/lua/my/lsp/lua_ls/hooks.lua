@@ -2,15 +2,14 @@ local _M = {}
 
 local user_const = require("my.constants")
 local const = require("my.lsp.lua_ls.constants")
-local luamod = require("my.utils.luamod")
-local Set = require("my.utils.set")
-local utils = require("my.utils")
+local std = require("my.std")
 
-local fs = utils.fs
-local plugin = utils.plugin
-local contains = utils.string.contains
-local find = string.find
-local sub = string.sub
+local luamod = std.luamod
+local fs = std.fs
+local plugin = std.plugin
+local contains = std.string.contains
+local find = std.string.find
+local sub = std.string.sub
 
 
 local TYPE_DIR = const.LUA_TYPE_ANNOTATIONS
@@ -293,7 +292,7 @@ function _M.on_missing_types(types, config)
   config:with_mutex("hooks.on_missing_types", function()
     local all = find_all_types(config)
 
-    local found = Set.new()
+    local found = std.Set()
     for _, ty in ipairs(types) do
       local files = all[ty]
       if files then

@@ -6,7 +6,7 @@ local vim = vim
 local api = vim.api
 local lsp = vim.lsp
 
----@param e _vim.autocmd.event
+---@param e my.event.payload
 ---@param client_name string
 ---@return vim.lsp.Client?
 local function get_client(e, client_name)
@@ -74,7 +74,7 @@ function _M.on_attach(name, fn)
 end
 
 
----@param e _vim.autocmd.event
+---@param e my.event.payload
 function _M.route_event(e)
   ---@type _vim.lsp.client.id
   local client_id = e.data and e.data.client_id

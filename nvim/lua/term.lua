@@ -1,0 +1,7 @@
+local event = require("my.event")
+event.on(event.TermRequest)
+  :group("term-request-demo", true)
+  :once(true)
+  :callback(function(e)
+    vim.notify(vim.inspect({ "event", e }))
+  end)

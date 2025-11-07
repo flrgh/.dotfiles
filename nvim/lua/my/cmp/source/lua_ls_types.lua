@@ -1,6 +1,9 @@
+local const = require("my.constants")
 local cmp = require("cmp")
 local storage = require("my.storage")
-local util = require("my.utils")
+local std = require("my.std")
+local luamod = std.luamod
+local plugin = std.plugin
 
 local vim = vim
 local fmt = string.format
@@ -18,10 +21,6 @@ local find_all_types
 do
   ---@type { [integer]: lsp.CompletionItem[] }
   local _TYPES = {}
-
-  local luamod = require("my.utils.luamod")
-  local const = require("my.constants")
-  local plugin = require("my.utils.plugin")
 
   local function cmp_types(a, b)
     return a.label < b.label
@@ -60,7 +59,7 @@ do
     local defs = luamod.find_all_types(extra_paths)
 
     ---@type lsp.CompletionItem[]
-    local types = util.table.new(#defs, 0)
+    local types = std.table.new(#defs, 0)
 
     for i = 1, #defs do
       local def = defs[i]

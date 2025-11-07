@@ -1,22 +1,18 @@
+local user_const = require("my.constants")
+local std = require("my.std")
 local storage = require("my.storage")
-local utils = require("my.utils")
-local fs = require("my.utils.fs")
-local luamod = require("my.utils.luamod")
-local clear = require("table.clear")
-local WS = require("my.workspace")
-local plugin = require("my.utils.plugin")
 local proto = require("vim.lsp.protocol")
 local const = require("my.lsp.lua_ls.constants")
 local DEFAULTS = require("my.lsp.lua_ls.defaults")
-local Set = require("my.utils.set")
-local user_const = require("my.constants")
 
+local fs = std.fs
+local luamod = std.luamod
 local lsp = vim.lsp
-local endswith = vim.endswith
-local insert = table.insert
-local deepcopy = vim.deepcopy
-local deep_equal = vim.deep_equal
-local fmt = string.format
+local endswith = std.string.startswith
+local insert = std.table.insert
+local deep_copy = std.deep_copy
+local deep_equal = std.deep_equal
+local fmt = std.string.format
 
 ---@type string[]
 local LUA_PATH_ENTRIES = luamod.LUA_PATH_ENTRIES
@@ -39,7 +35,7 @@ local NAME = const.NAME
 
 local DEBUG = vim.log.levels.DEBUG
 
----@param paths my.Set
+---@param paths my.std.Set
 ---@param dir string
 local function add_lua_path(paths, dir)
   if not dir or dir == "" then return end
@@ -57,13 +53,13 @@ end
 ---@field config my.lsp.config.Lua
 ---@field meta { [string]: boolean }
 ---@field dirty boolean
----@field workspace_library my.Set
----@field runtime_path my.Set
----@field ignore_dir my.Set
----@field addons my.Set
----@field definitions my.Set
----@field modules my.Set
----@field mutex my.util.mutex
+---@field workspace_library my.std.Set
+---@field runtime_path my.std.Set
+---@field ignore_dir my.std.Set
+---@field addons my.std.Set
+---@field definitions my.std.Set
+---@field modules my.std.Set
+---@field mutex my.std.Mutex
 local Config = {}
 local Config_mt = { __index = Config }
 
@@ -74,17 +70,17 @@ function Config.new(id, config)
   local self = setmetatable({
     id = id,
     client = nil,
-    config = deepcopy(config),
+    config = deep_copy(config),
     resolver = luamod.resolver.new(),
     meta = {},
     dirty = false,
-    workspace_library = Set.new(),
-    runtime_path = Set.from({ "?.lua", "?/init.lua" }),
-    ignore_dir = Set.new(),
-    addons = Set.new(),
-    definitions = Set.new(),
-    modules = Set.new(),
-    mutex = utils.mutex(),
+    workspace_library = std.Set(),
+    runtime_path = std.set.from({ "?.lua", "?/init.lua" }),
+    ignore_dir = std.Set(),
+    addons = std.Set(),
+    definitions = std.Set(),
+    modules = std.Set(),
+    mutex = std.Mutex(),
   }, Config_mt)
 
 
@@ -259,7 +255,7 @@ function Config:update_client_settings(client)
     return
   end
 
-  client.settings = deepcopy(settings)
+  client.settings = deep_copy(settings)
 
   do
     -- avoid triggering `workspace/didChangeWorkspaceFolders` by tricking

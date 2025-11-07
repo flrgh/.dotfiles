@@ -1,34 +1,31 @@
---- filesystem utility functions
----@module "my.utils.fs"
+---@class my.std.path
 local _M = {}
 
+
 local vim = vim
-local fn = vim.fn
+local api = vim.api
 local uv = vim.uv
-local json_decode = vim.json.decode
+
+local expand = vim.fn.expand
+
 local fs_stat = uv.fs_stat
-local fs_open = uv.fs_open
-local fs_fstat = uv.fs_fstat
-local fs_read = uv.fs_read
-local fs_close = uv.fs_close
 local fs_realpath = uv.fs_realpath
-local fs_write = uv.fs_write
 local fs_rename = uv.fs_rename
 local fs_lstat = uv.fs_lstat
-local fs_readlink = uv.fs_readlink
 local get_cwd = uv.cwd
+
 local concat = table.concat
 local assert = assert
 local byte = string.byte
 local gsub = string.gsub
-local deepcopy = vim.deepcopy
 local find = string.find
 local type = type
-local tostring = tostring
 local tonumber = tonumber
 local band = bit.band
 local getenv = os.getenv
-local clear = require("table.clear")
+local pairs = pairs
+local ipairs = ipairs
+local trim = require("my.std.string").trim
 
 local EXEC_BITS = tonumber(0111, 8)
 local SLASH = byte("/")
@@ -40,6 +37,7 @@ local DOT = byte(".")
 local function is_abs(path)
   return byte(path, 1, 1) == SLASH
 end
+_M.is_abs = is_abs
 
 ---@param path string
 ---@return boolean
@@ -47,6 +45,7 @@ local function is_self(path)
   local a, b = byte(path, 1, 3)
   return a == DOT and (b == SLASH or b == nil)
 end
+_M.is_self = is_self
 
 ---@param path string
 ---@return boolean
@@ -54,7 +53,9 @@ local function is_parent(path)
   local a, b, c = byte(path, 1, 3)
   return a == DOT and b == DOT and (c == SLASH or c == nil)
 end
+_M.is_parent = is_parent
 
+_M.cwd = get_cwd
 
 --- Check if a file exists.
 ---@param  fname   string
@@ -100,6 +101,7 @@ function _M.type(path)
 end
 
 ---@param path string
+---@return uv.fs_stat.result|nil
 function _M.stat(path)
   local st = fs_stat(path)
   if not st then
@@ -121,58 +123,18 @@ function _M.size(path)
   return (st and st.size) or -1
 end
 
---- Read a file's contents to a string.
----@param  fname   string
----@return string? content
----@return string? error
-function _M.read_file(fname)
-  local stat, data, fd, err
-
-  fd, err = fs_open(fname, "r", tonumber(666, 8))
-  if not fd then
-    return nil, err or "failed opening file"
-  end
-
-  stat, err = fs_fstat(fd)
-  if not stat then
-    return nil, err or "failed fstat-ing file"
-  end
-
-  data, err = fs_read(fd, stat.size, 0)
-  if not data then
-    return nil, err or "failed reading file"
-  end
-
-  assert(fs_close(fd))
-
-  return data
-end
-
---- Decode the contents of a json file.
----@param  fname   string
----@return table|string|number|boolean|nil json
----@return string? error
-function _M.read_json_file(fname)
-  local raw, err = _M.read_file(fname)
-  if not raw then
-    return nil, err
-  end
-
-  return json_decode(raw)
-end
-
 ---@param buf? integer
 ---@return string
 function _M.buffer_filename(buf)
   if buf then
-    return vim.api.nvim_buf_get_name(buf)
+    return api.nvim_buf_get_name(buf)
   end
-  return fn.expand("%:p", true)
+  return expand("%:p", true)
 end
 
 ---@return string
 function _M.buffer_directory()
-  return fn.expand("%:p:h", true)
+  return expand("%:p:h", true)
 end
 
 local _normalize
@@ -238,7 +200,7 @@ end
 
 ---@return string?
 function _M.workspace_root()
-  local dir = _M.buffer_directory() or fn.getcwd()
+  local dir = _M.buffer_directory() or get_cwd()
   if not dir then
     return
   end
@@ -274,63 +236,6 @@ function _M.dirname(path)
   return (_normalize(path):gsub("/[^/]+$", ""))
 end
 
-
----@param path string
----@param data string|string[]
----@param mode integer?
----@param flags string
----@return integer|nil written
----@return string|nil error
-local function write_with_flags(path, data, mode, flags)
-  mode = mode or tonumber(640, 8)
-
-  local fd, err = fs_open(path, flags, mode)
-  if not fd then
-    return nil, err
-  end
-
-  local typ = type(data)
-  assert(typ == "string" or typ == "table",
-         "invalid data type, expected a string or table "
-         .. "(got " .. typ .. ")")
-
-  local bytes
-  bytes, err = fs_write(fd, data)
-
-  local ok, cerr = fs_close(fd)
-
-  if not ok then
-    return nil, cerr
-
-  elseif not bytes then
-    return nil, err
-  end
-
-  return bytes
-end
-
---- Write data to a file
----@param path string
----@param data string|string[]
----@param mode integer?
----@return integer|nil written
----@return string|nil error
-function _M.write_file(path, data, mode)
-  return write_with_flags(path, data, mode, "w+")
-end
-
-
---- Append data to a file
----@param path string
----@param data string|string[]
----@param mode integer?
----@return integer|nil written
----@return string|nil error
-function _M.append_file(path, data, mode)
-  return write_with_flags(path, data, mode, "a+")
-end
-
-
 --- Rename a file
 ---@param from string
 ---@param to string
@@ -339,7 +244,6 @@ end
 function _M.rename(from, to)
   return fs_rename(from, to)
 end
-
 
 ---@param ... string
 ---@return string
@@ -370,53 +274,6 @@ function _M.join(...)
   return concat(parts, "/")
 end
 
-do
-  ---@class my.util.fs.cache.entry
-  ---
-  ---@field mtime { nsec: integer, sec: integer }
-  ---@field inode integer
-  ---@field content any
-
-  ---@type table<string, my.util.fs.cache.entry>
-  local cache = {}
-
-  --- This is like `read_json_file()`, but the result is cached.
-  ---
-  ---@param fname string
-  ---@return any      content
-  ---@return string?  error
-  ---@return boolean? cached
-  function _M.load_json_file(fname)
-    fname = _normalize(fname)
-
-    local st = fs_stat(fname)
-    if not st then
-      return nil, "could not stat() file", nil
-    end
-
-    local entry = cache[fname]
-    if entry
-      and entry.inode      == st.ino
-      and entry.mtime.sec  == st.mtime.sec
-      and entry.mtime.nsec == st.mtime.nsec
-    then
-      return entry.content, nil, true
-    end
-
-    local json, err = _M.read_json_file(fname)
-    if err then
-      return nil, err
-    end
-
-    cache[fname] = {
-      content = json,
-      mtime   = deepcopy(st.mtime),
-      inode   = st.ino,
-    }
-
-    return json, nil, false
-  end
-end
 
 ---@param dir string
 ---@param fname string
@@ -462,78 +319,81 @@ function _M.abbreviate(path)
 end
 
 
-local EXE_CACHE = {}
+local EXE_CACHE = require("my.std.cache").new("std.path.exe")
+local MISE_SHIMS
 
 ---@param path string
----@param use_cache? boolean
----@return boolean
-local function is_exe(path, use_cache)
-  local cached = EXE_CACHE[path]
-  if use_cache and cached ~= nil then
-    return not not cached, cached
-  end
-
+---@return string|false
+local function _get_exe(path)
   local st = fs_stat(path)
-  local res = st
+  if st
     and st.type == "file"
     and band(st.mode, EXEC_BITS) > 0
-    and path
-    or false
-
-  EXE_CACHE[path] = res
-  return not not res, res
-end
-
----@type string[]
-local __PATH
-
----@param use_cache? boolean
----@return string[]
-local function get_PATH(use_cache)
-  if __PATH and use_cache then
-    return __PATH
+  then
+    return path
+  else
+    return false
   end
-
-  __PATH = {}
-  local n = 0
-
-  local PATH = getenv("PATH")
-  if PATH then
-    for part in PATH:gmatch("[^:]+") do
-      n = n + 1
-      __PATH[n] = part
-    end
-  end
-
-  return __PATH
 end
-
 
 ---@param path string
----@param use_cache? boolean
----@return boolean
----@return string? abspath
-function _M.executable(path, use_cache)
-  local cached = EXE_CACHE[path]
-  if use_cache and cached ~= nil then
-    return not not cached, cached
+---@return string|nil
+local function is_exe(path)
+  local res = EXE_CACHE.get(path, _get_exe)
+  return res or nil
+end
+
+
+---@return fun():string|nil
+local function iter_PATH()
+  local PATH = getenv("PATH") or ""
+  return PATH:gmatch("[^:]+")
+end
+
+---@param name string
+---@return string|nil
+local function find_exe(name)
+  local cached = EXE_CACHE.get(name)
+  if cached ~= nil then
+    return cached or nil
   end
 
-  if find(path, "/", nil, true) then
-    return is_exe(path, use_cache)
+  if find(name, "/", nil, true) then
+    if not is_abs(name) then
+      return find_exe(get_cwd() .. "/" .. name)
+    end
+    return is_exe(name)
   end
 
-  for _, dir in ipairs(get_PATH(use_cache)) do
-    local try = dir .. "/" .. path
-    if is_exe(try, use_cache) then
-      EXE_CACHE[path] = try
-      return true, try
+  for dir in iter_PATH() do
+    local try = dir .. "/" .. name
+    if is_exe(try) then
+      MISE_SHIMS = MISE_SHIMS or (require("my.constants").home .. "/.local/share/mise/shims")
+
+      if dir == MISE_SHIMS then
+        local cmd = require("my.std.cmd")
+        local res = cmd.new(find_exe("mise") or "mise")
+          :args({ "which", name })
+          :save_stdout(true)
+          :run()
+          :wait()
+
+        local which = res and res.stdout and trim(res.stdout)
+        if which then
+          EXE_CACHE.set(name, which)
+          return which
+        end
+      end
+
+      EXE_CACHE.set(name, try)
+      return try
     end
   end
 
-  return is_exe(path, use_cache)
+  return is_exe(name)
 end
 
+_M.executable = find_exe
 
 ---@param path string
 ---@param normalize? boolean

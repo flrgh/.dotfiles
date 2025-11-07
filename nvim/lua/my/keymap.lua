@@ -18,7 +18,7 @@ local get_current_buf = api.nvim_get_current_buf
 local fmt = string.format
 local insert = table.insert
 
-local is_callable = require("my.utils").is_callable
+local is_callable = require("my.std").is_callable
 local clear = require("table.clear")
 
 local _M = {}

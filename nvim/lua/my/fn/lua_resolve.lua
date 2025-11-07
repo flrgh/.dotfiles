@@ -1,6 +1,6 @@
 local _M = {}
 
-local luamod = require("my.utils.luamod")
+local luamod = require("my.std.luamod")
 local storage = require("my.storage")
 local km = require("my.keymap")
 
@@ -112,8 +112,11 @@ function _M.resolve(args)
 end
 
 
-function _M.complete()
-  return luamod.get_module_requires(0)
+---@param buf? integer
+---@return string[]
+function _M.complete(buf)
+  buf = buf or 0
+  return luamod.get_module_requires(buf)
 end
 
 

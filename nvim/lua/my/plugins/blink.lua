@@ -1,4 +1,4 @@
-local plugin = require("my.utils.plugin")
+local plugin = require("my.std.plugin")
 
 ---@type blink.cmp.Config
 local opts = {}

@@ -1,5 +1,5 @@
 local const = require("my.constants")
-local fs = require("my.utils.fs")
+local fs = require("my.std.fs")
 
 -- https://lazy.folke.io/configuration
 ---@type LazyConfig

@@ -20,7 +20,7 @@ local function log_duration(task, duration, lvl)
      or (const.debug and WARN)
      or DEBUG
 
-  vim.notify(fmt("task %q completed in %.3f ms", task, duration),
+  vim.notify(fmt("task %s completed in %.3f ms", task, duration),
              lvl)
 end
 
@@ -68,16 +68,16 @@ function _M.elapsed(task)
   return get_time() - started
 end
 
----@alias my.utils.stopwatch fun():number
+---@alias my.std.stopwatch fun():number
 
 ---@param task string
 ---@param slow_if? number
----@return my.utils.stopwatch
+---@return my.std.stopwatch
 function _M.new(task, slow_if)
   slow_if = slow_if or 1000
   local start = 0
 
-  ---@type my.utils.stopwatch
+  ---@type my.std.stopwatch
   local function get_elapsed()
     local elapsed = get_time() - start
 

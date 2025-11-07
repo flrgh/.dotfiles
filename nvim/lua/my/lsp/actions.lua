@@ -1,6 +1,6 @@
 local _M = {}
 
-local plugin = require "my.utils.plugin"
+local plugin = require "my.std.plugin"
 local km = require("my.keymap")
 local const = require("my.constants")
 local event = require("my.event")

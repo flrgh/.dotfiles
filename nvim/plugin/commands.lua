@@ -14,7 +14,7 @@ command("Dump",
 
 command("LuaDebug",
   function()
-    local fs = require "my.utils.fs"
+    local fs = require "my.std.fs"
 
     local home = os.getenv("HOME")
 

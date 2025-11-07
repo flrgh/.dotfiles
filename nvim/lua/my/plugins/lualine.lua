@@ -2,7 +2,7 @@
 -- Author: shadmansaleh
 -- Credit: glepnir
 
-local mod = require "my.utils.luamod"
+local mod = require "my.std.luamod"
 
 local expand                    = vim.fn.expand
 local empty                     = vim.fn.empty

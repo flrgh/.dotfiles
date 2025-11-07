@@ -1,7 +1,7 @@
 local schemaStore
 local schemas
 
-if require("my.utils.plugin").installed("schemastore") then
+if require("my.std.plugin").installed("schemastore") then
   local ss = require "schemastore"
 
   schemaStore = {

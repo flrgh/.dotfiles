@@ -1,6 +1,6 @@
 local km = require "my.keymap"
 local actions = require "telescope.actions"
-local plugin = require "my.utils.plugin"
+local plugin = require "my.std.plugin"
 local const = require "my.constants"
 
 -- turn on line numbers for previewers

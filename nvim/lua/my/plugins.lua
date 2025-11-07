@@ -1,7 +1,7 @@
 ﻿local km = require "my.keymap"
 local evt = require "my.event"
 local const = require "my.constants"
-local fs = require "my.utils.fs"
+local fs = require "my.std.fs"
 
 local Ctrl = km.Ctrl
 local Leader = km.Leader
@@ -283,6 +283,7 @@ local plugins_by_category = {
     },
 
     { "rcarriga/nvim-notify",
+      event = evt.user.VeryLazy,
       init = function()
         local notify = require "notify"
         notify.setup({

@@ -1,4 +1,4 @@
-local mod = require("my.utils.luamod")
+local mod = require("my.std.luamod")
 
 if not mod.exists("cmp") then
   return

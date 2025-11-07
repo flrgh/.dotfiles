@@ -214,8 +214,8 @@ local defaults = {
         plugin            = nil,
         pluginArgs        = nil,
         special = {
-          ["my.utils.luamod.reload"] = "require",
-          ["my.utils.luamod.if_exists"] = "require",
+          ["my.std.luamod.reload"] = "require",
+          ["my.std.luamod.if_exists"] = "require",
           ["busted.require"] = "require",
         },
         unicodeName       = false,
@@ -251,7 +251,9 @@ local defaults = {
       workspace = {
         checkThirdParty  = ApplyInMemory,
         ---@type string[]
-        ignoreDir        = {},
+        ignoreDir        = {
+          "ldoc/builtin",
+        },
         ignoreSubmodules = true,
         ---@type string[]
         library          = {},

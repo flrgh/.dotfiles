@@ -3,7 +3,7 @@ local json = {
   validate = { enable = false },
 }
 
-if require("my.utils.plugin").installed("schemastore") then
+if require("my.std.plugin").installed("schemastore") then
   local ss = require "schemastore"
   json.schemas = ss.json.schemas()
   json.validate.enable = true

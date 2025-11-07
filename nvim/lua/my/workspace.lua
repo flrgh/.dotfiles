@@ -6,7 +6,7 @@
 local WS = {}
 
 
-local fs = require "my.utils.fs"
+local fs = require "my.std.fs"
 local const = require "my.constants"
 
 --- annotations from https://github.com/LuaCATS

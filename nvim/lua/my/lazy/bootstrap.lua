@@ -4,12 +4,14 @@ return function(mode)
   local silent = mode == "silent"
   local quiet = silent or mode == "quiet"
 
+  local vim = vim
+
   if not silent then
     vim.print("Bootstrapping plugins\n")
   end
 
   if quiet then
-    require("my.utils").output.pause()
+    require("my.std.io").pause()
   end
 
   vim.go.loadplugins = true
@@ -28,7 +30,7 @@ return function(mode)
   lazy.build(conf)
 
   if quiet then
-    require("my.utils").output.unpause()
+    require("my.std.io").unpause()
   end
 
   if not silent then

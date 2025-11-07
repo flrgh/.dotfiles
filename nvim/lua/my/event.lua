@@ -10,8 +10,8 @@ local tostring = tostring
 local create_augroup = vim.api.nvim_create_augroup
 local create_autocmd = vim.api.nvim_create_autocmd
 local nvim_exec_autocmds = vim.api.nvim_exec_autocmds
-local clear = require("table.clear")
-local is_callable = require("my.utils").is_callable
+local clear_tab = require("table.clear")
+local is_callable = require("my.std").is_callable
 
 
 
@@ -1457,13 +1457,14 @@ do
 
     ctx.started = nil
     ctx.event = nil
-    clear(ctx.opts)
-    clear(ctx.group_opts)
+    clear_tab(ctx.opts)
+    clear_tab(ctx.group_opts)
 
     return id
   end
 
   ---@param callback my.event.callback
+  ---@return integer
   function ctx:callback(callback)
     if self ~= ctx or not self.started then
       error("invalid event context state", 2)

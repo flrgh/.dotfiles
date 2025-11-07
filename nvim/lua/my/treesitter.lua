@@ -68,7 +68,7 @@ function _M.bootstrap()
 end
 
 function _M.setup()
-  local fs = require "my.utils.fs"
+  local fs = require "my.std.fs"
 
   require('nvim-treesitter.configs').setup {
     ---@diagnostic disable-next-line
@@ -121,7 +121,7 @@ function _M.setup()
   vim.opt.foldnestmax = 3
   vim.opt.foldminlines = 4
 
-  local plugin = require "my.utils.plugin"
+  local plugin = require "my.std.plugin"
 
   if plugin.installed("nvim-treesitter-context") then
     require("treesitter-context").setup {

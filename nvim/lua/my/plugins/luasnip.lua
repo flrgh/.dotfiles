@@ -1,7 +1,7 @@
 local _M = {}
 
-local plugin = require "my.utils.plugin"
-local mod = require "my.utils.luamod"
+local plugin = require "my.std.plugin"
+local mod = require "my.std.luamod"
 
 ---@module "luasnip"
 local ls
@@ -55,7 +55,7 @@ function _M.setup()
     end
   end
 
-  require("my.utils.luamod").reload("my.keymap")
+  require("my.std.luamod").reload("my.keymap")
   local km = require "my.keymap"
   km.imap[km.Ctrl.k] = { expand, "Expand snippet", silent = true }
   km.smap[km.Ctrl.k] = { expand, "Expand snippet", silent = true }
