@@ -50,6 +50,9 @@ local SERVERS = {
   "yamlls",
   "ts_ls",
   "zls",
+
+  -- toml language server
+  "tombi",
 }
 
 
