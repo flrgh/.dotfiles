@@ -128,7 +128,9 @@ install-from-asset() {
         --with-brotli
         --with-libpsl
         --with-libssh2
-        --with-gssapi
+
+        # this is broken now?
+        #--with-gssapi
     )
 
     local triple; triple=$(gcc -dumpmachine)
