@@ -119,6 +119,14 @@ fix-perms() {
     done
 }
 
+_bat() {
+    check-exists bat || return
+
+    local bin; bin=$(mise which bat)
+    local parent=${bin%/*}
+    add-man-1 "${parent}/bat.1"
+}
+
 _git_cliff() {
     check-exists git-cliff || return
 
@@ -217,6 +225,7 @@ _xh() {
 main() {
     setup
 
+    _bat
     _fd
     _fzf
     _gh

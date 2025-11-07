@@ -554,6 +554,8 @@ __rc_app_bat() {
     rc-if-command bat || return 0
     rc-export MANPAGER "sh -c 'col -bx | bat -l man -p'"
     rc-export MANROFFOPT "-c"
+    rc-export BAT_PAGING auto
+    rc-export BAT_PAGER builtin
 }
 __rc_app_bat
 
