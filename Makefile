@@ -336,6 +336,22 @@ env: $(BUILD)/home/.config/env $(DEP)/bash | $(MISE) .setup
 	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.config/env
 	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.pam_environment
 
+
+DIRENV_BUILD_RC := $(BUILD)/home/direnvrc
+$(DIRENV_BUILD_RC): $(DEP)/direnv \
+	$(SCRIPT)/build-direnv-rc \
+	home/.local/lib/bash/direnv.bash \
+	home/.local/lib/bash/direnv/*.bash \
+	| .setup symlinks
+
+	$(SCRIPT)/build-direnv-rc > $@
+
+DIRENV_RC := $(INSTALL_PATH)/.config/direnv/direnvrc
+
+.PHONY: direnv
+direnv: $(DEP)/direnv $(DIRENV_BUILD_RC)
+	$(INSTALL) --mode 0644 $(DIRENV_BUILD_RC) $(DIRENV_RC)
+
 BASH_BUILTIN_CLONE := $(USER_REPOS)/bash-builtin-extras
 $(BASH_BUILTIN_CLONE): private REPO := git@github.com:flrgh/bash-builtins.git
 $(BASH_BUILTIN_CLONE):
@@ -392,6 +408,7 @@ $(BUILD)/home/.bashrc: \
 	$(DEP)/usage \
 	$(DEP)/xh \
 	$(MISE_DEPS) \
+	direnv \
 	| .setup \
 	$(BUILD)/home/.config/env
 

@@ -1,3 +1,9 @@
+declare -g BWS_ACCESS_TOKEN
+
+__lazy_init() {
+    assert::has bws secret-tool jq
+}
+
 __is_uuid() {
     [[ ${1:-} =~ ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$ ]]
 }
@@ -20,23 +26,6 @@ __get_bws_token() {
 
 __unset_bws_token() {
     unset BWS_ACCESS_TOKEN
-}
-
-secret::__check() {
-    if ! has bws; then
-        log_error "'bws' not found"
-        return 1
-    fi
-
-    if ! has secret-tool; then
-        log_error "'secret-tool' not found"
-        return 1
-    fi
-
-    if ! has jq; then
-        log_error "'jq' not found"
-        return 1
-    fi
 }
 
 __list_projects() {
@@ -77,7 +66,6 @@ __list_secrets() {
 }
 
 secret::project() {
-    secret::__check
     local -r name=${1:?project name/id required}
 
     if __is_uuid "$name"; then
@@ -109,8 +97,6 @@ secret::project() {
 }
 
 secret::inject() {
-    secret::__check
-
     if (( $# < 2 )); then
         log_error "usage: ${FUNCNAME[0]} <VAR> <SECRET>"
         return 1

@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+#shopt -s failglob
+
+fatal() {
+    echo "FATAL: $*" >&2
+    exit 1
+}
+
+command -v shfmt &>/dev/null || fatal "shfmt not found"
+command -v jq &>/dev/null || fatal "jq not found"
+command -v shellcheck &>/dev/null || fatal "shellcheck not found"
+
+
+declare -a FILES
+mapfile -t FILES < <(find home/.local/lib/bash/direnv -type f -name '*.bash' | sort)
+
+if ! (( ${#FILES[@]} )); then
+    fatal "did not find any direnv files"
+fi
+
+LIB_DIR=$HOME/.config/direnv/lib
+if [[ -d $LIB_DIR ]]; then
+    find "$LIB_DIR" -type l -delete
+    rmdir "$LIB_DIR"
+fi
+
+OUT=$(mktemp)
+
+output() {
+    printf "$@" >> "$OUT"
+    printf '\n' >> "$OUT"
+}
+
+output '# shellcheck shell=bash'
+output '# vim: set ft=bash ts=4 sw=4 sts=4 et :'
+
+cat home/.local/lib/bash/direnv.bash >> "$OUT"
+
+output 'watch_file %q' "$HOME/.config/direnv/direnvrc"
+
+for FILE in "${FILES[@]}"; do
+    SRC=${HOME}/${FILE#home/}
+
+    shfmt --to-json < "$FILE" \
+    | jq -r '
+        ..
+        | select(
+            type == "object"
+            and .Type == "FuncDecl"
+          )
+        | .Name.Value
+    ' \
+    | grep -v '^_' \
+    | sort -u \
+    | while read -r fn; do
+        output '%s() { __bash_direnv_lazy %q "$@"; }' "$fn" "$SRC"
+    done
+done
+
+shfmt \
+    --language-dialect bash \
+    --indent 4 \
+    --write \
+    "$OUT" \
+>&2
+
+shellcheck --norc "$OUT" >&2
+
+cat "$OUT"
+rm "$OUT"

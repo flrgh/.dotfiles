@@ -3,9 +3,10 @@ source "$BASH_USER_LIB"/__init.bash
 (( BASH_USER_LIB_SOURCED[trace]++ == 0 )) || return 0
 
 trace() {
+    local -i level=${1:-0}
     local -i i
 
-    for (( i = 0; i < ${#BASH_LINENO[@]}; i++ )); do
+    for (( i = level; i < ${#BASH_LINENO[@]}; i++ )); do
         printf '%2d %-48s:%-3d %s\n' \
             "$i" \
             "${BASH_SOURCE[i]}" \
