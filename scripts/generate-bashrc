@@ -932,7 +932,6 @@ __rc_pager() {
             -s # --squeeze-blank-lines
             -i # --ignore-case
             --modelines=10
-            --mouse
             --use-color
         )
         rc-export LESS "${opts[*]}"
