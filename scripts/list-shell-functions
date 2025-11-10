@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+    if (( $# > 0 )); then
+        echo "$1" >&2
+    fi
+    echo "Usage: $0 <filename>" >&2
+}
+
+die() {
+    echo "$1" >&2
+    exit "${2:-1}"
+}
+
+main() {
+    if (( $# != 1 )); then
+        usage "argument required"
+        exit 1
+    fi
+
+    if [[ $1 == "-h" || $1 == "--help" ]]; then
+        usage
+        exit 0
+    fi
+
+    if ! command -v shfmt &>/dev/null; then
+        die "'shfmt' not installed"
+    fi
+
+    if ! command -v jq &>/dev/null; then
+        die "'jq' not installed"
+    fi
+
+    local fname=${1:?}
+    if [[ $fname != "-" ]] && [[ ! -f $fname || ! -r $fname ]]; then
+        die "file '$fname' does not exist or is not a regular file"
+    fi
+
+    if [[ $fname == "-" ]]; then
+        fname=/dev/stdin
+    fi
+
+    # don't use locale for sort order
+    export LC_ALL=C
+
+    shfmt --to-json <"$fname" \
+    | jq -r '
+        ..
+        | select(
+            type == "object"
+            and .Type == "FuncDecl"
+          )
+        | .Name.Value
+    ' \
+    | sort -u
+}
+
+main "$@"

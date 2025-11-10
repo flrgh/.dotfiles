@@ -43,17 +43,8 @@ output 'watch_file %q' "$HOME/.config/direnv/direnvrc"
 for FILE in "${FILES[@]}"; do
     SRC=${HOME}/${FILE#home/}
 
-    shfmt --to-json < "$FILE" \
-    | jq -r '
-        ..
-        | select(
-            type == "object"
-            and .Type == "FuncDecl"
-          )
-        | .Name.Value
-    ' \
+    ./scripts/list-shell-functions "$FILE" \
     | grep -v '^_' \
-    | sort -u \
     | while read -r fn; do
         output '%s() { __bash_direnv_lazy %q "$@"; }' "$fn" "$SRC"
     done
