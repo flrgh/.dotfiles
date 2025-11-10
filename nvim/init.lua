@@ -1,6 +1,6 @@
-require("my.constants")
-require("my.workspace")
+require("my.env")
 require("my.settings")
+require("my.workspace")
 require("my.mappings")
 require("my.plugins")
 require("my.storage")

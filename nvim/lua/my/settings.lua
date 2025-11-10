@@ -1,8 +1,3 @@
-local const = require("my.constants")
-if const.bootstrap then
-  return
-end
-
 local g = vim.g
 local o = vim.o
 local opt = vim.opt
@@ -47,25 +42,6 @@ opt.wildignore:append {
   '*.zip',
   '*/tmp/*',
 }
-
-do
-  local bash = const.home .. "/.local/bin/bash"
-  if o.shell ~= bash then
-    vim.uv.fs_access(bash, "rx", function(_err, perm)
-      if not perm then
-        return
-      end
-
-      if vim.in_fast_event() then
-        vim.schedule(function()
-          o.shell = bash
-        end)
-      else
-        o.shell = bash
-      end
-    end)
-  end
-end
 
 -- session management
 o.backup   = false

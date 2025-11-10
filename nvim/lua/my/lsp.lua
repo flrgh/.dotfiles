@@ -3,7 +3,7 @@ local _M = {}
 local std = require("my.std")
 
 local km = require("my.keymap")
-local const = require("my.constants")
+local env = require("my.env")
 local event = require("my.event")
 local health = require("user.health")
 
@@ -334,8 +334,8 @@ function _M.init()
                vim.log.levels.WARN)
   end
 
-  if const.lsp_debug then
-    LOG_LEVEL = const.lsp_log_level
+  if env.lsp_debug then
+    LOG_LEVEL = env.lsp_log_level
     require("my.lsp.logger").init()
   end
   lsp.set_log_level(LOG_LEVEL)

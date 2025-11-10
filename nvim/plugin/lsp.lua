@@ -1,6 +1,4 @@
-local const = require("my.constants")
-
-if const.bootstrap or const.headless then
+if not require("my.env").editor then
   return
 end
 

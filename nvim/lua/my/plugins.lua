@@ -1,24 +1,178 @@
 ﻿local km = require "my.keymap"
 local evt = require "my.event"
-local const = require "my.constants"
+local env = require "my.env"
 local fs = require "my.std.fs"
 
 local Ctrl = km.Ctrl
 local Leader = km.Leader
 
 local cmd = vim.cmd
+local type = type
+
+---@param t nil|string|string[]
+---@return nil|string[]
+local function items(t)
+  if type(t) == "string" then
+    t = { t }
+  end
+  return t
+end
+
+---@param tags string[]
+---@return table<string, true>
+local function tomap(tags)
+  for i = 1, #tags do
+    local tag = tostring(tags[i])
+    tags[tag] = true
+    tags[i] = nil
+  end
+  return tags
+end
+
+---@param t string[]
+---@param extra nil|string|string[]
+---@return nil|string[]
+local function extend(t, extra)
+  if t == nil then
+    return items(extra)
+
+  elseif extra == nil then
+    return items(t)
+  end
+
+  local new = {}
+  local n = 0
+
+  if type(t) == "string" then
+    n = n + 1
+    new[n] = t
+
+  else
+    for i = 1, #t do
+      n = n + 1
+      new[n] = t[i]
+    end
+  end
+
+  if type(extra) == "string" then
+    n = n + 1
+    new[n] = extra
+
+  else
+    for i = 1, #extra do
+      n = n + 1
+      new[n] = extra[i]
+    end
+  end
+
+  return new
+end
 
 -- https://lazy.folke.io/configuration
 ---@type LazyConfig
 local conf = require("my.lazy.config")
 require("my.lazy.install")
 
----@param plugin string|table|LazySpec
----@return LazyPluginSpec
-local function hydrate(plugin)
-  if type(plugin) == "string" then
+---@class my.plugin.spec: LazyPluginSpec
+---
+---@field tags? string[]
+
+---@alias my.plugin.def string|my.plugin.spec
+
+---@class my.plugin.meta
+---
+---@field cond? boolean|fun(self:LazyPluginSpec):boolean
+---@field tags table<string, boolean>
+
+---@type table<string, my.plugin.meta>
+local _META = {}
+
+
+---@param self LazyPluginSpec
+---@param cond? boolean|fun(self: LazyPluginSpec):boolean
+---@return boolean
+local function handle_cond(self, cond)
+  local ty = type(cond)
+
+  if ty == "boolean" then
+    return cond
+
+  elseif ty == "function" then
+    return cond(self)
+  end
+
+  assert(cond == nil)
+  return true
+end
+
+
+---@param self LazyPluginSpec
+---@return boolean
+local function plugin_cond(self)
+  local name = self.name or self[1]
+  assert(type(name) == "string")
+
+  local meta = assert(_META[name], "no plugin meta for " .. name)
+  _META[name] = nil
+
+  local tags = meta.tags
+  if env.editor
+    or (env.pager and (
+          tags.pager
+          or tags.plumbing
+          or tags.ui
+          or tags.colorscheme
+          or tags.man
+          or tags["*"]
+        )
+      )
+  then
+    return handle_cond(self, meta.cond)
+  end
+
+  return false
+end
+
+
+---@param plugin my.plugin.def
+---@param ftypes? string|string[]
+---@param category? string
+---@return my.plugin.spec
+local function hydrate(plugin, ftypes, category)
+  local name = plugin
+
+  if type(plugin) == "table" then
+    -- no further processing (it's not gonna run anyways)
+    if plugin.enabled == false or plugin.cond == false then
+      plugin.tags = nil
+      return plugin
+    end
+
+    name = plugin[1]
+
+  else
+    assert(type(name) == "string")
     plugin = { plugin }
   end
+
+  name = assert(name:match("([^/]+)$"))
+
+  plugin.ft = extend(plugin.ft, ftypes)
+
+  local tags = extend({}, plugin.tags)
+  plugin.tags = nil
+
+  tags = extend(tags, plugin.ft)
+  tags = extend(tags, category)
+
+  local meta = {
+    cond = plugin.cond,
+    tags = tomap(tags),
+  }
+  _META[name] = meta
+
+  plugin.cond = plugin_cond
+
   return plugin
 end
 
@@ -35,7 +189,7 @@ local function file_config(name)
   end
 end
 
----@type table<string, LazySpec[]>
+---@type table<string, my.plugin.def[]>
 local plugins_by_filetype = {
   lua = {
     -- lua manual in vimdoc
@@ -137,11 +291,9 @@ local plugins_by_filetype = {
   },
 }
 
----@type table<string, LazySpec[]>
+---@type table<string, my.plugin.def[]>
 local plugins_by_category = {
-  appearance = {
-    -- Color
-
+  colorscheme = {
     -- tokyonight-moon
     { "folke/tokyonight.nvim",
       --cond = false,
@@ -231,7 +383,9 @@ local plugins_by_category = {
     { "lunarvim/darkplus.nvim",
       enabled = false,
     },
+  },
 
+  ui = {
     -- devicon assets
     {
       "nvim-tree/nvim-web-devicons",
@@ -263,9 +417,7 @@ local plugins_by_category = {
       dependencies = { "nvim-tree/nvim-web-devicons" },
       config = file_config("lualine"),
     },
-  },
 
-  ui = {
     -- load tags in side pane
     {
       "majutsushi/tagbar",
@@ -284,6 +436,7 @@ local plugins_by_category = {
 
     { "rcarriga/nvim-notify",
       event = evt.user.VeryLazy,
+      tags = { "pager" },
       init = function()
         local notify = require "notify"
         notify.setup({
@@ -407,8 +560,7 @@ local plugins_by_category = {
     },
   },
 
-
-  editing = {
+  navigation = {
     { "justinmk/vim-ipmotion",
       config = function()
         -- prevent `{` and `}` navigation commands from opening folds
@@ -421,7 +573,9 @@ local plugins_by_category = {
       "romainl/vim-cool",
       event = evt.user.VeryLazy,
     },
+  },
 
+  editing = {
     -- adds some common readline key bindings to insert and command mode
     {
       "tpope/vim-rsi",
@@ -752,9 +906,8 @@ local idx = 0
 do
   for ft, list in pairs(plugins_by_filetype) do
     for _, plugin in ipairs(list) do
-      plugin = hydrate(plugin)
+      plugin = hydrate(plugin, ft)
 
-      plugin.ft = ft
       idx = idx + 1
       plugins[idx] = plugin
     end
@@ -762,16 +915,17 @@ do
 end
 
 do
-  for _, list in pairs(plugins_by_category) do
+  for cat, list in pairs(plugins_by_category) do
     for _, plugin in ipairs(list) do
-      plugin = hydrate(plugin)
+      plugin = hydrate(plugin, nil, cat)
+
       idx = idx + 1
       plugins[idx] = plugin
     end
   end
 end
 
-if not const.bootstrap then
+if not env.bootstrap then
   require("lazy").setup(plugins, conf)
 end
 

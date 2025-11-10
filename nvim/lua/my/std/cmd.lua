@@ -1,6 +1,6 @@
 local buffer = require("string.buffer")
 local callable = require("my.std.types").callable
-local const = require("my.constants")
+local env = require("my.env")
 local sw = require("my.std.stopwatch")
 
 --local vim = vim
@@ -13,8 +13,6 @@ local type = type
 local pairs = pairs
 local insert = table.insert
 local find = string.find
-local sub = string.sub
-local pcall = pcall
 local fmt = string.format
 local concat = table.concat
 local xpcall = xpcall
@@ -49,7 +47,7 @@ end
 
 ---@type fun(msg:string, ...any)
 local log_error
-if const.headless then
+if env.headless then
   function log_error(msg, ...)
     vim.print("ERROR: " .. format_err(msg, ...) .. "\n")
   end

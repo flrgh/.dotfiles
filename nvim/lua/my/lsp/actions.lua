@@ -1,10 +1,5 @@
 local _M = {}
 
-local plugin = require "my.std.plugin"
-local km = require("my.keymap")
-local const = require("my.constants")
-local event = require("my.event")
-
 local lsp = vim.lsp
 local vim = vim
 

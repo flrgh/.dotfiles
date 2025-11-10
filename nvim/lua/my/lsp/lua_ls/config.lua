@@ -1,4 +1,4 @@
-local user_const = require("my.constants")
+local env = require("my.env")
 local std = require("my.std")
 local storage = require("my.storage")
 local proto = require("vim.lsp.protocol")
@@ -338,7 +338,7 @@ function Config:lls_meta_dir()
   local encoding = rt.fileEncoding or "utf8"
 
   return fmt("%s/lua-lsp/%s %s %s",
-             user_const.nvim.state,
+             env.nvim.state,
              version,
              locale,
              encoding)

@@ -13,7 +13,7 @@ end
 ---@module 'cmp'
 local cmp = require("cmp")
 local km = require("my.keymap")
-local const = require "my.constants"
+local env = require("my.env")
 local lls_types = require("my.cmp.source.lua_ls_types")
 
 local Ctrl = km.Ctrl
@@ -53,7 +53,7 @@ end
 
 do
   local get_cwd
-  local ws = const.workspace or os.getenv("PWD")
+  local ws = env.workspace or os.getenv("PWD")
   if ws then
     get_cwd = function() return ws end
   end

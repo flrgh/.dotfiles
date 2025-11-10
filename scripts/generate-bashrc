@@ -552,12 +552,16 @@ __rc_completion
 # hooks/bashrc/20-bat.sh
 __rc_app_bat() {
     rc-if-command bat || return 0
-    rc-export MANPAGER "sh -c 'col -bx | bat -l man -p'"
-    rc-export MANROFFOPT "-c"
     rc-export BAT_PAGING auto
     rc-export BAT_PAGER builtin
 }
 __rc_app_bat
+
+__rc_app_delta() {
+    rc-if-command delta || return 0
+    rc-export DELTA_PAGER "less"
+}
+__rc_app_delta
 
 # hooks/bashrc/21-lua.sh
 __rc_app_lua() {
@@ -916,6 +920,36 @@ __rc_MANPATH() {
 }
 __rc_MANPATH
 
+__rc_pager() {
+    # less
+    if rc-command-exists less; then
+        rc-export PAGER less
+        local -a opts=(
+            -K # --quit-on-intr
+            -R # --RAW-CONTROL-CHARS
+            -F # --quit-if-one-screen
+            -J # --status-column
+            -s # --squeeze-blank-lines
+            -i # --ignore-case
+            --modelines=10
+            --mouse
+            --use-color
+        )
+        rc-export LESS "${opts[*]}"
+        rc-export LESSCHARSET "utf-8"
+    fi
+
+    # MANPAGER
+    if rc-command-exists nvim; then
+        rc-export MANPAGER "$HOME/.local/libexec/man-pager"
+
+    elif rc-command-exists bat; then
+        rc-export MANPAGER "sh -c 'col -bx | bat -l man -p'"
+        rc-export MANROFFOPT "-c"
+    fi
+}
+__rc_pager
+
 # aliases
 __rc_aliases() {
     rc-alias grep 'grep --color=auto'
@@ -1079,8 +1113,8 @@ __rc_config_history
 
 # systemd
 __rc_app_systemd() {
-    # this must be an empty string and not unset
     rc-workfile-open "$RC_DEP_RESET_VAR"
+    # this must be an empty string and not unset
     rc-workfile-append-line 'export SYSTEMD_PAGER=""'
     rc-workfile-close
 }

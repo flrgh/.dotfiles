@@ -1,6 +1,6 @@
 local fs = require "my.std.fs"
 local sw = require "my.std.stopwatch"
-local const = require "my.constants"
+local env = require("my.env")
 local clear = require("table.clear")
 
 local insert = table.insert
@@ -286,7 +286,7 @@ function resolver.new()
   local self = setmetatable({
     paths = {},
     module_cache = {},
-    debug = const.debug or false,
+    debug = env.debug or false,
     dir_lookup = {},
   }, resolver_mt)
 

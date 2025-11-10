@@ -1,6 +1,6 @@
 local _M = {}
 
-local user_const = require("my.constants")
+local env = require("my.env")
 local const = require("my.lsp.lua_ls.constants")
 local std = require("my.std")
 
@@ -114,7 +114,7 @@ local MODS = {
     },
     include = {
       "uv",
-      user_const.nvim.runtime_lua,
+      env.nvim.runtime_lua,
     },
 
     ignore = {
@@ -268,7 +268,7 @@ local function find_all_types(config)
   local extra_paths
   if config.meta.neovim then
     extra_paths = plugin.lua_dirs()
-    table.insert(extra_paths, user_const.nvim.runtime)
+    table.insert(extra_paths, env.nvim.runtime)
   end
 
   local all = luamod.find_all_types(extra_paths)
@@ -324,11 +324,11 @@ function _M.on_workspace(ws, config)
   end
 
   -- ~/git/flrgh/.dotfiles
-  if dir == user_const.dotfiles.root then
+  if dir == env.dotfiles.root then
     add_mod("vim", config)
-    config:add_runtime_dir(user_const.dotfiles.config_nvim_lua)
+    config:add_runtime_dir(env.dotfiles.config_nvim_lua)
     --config:add_workspace_library(user_const.dotfiles.config_nvim_lua)
-    config:set_root_dir(user_const.dotfiles.config_nvim)
+    config:set_root_dir(env.dotfiles.config_nvim)
 
     for _, plugin_name in ipairs(PLUGINS) do
       local plug = plugin.get(plugin_name)
@@ -337,8 +337,8 @@ function _M.on_workspace(ws, config)
       end
     end
 
-    if fs.dir_exists(user_const.nvim.bundle.lua) then
-      config:add_runtime_dir(user_const.nvim.bundle.lua)
+    if fs.dir_exists(env.nvim.bundle.lua) then
+      config:add_runtime_dir(env.nvim.bundle.lua)
     else
       for _, plug in ipairs(plugin.list()) do
         local lua = plug.dir .. "/lua"
@@ -365,7 +365,7 @@ function _M.on_workspace(ws, config)
 
   -- ~/git/kong/{kong,kong-ee}
   if (basename == "kong" or basename == "kong-ee")
-    and dir:find(user_const.git_root .. "/kong")
+    and dir:find(env.git_root .. "/kong")
   then
     add_mod("kong", config)
   end

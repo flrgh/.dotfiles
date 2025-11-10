@@ -1246,6 +1246,30 @@ e.user.LazyRestore = "LazyRestore"
 e.user.LazyLoad = "LazyLoad"
 
 
+---@type my.event.payload
+local EnterEvent
+do
+  local did_enter = vim.v.vim_did_enter
+  if did_enter == true or did_enter == 1 then
+    vim.notify("started too late to capture the VimEnter event",
+               vim.log.levels.WARN)
+
+  else
+    local group = assert(create_augroup("my.event.VimEnter", {
+      clear = true,
+    }))
+
+    assert(create_autocmd(e.VimEnter, {
+      pattern = nil,
+      group = group,
+      once = true,
+      callback = function(ev)
+        EnterEvent = ev --[[@as my.event.payload]]
+      end,
+    }))
+  end
+end
+
 --- Creates a namespaced User event pattern
 ---
 ---@param name string|string[]
@@ -1444,10 +1468,33 @@ do
     return self:pattern(pattern)
   end
 
+  local function reset()
+    ctx.started = nil
+    ctx.event = nil
+    clear_tab(ctx.opts)
+    clear_tab(ctx.group_opts)
+  end
 
   ---@return integer id
   local function create()
-    assert(ctx.started)
+    if not ctx.started then
+      error("invalid event context state", 2)
+    end
+
+    if EnterEvent
+      and ctx.event == e.VimEnter
+      and type(ctx.opts.callback) == "function"
+    then
+      local enter_callback = assert(ctx.opts.callback)
+      reset()
+
+      vim.schedule(function()
+        vim.notify("manually forwarding VimEnter event")
+        enter_callback(EnterEvent)
+      end)
+      return -1
+    end
+
     local group = assert(ctx.opts.group)
     if type(group) == "string" then
       ctx.opts.group = assert(create_augroup(group, ctx.group_opts))
@@ -1455,10 +1502,7 @@ do
 
     local id = assert(create_autocmd(ctx.event, ctx.opts))
 
-    ctx.started = nil
-    ctx.event = nil
-    clear_tab(ctx.opts)
-    clear_tab(ctx.group_opts)
+    reset()
 
     return id
   end

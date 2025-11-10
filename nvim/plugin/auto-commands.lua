@@ -1,4 +1,4 @@
-if require("my.constants").bootstrap then
+if not require("my.env").editor then
   return
 end
 

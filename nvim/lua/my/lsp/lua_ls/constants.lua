@@ -1,6 +1,6 @@
 local _M = {}
 
-local user_const = require("my.constants")
+local env = require("my.env")
 
 _M.NAME = "lua_ls"
 
@@ -23,9 +23,9 @@ _M.SRC_WORKSPACE_ROOT = "LSP.root_dir"
 _M.SRC_LUA_BUNDLE = "nvim/_lua_bundle"
 
 
-_M.LUA_TYPE_ANNOTATIONS = user_const.git_user_root .. "/lua-type-annotations"
-_M.LUA_CATS = user_const.git_root .. "/LuaCATS"
-_M.LUA_RESTY_COMMUNITY = user_const.git_user_root .. "/resty-community-typedefs/library"
+_M.LUA_TYPE_ANNOTATIONS = env.git_user_root .. "/lua-type-annotations"
+_M.LUA_CATS = env.git_root .. "/LuaCATS"
+_M.LUA_RESTY_COMMUNITY = env.git_user_root .. "/resty-community-typedefs/library"
 
 setmetatable(_M, {
   __index = function(_, k)

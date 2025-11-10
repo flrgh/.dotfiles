@@ -1,7 +1,7 @@
 --- Lua Module Utils.
 local _M = {}
 
-local const = require("my.constants")
+local env = require("my.env")
 local fs = require("my.std.fs")
 local resolver = require("my.std.luamod.resolver")
 local requires = require("my.std.luamod.requires")
@@ -35,7 +35,7 @@ do
 
     if path ~= ""
        and path ~= "/"
-       and dir ~= const.workspace
+       and dir ~= env.workspace
        and not seen[dir]
     then
       seen[dir] = dir

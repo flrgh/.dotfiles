@@ -1,4 +1,4 @@
-if require("my.constants").bootstrap then
+if require("my.env").bootstrap then
   return
 end
 

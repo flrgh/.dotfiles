@@ -294,16 +294,16 @@ end
 ---@return string
 function _M.abbreviate(path)
   if not path then return "" end
-  local const = require "my.constants"
+  local env = require("my.env")
 
   local replace = {
-    { const.nvim.runtime_lua, "{ nvim.runtime.lua }" },
-    { const.nvim.plugins,     "{ nvim.plugins }" },
-    { const.nvim.runtime,     "{ nvim.runtime }" },
-    { const.nvim.config,      "{ nvim.userconfig }" },
-    { const.nvim.bundle.root, "{ nvim._bundle }" },
-    { const.workspace,        "{ workspace }" },
-    { const.home,             "~" },
+    { env.nvim.runtime_lua, "{ nvim.runtime.lua }" },
+    { env.nvim.plugins,     "{ nvim.plugins }" },
+    { env.nvim.runtime,     "{ nvim.runtime }" },
+    { env.nvim.config,      "{ nvim.userconfig }" },
+    { env.nvim.bundle.root, "{ nvim._bundle }" },
+    { env.workspace,        "{ workspace }" },
+    { env.home,             "~" },
   }
 
   for _, item in ipairs(replace) do
@@ -368,7 +368,7 @@ local function find_exe(name)
   for dir in iter_PATH() do
     local try = dir .. "/" .. name
     if is_exe(try) then
-      MISE_SHIMS = MISE_SHIMS or (require("my.constants").home .. "/.local/share/mise/shims")
+      MISE_SHIMS = MISE_SHIMS or (require("my.env").home .. "/.local/share/mise/shims")
 
       if dir == MISE_SHIMS then
         local cmd = require("my.std.cmd")

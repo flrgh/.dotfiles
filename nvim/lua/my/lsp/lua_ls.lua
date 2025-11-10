@@ -54,8 +54,6 @@ local math_max = math.max
 
 local fs = require "my.std.fs"
 local luamod = require "my.std.luamod"
-local const = require "my.constants"
-local plugin = require "my.std.plugin"
 local sw = require "my.std.stopwatch"
 local WS = require "my.workspace"
 local event = require "my.event"

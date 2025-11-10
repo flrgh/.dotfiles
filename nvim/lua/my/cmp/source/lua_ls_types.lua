@@ -1,4 +1,4 @@
-local const = require("my.constants")
+local env = require("my.env")
 local cmp = require("cmp")
 local storage = require("my.storage")
 local std = require("my.std")
@@ -53,7 +53,7 @@ do
       for _, d in ipairs(plugin.lua_dirs()) do
         add(d)
       end
-      add(const.nvim.runtime)
+      add(env.nvim.runtime)
     end
 
     local defs = luamod.find_all_types(extra_paths)

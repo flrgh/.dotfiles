@@ -7,11 +7,11 @@ local WS = {}
 
 
 local fs = require "my.std.fs"
-local const = require "my.constants"
+local env = require "my.env"
 
 --- annotations from https://github.com/LuaCATS
-local LUA_CATS = const.git_root .. "/LuaCATS"
-local LUA_TYPE_ANNOTATIONS = const.git_user_root .. "/lua-type-annotations"
+local LUA_CATS = env.git_root .. "/LuaCATS"
+local LUA_TYPE_ANNOTATIONS = env.git_user_root .. "/lua-type-annotations"
 
 
 local insert = table.insert
@@ -42,7 +42,7 @@ local matchers = {
 }
 
 if not WS.dir then
-  local dir = assert(const.workspace)
+  local dir = assert(env.workspace)
   assert(fs.dir_exists(dir))
 
   WS.dir = assert(fs.realpath(dir))

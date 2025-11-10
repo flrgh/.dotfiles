@@ -1,7 +1,7 @@
-local km = require "my.keymap"
-local actions = require "telescope.actions"
-local plugin = require "my.std.plugin"
-local const = require "my.constants"
+local km = require("my.keymap")
+local actions = require("telescope.actions")
+local plugin = require("my.std.plugin")
+local env = require("my.env")
 
 -- turn on line numbers for previewers
 --
@@ -110,7 +110,16 @@ local nnoremap = km.nnoremap
 
 nnoremap(Ctrl.p)
   :desc("Fuzzy-find git-files w/ telescope")
-  :cmd("Telescope git_files")
+  :callback(function()
+    local path = require("my.std.path")
+    if path.workspace_root() then
+      require("telescope.builtin").git_files()
+    else
+      require("telescope.builtin").find_files({
+        cwd = path.cwd(),
+      })
+    end
+  end)
 
 nnoremap(Leader.rg)
   :desc("Live Grep (rg)")
@@ -120,7 +129,7 @@ nnoremap(Leader.pf)
   :desc("Find neovim [p]lugin [f]iles")
   :callback(function()
     require("telescope.builtin").find_files({
-      cwd = const.nvim.plugins,
+      cwd = env.nvim.plugins,
     })
   end)
 
@@ -128,7 +137,7 @@ nnoremap(Leader.prg)
   :desc("[p]lugin [f]ile [g]rep")
   :callback(function()
     require("telescope.builtin").live_grep({
-      cwd = const.nvim.plugins,
+      cwd = env.nvim.plugins,
     })
   end)
 
@@ -136,7 +145,7 @@ nnoremap(Leader.vf)
   :desc("Find neovim runtime files")
   :callback(function()
     require("telescope.builtin").find_files({
-      cwd = const.nvim.runtime,
+      cwd = env.nvim.runtime,
     })
   end)
 

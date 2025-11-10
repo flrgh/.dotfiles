@@ -1,3 +1,12 @@
+if not require("my.env").editor then
+  return
+end
+
+if vim.g.loaded_my_commands then
+  return
+end
+vim.g.loaded_my_commands = true
+
 local command = vim.api.nvim_create_user_command
 
 local vim = vim
@@ -5,7 +14,7 @@ local lsp = vim.lsp
 
 
 command("Dump",
-  "lua vim.pretty_print(<args>)",
+  "lua vim.print(vim.inspect(<args>))",
   { nargs = 1,
     complete = "lua",
     force = true,
@@ -186,8 +195,8 @@ command("LuaDebug",
 
     replace_path(vim.env.VIMRUNTIME, "nvim.runtime")
     replace_path(vim.fn.stdpath("data") .. "/lazy", "nvim.plugins")
-    replace_path(require("my.constants").workspace, "workspace")
-    replace_path(require("my.constants").nvim.bundle.root, "nvim.bundle")
+    replace_path(require("my.env").workspace, "workspace")
+    replace_path(require("my.env").nvim.bundle.root, "nvim.bundle")
 
     if luarocks then
       buf:put("luarocks:\n")

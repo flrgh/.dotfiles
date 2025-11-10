@@ -1,4 +1,4 @@
-local const = require("my.constants")
+local env = require("my.env")
 local fs = require("my.std.fs")
 
 -- https://lazy.folke.io/configuration
@@ -8,10 +8,10 @@ local conf = require("my.lazy.config")
 local lazypath = conf.root .. "/lazy.nvim"
 
 if not fs.exists(lazypath) then
-  local notify = const.bootstrap and print or vim.notify
+  local notify = env.bootstrap and print or vim.notify
 
   local on_stdout, on_stderr
-  if const.bootstrap then
+  if env.bootstrap then
     on_stdout = function(err, data)
       if err then
         notify("STDOUT (error): " .. err)

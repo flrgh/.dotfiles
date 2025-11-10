@@ -1,11 +1,11 @@
-local const = require("my.constants")
+local env = require("my.env")
 local fs = require("my.std.fs")
 
 -- https://lazy.folke.io/configuration
 ---@type LazyConfig
 local conf = {
-  lockfile = fs.join(const.dotfiles.config_nvim, "plugins.lock.json"),
-  root = const.nvim.plugins,
+  lockfile = fs.join(env.dotfiles.config_nvim, "plugins.lock.json"),
+  root = env.nvim.plugins,
 
   defaults = {
   },
@@ -46,8 +46,8 @@ local conf = {
   },
 
   profiling = {
-    loader  = const.debug,
-    require = const.debug,
+    loader  = env.debug,
+    require = env.debug,
   },
 }
 
