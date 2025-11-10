@@ -217,4 +217,3 @@ dump-var() {
             "${value}"
     fi
 }
-

@@ -1,24 +1,19 @@
-if (( BASH_USER_MODERN == 1 )); then
-    dump-matching() {
-        local -r pat=${1?pattern or substring required}
+dump-matching() {
+    if (( $# == 0 )); then
+        echo "pattern or substring required" >&2
+        return 1
+    fi
 
-        local var
-        # shellcheck disable=SC2043
-        for var in ${ compgen -v;}; do
+    local -a vars
+    compgen -V vars -v
+
+    local pat var
+    for var in "${vars[@]}"; do
+        for pat in "$@"; do
             if [[ $var = *${pat}* ]]; then
                 dump-var "$var"
+                break
             fi
         done
-    }
-else
-    dump-matching() {
-        local -r pat=${1?pattern or substring required}
-
-        local var
-        for var in $(compgen -v); do
-            if [[ $var = *${pat}* ]]; then
-                dump-var "$var"
-            fi
-        done
-    }
-fi
+    done
+}
