@@ -3,10 +3,10 @@ local _M = {}
 local env = require("my.env")
 local const = require("my.lsp.lua_ls.constants")
 local std = require("my.std")
+local plugins = require("my.plugins")
 
 local luamod = std.luamod
 local fs = std.fs
-local plugin = std.plugin
 local contains = std.string.contains
 local find = std.string.find
 local sub = std.string.sub
@@ -267,7 +267,7 @@ local function find_all_types(config)
 
   local extra_paths
   if config.meta.neovim then
-    extra_paths = plugin.lua_dirs()
+    extra_paths = plugins.lua_dirs()
     table.insert(extra_paths, env.nvim.runtime)
   end
 
@@ -325,13 +325,11 @@ function _M.on_workspace(ws, config)
 
   -- ~/git/flrgh/.dotfiles
   if dir == env.dotfiles.root then
-    add_mod("vim", config)
-    config:add_runtime_dir(env.dotfiles.config_nvim_lua)
-    --config:add_workspace_library(user_const.dotfiles.config_nvim_lua)
+    config:add_workspace_library(env.dotfiles.config_nvim_lua)
     config:set_root_dir(env.dotfiles.config_nvim)
 
     for _, plugin_name in ipairs(PLUGINS) do
-      local plug = plugin.get(plugin_name)
+      local plug = plugins.get(plugin_name)
       if plug and plug.dir and plug.dir ~= "" then
         add_lib(plug.dir .. "/lua", config)
       end
@@ -340,13 +338,14 @@ function _M.on_workspace(ws, config)
     if fs.dir_exists(env.nvim.bundle.lua) then
       config:add_runtime_dir(env.nvim.bundle.lua)
     else
-      for _, plug in ipairs(plugin.list()) do
-        local lua = plug.dir .. "/lua"
+      for _, lua in ipairs(plugins.lua_dirs()) do
         if fs.dir_exists(lua) then
           config:add_runtime_dir(lua)
         end
       end
     end
+
+    add_mod("vim", config)
   end
 
   if contains(lower, "vim")

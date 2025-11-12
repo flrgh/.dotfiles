@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 export NVIM_ENV_MODE=pager
-exec nvim "+Man!"
+exec nvim -n -i NONE "+Man!"

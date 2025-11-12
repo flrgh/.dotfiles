@@ -1,60 +1,52 @@
----@class my.workspace : table
+local _M = {}
+
+local path = require("my.std.path")
+
+---@class my.workspace
 ---
 ---@field dir string # fully-qualified workspace directory path
 ---@field basename string # last path element of the workspace
----@field meta my.workspace.meta
+---@field meta table<string, any>
 local WS = {}
+local MT = { __index = WS }
 
 
-local fs = require "my.std.fs"
-local env = require "my.env"
+---@param dir string
+---@return my.workspace
+function WS.from_dir(dir)
+  assert(path.dir_exists(dir))
 
---- annotations from https://github.com/LuaCATS
-local LUA_CATS = env.git_root .. "/LuaCATS"
-local LUA_TYPE_ANNOTATIONS = env.git_user_root .. "/lua-type-annotations"
+  dir = assert(path.realpath(dir))
 
+  local ws = {
+    dir = dir,
+    basename = path.basename(dir),
+    meta = {},
+  }
 
-local insert = table.insert
+  setmetatable(ws, MT)
 
----@alias my.workspace.meta table<string, any>
-
----@alias my.workspace.matcher fun(ws: my.workspace):boolean|nil
-
-
----@param subject string
----@param sub string
----@return boolean
-local function substr(subject, sub)
-  return subject:find(sub, nil, true) ~= nil
+  return ws
 end
 
 
----@type my.workspace.matcher[]
-local matchers = {
-  -- lua_ls
-  function(ws)
-    if ws.basename == "lua-language-server" then
-      ws.meta.lua = true
-      ws.meta.luarc = true
-      return true
-    end
-  end,
-}
-
-if not WS.dir then
-  local dir = assert(env.workspace)
-  assert(fs.dir_exists(dir))
-
-  WS.dir = assert(fs.realpath(dir))
-  WS.basename = fs.basename(dir)
-  WS.meta = {}
-  WS.lsp = {}
-
-  for i = 1, #matchers do
-    if matchers[i](WS) then
-      break
-    end
-  end
+---@param fname string
+---@return my.workspace
+function WS.from_file(fname)
+  local dir = path.dirname(fname)
+  return WS.from_dir(dir)
 end
 
-return WS
+
+---@param dir string
+---@param git? boolean
+---@return my.workspace
+function _M.root(dir, git)
+  local ws = WS.from_dir(dir)
+  ws.meta.root = true
+  ws.meta.git = git or false
+  return ws
+end
+
+
+return _M

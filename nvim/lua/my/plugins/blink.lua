@@ -1,4 +1,4 @@
-local plugin = require("my.std.plugin")
+local plugins = require("my.plugins")
 
 ---@type blink.cmp.Config
 local opts = {}
@@ -92,7 +92,7 @@ opts.sources = {
   providers = {},
 }
 
-if plugin.installed("blink-emoji.nvim") then
+if plugins.installed("blink-emoji.nvim") then
   opts.sources.providers.emoji = {
     name = "emoji",
     module = "blink-emoji",
@@ -105,7 +105,7 @@ if plugin.installed("blink-emoji.nvim") then
   table.insert(opts.sources.default, "emoji")
 end
 
-if plugin.installed("Kaiser-Yang/blink-cmp-git") then
+if plugins.installed("Kaiser-Yang/blink-cmp-git") then
   local filetypes = { "octo", "gitcommit", "markdown" }
 
   opts.sources.providers.git = {
@@ -120,7 +120,7 @@ if plugin.installed("Kaiser-Yang/blink-cmp-git") then
   table.insert(opts.sources.default, "git")
 end
 
-if plugin.installed("blink-nerdfont.nvim") then
+if plugins.installed("blink-nerdfont.nvim") then
   opts.sources.providers.nerdfont = {
     name = "Nerd Font Icon",
     module = "blink-nerdfont",

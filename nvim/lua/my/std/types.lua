@@ -1,3 +1,4 @@
+---@class my.std.types
 local _M = {}
 
 local type = type
@@ -5,6 +6,9 @@ local getmetatable = debug.getmetatable
 
 local EMPTY = {}
 
+_M.deep_copy = vim.deepcopy
+
+_M.deep_equal = vim.deep_equal
 
 ---@param v any
 ---@return boolean

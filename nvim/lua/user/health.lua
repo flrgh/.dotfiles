@@ -17,6 +17,13 @@ local OK = 0
 local WARN = 1
 local ERR = 2
 
+local LOG_LEVEL = {
+  [OK] = vim.log.levels.DEBUG,
+  [WARN] = vim.log.levels.WARN,
+  [ERR] = vim.log.levels.ERROR,
+}
+
+
 ---@return user.health.namespace
 local function getns(ns)
   STATUS[ns] = STATUS[ns] or {}
@@ -24,6 +31,10 @@ local function getns(ns)
 end
 
 
+---@param status integer
+---@param ns string
+---@param msg string
+---@param ...any
 local function report(status, ns, msg, ...)
   if select("#", ...) > 0 then
     msg = fmt(msg, ...)

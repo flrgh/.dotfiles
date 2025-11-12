@@ -68,7 +68,8 @@ function _M.bootstrap()
 end
 
 function _M.setup()
-  local fs = require "my.std.fs"
+  local path = require("my.std.path")
+  local plugins = require("my.plugins")
 
   require('nvim-treesitter.configs').setup {
     ---@diagnostic disable-next-line
@@ -84,8 +85,8 @@ function _M.setup()
       -- disable for files >= 100K
       disable = function(_lang, buf)
         local max = 1024 * 100
-        local fname = fs.buffer_filename(buf)
-        if fname and fs.size(fname) > max then
+        local fname = path.buffer_filename(buf)
+        if fname and path.size(fname) > max then
           return true
         end
 
@@ -121,9 +122,7 @@ function _M.setup()
   vim.opt.foldnestmax = 3
   vim.opt.foldminlines = 4
 
-  local plugin = require "my.std.plugin"
-
-  if plugin.installed("nvim-treesitter-context") then
+  if plugins.installed("nvim-treesitter-context") then
     require("treesitter-context").setup {
        -- Enable this plugin (Can be enabled/disabled later via commands)
       enable = true,

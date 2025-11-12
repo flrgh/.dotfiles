@@ -86,8 +86,8 @@ command("LuaDebug",
     end
 
     do
-      local WS = require "my.workspace"
-      buf:put(   "my.workspace:\n")
+      local WS = require("my.env").workspace
+      buf:put(   "my.env.workspace:\n")
       buf:putf(  "  dir: %s\n", WS.dir)
       buf:putf(  "  basename: %s\n", WS.basename)
       buf:putf(  "  meta:\n")
@@ -195,7 +195,7 @@ command("LuaDebug",
 
     replace_path(vim.env.VIMRUNTIME, "nvim.runtime")
     replace_path(vim.fn.stdpath("data") .. "/lazy", "nvim.plugins")
-    replace_path(require("my.env").workspace, "workspace")
+    replace_path(require("my.env").workspace.dir, "workspace")
     replace_path(require("my.env").nvim.bundle.root, "nvim.bundle")
 
     if luarocks then

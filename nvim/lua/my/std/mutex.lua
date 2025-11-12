@@ -1,6 +1,7 @@
 local wait = vim.wait
 local ceil = math.ceil
 
+---@class my.std.mutex
 local _M = {}
 
 ---@param max_timeout? integer

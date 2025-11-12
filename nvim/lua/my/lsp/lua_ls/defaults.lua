@@ -2,6 +2,7 @@ local const = require("my.lsp.lua_ls.constants")
 
 local ApplyInMemory = const.ApplyInMemory
 local Disable = const.Disable
+local Enable = const.Enable
 local Fallback = const.Fallback
 local Opened = const.Opened
 local None = const.None
@@ -17,6 +18,7 @@ local defaults = {
     Lua = {
       completion = {
         enable           = true,
+
         autoRequire      = false,
         callSnippet      = Disable,
         displayContext   = 0, -- disabled
@@ -29,7 +31,7 @@ local defaults = {
       },
 
       diagnostics = {
-        enable = true,
+        enable = false,
         disable = nil,
 
         globals = {
@@ -168,6 +170,7 @@ local defaults = {
         packageName = nil,
         privateName = nil,
         protectedName = nil,
+        regengine = "glob",
       },
 
       format = {
@@ -176,19 +179,22 @@ local defaults = {
       },
 
       hint = {
-        enable     = true,
-        paramName  = "All",
-        paramType  = true,
-        setType    = true,
-        arrayIndex = "Enable",
-        await      = false,
-        semicolon  = Disable,
+        enable         = true,
+
+        arrayIndex     = Enable,
+        await          = true,
+        awaitPropagate = true,
+        paramName      = const.All,
+        paramType      = true,
+        semicolon      = Disable,
+        setType        = true,
       },
 
       hover = {
         enable        = true,
+
         enumsLimit    = 10,
-        expandAlias   = true,
+        expandAlias   = false,
         previewFields = 20,
         viewNumber    = true,
         viewString    = true,
@@ -204,9 +210,9 @@ local defaults = {
       },
 
       runtime = {
-        builtin           = "enable",
+        builtin           = nil, -- default
         fileEncoding      = "utf8",
-        meta              = nil,
+        meta              = "${version} ${language} ${encoding}",
         nonstandardSymbol = nil,
         ---@type string[]
         path              = { "?.lua", "?/init.lua" },

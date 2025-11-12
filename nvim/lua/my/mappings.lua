@@ -1,8 +1,8 @@
-if require("my.env").bootstrap then
+if require("my.env").headless then
   return
 end
 
-local km = require "my.keymap"
+local km = require("my.keymap")
 
 local nnoremap = km.nnoremap
 local map      = km.map

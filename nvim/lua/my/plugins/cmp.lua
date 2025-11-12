@@ -52,10 +52,8 @@ do
 end
 
 do
-  local get_cwd
-  local ws = env.workspace or os.getenv("PWD")
-  if ws then
-    get_cwd = function() return ws end
+  local function get_cwd()
+    return env.workspace and env.workspace.dir or env.cwd
   end
 
   cmp.register_source(lls_types.NAME, lls_types.new())

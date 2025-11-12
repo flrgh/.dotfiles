@@ -1,6 +1,5 @@
 require("my.env")
+require("my.event")
 require("my.settings")
-require("my.workspace")
 require("my.mappings")
-require("my.plugins")
-require("my.storage")
+require("my.plugins").load()

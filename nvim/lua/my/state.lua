@@ -1,3 +1,4 @@
+---@class my.state
 local _M = {}
 
 local floor = math.floor
@@ -41,33 +42,35 @@ local function is_loaded(buf)
 end
 
 
----@class my.storage.global
+---@class my.state.global
 ---
 ---@field lua_lsp { [integer|string]: my.lua_ls.Config }
+---
+---@field workspace my.workspace
 ---
 ---@field [string] any
 _M.global = {}
 
 
----@class my.storage.buffer
+---@class my.state.buffer
 ---
 ---@field id _vim.buffer.id
 ---
 ---@field lua_lsp my.lua_ls.Config
 ---@field lua_resolver my.lua.resolver
 ---
----@field is_loaded fun(self: my.storage.buffer):boolean
+---@field is_loaded fun(self: my.state.buffer):boolean
 ---
 ---@field [string] any
 
----@param self my.storage.buffer
+---@param self my.state.buffer
 ---@return boolean
 local function buf_is_loaded(self)
   return is_loaded(self.id)
 end
 
 ---@param id integer
----@return my.storage.buffer
+---@return my.state.buffer
 local function new_buffer(id)
   assert(is_valid(id))
   return {
@@ -76,7 +79,7 @@ local function new_buffer(id)
   }
 end
 
----@type my.storage.buffer
+---@type my.state.buffer
 local unloaded_buffer = setmetatable({
   id = -1,
   is_loaded = function()
@@ -90,11 +93,11 @@ local unloaded_buffer = setmetatable({
   end,
 })
 
----@type { [_vim.buffer.id]: my.storage.buffer }
+---@type { [_vim.buffer.id]: my.state.buffer }
 local buffers = {}
 
----@class my.storage.buffers : my.storage.buffer
----@field [_vim.buffer.id] my.storage.buffer
+---@class my.state.buffers : my.state.buffer
+---@field [_vim.buffer.id] my.state.buffer
 _M.buffer = {}
 setmetatable(_M.buffer, {
   __index = function(_, buf)
@@ -142,7 +145,7 @@ setmetatable(_M.buffer, {
 local event = require("my.event")
 local DEBUG = vim.log.levels.DEBUG
 event.on(event.BufUnload)
-  :group("storage-unload-buffer", true)
+  :group("state-unload-buffer", true)
   :desc("remove buffer from valid buffer list")
   :callback(function(e)
     local id = buf_id(e.buf)
@@ -150,18 +153,18 @@ event.on(event.BufUnload)
   end)
 
 event.on(event.BufDelete)
-  :group("storage-delete-buffer", true)
-  :desc("delete buffer-local storage")
+  :group("state-delete-buffer", true)
+  :desc("delete buffer-local state")
   :callback(function(e)
     local id = buf_id(e.buf)
     _valid_buffers[id] = nil
-    vim.notify("clearing buffer-local storage for buffer: " .. id, DEBUG)
+    vim.notify("clearing buffer-local state for buffer: " .. id, DEBUG)
     rawset(buffers, e.buf, nil)
   end)
 
 event.on({ event.BufAdd, event.BufNew })
-  :group("storage-create-buffer", true)
-  :desc("initialize buffer-local storage")
+  :group("state-create-buffer", true)
+  :desc("initialize buffer-local state")
   :callback(function(e)
     local id = buf_id(e.buf)
     _valid_buffers[id] = true

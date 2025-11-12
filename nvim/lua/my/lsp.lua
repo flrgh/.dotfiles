@@ -6,9 +6,9 @@ local km = require("my.keymap")
 local env = require("my.env")
 local event = require("my.event")
 local health = require("user.health")
+local plugins = require("my.plugins")
 
 local fs = std.fs
-local plugin = std.plugin
 
 local executable = fs.path.executable
 local api = vim.api
@@ -87,7 +87,7 @@ do
 
     configured = true
 
-    if plugin.installed("lspsaga.nvim") then
+    if plugins.installed("lspsaga.nvim") then
       local saga = require("lspsaga")
       local command = require("lspsaga.command")
       local cmd = function(s)
@@ -245,7 +245,11 @@ function _M.on_attach(_client_id, buf)
   vim.bo[buf].omnifunc = "v:lua.vim.lsp.omnifunc"
 end
 
-local function no_more_attached_clients(buf, client_id)
+--- no more connected clients (or this was the last one)
+---@param  client_id integer
+---@param  buf       integer
+---@return boolean
+local function no_more_attached_clients(client_id, buf)
   local clients = lsp.get_clients({ bufnr = buf })
   if not clients then
     return true
@@ -260,33 +264,48 @@ local function no_more_attached_clients(buf, client_id)
   return false
 end
 
----@param client_id number
----@param buf    number
-function _M.on_detach(client_id, buf)
-  -- no more connected clients (or this was the last one)
-  if no_more_attached_clients(buf, client_id) then
-    vim.schedule(function()
-      if api.nvim_buf_is_valid(buf) then
-        vim.notify("[lsp] teardown for midterms")
-        vim.bo[buf].tagfunc = nil
-        vim.bo[buf].omnifunc = nil
-        km.remove_by_tag(KEYMAP_TAG)
-      end
-    end)
+
+---@param  client_id integer
+---@param  buf       integer
+---@return boolean
+local function should_deinit(client_id, buf)
+  return km.tag_exists(KEYMAP_TAG)
+    and api.nvim_buf_is_valid(buf)
+    and api.nvim_buf_is_loaded(buf)
+    and no_more_attached_clients(client_id, buf)
+end
+
+---@param  client_id integer
+---@param  buf       integer
+local function deinit(client_id, buf)
+  if should_deinit(client_id, buf) then
+    vim.notify("[lsp] teardown for midterms")
+    vim.bo[buf].tagfunc = nil
+    vim.bo[buf].omnifunc = nil
+    km.remove_by_tag(KEYMAP_TAG)
   end
 end
 
+---@param client_id number
+---@param buf       number
+function _M.on_detach(client_id, buf)
+  if should_deinit(client_id, buf) then
+    vim.defer_fn(function()
+      deinit(client_id, buf)
+    end, 100)
+  end
+end
 
 ---@return lsp.ClientCapabilities
 local function make_capabilities()
   local caps = lsp.protocol.make_client_capabilities()
 
-  if plugin.installed("blink.cmp") then
+  if plugins.installed("blink.cmp") then
     local overrides = nil
     local include_nvim_defaults = true
     caps = require("blink.cmp").get_lsp_capabilities(overrides, include_nvim_defaults)
 
-  elseif plugin.installed("nvim-cmp") then
+  elseif plugins.installed("nvim-cmp") then
     caps = require("cmp_nvim_lsp").default_capabilities(caps)
   end
 
@@ -326,7 +345,7 @@ end
 
 
 function _M.init()
-  if plugin.installed("nvim-lspconfig") then
+  if plugins.installed("nvim-lspconfig") then
     health.ok("lsp", "nvim-lspconfig plugin is installed")
   else
     health.warn("lsp", "nvim-lspconfig plugin is not installed")
@@ -353,9 +372,15 @@ function _M.init()
     end)
   end
 
-  event.on({ event.LspAttach, event.LspDetach })
-    :group("user-lsp-events")
-    :desc("forward LSP attach/detach events")
+  event.on(event.LspAttach)
+    :group("user-lsp-attach", true)
+    :desc("forward LSP attach events")
+    :pattern("*")
+    :callback(require("my.lsp.helpers").route_event)
+
+  event.on(event.LspDetach)
+    :group("user-lsp-detach", true)
+    :desc("forward LSP detach events")
     :pattern("*")
     :callback(require("my.lsp.helpers").route_event)
 end

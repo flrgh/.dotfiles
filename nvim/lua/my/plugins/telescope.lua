@@ -1,6 +1,6 @@
 local km = require("my.keymap")
 local actions = require("telescope.actions")
-local plugin = require("my.std.plugin")
+local plugin = require("my.plugins")
 local env = require("my.env")
 
 -- turn on line numbers for previewers

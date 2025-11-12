@@ -1,22 +1,27 @@
+---@class my.std
+---
+---@field cmd    my.std.cmd
+---@field fs     my.std.fs
+---@field io     my.std.io
+---@field luamod my.std.luamod
+---@field path   my.std.path
+---@field string my.std.string
+---@field table  my.std.table
+---@field types  my.std.types
 local _M = {}
 
-_M.cmd = require("my.std.cmd")
-_M.fs = require("my.std.fs")
-_M.io = require("my.std.io")
-_M.path = require("my.std.path")
+setmetatable(_M, {
+  __index = function(_, key)
+    local mod = require("my.std." .. key)
+    _M[key] = mod
+    return mod
+  end,
+})
 
-_M.plugin = require("my.std.plugin")
-_M.luamod = require("my.std.luamod")
-
-_M.types = require("my.std.types")
-
-_M.string = require("my.std.string")
-_M.table = require("my.std.table")
-
-_M.deep_copy = vim.deepcopy
-_M.deep_equal = vim.deep_equal
-
-_M.is_callable = _M.types.callable
+local types = require("my.std.types")
+_M.types = types
+_M.deep_copy = types.deep_copy
+_M.deep_equal = types.deep_equal
 
 _M.mutex = require("my.std.mutex")
 _M.Mutex = _M.mutex.new

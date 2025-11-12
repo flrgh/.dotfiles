@@ -2,6 +2,12 @@ if not require("my.env").editor then
   return
 end
 
+if vim.g.loaded_my_auto_commands then
+  return
+end
+
+vim.g.loaded_my_auto_commands = true
+
 local event = require("my.event")
 local vim = vim
 

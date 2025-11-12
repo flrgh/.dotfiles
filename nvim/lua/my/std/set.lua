@@ -80,5 +80,9 @@ function Set:contains(item)
   return self.map[item] ~= nil
 end
 
+---@class my.std.set
+local _M = {}
+_M.new = Set.new
+_M.from = Set.from
 
-return Set
+return _M

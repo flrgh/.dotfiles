@@ -143,18 +143,13 @@ do
   local i = 0
 
   local function handle_part(part)
-    if part == "." or part == "" then
-      return
-
-    elseif part == ".." then
+    if part == ".." then
       assert(i > 1, "path out of range")
 
       buf[i] = nil
       i = i - 1
 
-      return
-
-    else
+    elseif part ~= "." and part ~= "" then
       i = i + 1
       buf[i] = part
     end
@@ -279,8 +274,24 @@ end
 ---@param fname string
 ---@return boolean
 function _M.is_child(dir, fname)
-  if byte(dir, -1) == SLASH then
-    dir = dir:gsub("/+$", "")
+  local cwd
+
+  if is_abs(dir) then
+    dir = _normalize(dir)
+  else
+    cwd = cwd or (get_cwd() .. "/")
+    dir = cwd .. _normalize(dir)
+  end
+
+  if is_abs(fname) then
+    fname = _normalize(fname)
+  else
+    cwd = cwd or (get_cwd() .. "/")
+    fname = cwd .. _normalize(fname)
+  end
+
+  if #fname <= #dir then
+    return false
   end
 
   local from, to = find(fname, dir, nil, true)
@@ -302,7 +313,7 @@ function _M.abbreviate(path)
     { env.nvim.runtime,     "{ nvim.runtime }" },
     { env.nvim.config,      "{ nvim.userconfig }" },
     { env.nvim.bundle.root, "{ nvim._bundle }" },
-    { env.workspace,        "{ workspace }" },
+    { env.workspace.dir,    "{ workspace }" },
     { env.home,             "~" },
   }
 

@@ -18,8 +18,8 @@ local get_current_buf = api.nvim_get_current_buf
 local fmt = string.format
 local insert = table.insert
 
-local is_callable = require("my.std").is_callable
-local clear = require("table.clear")
+local is_callable = require("my.std.types").callable
+local clear = require("my.std.table").clear
 
 local _M = {}
 
@@ -710,6 +710,13 @@ _M.Meta = setmetatable({}, {
 ---
 --- (this is actually aliased to `Meta`)
 _M.Alt = _M.Meta
+
+
+---@param tag string
+---@return boolean
+function _M.tag_exists(tag)
+  return TAGS[tag] ~= nil
+end
 
 
 ---@param tag string

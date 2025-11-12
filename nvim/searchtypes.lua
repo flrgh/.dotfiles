@@ -1,5 +1,7 @@
-require("my.lazy.bootstrap")("silent")
+require("my.env")
+
+local plugins = require("my.plugins")
+plugins.load()
 
 local luamod = require("my.std.luamod")
-local plugin = require("my.std.plugin")
-vim.print(vim.inspect(luamod.find_all_types(plugin.lua_dirs())))
+vim.print(vim.inspect(luamod.find_all_types(plugins.lua_dirs())))

@@ -632,7 +632,8 @@ function CMD:is_closing()
   return self.inner:is_closing()
 end
 
+---@class my.std.cmd
+local _M = {}
+_M.new = CMD.new
 
-return {
-  new = CMD.new,
-}
+return _M

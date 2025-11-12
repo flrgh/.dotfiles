@@ -4,7 +4,7 @@ _M.const = require("my.lsp.lua_ls.constants")
 _M.defaults = require("my.lsp.lua_ls.defaults")
 local hooks = require("my.lsp.lua_ls.hooks")
 local Config = require("my.lsp.lua_ls.config")
-local storage = require("my.storage")
+local state = require("my.state")
 local Set = require("my.std.set")
 
 local vim = vim
@@ -55,7 +55,7 @@ local math_max = math.max
 local fs = require "my.std.fs"
 local luamod = require "my.std.luamod"
 local sw = require "my.std.stopwatch"
-local WS = require "my.workspace"
+local WS = require("my.env").workspace
 local event = require "my.event"
 local helpers = require("my.lsp.helpers")
 
@@ -203,7 +203,7 @@ do
       end
       seen[buf] = true
 
-      local data = storage.buffer[buf]
+      local data = state.buffer[buf]
       if not data:is_loaded() or not data.lua_lsp then
         goto continue
       end
@@ -254,7 +254,7 @@ do
       return
     end
 
-    local buf_storage = storage.buffer[buf]
+    local buf_storage = state.buffer[buf]
     if not buf_storage:is_loaded() then
       return
     end
@@ -292,7 +292,7 @@ function _M.on_diagnostic_changed(e)
     return
   end
 
-  local config = storage.buffer[e.buf].lua_lsp
+  local config = state.buffer[e.buf].lua_lsp
   if not config then
     return
   end
@@ -371,11 +371,11 @@ function _M.on_attach(client, buf)
     hooks.on_lua_module(mod, config)
   end
 
-  storage.buffer[buf].lua_resolver = config.resolver
+  state.buffer[buf].lua_resolver = config.resolver
 
   config:update_client_settings(client)
 
-  storage.buffer[buf].lua_lsp = config
+  state.buffer[buf].lua_lsp = config
 
   attach_done()
 end
@@ -384,8 +384,8 @@ end
 ---@param client vim.lsp.Client
 ---@param buf _vim.buffer.id
 function _M.on_detach(client, buf)
-  storage.buffer[buf].lua_resolver = nil
-  storage.buffer[buf].lua_lsp = nil
+  state.buffer[buf].lua_resolver = nil
+  state.buffer[buf].lua_lsp = nil
 end
 
 

@@ -11,7 +11,7 @@ local create_augroup = vim.api.nvim_create_augroup
 local create_autocmd = vim.api.nvim_create_autocmd
 local nvim_exec_autocmds = vim.api.nvim_exec_autocmds
 local clear_tab = require("table.clear")
-local is_callable = require("my.std").is_callable
+local is_callable = require("my.std.types").callable
 
 
 
@@ -1251,8 +1251,10 @@ local EnterEvent
 do
   local did_enter = vim.v.vim_did_enter
   if did_enter == true or did_enter == 1 then
-    vim.notify("started too late to capture the VimEnter event",
-               vim.log.levels.WARN)
+    vim.schedule(function()
+      vim.notify("started too late to capture the VimEnter event",
+                 vim.log.levels.TRACE)
+    end)
 
   else
     local group = assert(create_augroup("my.event.VimEnter", {

@@ -1,4 +1,5 @@
 --- Lua Module Utils.
+---@class my.std.luamod
 local _M = {}
 
 local env = require("my.env")

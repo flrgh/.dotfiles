@@ -1,17 +1,19 @@
 local env = require("my.env")
-local fs = require("my.std.fs")
 
 -- https://lazy.folke.io/configuration
 ---@type LazyConfig
 local conf = {
-  lockfile = fs.join(env.dotfiles.config_nvim, "plugins.lock.json"),
+  lockfile = env.dotfiles.config_nvim .. "/plugins.lock.json",
   root = env.nvim.plugins,
 
   defaults = {
   },
 
   pkg = {
-    -- we'll see...
+    enabled = false,
+  },
+
+  rocks = {
     enabled = false,
   },
 
@@ -32,7 +34,6 @@ local conf = {
     reset_packpath = true,
 
     rtp = {
-      reset = true,
       disabled_plugins = {
         "gzip",
         "netrwPlugin",
@@ -48,6 +49,19 @@ local conf = {
   profiling = {
     loader  = env.debug,
     require = env.debug,
+  },
+
+  spec = nil,
+
+  -- don't load /.lazy.lua files
+  local_spec = false,
+
+  checker = {
+    enabled = false,
+  },
+
+  readme = {
+    enabled = true,
   },
 }
 

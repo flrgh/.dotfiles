@@ -1,13 +1,13 @@
 local _M = {}
 
+local string = require("my.std.string")
 local luamod = require("my.std.luamod")
-local storage = require("my.storage")
+local state = require("my.state")
 local km = require("my.keymap")
 
 local default_resolver
 
 local api = vim.api
-local trim = vim.trim
 local WARN = vim.log.levels.WARN
 
 local min = math.min
@@ -15,17 +15,11 @@ local max = math.max
 local floor = math.floor
 local gsub = string.gsub
 local fmt = string.format
-
-
----@param s string
----@return string
-local function strip(s)
-  return (gsub(s, "^%s*([^%s]+).*", "%1"))
-end
+local trim = string.trim
 
 
 function _M.resolve(args)
-  local name = strip(args.args or "")
+  local name = trim(args.args or "")
 
   if name == "" then
     name = luamod.requires.get_line_requires()
@@ -36,11 +30,11 @@ function _M.resolve(args)
     return
   end
 
-  local resolver = storage.buffer.lua_resolver
+  local resolver = state.buffer.lua_resolver
   if not resolver then
     default_resolver = default_resolver or luamod.resolver.default()
     resolver = default_resolver
-    storage.buffer.lua_resolver = resolver
+    state.buffer.lua_resolver = resolver
   end
 
   local mod, tried = resolver:find_module(name, true)

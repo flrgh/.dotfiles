@@ -9,6 +9,33 @@ local expand = vim.fn.expand
 local log_levels = vim.log.levels
 local select = select
 
+---@param varname string
+---@param default? boolean
+---@return boolean?
+local function truthy(varname, default)
+  local value = default
+  local var = getenv(varname)
+
+  if var then
+    if var == "1"
+      or var == "true"
+      or var == "yes"
+      or var == "on"
+    then
+      value = true
+
+    elseif var == "0"
+      or var == "false"
+      or var == "no"
+      or var == "off"
+    then
+      value = false
+    end
+  end
+
+  return value
+end
+
 --- My github username
 ---@type string
 env.github_username = "flrgh"
@@ -21,17 +48,22 @@ env.cwd = assert(uv.cwd() or getenv("PWD"),
 
 do
   local fs_stat = uv.fs_stat
+  local fs_realpath = uv.fs_realpath
+  local gsub = string.gsub
+  local match = string.match
 
   local cwd = env.cwd
   local buf_dir = expand("%:p:h", true, false)
 
   local git_root
   local parent = buf_dir or cwd
+  local is_git
   while parent and parent ~= "/" and parent ~= "" do
     local git_dir = parent .. "/.git"
     local stat, _, e = fs_stat(git_dir)
 
     if stat and stat.type == "directory" then
+      is_git = true
       git_root = parent
       break
     elseif e and e ~= "ENOENT" then
@@ -39,13 +71,28 @@ do
             .. ": " .. tostring(e))
     end
 
-    parent = parent:gsub("/+[^/]*$", "")
+    parent = gsub(parent, "/+[^/]*$", "")
   end
 
-  --- nvim workspace directory
-  ---@type string
-  env.workspace = git_root or buf_dir or cwd
-  vim.fn.setenv("NVIM_WORKSPACE", env.workspace)
+  local dir = assert(fs_realpath(git_root or buf_dir or cwd))
+
+  ---@type my.workspace
+  env.workspace = {
+    --- nvim workspace directory
+    ---@type string
+    dir = dir,
+
+    ---@type string
+    basename = assert(match(dir, "([^/]+)$")),
+
+    ---@type table<string, any>
+    meta = {
+      root = true,
+      git = is_git,
+    },
+  }
+
+  vim.fn.setenv("NVIM_WORKSPACE", dir)
 end
 
 ---@type integer
@@ -55,8 +102,7 @@ env.lsp_log_level = vim.log.levels.OFF
 ---@type boolean
 env.lsp_debug = false
 do
-  local var = getenv("NVIM_LSP_DEBUG")
-  if var and var ~= "0" then
+  if truthy("NVIM_LSP_DEBUG") then
     env.lsp_debug = true
     env.lsp_log_level = log_levels.DEBUG
   end
@@ -67,8 +113,7 @@ end
 ---@type boolean
 env.debug = false
 do
-  local var = getenv("NVIM_DEBUG")
-  if var and var ~= "0" then
+  if truthy("NVIM_DEBUG") then
     env.debug = true
     vim.schedule(function()
       vim.notify("Neovim debug enabled via `NVIM_DEBUG` var",
@@ -115,7 +160,7 @@ do
   local config_nvim = dotfiles .. "/nvim"
 
   --- Special locations within my dotfiles repo
-  ---@class user.globals.dotfiles
+  ---@class my.env.dotfiles
   env.dotfiles = {
     --- Absolute to my dotfiles repo (~/git/flrgh/.dotfiles)
     ---@type string
@@ -133,20 +178,33 @@ end
 
 do
   local home = assert(env.home)
+  local setenv = vim.fn.setenv
 
-  ---@class user.globals.xdg
+  ---@param var string
+  ---@param suffix string
+  ---@return string
+  local function get_or_set(var, suffix)
+    local value = getenv(var)
+    if not value or value == "" then
+      value = home .. "/" .. suffix
+      setenv(var, value)
+    end
+    return value
+  end
+
+  ---@class my.env.xdg
   env.xdg = {
     -- $XDG_DATA_HOME (~/.local/share)
-    data = getenv("XDG_DATA_HOME") or (home .. "/.local/share"),
+    data = get_or_set("XDG_DATA_HOME", ".local/share"),
 
     -- $XDG_CONFIG_HOME (~/.config)
-    config = getenv("XDG_CONFIG_HOME") or (home .. "/.config"),
+    config = get_or_set("XDG_CONFIG_HOME", ".config"),
 
     -- $XDG_STATE_HOME (~/.local/state)
-    state = getenv("XDG_STATE_HOME") or (home .. "/.local/state"),
+    state = get_or_set("XDG_STATE_HOME", ".local/state"),
 
     -- $XDG_CACHE_HOME (~/.cache)
-    cache = getenv("XDG_CACHE_HOME") or (home .. "/.cache"),
+    cache = get_or_set("XDG_CACHE_HOME", ".cache"),
   }
 end
 
@@ -157,14 +215,18 @@ do
 
   local share_nvim = xdg.data .. "/" .. app_name
   local bundle = share_nvim .. "/_bundle"
+  local config = xdg.config .. "/" .. app_name
 
-  ---@class user.globals.nvim
+  ---@class my.env.nvim
   env.nvim = {
     -- $NVIM_APPNAME (default "nvim")
     app_name = app_name,
 
     -- ~/.config/nvim
-    config = xdg.config .. "/" .. app_name,
+    config = config,
+
+    -- ~/.config/nvim/after
+    config_after = config .. "/after",
 
     -- ~/.local/share/nvim
     share = share_nvim,
@@ -193,6 +255,40 @@ do
       lua = bundle .. "/lua",
     },
   }
+end
+
+-- clean up runtimepath
+do
+  local find = string.find
+
+  local config = env.nvim.config
+  local config_after = env.nvim.config_after
+  local home = env.home
+
+  local final = {}
+  local n = 0
+  n = n + 1
+  final[n] = config
+
+  local rtp = vim.opt_global.rtp:get()
+  for i = 1, #rtp do
+    local path = rtp[i]
+
+    if path
+      and path ~= config
+      and path ~= config_after
+      and find(path, home, nil, true) == 1
+      and not find(path, "/flatpak/exports/", nil, true)
+    then
+      n = n + 1
+      final[n] = path
+    end
+  end
+
+  n = n + 1
+  final[n] = config_after
+
+  vim.go.rtp = table.concat(final, ",")
 end
 
 ---@alias my.env.mode
@@ -243,6 +339,7 @@ do
         or mode == "editor"
         or mode == "pager"
         or mode == "bootstrap"
+        or mode == "script"
       )
     then
       vim.notify("unknown value for " .. ctx ..

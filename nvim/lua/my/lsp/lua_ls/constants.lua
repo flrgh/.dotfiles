@@ -12,6 +12,8 @@ _M.Replace = "Replace"
 _M.Fallback = "Fallback"
 _M.Opened = "Opened!"
 _M.None = "None!"
+_M.Enable = "Enable"
+_M.All = "All"
 
 
 _M.SRC_TYPE_DEFS = "type-definitions"

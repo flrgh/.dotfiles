@@ -1,7 +1,7 @@
 local _M = {}
 
-local plugin = require "my.std.plugin"
-local mod = require "my.std.luamod"
+local plugins = require("my.plugins")
+local mod = require("my.std.luamod")
 
 ---@module "luasnip"
 local ls
@@ -9,7 +9,7 @@ local ls
 local types
 
 function _M.setup()
-  if not plugin.installed("LuaSnip") then
+  if not plugins.installed("LuaSnip") then
     return
   end
 

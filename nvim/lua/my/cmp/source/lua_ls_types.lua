@@ -1,9 +1,9 @@
 local env = require("my.env")
 local cmp = require("cmp")
-local storage = require("my.storage")
+local state = require("my.state")
 local std = require("my.std")
+local plugins = require("my.plugins")
 local luamod = std.luamod
-local plugin = std.plugin
 
 local vim = vim
 local fmt = string.format
@@ -47,10 +47,10 @@ do
 
     add(config:lls_meta_dir())
     add(config.config.root_dir)
-    add(require("my.workspace").dir)
+    add(env.workspace.dir)
 
     if config.meta.neovim then
-      for _, d in ipairs(plugin.lua_dirs()) do
+      for _, d in ipairs(plugins.lua_dirs()) do
         add(d)
       end
       add(env.nvim.runtime)
@@ -154,7 +154,7 @@ end
 ---@param params cmp.SourceCompletionApiParams
 ---@param callback fun(items: lsp.CompletionResponse|nil)
 function source:complete(params, callback)
-  local config = storage.buffer.lua_lsp
+  local config = state.buffer.lua_lsp
   if not config then
     callback()
     return
@@ -239,7 +239,7 @@ end
 ---@param item lsp.CompletionItem
 ---@param callback function
 function source:execute(item, callback)
-  local config = storage.buffer.lua_lsp
+  local config = state.buffer.lua_lsp
   if not config then
     callback()
     return

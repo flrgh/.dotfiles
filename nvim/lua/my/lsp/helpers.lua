@@ -1,6 +1,6 @@
 local _M = {}
 
-local event = require "my.event"
+local event = require("my.event")
 
 local vim = vim
 local api = vim.api

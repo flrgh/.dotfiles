@@ -1,9 +1,10 @@
 local env = require("my.env")
 local std = require("my.std")
-local storage = require("my.storage")
+local state = require("my.state")
 local proto = require("vim.lsp.protocol")
 local const = require("my.lsp.lua_ls.constants")
 local DEFAULTS = require("my.lsp.lua_ls.defaults")
+local health = require("user.health")
 
 local fs = std.fs
 local luamod = std.luamod
@@ -28,8 +29,8 @@ local EMPTY = {}
 
 local workspaceDidChangeConfiguration = proto.Methods.workspace_didChangeConfiguration
 
-storage.global.lua_lsp = storage.global.lua_lsp or {}
-local STATES = storage.global.lua_lsp
+state.global.lua_lsp = state.global.lua_lsp or {}
+local STATES = state.global.lua_lsp
 
 local NAME = const.NAME
 
@@ -60,6 +61,7 @@ end
 ---@field definitions my.std.Set
 ---@field modules my.std.Set
 ---@field mutex my.std.Mutex
+---@field _lls_meta_dir? string
 local Config = {}
 local Config_mt = { __index = Config }
 
@@ -331,18 +333,40 @@ end
 
 ---@return string
 function Config:lls_meta_dir()
+  if self._lls_meta_dir then
+    return self._lls_meta_dir
+  end
+
   local rt = self.config.settings.Lua.runtime
 
-  local version = rt.version or "LuaJIT"
-  local locale = "en-us"
-  local encoding = rt.fileEncoding or "utf8"
+  local meta = rt.meta or "${version} ${language} ${encoding}"
 
-  return fmt("%s/lua-lsp/%s %s %s",
-             env.nvim.state,
-             version,
-             locale,
-             encoding)
+  local params = {
+    version = rt.version or "LuaJIT",
+    language = "en-us",
+    encoding = rt.fileEncoding or "utf8",
+  }
+
+  local dirname = meta:gsub("%$%{([%w]+)%}", params)
+
+  local meta_dir = fmt("%s/lua-lsp/%s", env.nvim.state, dirname)
+
+  vim.uv.fs_stat(meta_dir, function(err, stat)
+    if err or not stat then
+      health.error(const.NAME, "meta path (%q) does not exist", meta_dir)
+
+    elseif stat.type == "directory" then
+      health.ok(const.NAME, "meta dir (%q) found", meta_dir)
+
+    else
+      health.error(const.NAME, "meta path (%q) is not a directory", meta_dir)
+    end
+  end)
+
+  self._lls_meta_dir = meta_dir
+  return meta_dir
 end
+
 
 ---@param reason string
 function Config:lock(reason)
