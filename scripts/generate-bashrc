@@ -601,17 +601,29 @@ __rc_app_lua() {
         done
     }
 
+
+    local -r lua_utils=$HOME/git/flrgh/lua-utils
+
+    un-emit-lua-utils() {
+        if have-builtin varsplice gte "0.2"; then
+            rc-varsplice --remove -g LUA_PATH "${lua_utils}/lib/*"
+        else
+            rc-rm-path LUA_PATH "$lua_utils/lib/?.lua"
+            rc-rm-path LUA_PATH "$lua_utils/lib/?/init.lua"
+        fi
+    }
+
     emit-lua-utils() {
         if luarocks show flrgh &>/dev/null; then
             echo "lua utils installed via luarocks--no need for this"
+            un-emit-lua-utils
             return
         fi
 
-        local -r lua_utils=$HOME/git/flrgh/lua-utils
-
         if [[ ! -d $lua_utils ]]; then
             echo "lua utils ($lua_utils) not found, exiting"
-            exit 0
+            un-emit-lua-utils
+            return
         fi
 
         rc-add-path --prepend LUA_PATH \
