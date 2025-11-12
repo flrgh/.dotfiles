@@ -316,7 +316,14 @@ function _M.on_workspace(ws, config)
   local basename = ws.basename
   local lower = dir:lower()
 
-  add_lib(dir .. "/lua", config, { source = SRC_WORKSPACE_ROOT })
+  add_lib(dir, config, { source = SRC_WORKSPACE_ROOT })
+
+  if basename == "doorbell"
+    or basename == "doorbell-dev"
+    or basename == "doorbell-ng"
+  then
+    add_mod("doorbell", config)
+  end
 
   -- detect busted projects
   if fs.file_exists(dir .. ".busted") then
