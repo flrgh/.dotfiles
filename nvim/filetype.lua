@@ -14,4 +14,9 @@ vim.filetype.add({
     [".*Dockerfile.*"] = "dockerfile",
     [".*/%.ssh/config%.d/.*"] = "sshconfig",
   },
+
+  extension = {
+    -- brightscript / roku
+    bs = "brs",
+  },
 })
