@@ -193,9 +193,9 @@ end
 ---@param dir string
 ---@param config my.lua_ls.Config
 ---@return boolean
-local function add_lib(dir, config)
+local function add_lib(dir, config, meta)
   if fs.dir_exists(dir) then
-    config:add_library(dir)
+    config:add_library(dir, meta)
     return true
   end
   return false
@@ -316,7 +316,7 @@ function _M.on_workspace(ws, config)
   local basename = ws.basename
   local lower = dir:lower()
 
-  add_lib(dir .. "/lua", config)
+  add_lib(dir .. "/lua", config, { source = SRC_WORKSPACE_ROOT })
 
   -- detect busted projects
   if fs.file_exists(dir .. ".busted") then
@@ -325,13 +325,17 @@ function _M.on_workspace(ws, config)
 
   -- ~/git/flrgh/.dotfiles
   if dir == env.dotfiles.root then
+    config:prepend_runtime_dir(env.dotfiles.config_nvim_lua)
     config:add_workspace_library(env.dotfiles.config_nvim_lua)
     config:set_root_dir(env.dotfiles.config_nvim)
 
     for _, plugin_name in ipairs(PLUGINS) do
       local plug = plugins.get(plugin_name)
       if plug and plug.dir and plug.dir ~= "" then
-        add_lib(plug.dir .. "/lua", config)
+        add_lib(plug.dir .. "/lua", config, {
+          source = SRC_PLUGIN,
+          plugin = plug.name,
+        })
       end
     end
 

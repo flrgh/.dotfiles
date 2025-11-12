@@ -9,7 +9,7 @@ local health = require("user.health")
 local fs = std.fs
 local luamod = std.luamod
 local lsp = vim.lsp
-local endswith = std.string.startswith
+local endswith = std.string.endswith
 local insert = std.table.insert
 local deep_copy = std.deep_copy
 local deep_equal = std.deep_equal
@@ -165,13 +165,16 @@ end
 ---@param tree? my.lua.resolver.path
 ---@return my.lua_ls.Config
 function Config:add_runtime_path(search, tree)
-  self.resolver:add_path(search, { source = SRC_RUNTIME_PATH })
+  local meta = tree and tree.meta or { source = SRC_RUNTIME_PATH }
+
+  self.resolver:add_path(search, meta)
+
   if self.runtime_path:add(search) then
     self.dirty = true
     lsp.log.info({
       event = "insert Lua.runtime.path",
       path = search,
-      meta = tree and tree.meta,
+      meta = meta,
     })
   end
 
@@ -180,11 +183,32 @@ end
 
 
 ---@param dir string
+---@param tree? my.lua.resolver.path
 ---@return my.lua_ls.Config
-function Config:add_runtime_dir(dir)
-  return self:add_runtime_path(dir .. "/?.lua")
-    :add_runtime_path(dir .. "/?/init.lua")
+function Config:add_runtime_dir(dir, tree)
+  if dir == "." then
+    return self
+  end
+  return self:add_runtime_path(dir .. "/?.lua", tree)
+    :add_runtime_path(dir .. "/?/init.lua", tree)
 end
+
+
+---@param dir string
+---@param tree? my.lua.resolver.path
+---@return my.lua_ls.Config
+function Config:prepend_runtime_dir(dir, tree)
+  local runtime_paths = self.runtime_path:take()
+
+  self:add_runtime_dir(dir, tree)
+
+  for _, rt in ipairs(runtime_paths) do
+    self:add_runtime_path(rt)
+  end
+
+  return self
+end
+
 
 
 ---@param path string
@@ -194,17 +218,11 @@ function Config:add_workspace_library(path, tree)
   local ft, lt = fs.type(path)
 
   if ft == "file" or lt == "file" then
-    for parent in fs.iter_parents(path) do
-      if parent == "."
-        or parent == self.config.root_dir
-        or self.workspace_library:contains(parent)
-      then
+    for _, lib in ipairs(self.workspace_library.items) do
+      if fs.is_child(lib, path) then
         return self
       end
     end
-
-  else
-    self:add_runtime_dir(path)
   end
 
   if self.workspace_library:add(path) then
@@ -222,23 +240,32 @@ end
 
 ---@param lib string
 ---@return my.lua_ls.Config
-function Config:add_library(lib)
+function Config:add_library(lib, meta)
   lib = fs.normalize(lib)
-  self:add_workspace_library(lib)
+
+  ---@type my.lua.resolver.path
+  local tree = {
+    dir = lib,
+    suffixes = { "?.lua", "?/init.lua" },
+    absolute = fs.is_abs(lib),
+    meta = meta or {},
+  }
+
+  self:add_workspace_library(lib, tree)
 
   -- add $path/lua
   if not endswith(lib, '/lua') and fs.dir_exists(lib .. '/lua') then
-    self:add_runtime_dir(lib .. "/lua")
+    self:add_runtime_dir(lib .. "/lua", tree)
   end
 
   -- add $path/src
   if not endswith(lib, '/src') and fs.dir_exists(lib .. '/src') then
-    self:add_runtime_dir(lib .. "/src")
+    self:add_runtime_dir(lib .. "/src", tree)
   end
 
   -- add $path/lib
   if not endswith(lib, '/lib') and fs.dir_exists(lib .. '/lib') then
-    self:add_runtime_dir(lib .. "/lib")
+    self:add_runtime_dir(lib .. "/lib", tree)
   end
 
   return self

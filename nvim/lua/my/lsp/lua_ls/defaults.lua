@@ -245,8 +245,10 @@ local defaults = {
 
       type = {
         castNumberToInteger = true,
-        weakUnionCheck      = true,
+        checkTableShape     = false,
         weakNilCheck        = true,
+        weakUnionCheck      = true,
+        inferParamType      = false,
       },
 
       window = {
@@ -255,7 +257,7 @@ local defaults = {
       },
 
       workspace = {
-        checkThirdParty  = ApplyInMemory,
+        checkThirdParty  = Disable,
         ---@type string[]
         ignoreDir        = {
           "ldoc/builtin",
