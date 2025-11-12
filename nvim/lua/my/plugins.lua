@@ -27,7 +27,10 @@ local CONF = plugins.CONF
 ---@alias my.plugin.cond fun(self: LazyPluginSpec, tags: my.plugin.tags, env: my.env):boolean|nil
 
 ---@type my.plugin.cond
-local function return_nil(_, _, _) return nil end
+local function return_nil(...) return nil end
+
+---@type my.plugin.cond
+local function return_true(...) return true end
 
 ---@type my.plugin.cond
 local COND = return_nil
@@ -1102,11 +1105,26 @@ function plugins.load(cond)
   COND = cond or COND or return_nil
 
   require("my.settings")
-
   require("my.lazy.install")
   require("lazy").setup(SPECS, CONF)
 
   _loaded = true
+end
+
+function plugins.bootstrap()
+  vim.go.loadplugins = true
+
+  COND = return_true
+
+  require("my.settings")
+  require("my.lazy.install")
+  local lazy = require("lazy")
+
+  CONF.wait = true
+
+  lazy.setup(SPECS, CONF)
+  lazy.restore(CONF)
+  lazy.build(CONF)
 end
 
 
