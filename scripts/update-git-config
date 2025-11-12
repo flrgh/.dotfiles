@@ -33,7 +33,7 @@ update-delta() {
     local delta="delta --config \"$GLOBAL_CONFIG\""
 
     set-config core.pager "$delta"
-    set-config interactive.diffFilter "$delta --color-only"
+    set-config interactive.diffFilter "$delta --paging never --color-only"
 }
 
 update-user-signing-key() {
