@@ -837,21 +837,55 @@ __rc_user_functions() {
     rc-new-workfile user-functions
     rc-workfile-add-dep function-dispatch
 
+    rc-workfile-include ./bash/user-functions.bash
+
     local f src fn
+    local -i nfiles=0
+    local -i nfuncs=0
+    local -A seen=()
+
     for f in home/.local/lib/bash/functions/*.bash; do
+        nfiles+=1
+
         src="$HOME"/${f#"home/"}
+
+        nfuncs=0
         for fn in $(./scripts/list-shell-functions "$f"); do
             if [[ $fn = _* ]]; then
                 continue
             fi
+            nfuncs+=1
+            seen[$fn]=1
             rc-workfile-append '%s() { __function_dispatch_file %q %s "$@"; }\n' \
                 "$fn" \
                 "$src" \
                 "$fn"
         done
+
+        if (( nfuncs == 0 )); then
+            fatal "no functions found in $f"
+        fi
     done
 
-    rc-workfile-include ./bash/user-functions.bash
+    if (( nfiles == 0 )); then
+        fatal "no *.bash files found"
+    fi
+
+    if [[ -n ${seen[bin-path]:?"missing bin-path"} ]]; then
+        rc-workfile-add-exec alias "which=bin-path"
+    fi
+
+    if [[ -n ${seen[dump-array]:?"missing dump-array"} ]]; then
+        rc-workfile-add-exec complete -A arrayvar dump-array
+    fi
+
+    if [[ -n ${seen[dump-var]:?"missing dump-var"} ]]; then
+        rc-workfile-add-exec complete -A variable dump-var
+    fi
+
+    if [[ -n ${seen[dump-prefix]:?"missing dump-prefix"} ]]; then
+        rc-workfile-add-exec complete -A variable dump-prefix
+    fi
 
     rc-workfile-close
 }

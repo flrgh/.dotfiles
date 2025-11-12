@@ -7,9 +7,3 @@
     echo "hey you're not in vim anymore, but I can exit the shell for you..."
     sleep 0.75 && exit
 }
-
-alias which="bin-path"
-
-complete -A arrayvar dump-array
-complete -A variable dump-var
-complete -A variable dump-prefix
