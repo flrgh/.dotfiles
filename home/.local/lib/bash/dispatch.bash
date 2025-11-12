@@ -2,9 +2,11 @@ BASH_USER_LIB=${BASH_USER_LIB:-$HOME/.local/lib/bash}
 source "$BASH_USER_LIB"/__init.bash
 (( BASH_USER_LIB_SOURCED[dispatch]++ == 0 )) || return 0
 
-__function_dispatch() {
-    local -r fn=${FUNCNAME[1]:?could not detect function name}
-    local -r src="${BASH_USER_LIB}/functions/${fn}.bash"
+__function_dispatch_file() {
+    local -r src=${1:?}
+    shift
+
+    local -r fn=${1:?}
     if [[ ! -r $src ]]; then
         echo "ERROR: source file for function ${fn} ($src) does not exist" >&2
         return 127
@@ -20,5 +22,11 @@ __function_dispatch() {
         return 127
     fi
 
-    "$fn" "$@"
+    "$@"
+}
+
+__function_dispatch() {
+    local -r fn=${FUNCNAME[1]:?could not detect function name}
+    local -r src="${BASH_USER_LIB}/functions/${fn}.bash"
+    __function_dispatch_file "$src" "$fn" "$@"
 }

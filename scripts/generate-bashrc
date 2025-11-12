@@ -510,6 +510,7 @@ __rc_func_dispatch() {
     rc-new-workfile "function-dispatch"
     rc-workfile-add-dep "$RC_DEP_SET_VAR"
     source ./home/.local/lib/bash/dispatch.bash
+    rc-workfile-add-function __function_dispatch_file
     rc-workfile-add-function __function_dispatch
     rc-workfile-close
 }
@@ -823,7 +824,23 @@ __rc_key_bindings
 __rc_user_functions() {
     rc-new-workfile user-functions
     rc-workfile-add-dep function-dispatch
+
+    local f src fn
+    for f in home/.local/lib/bash/functions/*.bash; do
+        src="$HOME"/${f#"home/"}
+        for fn in $(./scripts/list-shell-functions "$f"); do
+            if [[ $fn = _* ]]; then
+                continue
+            fi
+            rc-workfile-append '%s() { __function_dispatch_file %q %s "$@"; }\n' \
+                "$fn" \
+                "$src" \
+                "$fn"
+        done
+    done
+
     rc-workfile-include ./bash/user-functions.bash
+
     rc-workfile-close
 }
 __rc_user_functions
