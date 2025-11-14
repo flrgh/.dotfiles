@@ -344,6 +344,7 @@ $(DIRENV_BUILD_RC): $(DEP)/direnv \
 	home/.local/lib/bash/direnv/*.bash \
 	| .setup symlinks
 
+	mkdir -p $(dir $@)
 	$(SCRIPT)/build-direnv-rc > $@
 
 DIRENV_RC := $(INSTALL_PATH)/.config/direnv/direnvrc
