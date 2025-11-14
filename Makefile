@@ -421,7 +421,7 @@ $(BUILD)/bashrc.md5: $(BUILD)/home/.bashrc
 		> "$@"
 	$(TOUCH) --reference "$<" "$@"
 
-$(BUILD)/bash-completion: | $(DEP)/bash-completion
+$(BUILD)/bash-completion: ./bash/completion/Makefile | $(DEP)/bash-completion
 	$(MAKE) -C ./bash/completion all
 	$(TOUCH) $@
 

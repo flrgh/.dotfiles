@@ -28,6 +28,7 @@ COMMANDS := \
 	openstack \
 	package-deps \
 	package-info \
+	package-rdeps \
 	pip \
 	pip3 \
 	rg \
@@ -229,6 +230,10 @@ package-info:
 
 package-deps: CMD = $(LIST_PACKAGE_NAMES)
 package-deps:
+	$(from-candidate-list-command)
+
+package-rdeps: CMD = $(LIST_PACKAGE_NAMES)
+package-rdeps:
 	$(from-candidate-list-command)
 
 aws: CMD = $(shell mise which aws_completer)

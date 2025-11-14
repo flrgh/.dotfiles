@@ -10,14 +10,11 @@ readonly pkg=${1?package name required}
 if command-exists dnf5; then
     dnf5 \
         --quiet \
-        --cacheonly \
         repoquery \
-        --depends \
+        --installed \
+        --whatdepends \
         "$pkg" \
-    | sed -r \
-        -e 's/^\((.+)\)$/\1/' \
-        -e 's/(.+)\s+[=<>]+\s+[^\s]+$/\1/' \
-        -e 's/\([^)]+\)$//' \
+    | sed -re 's/^([^:]+)-[0-9]+:[0-9]+.*/\1/' \
     | grep -xF -f <(ls-packages --name-only) \
     | sort -u
 
