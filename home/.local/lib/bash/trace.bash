@@ -6,11 +6,20 @@ trace() {
     local -i level=${1:-0}
     local -i i
 
-    for (( i = level; i < ${#BASH_LINENO[@]}; i++ )); do
-        printf '%2d %-48s:%-3d %s\n' \
-            "$i" \
+    local -i slen=8
+
+    for (( i = level + 1; i < ${#BASH_SOURCE[@]}; i++ )); do
+        local src=${BASH_SOURCE[i]}
+        slen=$(( (${#src} > slen) ? ( ${#src} + 2 ) : slen ))
+    done
+
+    for (( i = level + 1; i < ${#BASH_SOURCE[@]}; i++ )); do
+        builtin printf \
+            "%2d %-${slen}s :%-5d %s\n" \
+            "$(( i - level - 1))" \
             "${BASH_SOURCE[i]}" \
-            "${BASH_LINENO[i]}" \
+            "${BASH_LINENO[i - 1]}" \
             "${FUNCNAME[i]}"
     done
+
 }
