@@ -1,6 +1,6 @@
---- key-bindings.bash	2025-11-03 16:32:22.297953434 -0800
-+++ new-key-bindings.bash	2025-11-03 16:35:10.482348493 -0800
-@@ -1,122 +1,110 @@
+--- key-bindings.old.bash	2025-11-16 16:53:30.833487473 -0800
++++ key-bindings.new.bash	2025-11-16 16:55:11.528238829 -0800
+@@ -1,125 +1,111 @@
 -### key-bindings.bash ###
 -#     ____      ____
 -#    / __/___  / __/
@@ -27,8 +27,8 @@
 -# NOTE: Do not directly edit this section, which is copied from "common.sh".
 -# To modify it, one can edit "common.sh" and run "./update.sh" to apply
 -# the changes. See code comments in "common.sh" for the implementation details.
--
 +declare -g __fzf_defaults__
+ 
 +# shellcheck disable=SC2206
  __fzf_defaults() {
 -  printf '%s\n' "--height ${FZF_TMUX_HEIGHT:-40%} --min-height 20+ --bind=ctrl-z:ignore $1"
@@ -44,14 +44,14 @@
 +    )
 +
 +    local arg
-+    while (( $# )); do
++    while (($#)); do
 +        arg=$1
 +        shift
 +
 +        case $arg in
-+            --) break;;
-+            '') continue;;
-+            *) opts+=("$arg");;
++            --) break ;;
++            '') continue ;;
++            *) opts+=("$arg") ;;
 +        esac
 +    done
  
@@ -63,13 +63,16 @@
 -    elif command -v mawk > /dev/null 2>&1; then
 -      local n x y z d
 -      IFS=' .' read -r n x y z d <<< $(command mawk -W version 2> /dev/null)
--      [[ $n == mawk ]] && ((d >= 20230302 && (x * 1000 + y) * 1000 + z >= 1003004)) && __fzf_awk=mawk
+-      [[ $n == mawk ]] &&
+-        (((x * 1000 + y) * 1000 + z >= 1003004)) 2> /dev/null &&
+-        ((d >= 20230302)) 2> /dev/null &&
+-        __fzf_awk=mawk
 +    if [[ -n ${FZF_DEFAULT_OPTS_FILE:-} && -f ${FZF_DEFAULT_OPTS_FILE} ]]; then
-+        local -r -i offset=$(( ${#opts[@]} + 1 ));
++        local -r -i offset=$((${#opts[@]} + 1))
 +        builtin mapfile -t \
 +            -O "$offset" \
 +            opts \
-+        <"$FZF_DEFAULT_OPTS_FILE"
++            <"$FZF_DEFAULT_OPTS_FILE"
      fi
 -  fi
 -  LC_ALL=C exec "$__fzf_awk" "$@"
@@ -83,16 +86,16 @@
 -    while read -r item; do
 -      printf '%q ' "$item" # escape special chars
 +    if [[ -n ${FZF_DEFAULT_OPTS:-} ]]; then
-+        opts+=( $FZF_DEFAULT_OPTS )
++        opts+=($FZF_DEFAULT_OPTS)
 +    fi
 +
-+    while (( $# )); do
++    while (($#)); do
 +        arg=$1
 +        shift
 +
 +        case $arg in
-+            '') continue;;
-+            *) opts+=("$arg");;
++            '') continue ;;
++            *) opts+=("$arg") ;;
 +        esac
      done
 -}
@@ -117,9 +120,9 @@
 +        -m
 +
 +    FZF_DEFAULT_COMMAND=${FZF_CTRL_T_COMMAND:-} \
-+    FZF_DEFAULT_OPTS="$__fzf_defaults__" \
-+    FZF_DEFAULT_OPTS_FILE='' \
-+    fzf "$@" | while read -r item; do
++        FZF_DEFAULT_OPTS="$__fzf_defaults__" \
++        FZF_DEFAULT_OPTS_FILE='' \
++        fzf "$@" | while read -r item; do
 +        printf '%q ' "$item" # escape special chars
 +    done
  }
@@ -138,7 +141,7 @@
 +    READLINE_POINT=$((READLINE_POINT + ${#selected}))
 +}
 +
-+__fzf_lua_history=${HOME}/.local/libexec/fzf-lua-history
++declare -g __fzf_lua_history=${HOME}/.local/libexec/fzf-lua-history
 +
 +__fzf_history__() {
 +    # TODO: replace this with new command substitution
@@ -161,8 +164,7 @@
 -  __fzf_history__() {
 -    local output script
 -    script='BEGIN { getc; $/ = "\n\t"; $HISTCOUNT = $ENV{last_hist} + 1 } s/^[ *]//; s/\n/\n\t/gm; print $HISTCOUNT - $. . "\t$_" if !$seen{$_}++'
-+    local output
-     output=$(
+-    output=$(
 -      set +o pipefail
 -      builtin fc -lnr -2147483648 |
 -        last_hist=$(HISTTIMEFORMAT='' builtin history 1) command perl -n -l0 -e "$script" |
@@ -185,18 +187,19 @@
 -    /^\t/ { P(b); b = substr($0, 2); next }
 -    { b = b RS $0 }
 -    END { if (NR) P(b) }'
--    output=$(
++    local output
+     output=$(
 -      set +o pipefail
 -      builtin fc -lnr -2147483648 2> /dev/null | # ( $'\t '<lines>$'\n' )* ; <lines> ::= [^\n]* ( $'\n'<lines> )*
 -        __fzf_exec_awk "$script" |               # ( <counter>$'\t'<lines>$'\000' )*
 -        FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort,alt-r:toggle-raw --wrap-sign '"$'\t'"↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} +m --read0") \
 -        FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd) --query "$READLINE_LINE"
 +        set +o pipefail
-+        builtin fc -lnr -2147483648 2>/dev/null \
-+            | "$__fzf_lua_history" "$n" \
-+            | FZF_DEFAULT_OPTS="$__fzf_defaults__" \
-+            FZF_DEFAULT_OPTS_FILE='' \
-+            fzf --query "$READLINE_LINE"
++        builtin fc -lnr -2147483648 2>/dev/null |
++            "$__fzf_lua_history" "$n" |
++            FZF_DEFAULT_OPTS="$__fzf_defaults__" \
++                FZF_DEFAULT_OPTS_FILE='' \
++                fzf --query "$READLINE_LINE"
      ) || return
 +
      READLINE_LINE=${output#*$'\t'}
@@ -213,7 +216,7 @@
  
  # Required to refresh the prompt after fzf
  bind -m emacs-standard '"\er": redraw-current-line'
-@@ -125,49 +113,14 @@
+@@ -128,49 +114,12 @@
  bind -m vi-insert '"\C-z": emacs-editing-mode'
  bind -m emacs-standard '"\C-z": vi-editing-mode'
  
@@ -237,11 +240,9 @@
 -else
 -  # CTRL-T - Paste the selected file path into the command line
 -  if [[ ${FZF_CTRL_T_COMMAND-x} != "" ]]; then
-+# CTRL-T - Paste the selected file path into the command line
-+if [[ ${FZF_CTRL_T_COMMAND-x} != "" ]]; then
-     bind -m emacs-standard -x '"\C-t": fzf-file-widget'
-     bind -m vi-command -x '"\C-t": fzf-file-widget'
-     bind -m vi-insert -x '"\C-t": fzf-file-widget'
+-    bind -m emacs-standard -x '"\C-t": fzf-file-widget'
+-    bind -m vi-command -x '"\C-t": fzf-file-widget'
+-    bind -m vi-insert -x '"\C-t": fzf-file-widget'
 -  fi
 -
 -  # CTRL-R - Paste the selected command from history into the command line
@@ -253,8 +254,8 @@
 -    bind -m vi-command -x '"\C-r": __fzf_history__'
 -    bind -m vi-insert -x '"\C-r": __fzf_history__'
 -  fi
- fi
- 
+-fi
+-
 -# ALT-C - cd into the selected directory
 -if [[ ${FZF_ALT_C_COMMAND-x} != "" ]]; then
 -  bind -m emacs-standard '"\ec": " \C-b\C-k \C-u`__fzf_cd__`\e\C-e\er\C-m\C-y\C-h\e \C-y\ey\C-x\C-x\C-d\C-y\ey\C-_"'
@@ -265,6 +266,11 @@
 -
 -fi
 -### end: key-bindings.bash ###
++# CTRL-T - Paste the selected file path into the command line
++bind -m emacs-standard -x '"\C-t": fzf-file-widget'
++bind -m vi-command -x '"\C-t": fzf-file-widget'
++bind -m vi-insert -x '"\C-t": fzf-file-widget'
++
 +# CTRL-R - Paste the selected command from history into the command line
 +bind -m emacs-standard -x '"\C-r": __fzf_history__'
 +bind -m vi-command -x '"\C-r": __fzf_history__'
