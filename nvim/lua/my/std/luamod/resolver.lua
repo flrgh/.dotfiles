@@ -271,13 +271,20 @@ function resolver:add_lua_package_path()
   return self
 end
 
-function resolver:purge_cache()
+
+function resolver:purge_module_cache()
   clear(self.module_cache)
-  self:purge_fs_cache()
 end
+
 
 function resolver:purge_fs_cache()
   clear(FS_CACHE)
+end
+
+
+function resolver:purge_cache()
+  self:purge_module_cache()
+  self:purge_fs_cache()
 end
 
 
