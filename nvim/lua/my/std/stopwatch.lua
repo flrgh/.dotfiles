@@ -11,17 +11,17 @@ local fmt = string.format
 local env = require("my.env")
 
 local function log_duration(task, duration, lvl)
+  if not env.editor then
+    return
+  end
+
   if vim.in_fast_event() then
     vim.schedule(function() log_duration(task, duration) end)
     return
   end
 
-  lvl = lvl
-     or (env.debug and WARN)
-     or DEBUG
-
   vim.notify(fmt("task %s completed in %.3f ms", task, duration),
-             lvl)
+             lvl or (env.debug and WARN) or DEBUG)
 end
 
 ---@return integer time # ms
@@ -95,5 +95,6 @@ function _M.new(task, slow_if)
 
   return get_elapsed
 end
+
 
 return _M
