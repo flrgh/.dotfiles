@@ -609,6 +609,9 @@ do
       {
         "romainl/vim-cool",
         event = evt.user.VeryLazy,
+        tags = {
+          "pager", -- include in manpager mode
+        },
       },
     },
 
