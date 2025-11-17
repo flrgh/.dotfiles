@@ -178,6 +178,11 @@ local MODS = {
 
       -- local openresty build dir
       ".resty",
+
+      "bazel-bin",
+      "bazel-kong-ee",
+      "bazel-out",
+      "bazel-testlogs",
     },
   },
 }

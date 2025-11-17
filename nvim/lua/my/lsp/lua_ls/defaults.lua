@@ -260,6 +260,9 @@ local defaults = {
         checkThirdParty  = Disable,
         ---@type string[]
         ignoreDir        = {
+          "/.worktree",
+          "/.worktrees",
+          "/.tree",
           "ldoc/builtin",
         },
         ignoreSubmodules = true,
