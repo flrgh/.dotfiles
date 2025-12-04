@@ -27,7 +27,23 @@ _M.SRC_LUA_BUNDLE = "nvim/_lua_bundle"
 
 _M.LUA_TYPE_ANNOTATIONS = env.git_user_root .. "/lua-type-annotations"
 _M.LUA_CATS = env.git_root .. "/LuaCATS"
-_M.LUA_RESTY_COMMUNITY = env.git_user_root .. "/resty-community-typedefs/library"
+_M.LUA_RESTY_COMMUNITY = env.git_user_root .. "/resty-community-typedefs"
+
+local SERVER_DIR = env.home .. "/.local/libexec/lua-language-server"
+
+_M.SERVER = {
+  DIR = SERVER_DIR,
+  EXE = SERVER_DIR .. "/bin/lua-language-server",
+  META_DIR = env.nvim.state .. "/lua-lsp",
+  LOG_DIR = env.home .. "/.local/var/log/lua-lsp",
+  LOCALE = "en-us",
+}
+setmetatable(_M.SERVER, {
+  __index = function(_, k)
+    error("undefined config constant: SERVER." .. tostring(k))
+  end,
+})
+
 
 setmetatable(_M, {
   __index = function(_, k)

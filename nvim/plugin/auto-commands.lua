@@ -43,3 +43,6 @@ event.on({ event.StdinReadPost })
     bo.modifiable = false
     bo.modified = false
   end)
+
+
+require("my.state").init_auto_commands()

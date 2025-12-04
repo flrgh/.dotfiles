@@ -6,6 +6,14 @@ local vim = vim
 local api = vim.api
 local lsp = vim.lsp
 
+local GROUPS = {
+  ---@type table<string, table<string, integer>>,
+  [event.LspAttach] = {},
+
+  ---@type table<string, table<string, integer>>,
+  [event.LspDetach] = {},
+}
+
 ---@param e my.event.payload
 ---@param client_name string
 ---@return vim.lsp.Client?
@@ -45,8 +53,16 @@ end
 ---@param client_name string
 ---@param fn fun(client: vim.lsp.Client, buf:number)
 local function register(evt, client_name, fn)
+  local group = GROUPS[evt][client_name]
+  if not group then
+    group = assert(api.nvim_create_augroup("lsp-forward-" .. evt .. "-" .. client_name, {
+      clear = true
+    }))
+    GROUPS[evt][client_name] = group
+  end
+
   event.on(event.User)
-    :group("lsp-forward-" .. evt .. "-" .. client_name, true)
+    :group(group, false)
     :user_pattern({ evt, client_name })
     :callback(vim.schedule_wrap(function(e)
       local client = get_client(e, client_name)

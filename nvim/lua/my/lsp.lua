@@ -8,9 +8,7 @@ local event = require("my.event")
 local health = require("user.health")
 local plugins = require("my.plugins")
 
-local fs = std.fs
-
-local executable = fs.path.executable
+local executable = std.path.cache.executable
 local api = vim.api
 local lsp = vim.lsp
 local vim = vim
@@ -327,19 +325,19 @@ local function setup_server(name)
     return
   end
 
-  local exe = executable(cmd[1])
-  if not exe then
-    health.error("lsp", "server %q executable (%s) not found",
-                 name, cmd[1])
-    return
+  if type(cmd) == "table" then
+    local exe = executable(cmd[1])
+    if not exe then
+      health.error("lsp", "server %q executable (%s) not found", name, cmd[1])
+      return
+    end
+
+    health.ok("lsp", "server %q installed at %q", name, exe)
+    -- cmd[1] = exe
+    -- conf.cmd = cmd
   end
 
-  cmd[1] = exe
-  conf.cmd = cmd
-
-  health.ok("lsp", "server %q installed at %q", name, exe)
-
-  lsp.config(name, conf)
+  --lsp.config(name, conf)
   lsp.enable(name)
 end
 

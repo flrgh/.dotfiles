@@ -6,7 +6,7 @@ local const = require("my.lsp.lua_ls.constants")
 local DEFAULTS = require("my.lsp.lua_ls.defaults")
 local health = require("user.health")
 
-local fs = std.fs
+local pathlib = std.path
 local luamod = std.luamod
 local lsp = vim.lsp
 local endswith = std.string.endswith
@@ -14,6 +14,12 @@ local insert = std.table.insert
 local deep_copy = std.deep_copy
 local deep_equal = std.deep_equal
 local fmt = std.string.format
+local path_exists = std.path.cache.exists
+local path_type = std.path.cache.type
+local path_is_file = std.path.cache.file_exists
+local path_is_dir = std.path.cache.dir_exists
+local path_is_abs = std.path.is_abs
+local path_is_child = std.path.is_child
 
 ---@type string[]
 local LUA_PATH_ENTRIES = luamod.LUA_PATH_ENTRIES
@@ -60,52 +66,48 @@ end
 ---@field addons my.std.Set
 ---@field definitions my.std.Set
 ---@field modules my.std.Set
+---@field globals my.std.Set
 ---@field mutex my.std.Mutex
 ---@field _lls_meta_dir? string
 local Config = {}
 local Config_mt = { __index = Config }
 
 ---@param id integer|"default"
----@param config? my.lsp.config.Lua
+---@param defaults? my.lua_ls.Config
 ---@return my.lua_ls.Config
-function Config.new(id, config)
+function Config.new(id, defaults)
   local self = setmetatable({
     id = id,
     client = nil,
-    config = deep_copy(config),
+    config = deep_copy(defaults or DEFAULTS),
     resolver = luamod.resolver.new(),
     meta = {},
     dirty = false,
     workspace_library = std.Set(),
-    runtime_path = std.set.from({ "?.lua", "?/init.lua" }),
+    runtime_path = std.Set(),
     ignore_dir = std.Set(),
     addons = std.Set(),
     definitions = std.Set(),
     modules = std.Set(),
+    globals = std.Set(),
     mutex = std.Mutex(),
   }, Config_mt)
 
 
   local Lua = self.config.settings.Lua
+  self.globals:add_all(Lua.diagnostics.globals or EMPTY)
+  Lua.diagnostics.globals = self.globals.items
 
-  for _, path in ipairs(Lua.runtime.path or EMPTY) do
-    self:add_runtime_path(path)
-  end
+  self.runtime_path:add_all(Lua.runtime.path or EMPTY)
   Lua.runtime.path = self.runtime_path.items
 
-  for _, lib in ipairs(Lua.workspace.library or EMPTY) do
-    self:add_workspace_library(lib)
-  end
+  self.workspace_library:add_all(Lua.workspace.library or EMPTY)
   Lua.workspace.library = self.workspace_library.items
 
-  for _, ign in ipairs(Lua.workspace.ignoreDir or EMPTY) do
-    self:add_ignore(ign)
-  end
+  self.ignore_dir:add_all(Lua.workspace.ignoreDir or EMPTY)
   Lua.workspace.ignoreDir = self.ignore_dir.items
 
-  for _, addon in ipairs(Lua.workspace.userThirdParty or EMPTY) do
-    self.addons:add(addon)
-  end
+  self.addons:add_all(Lua.workspace.userThirdParty or EMPTY)
   Lua.workspace.userThirdParty = self.addons.items
   if self.addons.len > 0 then
     Lua.workspace.checkThirdParty = const.ApplyInMemory
@@ -114,19 +116,13 @@ function Config.new(id, config)
   end
 
   local resolver = self.resolver
-  resolver:add_lua_package_path()
-  resolver:add_env_lua_path()
-
-  for _, path in ipairs(resolver.paths) do
-    self:add_runtime_dir(path.dir)
+  for path in resolver.package_path_entries() do
+    self.runtime_path:add(path)
+    resolver:add_path(path, { source = "package.path" })
   end
-
-  for _, path in ipairs(self.runtime_path.items) do
-    resolver:add_path(path, { source = SRC_RUNTIME_PATH })
-  end
-
-  for _, lib in ipairs(self.workspace_library.items) do
-    resolver:add_dir(lib, { source = SRC_WS_LIBRARY })
+  for path in resolver.env_lua_path_entries() do
+    self.runtime_path:add(path)
+    resolver:add_path(path, { source = "$LUA_PATH" })
   end
 
   STATES[id] = self
@@ -186,11 +182,12 @@ end
 ---@param tree? my.lua.resolver.path
 ---@return my.lua_ls.Config
 function Config:add_runtime_dir(dir, tree)
-  if dir == "." then
+  if dir == "." or dir == "" or not path_is_dir(dir) then
     return self
   end
+
   return self:add_runtime_path(dir .. "/?.lua", tree)
-    :add_runtime_path(dir .. "/?/init.lua", tree)
+             :add_runtime_path(dir .. "/?/init.lua", tree)
 end
 
 
@@ -198,6 +195,8 @@ end
 ---@param tree? my.lua.resolver.path
 ---@return my.lua_ls.Config
 function Config:prepend_runtime_dir(dir, tree)
+  assert(path_is_dir(dir))
+
   local runtime_paths = self.runtime_path:take()
 
   self:add_runtime_dir(dir, tree)
@@ -210,16 +209,17 @@ function Config:prepend_runtime_dir(dir, tree)
 end
 
 
-
 ---@param path string
 ---@param tree? my.lua.resolver.path
 ---@return my.lua_ls.Config
 function Config:add_workspace_library(path, tree)
-  local ft, lt = fs.type(path)
+  if not path_exists(path) then
+    return self
+  end
 
-  if ft == "file" or lt == "file" then
+  if path_type(path) == "file" then
     for _, lib in ipairs(self.workspace_library.items) do
-      if fs.is_child(lib, path) then
+      if path_is_child(lib, path) then
         return self
       end
     end
@@ -241,30 +241,34 @@ end
 ---@param lib string
 ---@return my.lua_ls.Config
 function Config:add_library(lib, meta)
-  lib = fs.normalize(lib)
+  if not path_exists(lib) then
+    return self
+  end
+
+  lib = pathlib.cache.normalize(lib)
 
   ---@type my.lua.resolver.path
   local tree = {
     dir = lib,
     suffixes = { "?.lua", "?/init.lua" },
-    absolute = fs.is_abs(lib),
+    absolute = path_is_abs(lib),
     meta = meta or {},
   }
 
   self:add_workspace_library(lib, tree)
 
   -- add $path/lua
-  if not endswith(lib, '/lua') and fs.dir_exists(lib .. '/lua') then
+  if not endswith(lib, '/lua') then
     self:add_runtime_dir(lib .. "/lua", tree)
   end
 
   -- add $path/src
-  if not endswith(lib, '/src') and fs.dir_exists(lib .. '/src') then
+  if not endswith(lib, '/src') then
     self:add_runtime_dir(lib .. "/src", tree)
   end
 
   -- add $path/lib
-  if not endswith(lib, '/lib') and fs.dir_exists(lib .. '/lib') then
+  if not endswith(lib, '/lib') then
     self:add_runtime_dir(lib .. "/lib", tree)
   end
 
@@ -331,11 +335,23 @@ function Config:add_ignore(dir)
 end
 
 
+---@param name string
+---@return my.lua_ls.Config
+function Config:add_global(name)
+  if self.globals:add(name) then
+    self.dirty = true
+  end
+  return self
+end
+
+
 ---@param dir string
 ---@return my.lua_ls.Config
 function Config:add_type_defs(dir)
-  self.resolver:add_dir(dir, { source = SRC_TYPE_DEFS })
-  self:add_workspace_library(dir)
+  if path_is_dir(dir) then
+    self.resolver:add_dir(dir, { source = SRC_TYPE_DEFS })
+    self:add_workspace_library(dir)
+  end
 
   return self
 end
@@ -370,13 +386,13 @@ function Config:lls_meta_dir()
 
   local params = {
     version = rt.version or "LuaJIT",
-    language = "en-us",
+    language = const.SERVER.LOCALE,
     encoding = rt.fileEncoding or "utf8",
   }
 
   local dirname = meta:gsub("%$%{([%w]+)%}", params)
 
-  local meta_dir = fmt("%s/lua-lsp/%s", env.nvim.state, dirname)
+  local meta_dir = const.SERVER.META_DIR .. "/" .. dirname
 
   vim.uv.fs_stat(meta_dir, function(err, stat)
     if err or not stat then

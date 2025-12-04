@@ -14,6 +14,7 @@ readonly VBIN=$HOME/.local/vbin
 readonly SHIMS=${XDG_DATA_HOME:-${HOME}/.local/share}/mise/shims
 
 shopt -s nullglob
+shopt -s extglob
 
 mise reshim --force
 
@@ -23,4 +24,13 @@ rm -rfv "${FILES[@]/#"$SHIMS"/"${VBIN}"}"
 
 for dir in "${BINS[@]}"; do
     rm -fv "${FILES[@]/#"$SHIMS"/"${dir}"}"
+done
+
+for fname in "${FILES[@]}"; do
+    case $fname in
+        _*|*.so|*.so.[0-9]|*.so.[0-9].[0-9])
+            rm -fv "$fname";;
+
+        *) ;;
+    esac
 done

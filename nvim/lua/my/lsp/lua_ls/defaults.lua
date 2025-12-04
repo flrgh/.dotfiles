@@ -8,10 +8,22 @@ local Opened = const.Opened
 local None = const.None
 
 local insert = table.insert
+local SERVER = const.SERVER
+local CMD = {
+  SERVER.EXE,
+  "--logpath" , SERVER.LOG_DIR,
+  "--metapath", SERVER.META_DIR,
+  "--locale", SERVER.LOCALE,
+}
 
 ---@class my.lsp.config.Lua: vim.lsp.Config
 local defaults = {
-  cmd = nil,
+  cmd = function(dispatchers, _config)
+    local path = require("my.std.path")
+    path.mkdir(SERVER.LOG_DIR)
+    path.mkdir(SERVER.META_DIR)
+    return vim.lsp.rpc.start(CMD, dispatchers)
+  end,
   root_dir = nil,
   settings = {
     ---@type my.lsp.LuaLS
@@ -34,37 +46,7 @@ local defaults = {
         enable = false,
         disable = nil,
 
-        globals = {
-          'vim',
-
-          -- openresty/kong globals
-          'ngx',
-          'kong',
-
-          -- busted globals
-          'after_each',
-          'before_each',
-          'describe',
-          'expose',
-          'finally',
-          'insulate',
-          'it',
-          'lazy_setup',
-          'lazy_teardown',
-          'mock',
-          'pending',
-          'pending',
-          'randomize',
-          'setup',
-          'spec',
-          'spy',
-          'strict_setup',
-          'strict_teardown',
-          'stub',
-          'teardown',
-          'test',
-
-        },
+        globals = {},
 
         ignoredFiles = Disable,
         libraryFiles = Disable,

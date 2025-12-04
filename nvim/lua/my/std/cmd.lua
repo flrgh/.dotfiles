@@ -2,6 +2,7 @@ local buffer = require("string.buffer")
 local callable = require("my.std.types").callable
 local env = require("my.env")
 local sw = require("my.std.stopwatch")
+local io = require("my.std.io")
 
 --local vim = vim
 local validate = vim.validate
@@ -16,6 +17,28 @@ local find = string.find
 local fmt = string.format
 local concat = table.concat
 local xpcall = xpcall
+
+---@param data? string
+---@param eof? boolean
+local function write_stdout(data, eof)
+  if data then
+    io.stdout:write(data)
+  end
+  if eof then
+    io.stdout:flush()
+  end
+end
+
+---@param data? string
+---@param eof? boolean
+local function write_stderr(data, eof)
+  if data then
+    io.stderr:write(data)
+  end
+  if eof then
+    io.stderr:flush()
+  end
+end
 
 local DEFAULT_TIMEOUT = 1000 * 60 -- 60s
 
@@ -390,6 +413,10 @@ end
 ---@param stdout my.cmd.sink
 ---@return my.cmd
 function CMD:on_stdout(stdout)
+  if stdout == "inherit" then
+    stdout = write_stdout
+  end
+
   if type(stdout) ~= "function" then
     error("'stdout' invalid type", 2)
   end
@@ -519,6 +546,10 @@ end
 ---@param fn my.cmd.sink
 ---@return my.cmd
 function CMD:on_stderr(fn)
+  if fn == "inherit" then
+    fn = write_stderr
+  end
+
   validate("fn", fn, callable)
   self.opts.stderr = new_reader(self, fn, "stderr")
   return self

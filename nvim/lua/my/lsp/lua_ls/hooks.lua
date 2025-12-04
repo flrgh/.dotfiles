@@ -12,16 +12,11 @@ local find = std.string.find
 local sub = std.string.sub
 
 
+---@type string|false
+local LUAROCKS_DEPLOY_DIR
 local TYPE_DIR = const.LUA_TYPE_ANNOTATIONS
 local EMPTY = {}
 
-
-local PLUGINS = {
-  "lazy.nvim",
-  "nvim-cmp",
-  "nvim-lspconfig",
-  "blink.cmp",
-}
 
 local MODS = {
   say = {
@@ -47,10 +42,35 @@ local MODS = {
     type_defs = {
       const.LUA_CATS .. "/busted/library",
     },
+
     include = {
       "luassert",
       "say",
       "mediator",
+    },
+
+    globals = {
+      "after_each",
+      "before_each",
+      "describe",
+      "expose",
+      "finally",
+      "insulate",
+      "it",
+      "lazy_setup",
+      "lazy_teardown",
+      "mock",
+      "pending",
+      "pending",
+      "randomize",
+      "setup",
+      "spec",
+      "spy",
+      "strict_setup",
+      "strict_teardown",
+      "stub",
+      "teardown",
+      "test",
     },
   },
 
@@ -120,6 +140,9 @@ local MODS = {
     ignore = {
       "lspconfig/server_configurations"
     },
+    globals = {
+      "vim",
+    },
   },
 
   vim = {
@@ -147,6 +170,10 @@ local MODS = {
     },
     include = {
       "cjson",
+    },
+
+    globals = {
+      "ngx",
     },
   },
 
@@ -183,6 +210,14 @@ local MODS = {
       "bazel-kong-ee",
       "bazel-out",
       "bazel-testlogs",
+
+      "*/lua_resty_*",
+      "*/resty/gcp",
+      "*/resty/aws/raw-api",
+    },
+
+    globals = {
+      "kong",
     },
   },
 }
@@ -246,9 +281,14 @@ local function add_mod(name, config, seen)
     config:add_type_defs(defs)
   end
 
+  for _, gl in ipairs(conf.globals or EMPTY) do
+    config:add_global(gl)
+  end
+
   for _, inc in ipairs(conf.include or EMPTY) do
     add_mod(inc, config, seen)
   end
+
 
   return true
 end
@@ -331,37 +371,8 @@ function _M.on_workspace(ws, config)
   end
 
   -- detect busted projects
-  if fs.file_exists(dir .. ".busted") then
+  if fs.file_exists(dir .. "/.busted") then
     add_mod("busted", config)
-  end
-
-  -- ~/git/flrgh/.dotfiles
-  if dir == env.dotfiles.root then
-    config:prepend_runtime_dir(env.dotfiles.config_nvim_lua)
-    config:add_workspace_library(env.dotfiles.config_nvim_lua)
-    config:set_root_dir(env.dotfiles.config_nvim)
-
-    for _, plugin_name in ipairs(PLUGINS) do
-      local plug = plugins.get(plugin_name)
-      if plug and plug.dir and plug.dir ~= "" then
-        add_lib(plug.dir .. "/lua", config, {
-          source = SRC_PLUGIN,
-          plugin = plug.name,
-        })
-      end
-    end
-
-    if fs.dir_exists(env.nvim.bundle.lua) then
-      config:add_runtime_dir(env.nvim.bundle.lua)
-    else
-      for _, lua in ipairs(plugins.lua_dirs()) do
-        if fs.dir_exists(lua) then
-          config:add_runtime_dir(lua)
-        end
-      end
-    end
-
-    add_mod("vim", config)
   end
 
   if contains(lower, "vim")
@@ -385,16 +396,23 @@ function _M.on_workspace(ws, config)
     add_mod("kong", config)
   end
 
-  do
-    local res = vim.system({ "luarocks", "config", "deploy_lua_dir" },
-                           { text = true }
-                          ):wait()
+  if LUAROCKS_DEPLOY_DIR == nil then
+    local res = require("my.std.cmd").new("luarocks")
+      :args({ "config", "deploy_lua_dir" })
+      :save_stdout(true)
+      :run()
+      :wait()
 
-    local stdout = res and res.stdout and #res.stdout > 0 and res.stdout
-    if stdout then
-      stdout = vim.trim(stdout)
-      add_lib(stdout, config)
+    local stdout = res and res.stdout and std.string.trim(res.stdout)
+    if stdout and stdout ~= "" then
+      LUAROCKS_DEPLOY_DIR = stdout
+    else
+      LUAROCKS_DEPLOY_DIR = false
     end
+  end
+
+  if LUAROCKS_DEPLOY_DIR then
+    add_lib(LUAROCKS_DEPLOY_DIR, config, { source = "luarocks.config.deploy_lua_dir" })
   end
 end
 

@@ -1250,7 +1250,9 @@ e.user.LazyLoad = "LazyLoad"
 local EnterEvent
 do
   local did_enter = vim.v.vim_did_enter
-  if did_enter == true or did_enter == 1 then
+  if (did_enter == true or did_enter == 1)
+    and require("my.env").editor
+  then
     vim.schedule(function()
       vim.notify("started too late to capture the VimEnter event",
                  vim.log.levels.TRACE)
@@ -1336,7 +1338,7 @@ do
     },
   }
 
-  ---@param group string|integer[]
+  ---@param group string|integer
   ---@param clear? boolean
   ---@return my.event.ctx
   function ctx:group(group, clear)

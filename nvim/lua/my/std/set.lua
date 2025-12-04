@@ -4,7 +4,7 @@ local clone = table.clone
 
 ---@class my.std.Set
 ---@field items string[]
----@field map { [string]: boolean }
+---@field map { [string]: integer }
 ---@field len integer
 local Set = {}
 local Set_mt = { __index = Set }
@@ -25,8 +25,8 @@ end
 function Set:add(elem)
   local map = self.map
   if not map[elem] then
-    map[elem] = true
     local len = self.len + 1
+    map[elem] = len
     self.items[len] = elem
     self.len = len
     return true
@@ -79,6 +79,7 @@ end
 function Set:contains(item)
   return self.map[item] ~= nil
 end
+
 
 ---@class my.std.set
 local _M = {}

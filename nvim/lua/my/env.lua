@@ -166,13 +166,13 @@ do
     ---@type string
     root = dotfiles,
 
-    --- Path to ~/.config/nvim _within_ my dotfiles repo
+    --- ~/git/flrgh/.dotfiles/nvim
     ---@type string
-    config_nvim = config_nvim,
+    nvim = config_nvim,
 
-    --- Path to ~/.config/nvim/lua _within_ my dotfiles repo
+    --- ~/git/flrgh/.dotfiles/nvim/lua
     ---@type string
-    config_nvim_lua = config_nvim .. "/lua",
+    nvim_lua = config_nvim .. "/lua",
   }
 end
 
@@ -209,40 +209,47 @@ do
 end
 
 do
-  local app_name = getenv("NVIM_APPNAME") or "nvim"
 
-  local xdg = env.xdg
+  local stdpath = vim.fn.stdpath
 
-  local share_nvim = xdg.data .. "/" .. app_name
-  local bundle = share_nvim .. "/_bundle"
-  local config = xdg.config .. "/" .. app_name
+  local std_config = stdpath("config")
+  local std_data = stdpath("data")
+  local std_state = stdpath("state")
+
+  local bundle = std_data .. "/_bundle"
 
   ---@class my.env.nvim
   env.nvim = {
     -- $NVIM_APPNAME (default "nvim")
-    app_name = app_name,
+    app_name = getenv("NVIM_APPNAME") or "nvim",
 
     -- ~/.config/nvim
-    config = config,
+    config = std_config,
 
     -- ~/.config/nvim/after
-    config_after = config .. "/after",
+    config_after = std_config .. "/after",
 
     -- ~/.local/share/nvim
-    share = share_nvim,
+    share = std_data,
 
-    -- ~/.local/state/nvim
-    state = xdg.state .. "/" .. app_name,
+    -- ~/.local/share/nvim
+    data = std_data,
 
     -- ~/.local/share/nvim/runtime
-    runtime = share_nvim .. "/runtime",
+    runtime = std_data .. "/runtime",
 
     -- ~/.local/share/nvim/runtime/lua
-    runtime_lua = share_nvim .. "/runtime/lua",
+    runtime_lua = std_data .. "/runtime/lua",
 
     -- plugin install path
     -- ~/.local/share/nvim/lazy
-    plugins = share_nvim .. "/lazy",
+    plugins = std_data .. "/lazy",
+
+    -- ~/.local/state/nvim
+    state = std_state,
+
+    -- ~/.cache/nvim
+    cache = stdpath("cache"),
 
     -- bundle directory
     --
@@ -251,8 +258,14 @@ do
       -- ~/.local/share/nvim/_bundle
       root = bundle,
 
-      -- ~/.local/share/nvim/_bundle/lua
-      lua = bundle .. "/lua",
+      -- ~/.local/share/nvim/_bundle/main
+      main = bundle .. "/main",
+
+      -- ~/.local/share/nvim/_bundle/main/lua
+      lua = bundle .. "/main/lua",
+
+      -- ~/.local/share/nvim/_bundle/ns
+      namespaced = bundle .. "/ns",
     },
   }
 end

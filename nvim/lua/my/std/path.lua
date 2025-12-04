@@ -12,6 +12,7 @@ local fs_stat = uv.fs_stat
 local fs_realpath = uv.fs_realpath
 local fs_rename = uv.fs_rename
 local fs_lstat = uv.fs_lstat
+local fs_mkdir = uv.fs_mkdir
 local get_cwd = uv.cwd
 
 local concat = table.concat
@@ -73,6 +74,40 @@ function _M.dir_exists(fname)
   return st and st.type == "directory"
 end
 
+---@param dir string
+---@param mode? string|integer
+---@return boolean? ok
+---@return string? error
+function _M.mkdir(dir, mode)
+  mode = mode or tonumber(0755, 8)
+  return fs_mkdir(dir, mode)
+end
+
+
+---@param dir string
+---@param mode? string|integer
+---@return boolean? ok
+---@return string? error
+function _M.mkdir_all(dir, mode)
+  if _M.dir_exists(dir) then
+    return true
+  end
+
+  dir = _M.normalize(dir)
+
+  mode = mode or tonumber(0755, 8)
+
+  local parent = dir:gsub("/+[^/]+$", "")
+  if parent ~= "" then
+    local ok, err = _M.mkdir_all(parent, mode)
+    if not ok then
+      return nil, err
+    end
+  end
+
+  return _M.mkdir(dir, mode)
+end
+
 --- Check if a path exists.
 ---@param  path   string
 ---@return boolean exists
@@ -85,7 +120,7 @@ end
 ---@return string? filetype
 ---@return string? linktype
 function _M.type(path)
-  local st = fs_stat(path)
+  local st = fs_lstat(path)
   if not st then
     return
   end
@@ -93,7 +128,7 @@ function _M.type(path)
   local ft = st.type
 
   if ft == "link" then
-    local lst = fs_lstat(path)
+    local lst = fs_stat(path)
     return ft, lst and lst.type
   end
 
@@ -104,14 +139,6 @@ end
 ---@return uv.fs_stat.result|nil
 function _M.stat(path)
   local st = fs_stat(path)
-  if not st then
-    return
-  end
-
-  if st.type == "link" then
-    return fs_lstat(path)
-  end
-
   return st
 end
 
@@ -202,7 +229,7 @@ function _M.workspace_root()
 
   dir = _normalize(dir)
 
-  while not _M.dir_exists(dir .. "/.git") do
+  while not _M.exists(dir .. "/.git") do
     dir = dir:gsub("/[^/]+$", "")
     if dir == nil or dir == "/" or dir == "" then
       return
@@ -414,6 +441,8 @@ function _M.iter_parents(path, normalize)
     path = _normalize(path)
   end
 
+  local abs = is_abs(path)
+
   ---@type string|nil
   local chunk = path
 
@@ -425,18 +454,254 @@ function _M.iter_parents(path, normalize)
     local parent = chunk:gsub("/+[^/]*$", "")
     if parent == "" then
       chunk = nil
-      return "/"
+      if abs then
+        parent = "/"
+      else
+        parent = nil
+      end
 
     elseif parent == chunk then
       chunk = nil
-      return parent
 
     else
       chunk = parent
-      return parent
     end
+
+    return parent
   end
 end
 
+do
+  _M.cache = {}
+
+  ---@type string[]
+  local PATH
+
+  local function split_PATH()
+    local path = os.getenv("PATH") or ""
+    elems = {}
+    local n = 0
+    for elem in path:gmatch("[^:]+") do
+      n = n + 1
+      elems[n] = elem
+    end
+    return elems
+  end
+
+  ---@type string
+  local HOME
+
+  local function get_HOME()
+    return require("my.env").home
+  end
+
+  ---@type string
+  local MISE_SHIMS
+
+  local function get_MISE_SHIMS()
+    HOME = HOME or get_HOME()
+    return HOME .. "/.local/share/mise/shims"
+  end
+
+  local norm_cache = require("my.std.cache").new("my.std.path.norm")
+  local norm_cache_get = norm_cache.get
+
+  ---@param name string
+  ---@return string
+  local function cache_key(name)
+    if name == "/" then
+      return "/"
+
+    elseif name == "" or name == "." or name == "./" then
+      return get_cwd()
+    end
+
+    if not is_abs(name) then
+      name = get_cwd() .. "/" .. name
+    end
+
+    return norm_cache_get(name, _normalize)
+  end
+
+  local rel_norm_cache = require("my.std.cache").new("my.std.path.norm.rel")
+  local rel_norm_cache_get = rel_norm_cache.get
+
+  ---@param name string
+  ---@return string
+  function _M.cache.normalize(name)
+    if is_abs(name) then
+      return norm_cache_get(name, _normalize)
+
+    else
+      return rel_norm_cache_get(name, _normalize)
+    end
+  end
+
+  ---@param name string
+  ---@return uv.fs_stat.result? stat
+  ---@return string? error
+  local function stat(name)
+    local st, _, err = fs_stat(name)
+    if err == "ENOENT" then
+      return nil
+
+    elseif not st then
+      return nil, err
+    end
+
+    return st
+  end
+
+  local stat_cache = require("my.std.cache").new("my.std.path.stat")
+  local stat_cache_get = stat_cache.get
+
+  ---@param path string
+  ---@return uv.fs_stat.result?
+  ---@return string? error
+  function _M.cache.stat(path)
+    local key = cache_key(path)
+    local st, hit, err = stat_cache_get(key, stat)
+    return st, err
+  end
+
+  ---@param path string
+  ---@return boolean? exists
+  ---@return string? error
+  function _M.cache.exists(path)
+    local key = cache_key(path)
+    local st, _, err = stat_cache_get(key, stat)
+    if err then
+      return nil, err
+    end
+
+    return st ~= nil
+  end
+
+  ---@param path string
+  ---@return boolean? exists
+  ---@return string? error
+  function _M.cache.file_exists(path)
+    local key = cache_key(path)
+    local st, _, err = stat_cache_get(key, stat)
+    if err then
+      return nil, err
+    end
+
+    return st and st.type == "file" or false
+  end
+
+  ---@param path string
+  ---@return boolean? exists
+  ---@return string? error
+  function _M.cache.dir_exists(path)
+    local key = cache_key(path)
+    local st, _, err = stat_cache_get(key, stat)
+    if err then
+      return nil, err
+    end
+
+    return st and st.type == "directory" or false
+  end
+
+  ---@param name string
+  ---@return string|nil
+  function _M.cache.type(name)
+    local key = cache_key(name)
+    local st, _, err = stat_cache_get(key, stat)
+    if err then
+      return nil, err
+    end
+
+    return st and st.type
+  end
+
+  ---@param key string
+  ---@return boolean
+  ---@return string? error
+  local function is_exe(key)
+    local st, _, err = stat_cache_get(key, stat)
+    if err then
+      return nil, err
+    end
+
+    return st
+      and st.type == "file"
+      and band(st.mode, EXEC_BITS) > 0
+      or false
+  end
+
+  ---@param path string
+  ---@return boolean? exists
+  ---@return string? error
+  function _M.cache.is_exe(path)
+    local key = cache_key(path)
+    return is_exe(key)
+  end
+
+  local exe_cache = require("my.std.cache").new("my.std.path.exe")
+
+  ---@param name string
+  ---@return string|nil
+  local function find_exe(name)
+    PATH = PATH or split_PATH()
+
+    for i = 1, #PATH do
+      local dir = PATH[i]
+      local try = dir .. "/" .. name
+
+      if is_exe(try) then
+        MISE_SHIMS = MISE_SHIMS or get_MISE_SHIMS()
+
+        if dir == MISE_SHIMS then
+          local cmd = require("my.std.cmd")
+          local res = cmd.new(find_exe("mise") or "mise")
+            :args({ "which", name })
+            :save_stdout(true)
+            :run()
+            :wait()
+
+          local which = res and res.stdout and trim(res.stdout)
+          if which then
+            return which
+          end
+        end
+
+        return try
+      end
+    end
+
+    return nil
+  end
+
+  ---@param name string
+  ---@return string|nil
+  function _M.cache.executable(name)
+    if find(name, "/", nil, true) then
+      local key = cache_key(name)
+      return is_exe(key) and key or nil
+    end
+
+    return (exe_cache.get(name, find_exe))
+  end
+
+  function _M.cache.clear()
+    norm_cache.clear()
+    rel_norm_cache.clear()
+    stat_cache.clear()
+    exe_cache.clear()
+    PATH = nil
+    HOME = nil
+    MISE_SHIMS = nil
+  end
+
+  function _M.cache.stats()
+    return {
+      norm = norm_cache.size(),
+      rel_norm = rel_norm_cache.size(),
+      stat = stat_cache.size(),
+      exe = exe_cache.size(),
+    }
+  end
+end
 
 return _M

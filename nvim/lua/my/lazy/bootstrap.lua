@@ -14,11 +14,13 @@ return function(mode)
     require("my.std.io").pause()
   end
 
-  require("my.plugins").bootstrap()
+  require("my.plugins").load(true)
 
   if quiet then
     require("my.std.io").unpause()
   end
+
+  require("my.plugins").bundle()
 
   if not silent then
     vim.print("Plugin bootstrap complete\n")

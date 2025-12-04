@@ -3,7 +3,7 @@ local env = require("my.env")
 -- https://lazy.folke.io/configuration
 ---@type LazyConfig
 local conf = {
-  lockfile = env.dotfiles.config_nvim .. "/plugins.lock.json",
+  lockfile = env.dotfiles.nvim .. "/plugins.lock.json",
   root = env.nvim.plugins,
 
   defaults = {

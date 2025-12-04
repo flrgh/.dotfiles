@@ -1,29 +1,38 @@
+---@class my.std.cache
+local _M = {}
+
 local table = require("my.std.table")
 local tab_clear = table.clear
+local insert = table.insert
 
 local NIL = {}
 
-local _M = {}
+---@type my.std.Cache[]
+local CACHES = {}
 
----@type my.std.cache[]
-local registry = {}
-
+---@type table<string, my.std.Cache>
+local MAP = {}
 
 ---@param name string
----@return my.std.cache
+---@return my.std.Cache
 function _M.new(name)
   assert(type(name) == "string")
+
+  if MAP[name] then
+    return MAP[name]
+  end
 
   local cache = {}
   local num_cached = 0
 
-  ---@generic V any
+  ---@generic V
   ---@param key string
-  ---@param cb? fun(key: string):V, string|nil
-  ---@return any V
+  ---@param cb? fun(key: string, ...: any):V, string|nil
+  ---@param ...any
+  ---@return V|nil
   ---@return boolean hit
   ---@return string? error
-  local function get(key, cb)
+  local function get(key, cb, ...)
     local value = cache[key]
     if value ~= nil then
       if value == NIL then
@@ -34,7 +43,7 @@ function _M.new(name)
 
     if cb then
       local err
-      value, err = cb(key)
+      value, err = cb(key, ...)
       if err then
         return nil, false, err
       end
@@ -88,7 +97,7 @@ function _M.new(name)
     return num_cached
   end
 
-  ---@class my.std.cache
+  ---@class my.std.Cache
   local self = {
     get = get,
     has = has,
@@ -101,7 +110,8 @@ function _M.new(name)
     end,
   }
 
-  table.insert(registry, self)
+  table.insert(CACHES, self)
+  MAP[name] = self
 
   return self
 end

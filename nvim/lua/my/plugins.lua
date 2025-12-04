@@ -1,22 +1,40 @@
 ﻿---@class my.plugins
 local plugins = {}
 
+-- have we called lazy.setup() yet
+plugins.LOADED = false
+
 ---@type LazyPluginSpec[]
 plugins.SPECS = {}
 local SPECS = plugins.SPECS
 local N = 0
 
+local PRIORITY_HIGH = 2^16
+
+
 ---@class my.plugin.spec: LazyPluginSpec
 ---
 ---@field tags? string[]
+---@field files? my.plugin.files
 
 ---@alias my.plugin.def string|my.plugin.spec
 
 ---@alias my.plugin.tags table<string, any>
 
+---@alias my.plugin.files [string, string][]
+
 ---@type table<string, my.plugin.tags>
 plugins.TAGS = {}
 local TAGS = plugins.TAGS
+
+---@class my.plugin.meta
+---
+---@field tags my.plugin.tags
+---@field files my.plugin.files
+
+---@type table<string, my.plugin.meta>
+plugins.META = {}
+local META = plugins.META
 
 
 -- https://lazy.folke.io/configuration
@@ -174,26 +192,33 @@ end
 ---@param category? string
 ---@return LazyPluginSpec
 local function hydrate(plugin, lang, category)
-  local name = plugin
-
-  if type(plugin) == "table" then
-    -- no further processing (it's not gonna run anyways)
-    if plugin.enabled == false or plugin.cond == false then
-      plugin.tags = nil
-      return plugin
-    end
-
-    name = plugin.name or plugin[1]
-
-  else
-    plugin = { plugin }
+  if type(plugin) == "string" then
+    return hydrate({ plugin }, lang, category)
   end
 
-  assert(type(name) == "string")
-  name = name:gsub("^[^/]+/", "")
-  plugin.name = name
+  assert(type(plugin) == "table")
+
+  -- no further processing (it's not gonna run anyways)
+  if plugin.enabled == false or plugin.cond == false then
+    plugin.tags = nil
+    return plugin
+  end
+
+  local slug = assert(plugin[1])
+
+  if not plugin.name then
+    plugin.name = slug:gsub("^[^/]+/", "")
+  end
+  local name = plugin.name
 
   plugin.ft = extend(plugin.ft, lang)
+
+  if category == "colorscheme" or category == "ui" then
+    plugin.priority = plugin.priority or PRIORITY_HIGH
+    if plugin.lazy == nil and plugin.event == nil then
+      plugin.lazy = false
+    end
+  end
 
   local tags = extend({}, plugin.tags)
   plugin.tags = nil
@@ -201,7 +226,18 @@ local function hydrate(plugin, lang, category)
   tags = extend(tags, plugin.ft)
   tags = extend(tags, category)
 
-  TAGS[name] = tomap(tags)
+  local meta = {
+    tags = tomap(tags),
+    files = nil,
+  }
+  META[name] = meta
+  TAGS[name] = meta.tags
+
+  if plugin.files then
+    meta.files = plugin.files
+  end
+  plugin.files = nil
+
 
   if plugin.cond == nil or plugin.cond == true then
     plugin.cond = plugin_cond
@@ -292,18 +328,9 @@ do
       "hashivim/vim-terraform",
     },
 
-    php = {
-      "StanAngeloff/php.vim",
-    },
-
     bats = {
       -- syntax for .bats files
       "aliou/bats.vim",
-    },
-
-    sh = {
-      -- running shfmt commands on the buffer
-      "z0mbix/vim-shfmt",
     },
 
     -- roku / brightscript support
@@ -333,8 +360,6 @@ do
     colorscheme = {
       -- tokyonight-moon
       { "folke/tokyonight.nvim",
-        --cond = false,
-        priority = 2^16,
         lazy = false,
         config = function()
           require("tokyonight").setup()
@@ -355,7 +380,6 @@ do
 
       { "marko-cerovac/material.nvim",
         lazy = false,
-        priority = 2^16,
         config = function()
           --[[
             "darker"
@@ -508,6 +532,8 @@ do
     treesitter = {
       {
         "nvim-treesitter/nvim-treesitter",
+        branch = "master",
+
         -- FIXME: figure out how to make this work with my lua module search autocommand
         -- event = evt.user.VeryLazy,
         build = function()
@@ -520,8 +546,14 @@ do
       },
       {
         "nvim-treesitter/nvim-treesitter-textobjects",
+        branch = "master",
         event = evt.user.VeryLazy,
-        dependencies = { "nvim-treesitter" },
+        dependencies = {
+          {
+            "nvim-treesitter/nvim-treesitter",
+            branch = "master",
+          }
+        },
       },
       {
         "nvim-treesitter/nvim-treesitter-context",
@@ -903,7 +935,7 @@ do
             --   vim.b.minianimate_disable = true
             -- end,
             hook = nil,
-            }
+          }
         end,
       },
 
@@ -972,6 +1004,9 @@ do
     if lazy then
       return true
     end
+
+    require("my.settings")
+    require("my.lazy.install")
 
     local ok, _lazy = pcall(require, "lazy")
     if ok then
@@ -1094,24 +1129,29 @@ do
   end
 end
 
-local _loaded = false
+function plugins.lockfile()
+  return fs.load_json_file(CONF.lockfile)
+end
 
 ---@param cond? my.plugin.cond
 function plugins.load(cond)
-  if _loaded then
+  if plugins.LOADED then
     return
   end
 
   vim.go.loadplugins = true
 
-  assert(cond == nil or type(cond) == "function")
+  assert(cond == true or cond == nil or type(cond) == "function")
+  if cond == true then
+    cond = return_true
+  end
   COND = cond or COND or return_nil
 
   require("my.settings")
   require("my.lazy.install")
   require("lazy").setup(SPECS, CONF)
 
-  _loaded = true
+  plugins.LOADED = true
 end
 
 function plugins.bootstrap()
@@ -1130,5 +1170,312 @@ function plugins.bootstrap()
   lazy.build(CONF)
 end
 
+
+function plugins.bundle()
+  ---@class typopts
+  ---
+  ---@field namespace? boolean
+
+  ---@type table<string, typopts>
+  local TYPES = {
+    -- automatically loaded scripts
+    autoload = {
+    },
+    -- color scheme files
+    colors = {
+    },
+    -- compiler files
+    compiler = {
+    },
+    -- documentation
+    doc = {
+    },
+    -- filetype plugins
+    ftplugin = {
+      auto_namespace = true,
+    },
+    -- indent scripts
+    indent = {
+    },
+    -- key mapping files
+    keymap = {
+    },
+    -- menu translations
+    lang = {
+    },
+    -- LSP client configurations
+    lsp = {
+    },
+    -- Lua
+    lua = {
+    },
+    -- packages
+    pack = {
+    },
+    -- treesitter syntax parsers
+    parser = {
+    },
+    -- plugin scripts
+    plugin = {
+    },
+    -- treesitter queries
+    queries = {
+      namespace = true,
+    },
+    -- remote-plugin scripts
+    rplugin = {
+    },
+    -- spell checking files
+    spell = {
+    },
+    -- syntax files
+    syntax = {
+    },
+    -- tutorial files
+    tutor = {
+    },
+  }
+
+  do
+    local after = {}
+    for k, v in pairs(TYPES) do
+      after["after/" .. k] = v
+    end
+
+    for k, v in pairs(after) do
+      TYPES[k] = v
+    end
+  end
+
+  local FILES = {}
+
+  local bundle = env.nvim.bundle.root
+  local dotfiles = env.dotfiles.root
+  local lazy = env.nvim.plugins
+  local std = require("my.std")
+
+  local uv = vim.uv
+  local scandir = uv.fs_scandir
+  local scandir_next = uv.fs_scandir_next
+  local link = uv.fs_link
+  local is_dir = std.path.dir_exists
+  local is_file = std.path.file_exists
+  local stat = std.path.stat
+  local mkdir = std.path.mkdir
+  local fmt = string.format
+
+  local newbundle = bundle .. "." .. tostring(uv.getpid())
+  local B = {
+    root = newbundle,
+    main = newbundle .. "/main",
+    namespaced = newbundle .. "/ns",
+  }
+
+  assert(mkdir(B.root))
+  assert(mkdir(B.main))
+  assert(mkdir(B.namespaced))
+
+  local running = 0
+  local failed = false
+
+  local function done()
+    running = running - 1
+  end
+
+  ---@return boolean
+  local function start()
+    if not failed then
+      running = running + 1
+    end
+    return not failed
+  end
+
+  local function fail(f, ...)
+    done()
+    failed = true
+    vim.print(fmt(f, ...))
+  end
+
+  local function warn(f, ...)
+    vim.print("WARN " .. fmt(f, ...))
+  end
+
+  ---@param plugin LazyPlugin
+  ---@param fname string
+  ---@param ty typopts
+  local function on_file(plugin, fname, ty)
+    if not start() then return end
+
+    if fname == "doc/tags" then
+      return done()
+    end
+
+    local dst
+    if ty.namespace then
+      dst = B.namespaced .. "/" .. plugin.name .. "/" .. fname
+    else
+      dst = B.main .. "/" .. fname
+    end
+
+    if FILES[dst] then
+      warn("CONFLICT! file: %s, plugins: %s, %s\n",
+           fname, FILES[dst].name, plugin.name)
+
+      if ty.auto_namespace then
+        assert(not ty.namespace)
+        on_file(plugin, fname, { namespace = true })
+        return done()
+      end
+    end
+
+    FILES[dst] = plugin
+
+    local src = plugin.dir .. "/" .. fname
+
+    local sstat, dstat, err
+    sstat, err = stat(src)
+    if failed then return done() end
+
+    if not sstat then
+      return fail("stat(%q) => %s\n", src, err)
+    end
+
+    dstat, err = stat(dst)
+    if failed then return done() end
+
+    if dstat then
+      if dstat.ino == sstat.ino then
+        return done()
+      end
+      --return fail("link(%q, %q) => exists (inode mismatch)\n", src, dst, err)
+      warn("CONFLICT: link(%q, %q) => exists (inode mismatch)\n", src, dst, err)
+
+      uv.fs_unlink(dst, function(err, ok)
+        if not ok then
+          return fail("unlink(%q) => %s\n", dst, err)
+        end
+
+        if failed then return done() end
+
+        on_file(plugin, fname, ty)
+      end)
+    end
+
+    if ty.namespace then
+      local parent = dst:gsub("/+[^/]+$", "")
+      local ok, err = std.path.mkdir_all(parent)
+      if not ok then
+        return fail("mkdir_all(%q) => %s\n", parent, err)
+      end
+    end
+
+    link(src, dst, function(err, ok)
+      if err or not ok then
+        return fail("link(%q, %q) => %s\n", src, dst, err)
+      end
+      done()
+    end)
+  end
+
+  ---@param plugin LazyPlugin
+  ---@param dir string
+  ---@param ty typopts
+  local function on_dir(plugin, dir, ty)
+    if not start() then return end
+
+    local src = plugin.dir .. "/" .. dir
+
+    local s = scandir(src)
+    if not s then
+      return done()
+    end
+
+    local made_dst = false
+
+    while not failed do
+      local child = scandir_next(s)
+      if not child then
+        return done()
+      end
+
+      if not made_dst then
+        local dst
+        if ty.namespace then
+          dst = B.namespaced .. "/" .. plugin.name .. "/" .. dir
+        else
+          dst = B.main .. "/" .. dir
+        end
+        local err
+        made_dst, err = std.path.mkdir_all(dst)
+        if not made_dst then
+          return fail("Failed creating directory %s: %s\n", dst, err)
+        end
+      end
+
+      local child_src = src .. "/" .. child
+      if is_dir(child_src) then
+        on_dir(plugin, dir .. "/" .. child, ty)
+
+      elseif is_file(child_src) then
+        on_file(plugin, dir .. "/" .. child, ty)
+      end
+    end
+
+    return done()
+  end
+
+  ---@param name string
+  local function copy_plugin(name)
+    if not start() then return end
+
+    local p = assert(plugins.get(name))
+    p.name = p.name or p[1]
+
+    local dir = lazy .. "/" .. name
+    if not is_dir(dir) then
+      return done()
+    end
+
+    local s = scandir(dir)
+    if not s then
+      return done()
+    end
+
+    while not failed do
+      local child = scandir_next(s)
+      if not child then
+        return done()
+      end
+
+      local child_path = dir .. "/" .. child
+      local ty = TYPES[child]
+      if ty and is_dir(child_path) then
+        on_dir(p, child, ty)
+      end
+    end
+
+    return done()
+  end
+
+  do
+    local dir = assert(scandir(lazy))
+    while not failed do
+      local child = scandir_next(dir)
+      if not child then
+        break
+      end
+
+      copy_plugin(child)
+    end
+  end
+
+  vim.wait(1000, function()
+    vim.print("RUNNING: " .. tostring(running))
+    return running == 0
+  end, 100)
+
+  assert(running == 0, "not finished running")
+  assert(not failed, "something failed")
+end
 
 return plugins

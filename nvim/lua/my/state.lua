@@ -142,33 +142,36 @@ setmetatable(_M.buffer, {
   end,
 })
 
-local event = require("my.event")
-local DEBUG = vim.log.levels.DEBUG
-event.on(event.BufUnload)
-  :group("state-unload-buffer", true)
-  :desc("remove buffer from valid buffer list")
-  :callback(function(e)
-    local id = buf_id(e.buf)
-    _valid_buffers[id] = false
-  end)
+function _M.init_auto_commands()
+  local event = require("my.event")
+  local DEBUG = vim.log.levels.DEBUG
 
-event.on(event.BufDelete)
-  :group("state-delete-buffer", true)
-  :desc("delete buffer-local state")
-  :callback(function(e)
-    local id = buf_id(e.buf)
-    _valid_buffers[id] = nil
-    vim.notify("clearing buffer-local state for buffer: " .. id, DEBUG)
-    rawset(buffers, e.buf, nil)
-  end)
+  event.on(event.BufUnload)
+    :group("state-unload-buffer", true)
+    :desc("remove buffer from valid buffer list")
+    :callback(function(e)
+      local id = buf_id(e.buf)
+      _valid_buffers[id] = false
+    end)
 
-event.on({ event.BufAdd, event.BufNew })
-  :group("state-create-buffer", true)
-  :desc("initialize buffer-local state")
-  :callback(function(e)
-    local id = buf_id(e.buf)
-    _valid_buffers[id] = true
-    vim.notify("declaring new buffer " .. id, DEBUG)
-  end)
+  event.on(event.BufDelete)
+    :group("state-delete-buffer", true)
+    :desc("delete buffer-local state")
+    :callback(function(e)
+      local id = buf_id(e.buf)
+      _valid_buffers[id] = nil
+      vim.notify("clearing buffer-local state for buffer: " .. id, DEBUG)
+      rawset(buffers, e.buf, nil)
+    end)
+
+  event.on({ event.BufAdd, event.BufNew })
+    :group("state-create-buffer", true)
+    :desc("initialize buffer-local state")
+    :callback(function(e)
+      local id = buf_id(e.buf)
+      _valid_buffers[id] = true
+      vim.notify("declaring new buffer " .. id, DEBUG)
+    end)
+end
 
 return _M

@@ -6,6 +6,10 @@ local hooks = require("my.lsp.lua_ls.hooks")
 local Config = require("my.lsp.lua_ls.config")
 local state = require("my.state")
 local Set = require("my.std.set")
+local path = require("my.std.path")
+
+_M.config = Config
+_M.hooks = hooks
 
 local vim = vim
 local lsp = vim.lsp
@@ -13,6 +17,22 @@ local api = vim.api
 local defer_fn = vim.defer_fn
 local uv_now = vim.uv.now
 local math_max = math.max
+
+local UPDATES = {}
+
+---@param fn fun(conf: my.lua_ls.Config)
+function _M.update(fn)
+  table.insert(UPDATES, fn)
+end
+
+---@param conf my.lua_ls.Config
+local function handle_updates(conf)
+  for i = 1, #UPDATES do
+    UPDATES[i](conf)
+    UPDATES[i] = nil
+  end
+end
+
 
 ---@class my.lsp.LuaLS.runtime
 ---@field version?           string
@@ -373,6 +393,7 @@ function _M.on_attach(client, buf)
 
   state.buffer[buf].lua_resolver = config.resolver
 
+  handle_updates(config)
   config:update_client_settings(client)
 
   state.buffer[buf].lua_lsp = config
@@ -405,6 +426,7 @@ function _M.init()
 
   config = Config.get_or_create(0)
   hooks.on_workspace(WS, config)
+  handle_updates(config)
 
   return config.config
 end

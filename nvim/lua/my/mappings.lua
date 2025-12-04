@@ -78,7 +78,8 @@ vnoremap.K = { ":move '<-2<CR>gv=gv", 'Move selection down one line', no_auto_cr
 -- unbind q from macro things
 nnoremap.q = { km.NOP, "(Macro Recording Disabled)" }
 
-nnoremap["_$"] = {
-  require("my.editor").strip_whitespace,
-  "Strip trailing whitespace from all lines in the current buffer",
-}
+nnoremap("_$")
+  :desc("Strip trailing whitespace from all lines in the current buffer")
+  :callback(function()
+    return require("my.editor").strip_whitespace()
+  end)

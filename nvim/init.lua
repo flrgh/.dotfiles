@@ -1,4 +1,5 @@
 require("my.env")
+require("my.patches").init()
 require("my.event")
 require("my.settings")
 require("my.mappings")
