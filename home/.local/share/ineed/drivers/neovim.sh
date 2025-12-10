@@ -39,13 +39,8 @@ get-installed-version() {
     fi
 }
 
-get-latest-version() {
-    gh-helper get-releases "$REPO" \
-    | jq -r '.[].tag_name' \
-    | grep -vE 'stable|nightly' \
-    | sort --version-sort --reverse \
-    | head -1 \
-    | sed -r -e 's/#v//'
+list-available-versions() {
+    gh-helper get-tag-names "$REPO"
 }
 
 get-asset-download-url() {
