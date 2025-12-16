@@ -157,6 +157,10 @@ function _M.find_all_requires(dir, cb)
     end
 
     line = trim(line)
+    if line == "" or line:sub(-1) == "." then
+      return
+    end
+
     mods:add(line)
   end)
 
