@@ -9,6 +9,9 @@ local expand = vim.fn.expand
 local log_levels = vim.log.levels
 local select = select
 
+local HAVE_ARGS = _G.arg ~= nil and _G.arg[0] ~= nil
+
+
 ---@param varname string
 ---@param default? boolean
 ---@return boolean?
@@ -385,10 +388,10 @@ do
     end
 
     -- default mode value
-    if env.headless then
+    env.mode = "editor"
+
+    if HAVE_ARGS or env.headless then
       env.mode = "script"
-    else
-      env.mode = "editor"
     end
 
     local g = vim.g
