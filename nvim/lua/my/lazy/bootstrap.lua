@@ -14,7 +14,7 @@ return function(mode)
     require("my.std.io").pause()
   end
 
-  require("my.plugins").load(true)
+  require("my.plugins").bootstrap()
 
   if quiet then
     require("my.std.io").unpause()

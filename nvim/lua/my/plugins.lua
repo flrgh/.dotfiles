@@ -1166,6 +1166,7 @@ function plugins.bootstrap()
   CONF.wait = true
 
   lazy.setup(SPECS, CONF)
+  lazy.clean(CONF)
   lazy.restore(CONF)
   lazy.build(CONF)
 end
@@ -1428,7 +1429,7 @@ function plugins.bundle()
   local function copy_plugin(name)
     if not start() then return end
 
-    local p = assert(plugins.get(name))
+    local p = assert(plugins.get(name), "plugin not found: " .. name)
     p.name = p.name or p[1]
 
     local dir = lazy .. "/" .. name
