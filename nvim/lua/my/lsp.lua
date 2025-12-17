@@ -52,6 +52,7 @@ local SERVERS = {
   -- toml language server
   "tombi",
 }
+_M.SERVERS = SERVERS
 
 
 ---@type function

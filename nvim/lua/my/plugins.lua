@@ -21,7 +21,7 @@ local PRIORITY_HIGH = 2^16
 
 ---@alias my.plugin.tags table<string, any>
 
----@alias my.plugin.files [string, string][]
+---@alias my.plugin.files table<string, table|string|function>
 
 ---@type table<string, my.plugin.tags>
 plugins.TAGS = {}
@@ -383,6 +383,9 @@ do
           })
           cmd.colorscheme("material")
         end,
+        files = {
+          ["lua/lualine/themes/material.lua"] = "clobber",
+        },
       },
 
       -- warm, low contrast
@@ -785,6 +788,18 @@ do
       {
         "neovim/nvim-lspconfig",
         lazy = false, -- needs to be injected into rtp early on
+        files = {
+          ["lsp/*.lua"] = function(fname, opts)
+            local servers = require("my.lsp").SERVERS
+            for i = 1, #servers do
+              local exp = "lsp/" .. servers[i] .. ".lua"
+              if exp == fname then
+                return
+              end
+            end
+            opts.skip = true
+          end,
+        },
       },
 
       {
@@ -1145,6 +1160,14 @@ function plugins.bundle()
   ---@class typopts
   ---
   ---@field namespace? boolean
+  ---@field auto_namespace? boolean
+  ---@field ft_namespace? boolean
+  ---
+  ---@field concat? boolean
+  ---
+  ---@field clobber? boolean
+  ---@field skip? boolean
+  ---@field plugin_matched? boolean
 
   ---@type table<string, typopts>
   local TYPES = {
@@ -1162,7 +1185,11 @@ function plugins.bundle()
     },
     -- filetype plugins
     ftplugin = {
-      auto_namespace = true,
+      ft_namespace = true,
+    },
+    -- filetype detection plugins
+    ftdetect = {
+      concat = true,
     },
     -- indent scripts
     indent = {
@@ -1190,7 +1217,7 @@ function plugins.bundle()
     },
     -- treesitter queries
     queries = {
-      namespace = true,
+      auto_namespace = true,
     },
     -- remote-plugin scripts
     rplugin = {
@@ -1203,6 +1230,9 @@ function plugins.bundle()
     },
     -- tutorial files
     tutor = {
+    },
+
+    after = {
     },
   }
 
@@ -1218,11 +1248,14 @@ function plugins.bundle()
   end
 
   local FILES = {}
+  local CLOBBERED = {}
 
   local bundle = env.nvim.bundle.root
   local dotfiles = env.dotfiles.root
   local lazy = env.nvim.plugins
   local std = require("my.std")
+  local table = std.table
+  local string = std.string
 
   local uv = vim.uv
   local scandir = uv.fs_scandir
@@ -1250,6 +1283,7 @@ function plugins.bundle()
 
   local function done()
     running = running - 1
+    assert(running >= 0)
   end
 
   ---@return boolean
@@ -1272,30 +1306,159 @@ function plugins.bundle()
 
   ---@param plugin LazyPlugin
   ---@param fname string
-  ---@param ty typopts
-  local function on_file(plugin, fname, ty)
+  ---@param opts typopts
+  ---@return typopts
+  local function merge_plugin_opts(plugin, fname, opts)
+    if opts.plugin_matched then
+      return opts
+    end
+
+    local meta = META[plugin.name]
+    local files = meta and meta.files
+    if not files then
+      return opts
+    end
+
+    for pat, fopts in pairs(files) do
+      if string.globmatch(pat, fname) then
+        local ty = type(fopts)
+        opts = table.clone(opts)
+        if ty == "table" then
+          for k, v in pairs(fopts) do
+            opts[k] = v
+          end
+
+        elseif ty == "string" then
+          opts[fopts] = true
+
+        else
+          assert(ty == "function")
+          fopts(fname, opts, plugin)
+        end
+
+        opts.plugin_matched = true
+        return opts
+      end
+    end
+
+    return opts
+  end
+
+  ---@param plugin LazyPlugin
+  ---@param fname string
+  ---@param opts typopts
+  local function concat_file(plugin, fname, opts)
     if not start() then return end
 
+    opts = merge_plugin_opts(plugin, fname, opts)
+    if opts.skip then
+      return done()
+    end
+
+    local ext = fname:sub(-4)
+    local header, footer
+    local src = plugin.dir .. "/" .. fname
+    local basename
+
+    if ext == ".vim" then
+      header = [[" BEGIN ]] .. src
+      footer = [[" END ]] .. src
+      basename = "user_bundled"
+
+    elseif ext == ".lua" then
+      header = [[-- BEGIN ]] .. src
+      footer = [[-- END ]] .. src
+      basename = "user_bundled"
+
+    elseif fname == "doc/tags" then
+      header = ""
+      footer = ""
+      basename = "tags"
+      ext = ""
+
+    else
+      return fail("unknown bundled file extension: %s", ext)
+    end
+
+    local src = plugin.dir .. "/" .. fname
+
+    local dst = B.main .. "/" .. fname:gsub("[^/]+$", basename) .. ext
+    local data, err = fs.read_file(src)
+    if failed then return done() end
+    if not data then
+      return fail("failed reading %s for concat action: %s", src, err)
+    end
+
+    if failed then return done() end
+
+    data = header .. "\n" .. data .. "\n" .. footer .. "\n\n"
+
+    local ok
+    ok, err = fs.append_file(dst, data)
+    if not ok then
+      return fail("failed appending %s to %s: %s",
+                  src, dst, err)
+    end
+
+    return done()
+  end
+
+  ---@param plugin LazyPlugin
+  ---@param fname string
+  ---@param opts typopts
+  local function on_file(plugin, fname, opts)
+    if not start() then return end
+
+    opts = merge_plugin_opts(plugin, fname, opts)
+    if opts.skip then
+      return done()
+    end
+
     if fname == "doc/tags" then
+      --concat_file(plugin, fname, opts)
       return done()
     end
 
     local dst
-    if ty.namespace then
+    if opts.namespace then
       dst = B.namespaced .. "/" .. plugin.name .. "/" .. fname
+
+    elseif opts.ft_namespace then
+      local dir, base, ext = assert(fname:match("^(.*)/([^/]+)(%.[a-z]+)$"))
+      local slug = plugin.name:gsub("%.", "_")
+      if dir ~= "" then
+        dir = dir .. "/"
+      end
+      dst = B.main .. "/" .. dir .. base .. "/" .. slug .. ext
+
+    elseif opts.concat then
+      concat_file(plugin, fname, opts)
+      return done()
     else
       dst = B.main .. "/" .. fname
     end
 
-    if FILES[dst] then
-      warn("CONFLICT! file: %s, plugins: %s, %s\n",
-           fname, FILES[dst].name, plugin.name)
+    if CLOBBERED[dst] then
+      if opts.clobber then
+        assert(CLOBBERED[dst] == plugin)
+      else
+        return done()
+      end
+    end
 
-      if ty.auto_namespace then
-        assert(not ty.namespace)
+    if FILES[dst] and FILES[dst] ~= plugin then
+      if opts.auto_namespace then
+        assert(not opts.namespace)
         on_file(plugin, fname, { namespace = true })
         return done()
       end
+
+      warn("CONFLICT! file: %s, plugins: %s, %s\n",
+           fname, FILES[dst].name, plugin.name)
+    end
+
+    if opts.clobber then
+      CLOBBERED[dst] = plugin
     end
 
     FILES[dst] = plugin
@@ -1317,8 +1480,10 @@ function plugins.bundle()
       if dstat.ino == sstat.ino then
         return done()
       end
-      --return fail("link(%q, %q) => exists (inode mismatch)\n", src, dst, err)
-      warn("CONFLICT: link(%q, %q) => exists (inode mismatch)\n", src, dst, err)
+
+      if not opts.clobber then
+        warn("CONFLICT: link(%q, %q) => exists (inode mismatch)\n", src, dst, err)
+      end
 
       uv.fs_unlink(dst, function(err, ok)
         if not ok then
@@ -1327,11 +1492,11 @@ function plugins.bundle()
 
         if failed then return done() end
 
-        on_file(plugin, fname, ty)
+        on_file(plugin, fname, opts)
       end)
     end
 
-    if ty.namespace then
+    if opts.namespace or opts.ft_namespace then
       local parent = dst:gsub("/+[^/]+$", "")
       local ok, err = std.path.mkdir_all(parent)
       if not ok then
@@ -1349,9 +1514,14 @@ function plugins.bundle()
 
   ---@param plugin LazyPlugin
   ---@param dir string
-  ---@param ty typopts
-  local function on_dir(plugin, dir, ty)
+  ---@param opts typopts
+  local function on_dir(plugin, dir, opts)
     if not start() then return end
+
+    opts = merge_plugin_opts(plugin, dir, opts)
+    if opts.skip then
+      return done()
+    end
 
     local src = plugin.dir .. "/" .. dir
 
@@ -1368,9 +1538,14 @@ function plugins.bundle()
         return done()
       end
 
+      if dir == "after" then
+        -- NOTE: does not merge_opts(), is that okay?
+        opts = TYPES[child] or opts
+      end
+
       if not made_dst then
         local dst
-        if ty.namespace then
+        if opts.namespace then
           dst = B.namespaced .. "/" .. plugin.name .. "/" .. dir
         else
           dst = B.main .. "/" .. dir
@@ -1384,10 +1559,10 @@ function plugins.bundle()
 
       local child_src = src .. "/" .. child
       if is_dir(child_src) then
-        on_dir(plugin, dir .. "/" .. child, ty)
+        on_dir(plugin, dir .. "/" .. child, opts)
 
       elseif is_file(child_src) then
-        on_file(plugin, dir .. "/" .. child, ty)
+        on_file(plugin, dir .. "/" .. child, opts)
       end
     end
 
@@ -1439,13 +1614,113 @@ function plugins.bundle()
     end
   end
 
-  vim.wait(1000, function()
+  vim.wait(5000, function()
     vim.print("RUNNING: " .. tostring(running))
     return running == 0
   end, 100)
 
   assert(running == 0, "not finished running")
   assert(not failed, "something failed")
+
+  local ok, err = vim.uv.fs_rename(env.nvim.bundle.root, B.root .. ".old")
+  assert(ok, "failed renaming bundle directory: " .. tostring(err))
+
+  local manifest = {
+    names = {},
+    plugins = {},
+  }
+
+  local plugin_files = {}
+  for fname, p in pairs(FILES) do
+    local files = plugin_files[p.name]
+    if not files then
+      files = {}
+      plugin_files[p.name] = files
+    end
+
+    table.insert(files, fname:sub(#B.root + 2))
+  end
+
+
+  for i, p in ipairs(plugins.list()) do
+    manifest.plugins[i] = {
+      index = i,
+
+      name = p.name,
+      dir = p.dir,
+      url = p.url,
+
+      lazy = p.lazy,
+      event = p.event,
+      keys = p.keys,
+      cmd = p.cmd,
+
+      has_init = p.init ~= nil,
+      has_config = p.config ~= nil,
+      has_opts = p.opts ~= nil,
+
+      names = {},
+      files = plugin_files[p.name],
+      tags = TAGS[p.name],
+
+      branch = p.branch,
+      version = p.version,
+      commit = p.commit,
+      updated = nil,
+    }
+
+    if manifest.plugins[i].files then
+      table.sort(manifest.plugins[i].files)
+    end
+
+    local names = manifest.plugins[i].names
+    local name = p.name
+    local function add_name(s)
+      assert(manifest.names[s] == nil or manifest.names[s] == i)
+      if not manifest.names[s] then
+        manifest.names[s] = i
+        table.insert(names, s)
+      end
+    end
+
+    add_name(name)
+    add_name(name:lower())
+    if name:find("%.nvim$") then
+      add_name(name:sub(1, -6), p)
+
+    elseif name:find("%.vim$") then
+      add_name(name:sub(1, -5), p)
+    end
+
+    if p.url then
+      -- e.g. https://github.com/b0o/schemastore.nvim.git
+      local user, name = p.url:match("github%.com/([^/]+)/(.+)(%.git)$")
+      if user then
+        -- index by {{ github.user }}/{{ github.repo }}
+        add_name(user .. "/" .. name)
+      end
+    end
+  end
+
+  do
+    local results = plugins.check()
+    for i = 1, #results do
+      local elem = results[i]
+      local idx = assert(manifest.names[elem[1]])
+      local p = assert(manifest.plugins[idx])
+      p.updated = elem[2]
+      p.commit = elem[3]
+    end
+  end
+
+  vim.cmd.helptags(B.main .. "/doc")
+
+  assert(fs.write_file(B.root .. "/manifest.json", vim.json.encode(manifest)))
+
+  assert(fs.write_file(B.root .. "/manifest.txt", vim.inspect(plugins.list())))
+
+  local ok, err = vim.uv.fs_rename(B.root, env.nvim.bundle.root)
+  assert(ok, "failed renaming bundle directory: " .. tostring(err))
 end
 
 return plugins

@@ -1,15 +1,25 @@
+---@class my.std.string: stringlib
+local _M = setmetatable({}, { __index = _G.string })
+
+
+local glob_to_lpeg = require("vim.glob").to_lpeg
+local glob_match = glob_to_lpeg("*").match
+
+
 local find = string.find
 local gsub = string.gsub
 local byte = string.byte
 local match = string.match
 local type = type
 
----@class my.std.string: stringlib
-local _M = setmetatable({}, { __index = _G.string })
 
 local SPACE = byte(" ")
 local TAB = byte("\t")
 local NEWLINE = byte("\n")
+
+---@type table<string, vim.lpeg.Pattern>
+local GLOBS = {}
+
 
 ---@param haystack string
 ---@param needle string
@@ -47,5 +57,24 @@ function _M.startswith(str, prefix)
 end
 
 _M.endswith = vim.endswith
+
+
+---@param pattern string
+---@param subject string
+---@return boolean
+function _M.globmatch(pattern, subject)
+  -- XXX: not sure if correct behavior, but it works for how I'm using this
+  if pattern == subject then
+    return true
+  end
+
+  local glob = GLOBS[pattern]
+  if not glob then
+    glob = assert(glob_to_lpeg(pattern))
+    GLOBS[pattern] = glob
+  end
+
+  return glob_match(glob, subject) and true or false
+end
 
 return _M

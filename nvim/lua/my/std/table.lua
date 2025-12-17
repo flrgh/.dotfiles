@@ -9,9 +9,9 @@ local _M = setmetatable({}, { __index = _G.table })
 _M.new = new
 _M.clear = clear
 
----@generic T : table
+---@generic T
 ---@param src T
----@return T
+---@return T cloned
 function _M.clone(src)
   if type(src) ~= "table" then
     error("input was not a table", 2)
