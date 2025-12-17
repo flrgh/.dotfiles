@@ -328,30 +328,9 @@ do
       "hashivim/vim-terraform",
     },
 
-    bats = {
-      -- syntax for .bats files
-      "aliou/bats.vim",
-    },
-
     -- roku / brightscript support
     brs = {
       "entrez/roku.vim",
-    },
-
-    nu = {
-      {
-        "LhKipp/nvim-nu",
-        build = function()
-          cmd "TSInstall nu"
-        end,
-        config = function()
-          require("nu").setup {
-            -- LSP features require null-ls, but it is no more
-            use_lsp_features = false,
-            all_cmd_names = [[nu -c 'help commands | get name | str join "\n"']],
-          }
-        end,
-      }
     },
   }
 
@@ -892,7 +871,7 @@ do
 
     filetype = {
       -- support .editorconfig files
-      "gpanders/editorconfig.nvim",
+      "tpope/vim-sleuth",
 
       -- direnv support and syntax hilighting
       "direnv/direnv.vim",
@@ -964,17 +943,7 @@ do
           require("which-key").setup({})
         end,
       },
-
-      {
-        "aserowy/tmux.nvim",
-        cond = function()
-          return os.getenv("TMUX") ~= nil
-            or os.getenv("TMUX_PANE") ~= nil
-            or os.getenv("TMUX_SOCKET") ~= nil
-        end,
-      },
     },
-
   }
 
   do
