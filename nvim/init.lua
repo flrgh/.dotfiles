@@ -1,5 +1,5 @@
-require("my.env")
-require("my.patches").init()
+local env = require("my.env")
+require("my.patches").init(env)
 require("my.event")
 require("my.settings")
 require("my.mappings")

@@ -11,16 +11,16 @@ local api = vim.api
 
 ---@param v any
 ---@return boolean
-local function is_valid(v)
+local function is_valid_buf_id(v)
   return type(v) == "number"
-    and floor(v) == ceil(v)
     and v > 0
+    and floor(v) == ceil(v)
 end
 
 ---@param v integer
 ---@return string
 local function buf_id(v)
-  assert(is_valid(v))
+  assert(is_valid_buf_id(v))
   return tostring(v)
 end
 
@@ -72,7 +72,7 @@ end
 ---@param id integer
 ---@return my.state.buffer
 local function new_buffer(id)
-  assert(is_valid(id))
+  assert(is_valid_buf_id(id))
   return {
     id = id,
     is_loaded = buf_is_loaded,
@@ -107,7 +107,7 @@ setmetatable(_M.buffer, {
 
     assert(buf ~= nil and buf ~= 0)
 
-    if is_valid(buf) then
+    if is_valid_buf_id(buf) then
       if not is_loaded(buf) then
         return unloaded_buffer
       end

@@ -10,8 +10,9 @@ local tostring = tostring
 local create_augroup = vim.api.nvim_create_augroup
 local create_autocmd = vim.api.nvim_create_autocmd
 local nvim_exec_autocmds = vim.api.nvim_exec_autocmds
-local clear_tab = require("table.clear")
-local is_callable = require("my.std.types").callable
+local std = require("my.std")
+local clear_tab = std.table.clear
+local is_callable = std.types.callable
 
 
 

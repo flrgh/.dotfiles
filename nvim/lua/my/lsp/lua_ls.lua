@@ -413,22 +413,37 @@ end
 local init = false
 
 function _M.init()
+  local config = Config.get_or_create(0)
+
   if not init then
     init = true
     helpers.on_attach(NAME, _M.on_attach)
     helpers.on_detach(NAME, _M.on_detach)
-  end
 
-  local config = Config.get(0)
-  if config then
-    return config.config
+    hooks.on_workspace(WS, config)
+    handle_updates(config)
   end
-
-  config = Config.get_or_create(0)
-  hooks.on_workspace(WS, config)
-  handle_updates(config)
 
   return config.config
+end
+
+
+---@param buf? integer
+---@return vim.lsp.Client?
+function _M.get_client(buf)
+  if not buf or buf == 0 then
+    buf = api.nvim_get_current_buf()
+  end
+
+  local clients = lsp.get_clients({ buf = buf, name = _M.const.NAME })
+  return clients and clients[1]
+end
+
+---@param buf? integer
+---@return my.lua_ls.Config?
+function _M.get_config(buf)
+  local client = _M.get_client(buf)
+  return client and Config.get(client.id)
 end
 
 

@@ -498,7 +498,7 @@ language-servers: npm $(LIBEXEC) \
 	| .setup
 
 $(PKG)/neovim: $(DEP)/neovim nvim/plugins.lock.json
-	nvim -l ./nvim/bootstrap.lua
+	nvim -l ./nvim/scripts/bootstrap.lua
 	$(TOUCH) $@
 
 $(INSTALL_DATA)/nvim/lazy/lazy.nvim: $(PKG)/neovim

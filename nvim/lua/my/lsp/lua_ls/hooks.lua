@@ -412,7 +412,7 @@ function _M.on_workspace(ws, config)
   end
 
   if LUAROCKS_DEPLOY_DIR then
-    add_lib(LUAROCKS_DEPLOY_DIR, config, { source = "luarocks.config.deploy_lua_dir" })
+    config:add_runtime_dir(LUAROCKS_DEPLOY_DIR, { source = "luarocks.config.deploy_lua_dir" })
   end
 end
 

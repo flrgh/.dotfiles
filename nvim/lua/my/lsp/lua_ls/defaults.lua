@@ -18,12 +18,7 @@ local CMD = {
 
 ---@class my.lsp.config.Lua: vim.lsp.Config
 local defaults = {
-  cmd = function(dispatchers, _config)
-    local path = require("my.std.path")
-    path.mkdir(SERVER.LOG_DIR)
-    path.mkdir(SERVER.META_DIR)
-    return vim.lsp.rpc.start(CMD, dispatchers)
-  end,
+  cmd = CMD,
   root_dir = nil,
   settings = {
     ---@type my.lsp.LuaLS

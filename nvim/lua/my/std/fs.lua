@@ -8,7 +8,8 @@ setmetatable(_M, { __index = _M.path })
 local vim = vim
 local uv = vim.uv
 
-local json_decode = vim.json.decode
+local json_decode = assert(vim.json.decode)
+local json_encode = assert(vim.json.encode)
 
 local fs_stat = uv.fs_stat
 local fs_open = uv.fs_open
@@ -107,6 +108,17 @@ end
 ---@return integer|nil written
 ---@return string|nil error
 function _M.write_file(path, data, mode)
+  return write_with_flags(path, data, mode, "w+")
+end
+
+--- Write JSON data to a file
+---@param path string
+---@param json any
+---@param mode integer?
+---@return integer|nil written
+---@return string|nil error
+function _M.write_json_file(path, json, mode)
+  local data = json_encode(json)
   return write_with_flags(path, data, mode, "w+")
 end
 

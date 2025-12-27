@@ -14,6 +14,10 @@ local fs_rename = uv.fs_rename
 local fs_lstat = uv.fs_lstat
 local fs_mkdir = uv.fs_mkdir
 local get_cwd = uv.cwd
+local fs_unlink = uv.fs_unlink
+local fs_rmdir = uv.fs_rmdir
+local fs_scandir = uv.fs_scandir
+local fs_scandir_next = uv.fs_scandir_next
 
 local concat = table.concat
 local assert = assert
@@ -57,6 +61,15 @@ end
 _M.is_parent = is_parent
 
 _M.cwd = get_cwd
+
+--- Returns true if `path` exists and is a symlink
+---@param path string
+---@return boolean?
+local function is_symlink(path)
+  local st = fs_lstat(path)
+  return st and st.type == "link"
+end
+_M.is_symlink = is_symlink
 
 --- Check if a file exists.
 ---@param  fname   string
@@ -108,6 +121,25 @@ function _M.mkdir_all(dir, mode)
   return _M.mkdir(dir, mode)
 end
 
+---@param fname string
+---@return string? parent
+function _M.dirname(fname)
+  local parent = fname:gsub("/+$", ""):gsub("/+[^/]+$", "")
+  return parent ~= "" and parent or nil
+end
+
+---@param fname string
+---@param mode? string|integer
+---@return boolean? ok
+---@return string? error
+function _M.mkparents(fname, mode)
+  local parent = _M.dirname(fname)
+  if parent then
+    return _M.mkdir_all(parent, mode)
+  end
+  return true
+end
+
 --- Check if a path exists.
 ---@param  path   string
 ---@return boolean exists
@@ -139,6 +171,14 @@ end
 ---@return uv.fs_stat.result|nil
 function _M.stat(path)
   local st = fs_stat(path)
+  return st
+end
+
+
+---@param path string
+---@return uv.fs_stat.result|nil
+function _M.lstat(path)
+  local st = fs_lstat(path)
   return st
 end
 
@@ -470,6 +510,129 @@ function _M.iter_parents(path, normalize)
     return parent
   end
 end
+
+---@class my.std.path.rm.opts
+---
+---@field recursive boolean
+---@field follow boolean
+---@field ignore boolean
+
+---@type my.std.path.rm.opts
+local DEFAULT_RM_OPTS = {
+  recursive = false,
+  follow = false,
+  ignore = true,
+}
+
+---@param fname string
+---@return boolean? ok
+---@return string? error
+local function rm_file(fname)
+  local ok, err = fs_unlink(fname)
+  return ok, err
+end
+
+_M.rm_file = rm_file
+
+---@param dir string
+---@return boolean? ok
+---@return string? error
+local function rm_dir(dir)
+  local ok, err = fs_rmdir(dir)
+  return ok, err
+end
+_M.rm_dir = rm_dir
+
+---@param dir string
+---@return boolean? ok
+---@return string? error
+local function rm_tree(dir)
+  local entry, err = fs_scandir(dir)
+  if not entry then
+    return nil, err
+  end
+
+  while true do
+    local child = fs_scandir_next(entry)
+    if not child then
+      break
+    end
+
+    child = dir .. "/" .. child
+
+    local st, err = fs_lstat(child)
+    if not st then
+      return nil, err
+    end
+
+    local ok
+    if st.type == "directory" then
+      ok, err = rm_tree(child)
+    else
+      ok, err = rm_file(child)
+    end
+
+    if not ok then
+      return nil, err
+    end
+  end
+
+  return rm_dir(dir)
+end
+_M.rm_tree = rm_tree
+
+---@param path string
+---@param ignore boolean
+---@param recursive boolean
+---@param follow boolean
+---@return boolean? ok
+---@return string? error
+local function rm(path, ignore, recursive, follow)
+  assert(not follow, "NYI")
+
+  local st = fs_lstat(path)
+  if not st then
+    if ignore then
+      return true
+    end
+    return nil, "ENOENT"
+  end
+
+  if st.type == "directory" then
+    if recursive then
+      return rm_tree(path)
+
+    else
+      return rm_dir(path)
+    end
+  end
+
+  return rm_file(path)
+end
+
+---@param path string
+---@param opts? my.std.path.rm.opts
+---@return boolean? ok
+function _M.rm(path, opts)
+  opts = opts or DEFAULT_RM_OPTS
+  local follow = opts.follow
+  if follow == nil then
+    follow = DEFAULT_RM_OPTS.follow
+  end
+
+  local recursive = opts.recursive
+  if recursive == nil then
+    recursive = DEFAULT_RM_OPTS.recursive
+  end
+
+  local ignore = opts.ignore
+  if ignore == nil then
+    ignore = DEFAULT_RM_OPTS.ignore
+  end
+
+  return rm(path, ignore, recursive, follow)
+end
+
 
 do
   _M.cache = {}

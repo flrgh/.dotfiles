@@ -116,6 +116,11 @@ function Config.new(id, defaults)
   end
 
   local resolver = self.resolver
+
+  for _, path in ipairs(self.runtime_path.items) do
+    resolver:add_path(path, { source = "Lua.runtime.path" })
+  end
+
   for path in resolver.package_path_entries() do
     self.runtime_path:add(path)
     resolver:add_path(path, { source = "package.path" })
@@ -258,17 +263,17 @@ function Config:add_library(lib, meta)
   self:add_workspace_library(lib, tree)
 
   -- add $path/lua
-  if not endswith(lib, '/lua') then
+  if not endswith(lib, '/lua') and path_is_dir(lib .. "/lua") then
     self:add_runtime_dir(lib .. "/lua", tree)
   end
 
   -- add $path/src
-  if not endswith(lib, '/src') then
+  if not endswith(lib, '/src') and path_is_dir(lib .. "/src") then
     self:add_runtime_dir(lib .. "/src", tree)
   end
 
   -- add $path/lib
-  if not endswith(lib, '/lib') then
+  if not endswith(lib, '/lib') and path_is_dir(lib .. "/lib") then
     self:add_runtime_dir(lib .. "/lib", tree)
   end
 
@@ -349,7 +354,6 @@ end
 ---@return my.lua_ls.Config
 function Config:add_type_defs(dir)
   if path_is_dir(dir) then
-    self.resolver:add_dir(dir, { source = SRC_TYPE_DEFS })
     self:add_workspace_library(dir)
   end
 

@@ -44,8 +44,13 @@ do
 
   ---@param name string
   ---@param all boolean
+  ---@param uncached? boolean
   ---@return string[]
-  local function cached_get_runtime_file(name, all)
+  local function cached_get_runtime_file(name, all, uncached)
+    if uncached == true then
+      return vim_api_nvim_get_runtime_file(name, all)
+    end
+
     check_rtp()
 
     local cache = all and CACHE_ALL or CACHE_NO_ALL
@@ -86,8 +91,11 @@ function _M.stats()
   vim.notify(vim.inspect(STATS))
 end
 
-function _M.init()
-  patch_get_runtime_file()
+---@param env my.env
+function _M.init(env)
+  if env and env.editor then
+    patch_get_runtime_file()
+  end
 end
 
 

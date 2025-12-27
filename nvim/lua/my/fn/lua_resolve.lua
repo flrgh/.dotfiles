@@ -4,10 +4,12 @@ local string = require("my.std.string")
 local luamod = require("my.std.luamod")
 local state = require("my.state")
 local km = require("my.keymap")
+local lua_ls = require("my.lsp.lua_ls")
 
 local default_resolver
 
 local api = vim.api
+local lsp = vim.lsp
 local WARN = vim.log.levels.WARN
 
 local min = math.min
@@ -31,6 +33,11 @@ function _M.resolve(args)
   end
 
   local resolver = state.buffer.lua_resolver
+  local config = lua_ls.get_config()
+  if config then
+    resolver = config.resolver
+  end
+
   if not resolver then
     default_resolver = default_resolver or luamod.resolver.default()
     resolver = default_resolver

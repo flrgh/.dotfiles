@@ -9,6 +9,10 @@ plugins.SPECS = {}
 local SPECS = plugins.SPECS
 local N = 0
 
+---@type function[]
+local INITS = {}
+
+
 local PRIORITY_HIGH = 2^16
 
 
@@ -57,7 +61,14 @@ local COND = return_nil
 local km = require("my.keymap")
 local evt = require("my.event")
 local env = require("my.env")
-local fs = require("my.std.fs")
+local std = require("my.std")
+local fs = std.fs
+local table = std.table
+local string = std.string
+
+local globmatch = string.globmatch
+local trim = string.trim
+local tbl_extend = table.extend
 
 local Ctrl = km.Ctrl
 local Leader = km.Leader
@@ -546,6 +557,14 @@ do
 
     telescope = {
       {
+        "nvim-telescope/telescope-symbols.nvim",
+        event = evt.user.VeryLazy,
+        files = {
+          ["data"] = { skip = false },
+          ["data/**"] = { skip = false },
+        },
+      },
+      {
         "nvim-telescope/telescope.nvim",
         event = evt.user.VeryLazy,
         dependencies = {
@@ -554,7 +573,9 @@ do
             "nvim-telescope/telescope-fzf-native.nvim",
             build = "make",
           },
-          "nvim-telescope/telescope-symbols.nvim",
+          {
+            "nvim-telescope/telescope-symbols.nvim",
+          },
         },
         branch = "0.1.x",
         config = file_config("telescope"),
@@ -710,6 +731,17 @@ do
       },
 
       {
+        "rafamadriz/friendly-snippets",
+        config = function()
+          require("luasnip.loaders.from_vscode").lazy_load()
+        end,
+        files = {
+          ["snippets"] = { skip = false },
+          ["snippets/**"] = { skip = false },
+        },
+      },
+
+      {
         "L3MON4D3/LuaSnip",
         lazy = true,
         version = "v2.*",
@@ -718,12 +750,7 @@ do
           require("my.plugins.luasnip").setup()
         end,
         dependencies = {
-          {
-            "rafamadriz/friendly-snippets",
-            config = function()
-              require("luasnip.loaders.from_vscode").lazy_load()
-            end,
-          },
+          { "rafamadriz/friendly-snippets" },
         },
       },
 
@@ -994,7 +1021,6 @@ do
     end
 
     require("my.settings")
-
     require("my.lazy.install")
 
     local ok, _lazy = pcall(require, "lazy")
@@ -1142,7 +1168,6 @@ function plugins.load(cond)
   if plugins.MODE == "lazy" then
     require("my.lazy.install")
     require("lazy").setup(SPECS, CONF)
-
   else
 
   end
@@ -1171,8 +1196,6 @@ function plugins.check()
   plugins.load(true)
 
   local cmd = require("my.std.cmd")
-  local fs = require("my.std.fs")
-  local trim = require("my.std.string").trim
 
   local list = require("my.std").Set()
   local all = {}
@@ -1269,17 +1292,25 @@ function plugins.check()
 end
 
 function plugins.bundle()
+  plugins.load(true)
+
   ---@class typopts
   ---
   ---@field namespace? boolean
-  ---@field auto_namespace? boolean
   ---@field ft_namespace? boolean
   ---
   ---@field concat? boolean
   ---
   ---@field clobber? boolean
   ---@field skip? boolean
-  ---@field plugin_matched? boolean
+  ---
+  ---@field type string
+  ---@field ftype string
+  ---@field ltype string
+  ---
+  ---@field last boolean
+  ---
+  ---@field abspath string
 
   ---@type table<string, typopts>
   local TYPES = {
@@ -1301,7 +1332,7 @@ function plugins.bundle()
     },
     -- filetype detection plugins
     ftdetect = {
-      concat = true,
+      --concat = true,
     },
     -- indent scripts
     indent = {
@@ -1329,7 +1360,6 @@ function plugins.bundle()
     },
     -- treesitter queries
     queries = {
-      auto_namespace = true,
     },
     -- remote-plugin scripts
     rplugin = {
@@ -1343,31 +1373,62 @@ function plugins.bundle()
     -- tutorial files
     tutor = {
     },
-
-    after = {
-    },
   }
 
-  do
-    local after = {}
-    for k, v in pairs(TYPES) do
-      after["after/" .. k] = v
-    end
+  local TYPE_OPTS = {
+    { "doc/tags",        skip = true, last = true },
+    { ".git", "**/.git", skip = true, last = true },
+    { "**/.keep",        skip = true },
+    { "**/.gitignore",   skip = true },
+    { "after" },
+    { ".*",              skip = true },
+  }
 
-    for k, v in pairs(after) do
-      TYPES[k] = v
-    end
+  local DEFAULT_TYPE_OPTS = {
+    "<default>",
+    skip = true,
+    last = false,
+  }
+
+  for name, opts in pairs(TYPES) do
+    local new
+
+    -- syntax
+    new = table.clone(opts)
+    new.type = nil
+    new.after = nil
+    new[1] = name
+    table.insert(TYPE_OPTS, new)
+
+    -- after/syntax
+    new = table.clone(opts)
+    new.type = nil
+    new.after = true
+    new[1] = "after/" .. name
+    table.insert(TYPE_OPTS, new)
+
+    -- syntax/**
+    new = table.clone(opts)
+    new.type = name
+    new.after = nil
+    new[1] = name .. "/**"
+    table.insert(TYPE_OPTS, new)
+
+    -- after/syntax/**
+    new = table.clone(opts)
+    new.type = name
+    new.after = true
+    new[1] = "after/" .. name .. "/**"
+    table.insert(TYPE_OPTS, new)
   end
 
   local FILES = {}
   local CLOBBERED = {}
+  local HAS = {}
 
   local bundle = env.nvim.bundle.root
   local dotfiles = env.dotfiles.root
   local lazy = env.nvim.plugins
-  local std = require("my.std")
-  local table = std.table
-  local string = std.string
 
   local uv = vim.uv
   local scandir = uv.fs_scandir
@@ -1381,14 +1442,20 @@ function plugins.bundle()
 
   local newbundle = bundle .. "." .. tostring(uv.getpid())
   local B = {
-    root = newbundle,
-    main = newbundle .. "/main",
-    namespaced = newbundle .. "/ns",
+    root    = newbundle,
+    main = {
+      start = {
+        user    = newbundle .. "/pack/main/start/01-user",
+        plugins = newbundle .. "/pack/main/start/02-plugins",
+      },
+      opt = {
+        user    = newbundle .. "/pack/main/opt/01-user",
+        plugins = newbundle .. "/pack/main/opt/02-plugins",
+      }
+    },
   }
 
   assert(mkdir(B.root))
-  assert(mkdir(B.main))
-  assert(mkdir(B.namespaced))
 
   local running = 0
   local failed = false
@@ -1416,12 +1483,36 @@ function plugins.bundle()
     vim.print("WARN " .. fmt(f, ...))
   end
 
-  ---@param plugin LazyPlugin
   ---@param fname string
-  ---@param opts typopts
+  ---@param plugin LazyPlugin
   ---@return typopts
-  local function merge_plugin_opts(plugin, fname, opts)
-    if opts.plugin_matched then
+  local function classify(fname, plugin)
+    local opts
+
+    for i = 1, #TYPE_OPTS do
+      local to = TYPE_OPTS[i]
+      for j = 1, #to do
+        if globmatch(to[j], fname) then
+          opts = to
+          break
+        end
+      end
+
+      if opts then
+        break
+      end
+    end
+
+    opts = table.clone(opts or DEFAULT_TYPE_OPTS)
+
+    opts.abspath = plugin.dir .. "/" .. fname
+    opts.ftype, opts.ltype = std.path.type(opts.abspath)
+    if failed then
+      return opts
+    end
+    assert(opts.ftype, fname)
+
+    if opts.last then
       return opts
     end
 
@@ -1432,13 +1523,11 @@ function plugins.bundle()
     end
 
     for pat, fopts in pairs(files) do
-      if string.globmatch(pat, fname) then
+      if globmatch(pat, fname) then
         local ty = type(fopts)
-        opts = table.clone(opts)
+
         if ty == "table" then
-          for k, v in pairs(fopts) do
-            opts[k] = v
-          end
+          opts = tbl_extend("force", opts, fopts)
 
         elseif ty == "string" then
           opts[fopts] = true
@@ -1448,13 +1537,13 @@ function plugins.bundle()
           fopts(fname, opts, plugin)
         end
 
-        opts.plugin_matched = true
-        return opts
+        break
       end
     end
 
     return opts
   end
+
 
   ---@param plugin LazyPlugin
   ---@param fname string
@@ -1462,14 +1551,14 @@ function plugins.bundle()
   local function concat_file(plugin, fname, opts)
     if not start() then return end
 
-    opts = merge_plugin_opts(plugin, fname, opts)
+    local opts = classify(fname, plugin)
     if opts.skip then
       return done()
     end
 
     local ext = fname:sub(-4)
     local header, footer
-    local src = plugin.dir .. "/" .. fname
+    local src = opts.abspath
     local basename
 
     if ext == ".vim" then
@@ -1492,9 +1581,7 @@ function plugins.bundle()
       return fail("unknown bundled file extension: %s", ext)
     end
 
-    local src = plugin.dir .. "/" .. fname
-
-    local dst = B.main .. "/" .. fname:gsub("[^/]+$", basename) .. ext
+    local dst = B.main.start.plugins .. "/" .. fname:gsub("[^/]+$", basename) .. ext
     local data, err = fs.read_file(src)
     if failed then return done() end
     if not data then
@@ -1502,6 +1589,12 @@ function plugins.bundle()
     end
 
     if failed then return done() end
+
+    local ok, err = std.path.mkparents(dst)
+    if failed then return done() end
+    if not ok then
+      return fail("mkparents(%q) => %s\n", dst, err)
+    end
 
     data = header .. "\n" .. data .. "\n" .. footer .. "\n\n"
 
@@ -1517,37 +1610,43 @@ function plugins.bundle()
 
   ---@param plugin LazyPlugin
   ---@param fname string
-  ---@param opts typopts
-  local function on_file(plugin, fname, opts)
+  local function on_file(plugin, fname)
     if not start() then return end
 
-    opts = merge_plugin_opts(plugin, fname, opts)
+    local opts = classify(fname, plugin)
     if opts.skip then
       return done()
     end
 
-    if fname == "doc/tags" then
-      --concat_file(plugin, fname, opts)
-      return done()
+    do
+      HAS[plugin.name] = HAS[plugin.name] or {}
+
+      local ftype = fname:match("^([^/]+)")
+      assert(ftype, fname)
+
+      if ftype == "after" then
+        ftype = fname:match("^after/([^/]+)")
+        assert(ftype, fname)
+        HAS[plugin.name]["after/" .. ftype] = true
+      end
+
+      HAS[plugin.name][ftype] = true
     end
 
     local dst
-    if opts.namespace then
-      dst = B.namespaced .. "/" .. plugin.name .. "/" .. fname
-
-    elseif opts.ft_namespace then
+    if opts.ft_namespace then
       local dir, base, ext = assert(fname:match("^(.*)/([^/]+)(%.[a-z]+)$"))
       local slug = plugin.name:gsub("%.", "_")
       if dir ~= "" then
         dir = dir .. "/"
       end
-      dst = B.main .. "/" .. dir .. base .. "/" .. slug .. ext
+      dst = B.main.start.plugins .. "/" .. dir .. base .. "/" .. slug .. ext
 
     elseif opts.concat then
       concat_file(plugin, fname, opts)
       return done()
     else
-      dst = B.main .. "/" .. fname
+      dst = B.main.start.plugins .. "/" .. fname
     end
 
     if CLOBBERED[dst] then
@@ -1559,12 +1658,6 @@ function plugins.bundle()
     end
 
     if FILES[dst] and FILES[dst] ~= plugin then
-      if opts.auto_namespace then
-        assert(not opts.namespace)
-        on_file(plugin, fname, { namespace = true })
-        return done()
-      end
-
       warn("CONFLICT! file: %s, plugins: %s, %s\n",
            fname, FILES[dst].name, plugin.name)
     end
@@ -1575,7 +1668,7 @@ function plugins.bundle()
 
     FILES[dst] = plugin
 
-    local src = plugin.dir .. "/" .. fname
+    local src = opts.abspath
 
     local sstat, dstat, err
     sstat, err = stat(src)
@@ -1604,16 +1697,14 @@ function plugins.bundle()
 
         if failed then return done() end
 
-        on_file(plugin, fname, opts)
+        on_file(plugin, fname)
       end)
     end
 
-    if opts.namespace or opts.ft_namespace then
-      local parent = dst:gsub("/+[^/]+$", "")
-      local ok, err = std.path.mkdir_all(parent)
-      if not ok then
-        return fail("mkdir_all(%q) => %s\n", parent, err)
-      end
+    local ok, err = std.path.mkparents(dst)
+    if failed then return done() end
+    if not ok then
+      return fail("mkparents(%q) => %s\n", dst, err)
     end
 
     link(src, dst, function(err, ok)
@@ -1626,16 +1717,15 @@ function plugins.bundle()
 
   ---@param plugin LazyPlugin
   ---@param dir string
-  ---@param opts typopts
-  local function on_dir(plugin, dir, opts)
+  local function on_dir(plugin, dir)
     if not start() then return end
 
-    opts = merge_plugin_opts(plugin, dir, opts)
+    local opts = classify(dir, plugin)
     if opts.skip then
       return done()
     end
 
-    local src = plugin.dir .. "/" .. dir
+    local src = opts.abspath
 
     local s = scandir(src)
     if not s then
@@ -1647,46 +1737,130 @@ function plugins.bundle()
     while not failed do
       local child = scandir_next(s)
       if not child then
-        return done()
-      end
-
-      if dir == "after" then
-        -- NOTE: does not merge_opts(), is that okay?
-        opts = TYPES[child] or opts
-      end
-
-      if not made_dst then
-        local dst
-        if opts.namespace then
-          dst = B.namespaced .. "/" .. plugin.name .. "/" .. dir
-        else
-          dst = B.main .. "/" .. dir
-        end
-        local err
-        made_dst, err = std.path.mkdir_all(dst)
-        if not made_dst then
-          return fail("Failed creating directory %s: %s\n", dst, err)
-        end
+        break
       end
 
       local child_src = src .. "/" .. child
+
       if is_dir(child_src) then
-        on_dir(plugin, dir .. "/" .. child, opts)
+        on_dir(plugin, dir .. "/" .. child)
 
       elseif is_file(child_src) then
-        on_file(plugin, dir .. "/" .. child, opts)
+        on_file(plugin, dir .. "/" .. child)
       end
     end
 
     return done()
   end
 
+  ---@param root string
+  ---@param on_dir fun(name: string):boolean
+  ---@param on_file fun(name: string)
+  local function walk(root, on_dir, on_file)
+    if not start() then
+      return
+    end
+
+    local s = scandir(root)
+    if not s then
+      return fail("scandir(%q) failed\n", root)
+    end
+
+    while not failed do
+      local child = scandir_next(s)
+
+      if not child then
+        break
+      end
+
+      local child_path = root .. "/" .. child
+
+      if is_dir(child_path) then
+        if on_dir(child) then
+          walk(
+            child_path,
+
+            function(name)
+              return on_dir(child .. "/" .. name)
+            end,
+
+            function(name)
+              return on_file(child .. "/" .. name)
+            end
+          )
+        end
+
+      elseif is_file(child_path) then
+        on_file(child)
+      end
+    end
+
+    return done()
+  end
+
+  local MANIFESTS = {}
+
+  ---@param plugin LazyPlugin
+  local function plugin_manifest(plugin)
+    if not start() then
+      return
+    end
+
+    local m = {
+      name = plugin.name,
+      dir = lazy .. "/" .. plugin.name,
+      files = {},
+      types = {},
+      skipped = {},
+      tags = {},
+    }
+
+    walk(plugin.dir,
+      function(dir)
+        local opts = classify(dir, plugin)
+        if opts.skip then
+          table.insert(m.skipped, dir)
+          return false
+        end
+
+        if opts.type then
+          m.types[opts.type] = true
+        end
+
+        return true
+      end,
+
+      function(file)
+        local opts = classify(file, plugin)
+        if opts.skip then
+          table.insert(m.skipped, file)
+          return false
+        end
+
+        if opts.type then
+          m.types[opts.type] = true
+        end
+
+        table.insert(m.files, file)
+      end
+    )
+
+    MANIFESTS[plugin.name] = m
+    return done()
+  end
+
   ---@param name string
-  local function copy_plugin(name)
+  local function on_plugin(name)
     if not start() then return end
 
-    local p = assert(plugins.get(name), "plugin not found: " .. name)
+    local p = plugins.get(name)
+    if not p then
+      return fail("plugin not found: %s\n", name)
+    end
+
     p.name = p.name or p[1]
+
+    plugin_manifest(p)
 
     local dir = lazy .. "/" .. name
     if not is_dir(dir) then
@@ -1705,9 +1879,12 @@ function plugins.bundle()
       end
 
       local child_path = dir .. "/" .. child
-      local ty = TYPES[child]
-      if ty and is_dir(child_path) then
-        on_dir(p, child, ty)
+
+      if is_dir(child_path) then
+        on_dir(p, child)
+
+      elseif is_file(child_path) then
+        on_file(p, child)
       end
     end
 
@@ -1715,14 +1892,19 @@ function plugins.bundle()
   end
 
   do
-    local dir = assert(scandir(lazy))
-    while not failed do
-      local child = scandir_next(dir)
-      if not child then
-        break
-      end
+    local lock = plugins.lockfile()
+    ---@type string[]
+    local names = {}
+    for k in pairs(lock) do
+      table.insert(names, k)
+    end
+    table.sort(names)
 
-      copy_plugin(child)
+    for _, name in ipairs(names) do
+      if start() then
+        on_plugin(name)
+        done()
+      end
     end
   end
 
@@ -1733,9 +1915,6 @@ function plugins.bundle()
 
   assert(running == 0, "not finished running")
   assert(not failed, "something failed")
-
-  local ok, err = vim.uv.fs_rename(env.nvim.bundle.root, B.root .. ".old")
-  assert(ok, "failed renaming bundle directory: " .. tostring(err))
 
   local manifest = {
     names = {},
@@ -1770,6 +1949,7 @@ function plugins.bundle()
       has_init = p.init ~= nil,
       has_config = p.config ~= nil,
       has_opts = p.opts ~= nil,
+      types = HAS[p.name],
 
       names = {},
       files = plugin_files[p.name],
@@ -1779,6 +1959,8 @@ function plugins.bundle()
       version = p.version,
       commit = p.commit,
       updated = nil,
+
+      test = MANIFESTS[p.name],
     }
 
     if manifest.plugins[i].files then
@@ -1825,14 +2007,21 @@ function plugins.bundle()
     end
   end
 
-  vim.cmd.helptags(B.main .. "/doc")
+  vim.cmd.helptags(B.main.start.plugins .. "/doc")
 
-  assert(fs.write_file(B.root .. "/manifest.json", vim.json.encode(manifest)))
+  assert(fs.write_json_file(B.root .. "/manifest.json", manifest))
 
   assert(fs.write_file(B.root .. "/manifest.txt", vim.inspect(plugins.list())))
 
-  local ok, err = vim.uv.fs_rename(B.root, env.nvim.bundle.root)
+  local OLD = B.root .. ".old"
+  local ok, err = std.path.rename(env.nvim.bundle.root, OLD)
   assert(ok, "failed renaming bundle directory: " .. tostring(err))
+
+  local ok, err = std.path.rename(B.root, env.nvim.bundle.root)
+  assert(ok, "failed renaming bundle directory: " .. tostring(err))
+
+  local ok, err = std.path.rm_tree(OLD)
+  assert(ok, "failed removing old bundle directory: " .. tostring(err))
 end
 
 return plugins
