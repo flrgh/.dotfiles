@@ -25,13 +25,18 @@ git::config::set() {
 
 # add a repository-local gitignore pattern
 git::ignore() {
-    local -r pat=${1:?pattern required}
+    if (( $# < 1 )); then
+        fatal "at least one pattern is required"
+    fi
 
     git::assert::repo
 
-    if [[ ! -e $__GIT_EXCLUDE ]] || ! grep -qxF "$pat" "$__GIT_EXCLUDE"; then
-        git ignore --private "$pat"
-    fi
+    local pat
+    for pat in "$@"; do
+        if ! grep -sqxF "$pat" "$__GIT_EXCLUDE"; then
+            log::cmd git ignore --private "$pat"
+        fi
+    done
 
     watch::file "$__GIT_EXCLUDE"
 }
