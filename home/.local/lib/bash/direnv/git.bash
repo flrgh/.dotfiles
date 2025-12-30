@@ -4,8 +4,8 @@ declare -g __GIT_EXCLUDE=.git/info/exclude
 git::assert::repo() {
     local -r dir=${1:-"$PWD"}
 
-    if [[ ! -d "$dir"/.git/info ]]; then
-        fatal "not a git repository"
+    if [[ ! -d "$dir"/.git ]]; then
+        fatal "'$dir' is not a git repository"
     fi
 }
 
