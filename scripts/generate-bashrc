@@ -474,6 +474,12 @@ __rc_prompt() {
           if [[ -n ${!DIRENV_*} || ${__last_pwd:-} != "$PWD" || -e $PWD/.envrc ]]; then
             __last_pwd=$PWD
             _direnv_hook
+
+            if [[ -v BASH_DIRENV_HOOKS ]]; then
+                echo "eval(BASH_DIRENV_HOOKS)" >&2
+                eval "$BASH_DIRENV_HOOKS"
+                unset BASH_DIRENV_HOOKS
+            fi
           fi
         }
         rc-workfile-add-function __direnv
