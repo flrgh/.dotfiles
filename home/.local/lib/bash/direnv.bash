@@ -37,6 +37,12 @@ log::trace() {
     done
 }
 
+log::cmd() {
+    # shellcheck disable=SC2016
+    log::status '`%s`\n' "$*"
+    "$@"
+}
+
 fatal() {
     local -r msg=${1:?}
     local -i level=${2:-0}
