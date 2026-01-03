@@ -140,10 +140,10 @@ replace() {
 
     if [[ ! -x $bash ]]; then
         bash=${bash%" (deleted)"}
+    fi
 
-        if [[ ! -x $bash ]]; then
-            bash=/usr/bin/bash
-        fi
+    if [[ ! -x $bash ]]; then
+        bash=/usr/bin/bash
     fi
 
     if [[ -v TMUX && -v TMUX_PANE ]]; then
