@@ -10,6 +10,7 @@ declare -g EVENT_ID_HISTORY=SIGUSR2
 
 declare -g -A __event_callbacks=()
 declare -g -A __event_triggers=()
+declare -gi __events_shutdown=0
 
 __set_event_conf() {
     __event_conf=1
@@ -18,6 +19,35 @@ __set_event_conf() {
 __set_event_history() {
     __event_history=1
 }
+
+if builtin enable rm &>/dev/null; then
+    builtin enable -n rm
+    __events_rm() {
+        builtin rm "$@"
+    }
+else
+    __events_rm() {
+        command rm "$@"
+    }
+fi
+
+if builtin enable realpath &>/dev/null; then
+    builtin enable -n realpath
+    __events_is_bash() {
+        local -r subject=${1:?}
+        local exe
+        builtin realpath -a exe -q "$subject" &>/dev/null \
+            && [[ ${exe[0]} == */bin/bash* ]]
+    }
+else
+    __events_is_bash() {
+        local -r subject=${1:?}
+        local path
+        path=$(realpath -m "$subject" 2>/dev/null) \
+            && [[ $path = */bin/bash* ]]
+    }
+fi
+
 
 events_init() {
     [[ -d $__pid_dir ]] || mkdir -p "$__pid_dir"
@@ -53,6 +83,14 @@ events_on() {
 }
 
 events_flush() {
+    if (( __events_shutdown )); then
+        return
+    fi
+
+    if [[ ! -e $__pid_file ]]; then
+        : >"$__pid_file"
+    fi
+
     if (( __event_triggers[$EVENT_ID_CONF] == 1 )); then
         __event_triggers[$EVENT_ID_CONF]=0
         if [[ -n ${__event_callbacks[$EVENT_ID_CONF]:-} ]]; then
@@ -69,9 +107,15 @@ events_flush() {
 }
 
 events_teardown() {
+    if (( __events_shutdown )); then
+        return
+    fi
+
+    __events_shutdown=1
+
     events_on "$EVENT_ID_CONF" || true
     events_on "$EVENT_ID_HISTORY" || true
-    rm -f "$__pid_file" || true
+    __events_rm -f "$__pid_file" || true
 }
 
 events_publish() {
@@ -91,12 +135,11 @@ events_publish() {
             continue
         fi
 
-        if [[ ! -O /proc/$pid || $(realpath -m /proc/$$/exe) != */bin/bash* ]]; then
-            rm -f "${file:?}"
-            continue
+        if [[ -O /proc/$pid ]] && __events_is_bash "/proc/$pid/exe"; then
+            pids+=("$pid")
+        else
+            __events_rm -f "${file:?}"
         fi
-
-        pids+=("$pid")
     done
 
     if (( ${#pids[@]} > 0 )); then
