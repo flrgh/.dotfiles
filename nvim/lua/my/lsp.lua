@@ -37,7 +37,7 @@ local SERVERS = {
   --]]
   "pyright",
   "rust_analyzer",
-  "systemd_ls",
+  "systemd_lsp",
 
   --[[
   sql-language-server is completely unusable

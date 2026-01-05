@@ -167,6 +167,9 @@ $(UV_DEPS): $(DEP)/uv $(DEP)/python $(PKG)/python.cleanup
 
 .PHONY: uv-update
 uv-update: ./deps/uv.txt | $(MISE)
+	-$(UV) tool uninstall \
+		systemd-language-server \
+		2>/dev/null
 	$(UV) tool upgrade --no-managed-python --all
 
 NEED_PACKAGES := $(notdir $(basename $(wildcard $(REPO_ROOT)/home/.local/share/ineed/drivers/*.sh)))
@@ -492,7 +495,7 @@ language-servers: npm $(LIBEXEC) \
 	$(DEP)/gopls \
 	$(MISE_DEPS) \
 	$(DEP)/compiledb \
-	$(DEP)/systemd-language-server \
+	$(DEP)/systemd-lsp \
 	$(DEP)/marksman \
 	$(DEP)/zls \
 	| .setup

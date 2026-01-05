@@ -1,4 +1,2 @@
 # generate compile_commands.json for clangd
 compiledb
-
-systemd-language-server

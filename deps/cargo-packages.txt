@@ -12,6 +12,7 @@ cbindgen
 cross          # cargo cross-compilation helper
 inferno        # rust port of flamegraph.pl
 minijinja-cli  # template renderer
+systemd-lsp
 wasm-pack
 wasmtime-cli
 worker-build   # for cloudflare workers
