@@ -1,4 +1,4 @@
-setlocal foldcolumn=2
+setlocal foldcolumn=1
 setlocal nomodified
 setlocal showbreak=NONE
 setlocal nospell
