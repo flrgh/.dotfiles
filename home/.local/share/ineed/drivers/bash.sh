@@ -20,6 +20,8 @@ readonly LIBEXECDIR=$PREFIX/libexec
 readonly LIBBASH=$LIBDIR/bash
 readonly LOADABLES=$LIBBASH/loadables
 
+readonly SRC=${HOME}/.local/src/bash
+
 readonly LOCATIONS=(
   prefix="$PREFIX"         # [/usr/local]           install architecture-independent files in PREFIX
   bindir="$BINDIR"         # [EPREFIX/bin]          user executables
@@ -182,51 +184,197 @@ get-installed-version() {
     fi
 }
 
-list-available-versions() {
-    local html
-    html=$(cache-get -q "$INDEX" "bash-versions.html")
-    sed -n -r \
-        -e 's/.*href="bash-([0-9]+\.[0-9]+(\.[0-9]+)?)\.tar\.gz".*/\1/p' \
-    < "$html"
+declare -A _VERSION=(
+    [maj]=0
+    [min]=0
+    [patch]=0
+
+    [has_patch]=0
+
+    [maj_min]=""
+    [str]=""
+
+    [src_dir]=""
+    [patch_dir]=""
+
+    [download_url]=""
+    [patch_url]=""
+)
+
+_parse() {
+    local input=${1:?}
+
+    _VERSION[maj]=0
+    _VERSION[min]=0
+    _VERSION[patch]=0
+    _VERSION[has_patch]=0
+    _VERSION[maj_min]=""
+    _VERSION[str]=""
+    _VERSION[src_dir]=""
+    _VERSION[patch_dir]=""
+    _VERSION[download_url]=""
+    _VERSION[patch_url]=""
+
+    if [[ $input =~ ^([0-9]+)\.([0-9]+)(\.([0-9]+))?$ ]]; then
+        _VERSION[maj]=${BASH_REMATCH[1]}
+        _VERSION[min]=${BASH_REMATCH[2]}
+
+        _VERSION[patch]=${BASH_REMATCH[4]:-0}
+        if [[ -n ${BASH_REMATCH[4]:-} ]]; then
+            _VERSION[has_patch]=1
+        fi
+
+        _VERSION[maj_min]=${_VERSION[maj]}.${_VERSION[min]}
+        _VERSION[str]=${_VERSION[maj]}.${_VERSION[min]}.${_VERSION[patch]}
+
+        _VERSION[src_dir]=${SRC}/${_VERSION[str]}
+        _VERSION[patch_dir]=${SRC}/${_VERSION[maj_min]}-patches
+
+        # e.g. https://mirrors.ocf.berkeley.edu/gnu/bash/bash-5.2.37.tar.gz
+        _VERSION[download_url]=${MIRROR}/bash-${_VERSION[maj_min]}.tar.gz
+
+        # e.g. https://mirrors.ocf.berkeley.edu/gnu/bash/bash-5.2-patches/
+        _VERSION[patch_url]=${MIRROR}/bash-${_VERSION[maj_min]}-patches/
+
+        return 0
+    fi
+
+    return 1
 }
 
 get-asset-download-url() {
     local -r version=$1
-    # e.g. https://mirrors.ocf.berkeley.edu/gnu/bash/bash-5.2.37.tar.gz
-    echo "${MIRROR}/bash-${version}.tar.gz"
+
+    _parse "$version"
+    echo "${_VERSION[download_url]}"
 }
 
-download-patches() {
-    local -r version=$1
+list-patches() {
+    local -r version=${1:?}
 
-    # 5.3 => 5
-    # 5.3.1 => 5
-    local -r maj=${version%%.*}
+    _parse "$version"
 
-    # 5.3 => 3
-    # 5.3.1 => 3.1
-    local -r min_patch=${version#"$maj".}
+    local -r maj=${_VERSION[maj]}
+    local -r min=${_VERSION[min]}
 
-    # 3 => 3
-    # 3.1 => 3
-    local -r min=${min_patch%.*}
-
-    local -r base=${MIRROR}/bash-${maj}.${min}-patches
-    local -r index=${base}/
+    local -r index=${_VERSION[patch_url]}
     local html; html=$(cache-get -q "$index" "bash-${maj}.${min}-patches.html")
 
-    mkdir ./patches
-    local name path
     sed -n -r \
         -e 's/.*href="(bash[0-9]+-[0-9]+)".*/\1/p' \
-        < "$html" \
-    | while read -r name; do
-        path=$(cache-get -q "${base}/${name}" "${name}")
+        < "$html"
+}
+
+list-patch-numbers() {
+    local -r version=${1:?}
+
+    local patch
+    local -i num
+    while read -r patch; do
+        patch=${patch##*-}
+        num=${patch##*0}
+        echo "$num"
+    done < <(list-patches "$version")
+}
+
+
+download-patches() {
+    local -r version=${1:?}
+
+    _parse "$version"
+
+    local -r maj=${_VERSION[maj]}
+    local -r min=${_VERSION[min]}
+    local -r patch_url=${_VERSION[patch_url]}
+    local -r patch_dir=${_VERSION[patch_dir]}
+
+    mkdir -p "$patch_dir"
+
+
+    local patch path
+    while read -r patch; do
+        path=$(cache-get -q "${patch_url}${patch}" "bash-${maj}.${min}-patches/${patch}")
+
         if [[ ! -s $path ]]; then
-            echo "failed downloading patch $name"
+            echo "failed downloading patch $patch" >&2
             exit 1
         fi
-        cat "$path" > "./patches/${name}"
+
+        cp -a "$path" "${patch_dir}/"
+    done < <(list-patches "$version")
+}
+
+unpack-source() {
+    local -r asset=$1
+    local -r dst=$2
+
+    rm -rf "${dst:?}" || true
+    mkdir -p "$dst"
+
+    tar -C "$dst" --strip-components 1 \
+        -xzf "$asset"
+}
+
+
+list-available-versions() {
+    local html
+    html=$(cache-get -q "$INDEX" "bash-versions.html")
+
+    local version
+    while read -r version; do
+        _parse "$version"
+
+        # I just don't care about anything pre 5.x
+        if (( _VERSION[maj] < 5 )); then
+            continue
+        fi
+
+        echo "${_VERSION[str]}"
+
+        if (( _VERSION[has_patch] )); then
+            continue
+        fi
+
+        local patch
+        while read -r patch; do
+            # sanity
+            _parse "${version}.${patch}"
+
+            echo "${_VERSION[str]}"
+
+        done < <(list-patch-numbers "$version")
+    done < <(
+        sed -n -r \
+            -e 's/.*href="bash-([0-9]+\.[0-9]+(\.[0-9]+)?)\.tar\.gz".*/\1/p' \
+        < "$html"
+    ) \
+    | sort -V \
+    | uniq
+}
+
+patch-source() {
+    local -r version=${1:?}
+
+    _parse "$version"
+
+    local -r patches=${_VERSION[patch_dir]}
+    local -r src=${_VERSION[src_dir]}
+
+    local p num
+    for p in "${patches}"/*; do
+        num=${p##*/}
+        num=${p##*-}
+        num=${p##*0}
+
+        if (( num > _VERSION[patch] )); then
+            break
+        fi
+
+        echo "applying patch: ${p##*/}"
+
+        # patch in workdir
+        echo "patch -d '$src' -p0 < '$p'"
+        patch --verbose -d "$src" -p0 < "$p"
     done
 }
 
@@ -234,31 +382,18 @@ install-from-asset() {
     local -r asset=$1
     local -r version=$2
 
-    # keep source code around since I commonly reference it
-    local -r src=$HOME/.local/src/bash/${version}
-    rm -rf "${src:?}" || true
-    mkdir -p "$src"
+    _parse "$version"
 
-    tar -C "$src" --strip-components 1 \
-        -xzf "$asset"
+    local -r patches=${_VERSION[patch_dir]}
+    local -r src=${_VERSION[src_dir]}
+
+    # keep source code around since I commonly reference it
+    unpack-source "$asset" "$src"
+    download-patches "$version"
+    patch-source "$version"
 
     cd "$(mktemp -d)"
     rsync -a "$src/" "$PWD/"
-
-    download-patches "$version"
-    local -r patches=${src}-patches
-    rm -rf "${patches:?}" || true
-    mkdir -p "$patches"
-    rsync -a "./patches/" "${patches}/"
-
-    local p
-    for p in ./patches/*; do
-        # patch in workdir
-        patch -p2 < "$p"
-
-        # patch in src
-        patch -d "$src" -p2 < "$p"
-    done
 
     cp -a ./config-top.h{,.bak}
 

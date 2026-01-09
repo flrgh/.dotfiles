@@ -369,6 +369,16 @@ install::complete() {
     complete-from-drivers
 }
 
+unpin::cmd() {
+    local -r name=$1
+    remove-pin "$name"
+}
+
+unpin::complete() {
+    install::complete "$@"
+}
+
+
 pin::cmd() {
     local -r name=$1
     local version=${2:-}
