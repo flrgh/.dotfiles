@@ -28,6 +28,7 @@ jc                # convert text output from common tools to JSON
 jo                # command-line JSON object creation
 jq
 jwhois
+liburing-devel    # contains man pages for io_uring
 libyaml
 libyaml-devel
 litecli           # nicer SQLite CLI
