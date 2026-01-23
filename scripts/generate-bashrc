@@ -1197,6 +1197,13 @@ __rc_app_systemd() {
 }
 __rc_app_systemd
 
+__rc_app_aws() {
+    rc-export AWS_CLI_S3_MV_VALIDATE_SAME_S3_PATHS "true"
+    rc-export AWS_DEFAULT_REGION "us-west-2"
+    rc-export AWS_EC2_METADATA_DISABLED "true"
+}
+__rc_app_aws
+
 # hooks/bashrc/99-finalize.sh
 __rc_finalize() {
     rc-new-workfile "rc-timer-post"
