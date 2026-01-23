@@ -89,6 +89,10 @@ events_flush() {
 
     if [[ ! -e $__pid_file ]]; then
         : >"$__pid_file"
+
+        # re-trigger event handlers if our pid file was missing
+        __event_triggers[$EVENT_ID_CONF]=1
+        __event_triggers[$EVENT_ID_HISTORY]=1
     fi
 
     if (( __event_triggers[$EVENT_ID_CONF] == 1 )); then
