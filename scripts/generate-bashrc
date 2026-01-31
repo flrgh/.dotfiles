@@ -1085,8 +1085,6 @@ __rc_golang() {
     elif [[ -d $gopath ]]; then
         rc-add-path PATH "$gopath/bin"
     fi
-
-    go telemetry off
 }
 __rc_golang
 
