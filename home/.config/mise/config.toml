@@ -35,24 +35,61 @@ xh = "latest"
 yq = "latest"
 zls = "latest"
 tombi = "latest"
+claude-code = { version = "latest", bin = "claude", platforms = """
+[linux-arm64]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{ version }}/linux-arm64/claude"
+
+[linux-x64]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{ version }}/linux-x64/claude"
+
+[macos-arm64]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{ version }}/darwin-arm64/claude"
+
+[macos-x64]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{ version }}/darwin-x64/claude"
+
+[windows-x64]
+bin = "claude.exe"
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{ version }}/win32-x64/claude.exe"
+""", version_list_url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/latest" }
+htmlq = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
 # another backend
 disable_backends = [
-    # "aqua",
+    #"aqua",
     "asdf",
     "cargo",
-    "core",
+    "conda",
+    #"core",
     "dotnet",
+    "forgejo",
     "gem",
+    #"github",
+    #"gitlab",
+    "go",
+    #"http",
     "npm",
     "pipx",
+    "s3",
     "spm",
     "ubi",
     "vfox",
 ]
 paranoid = true
+experimental = true
+
+github_attestations = true
+gpg_verify = true
+
+ceiling_paths = [
+    "/home"
+]
+
+no_env = true
+no_hooks = true
+not_found_auto_install = false
 
 [settings.cargo]
 binstall = true
@@ -65,9 +102,14 @@ uvx = true
 slsa = true
 cosign = true
 minisign = true
+github_attestations = true
 
 [settings.node]
 gpg_verify = true
+
+[settings.github]
+github_attestations = true
+slsa = true
 
 
 # # mise config files are hierarchical. mise will find all of the config files

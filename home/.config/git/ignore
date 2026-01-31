@@ -6,3 +6,5 @@
 # kong
 .resty
 .kbt
+
+**/.claude/settings.local.json

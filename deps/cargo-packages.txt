@@ -11,6 +11,7 @@ cargo-update
 cbindgen
 cross          # cargo cross-compilation helper
 inferno        # rust port of flamegraph.pl
+html-to-markdown-cli
 minijinja-cli  # template renderer
 systemd-lsp
 wasm-pack

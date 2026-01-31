@@ -65,7 +65,13 @@ OLD_FILES := $(INSTALL_PATH)/.bash_profile \
 	$(INSTALL_BIN)/*~ \
 	$(INSTALL_STATE)/ineed/aws-cli.* \
 	$(INSTALL_BIN)/tl_* \
-	$(INSTALL_BIN)/marksman-linux
+	$(INSTALL_BIN)/marksman-linux \
+	$(INSTALL_DATA)/claude/versions/*
+
+# only removed if empty
+OLD_DIRS := $(INSTALL_DATA)/claude/versions \
+	$(INSTALL_DATA)/claude \
+	$(INSTALL_LIB)/node_modules/@anthropic-ai
 
 CREATE_DIRS := \
 	.cache .cache/download \
@@ -216,10 +222,16 @@ NPM_DEP_FILE := ./deps/package.json
 NPM_WANTED    = $(shell jq -r '.dependencies | to_entries | .[] | "\(.key)@\(.value)"' < $(NPM_DEP_FILE))
 NPM_INSTALLED = $(shell $(NPM) list -g --json | jq -r '.dependencies | to_entries | .[] | "\(.key)@\(.value.version)"')
 NPM_NEEDED    = $(strip $(filter-out $(NPM_INSTALLED),$(NPM_WANTED)))
+NPM_REMOVE    = $(shell jq -r '._removed // [] | .[]?' < $(NPM_DEP_FILE))
 
 .PHONY: npm
 npm: | $(MISE) .setup
-	@$(NPM) uninstall -g $(shell jq -r '.name' < $(NPM_DEP_FILE)); \
+	@_remove="$(NPM_REMOVE)"; \
+	if [[ -n $$_remove ]]; then \
+		echo "npm - uninstall: $$_remove"; \
+		$(NPM) uninstall -g $$_remove; \
+	fi;
+	$(NPM) uninstall -g $(shell jq -r '.name' < $(NPM_DEP_FILE)); \
 	_needed="$(NPM_NEEDED)"; \
 	if [[ -n $$_needed ]]; then \
 		echo "npm - install: $$_needed"; \
@@ -269,7 +281,7 @@ os-packages-update: os-packages
 	sudo dnf update -y
 
 $(DEP)/bazel: $(DEP)/bazelisk
-	ln -sfv $(shell $(MISE) which bazelisk) $(INSTALL_BIN)/bazel
+	ln -sfv bazelisk $(INSTALL_BIN)/bazel
 	$(TOUCH) --reference "$<" "$@"
 
 .PHONY: kong
@@ -278,7 +290,10 @@ kong: $(PKG)/os/kong $(DEP)/bazel | .setup
 .PHONY: rm-old-files
 rm-old-files:
 	@for f in $(OLD_FILES); do \
-		rm -rfv "$${f:?}"; \
+		rm --preserve-root --force --verbose -- "$${f:?}"; \
+	done
+	@for d in $(OLD_DIRS); do \
+		rm --preserve-root --dir --force --verbose "$${d:?}"; \
 	done
 
 .PRECIOUS: $(CREATE_DIRS)

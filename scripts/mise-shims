@@ -4,8 +4,9 @@
 
 set -euo pipefail
 
+readonly LOCAL_BIN="$HOME/.local/bin"
 readonly BINS=(
-    "$HOME/.local/bin"
+    "$LOCAL_BIN"
     "$HOME/.local/cargo/bin"
     "$HOME/.local/go/bin"
 )
@@ -13,24 +14,117 @@ readonly VBIN=$HOME/.local/vbin
 
 readonly SHIMS=${XDG_DATA_HOME:-${HOME}/.local/share}/mise/shims
 
+# things symlinked from ~/.local/bin/$name -> $(mise which $name)
+readonly -a SHIM_LINKS=()
+
+# things _not_ symlinked at all
+readonly -a MUST_SHIM=()
+
 shopt -s nullglob
 shopt -s extglob
 
+if (( ${DEBUG:-0} )); then
+    unlink() {
+        rm -fv "$@"
+    }
+
+    debug() {
+        echo "$@"
+    }
+
+else
+    unlink() {
+        rm -f "$@"
+    }
+
+    debug() {
+        :
+    }
+fi
+
+CLEAN=()
+clean() {
+    if (( $# > 0 )); then
+        CLEAN+=("$@")
+    else
+        unlink "${CLEAN[@]}"
+        CLEAN=()
+    fi
+}
+
+contains() {
+    local -r needle=${1:?}
+    shift
+
+    for elem in "$@"; do
+        if [[ $needle == "$elem" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+mklink() {
+    local -r target=${1:?}
+    local -r link=${2:?}
+
+    local current
+    if [[ -L $link ]] && current=$(readlink "$link") && [[ $current == "$target" ]]; then
+        debug "$link -> $target ... already linked"
+        return
+    fi
+
+    ln -sfv "$target" "$link"
+}
+
 mise reshim --force
 
-FILES=( "${SHIMS}"/* )
+cleanup_old_vbins() {
+    local -a files=( "${SHIMS}"/* )
+    clean "${files[@]/#"$SHIMS"/"${VBIN}"}"
+}
 
-rm -rfv "${FILES[@]/#"$SHIMS"/"${VBIN}"}"
+cleanup_conflicting_shims() {
+    for name in "${MUST_SHIM[@]}"; do
+        for dir in "${BINS[@]}"; do
+            clean "${dir}/${name}"
+        done
+    done
+    clean
+}
 
-for dir in "${BINS[@]}"; do
-    rm -fv "${FILES[@]/#"$SHIMS"/"${dir}"}"
-done
+cleanup_old_vbins
+cleanup_conflicting_shims
 
-for fname in "${FILES[@]}"; do
-    case $fname in
+for shim in "$SHIMS"/*; do
+    name=${shim##*/}
+
+    case $name in
         _*|*.so|*.so.[0-9]|*.so.[0-9].[0-9])
-            rm -fv "$fname";;
+            clean "$name"
+            continue
+            ;;
 
         *) ;;
     esac
+
+
+    if contains "$name" "${MUST_SHIM[@]}"; then
+        debug "use shim: $name"
+        continue
+    fi
+
+    if contains "$name" "${SHIM_LINKS[@]}"; then
+        debug "link to shim: $name"
+        mklink "$shim" "${LOCAL_BIN}/${name}"
+        continue
+    fi
+
+    # direct link
+    if bin=$(mise which "$name") && [[ -x $bin ]]; then
+        debug "direct link: $name"
+        mklink "$bin" "$LOCAL_BIN/$name"
+        clean "$SHIMS/$name"
+    fi
 done
+clean
