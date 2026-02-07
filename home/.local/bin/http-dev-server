@@ -32,11 +32,11 @@ usage() {
 
 while (( $# > 0 )); do
     case $1 in
-        -h|--help)      usage;   exit 0 ;;
-        -b|--bind)      ADDR=$1; shift  ;;
-        -p|--port)      PORT=$1; shift  ;;
-        -d|--directory) DIR=$1;  shift  ;;
-        *)              usage;   exit 1 ;;
+        -h|--help)      usage;   exit 0  ;;
+        -b|--bind)      ADDR=$2; shift 2 ;;
+        -p|--port)      PORT=$2; shift 2 ;;
+        -d|--directory) DIR=$2;  shift 2 ;;
+        *)              usage;   exit 1  ;;
     esac
 done
 
