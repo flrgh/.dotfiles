@@ -49,7 +49,6 @@ regex = "(ipfs:|ipns:|magnet:|mailto:|gemini://|gopher://|https://|http://|news:
 action = "Select"
 post_processing = true
 mouse.enabled = true
-mouse.mods = "None"
 
 # [long] git commit shas
 [[hints.enabled]]
@@ -57,7 +56,6 @@ regex = "[0-9a-f]{40}"
 action = "Select"
 post_processing = true
 mouse.enabled = true
-mouse.mods = "None"
 
 # UUIDs
 [[hints.enabled]]
@@ -65,7 +63,6 @@ regex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 action = "Select"
 post_processing = true
 mouse.enabled = true
-mouse.mods = "None"
 
 # email addresses
 [[hints.enabled]]
@@ -73,7 +70,6 @@ regex = "[_+a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+"
 action = "Select"
 post_processing = true
 mouse.enabled = true
-mouse.mods = "None"
 
 [[keyboard.bindings]]
 action = "Paste"
@@ -101,6 +97,12 @@ chars = "\u0006c"
 key = "T"
 mods = "Control|Shift"
 
+# Shift+Return newline binding for claude in tmux
+[[keyboard.bindings]]
+key = "Return"
+mods = "Shift"
+chars = "\u001b\r"
+
 [mouse]
 hide_when_typing = false
 
@@ -120,7 +122,7 @@ semantic_escape_chars = ",│`|:\"' ()[]{}<>"
 osc52 = "OnlyCopy"
 
 [window]
-decorations = "None"
+decorations = "none"
 decorations_theme_variant = "None"
 dynamic_padding = false
 dynamic_title = true
