@@ -1,0 +1,866 @@
+#!/usr/bin/env luajit
+
+local cjson = require("cjson.safe")
+local inspect = require("inspect")
+local lfs = require("lfs")
+local uv = require("luv")
+
+local NULL = assert(cjson.null)
+local fmt = string.format
+local concat = table.concat
+local type = type
+local sub = string.sub
+local find = string.find
+local decode = cjson.decode
+local getmetatable = debug.getmetatable
+local tostring = tostring
+
+cjson.decode_array_with_array_mt(true)
+
+local cjson_array_mt = assert(cjson.array_mt)
+local cjson_empty_array = assert(cjson.empty_array)
+local cjson_empty_array_mt = assert(cjson.empty_array_mt)
+
+---@param t any
+---@return boolean
+local function is_array(t)
+  if type(t) ~= "table" then
+    return false
+  end
+
+  local mt = getmetatable(t)
+  return t == cjson_array_mt
+    or mt == cjson_array_mt
+    or mt == cjson_empty_array_mt
+end
+
+
+---@class jrpc
+---
+---@field jsonrpc "2.0"
+---@field id string|integer|nil
+
+---@class jrpc.request : jrpc
+---
+---@field id string|integer
+---@field method string
+---@field params? table
+
+---@class jrpc.notification : jrpc.request
+---
+---@field id nil
+
+---@class jrpc.response : jrpc
+---
+---@field id string|integer
+---@field result table
+
+---@class jrpc.error : jrpc
+---
+---@field id string|integer|cjson.null
+---@field error { code: integer, message: string, data: any }
+
+---@alias jrpc.message
+---| jrpc.request
+---| jrpc.notification
+---| jrpc.response
+---| jrpc.error
+
+
+---@enum jrpc.message.type
+local JRPC_TYPES = {
+  NONE = 0,
+  REQUEST = 1,
+  RESPONSE = 2,
+  NOTIFICATION = 3,
+  ERROR = 4,
+  REQUEST_BATCH = 5,
+  RESPONSE_BATCH = 6,
+}
+
+local JRPC_NONE = JRPC_TYPES.NONE
+local JRPC_REQUEST = JRPC_TYPES.REQUEST
+local JRPC_RESPONSE = JRPC_TYPES.RESPONSE
+local JRPC_NOTIFICATION = JRPC_TYPES.NOTIFICATION
+local JRPC_ERROR = JRPC_TYPES.ERROR
+local JRPC_REQUEST_BATCH = JRPC_TYPES.REQUEST_BATCH
+local JRPC_RESPONSE_BATCH = JRPC_TYPES.RESPONSE_BATCH
+
+
+---@enum jrpc.error.code
+local JRPC_ERRORS = {
+  --- Invalid JSON was received by the server.
+  --- An error occurred on the server while parsing the JSON text.
+  PARSE_ERROR = -32700,
+
+  --- The JSON sent is not a valid Request object.
+  INVALID_REQUEST = -32600,
+
+  --- The method does not exist / is not available.
+  METHOD_NOT_FOUND = -32601,
+
+  --- Invalid method parameter(s).
+  INVALID_PARAMS = -32602,
+
+  --- Internal JSON-RPC error.
+  INTERNAL_ERROR = -32603,
+
+  --- MCP specific
+  URL_ELICITATION_REQUIRED = -32042,
+
+  --- MCP specific
+  REQUEST_CANCELLED = -32800,
+}
+
+local JRPC_ERROR_STRINGS = {}
+do
+  for k, v in pairs(JRPC_ERRORS) do
+    JRPC_ERROR_STRINGS[v] = k
+  end
+end
+local UNKNOWN = "UNKNOWN"
+local PARSE_ERROR = JRPC_ERRORS.PARSE_ERROR
+local INVALID_REQUEST = JRPC_ERRORS.INVALID_REQUEST
+local METHOD_NOT_FOUND = JRPC_ERRORS.METHOD_NOT_FOUND
+local INVALID_PARAMS = JRPC_ERRORS.INVALID_PARAMS
+local INTERNAL_ERROR = JRPC_ERRORS.INTERNAL_ERROR
+local URL_ELICITATION_REQUIRED = JRPC_ERRORS.URL_ELICITATION_REQUIRED
+local REQUEST_CANCELLED = JRPC_ERRORS.REQUEST_CANCELLED
+
+---@param msg jrpc.response|jrpc.error
+local function is_error(msg)
+  return msg.id == NULL
+    or msg.error ~= nil
+end
+
+---@param msg jrpc.message
+---@return jrpc.message.type
+local function msg_type(msg)
+  local id = msg.id
+
+  if id == nil then
+    -- batch
+    if is_array(msg) then
+      local first = msg[1]
+      if not first then
+        return NONE
+      end
+
+      local btype = msg_type(first)
+
+      -- batches must be requests or responses (which might be errors)
+      if btype == JRPC_REQUEST then
+        return JRPC_REQUEST_BATCH
+
+      elseif btype == JRPC_RESPONSE or btype == JRPC_ERROR then
+        return JRPC_RESPONSE_BATCH
+      end
+
+      -- invalid
+      return NONE
+    end
+
+    return JRPC_NOTIFICATION
+
+  elseif id == NULL or msg.error ~= nil then
+    assert(msg.result == nil)
+    return JRPC_ERROR
+  end
+
+  if msg.result ~= nil then
+    assert(msg.params == nil)
+    return JRPC_RESPONSE
+  end
+
+  if type(msg.method) == "string" then
+    return JRPC_REQUEST
+  end
+
+  return JRPC_NONE
+end
+
+
+local ARGS = assert(_G.arg)
+local MODE = "stdio"
+
+---@type "none"|"mcp"|"lsp"
+local PROTO = "none"
+
+local CMD
+local CMD_ARGS
+do
+  local cmd_offset
+
+  for i = 1, #ARGS do
+    local arg = ARGS[i]
+
+    if arg == "--stdio" then
+      MODE = "stdio"
+
+    elseif arg == "--mcp" then
+      PROTO = "mcp"
+
+    elseif arg == "--lsp" then
+      PROTO = "lsp"
+
+    elseif arg == "--" then
+      cmd_offset = i + 1
+      break
+
+    elseif arg:sub(1, 1) == "-" then
+      error(fmt("unknown argument: %q", arg))
+
+    else
+      cmd_offset = i
+      break
+    end
+  end
+
+  if cmd_offset then
+    CMD = ARGS[cmd_offset]
+    CMD_ARGS = {}
+    local n = 0
+    for i = cmd_offset + 1, #ARGS do
+      n = n + 1
+      CMD_ARGS[n] = ARGS[i]
+    end
+  end
+end
+
+if MODE ~= "stdio" or not CMD then
+  error("what am I supposed to do?")
+end
+
+local EXIT = nil
+local EXIT_CODE = 0
+local EXIT_SIG
+local CLIENT_SIG
+
+local LABEL = CMD:gsub(".*/+([^/]+)", "%1")
+
+local CLIENT_STDIN = assert(uv.new_pipe())
+assert(CLIENT_STDIN:open(0))
+
+local CLIENT_STDOUT = assert(uv.new_pipe())
+assert(CLIENT_STDOUT:open(1))
+
+local CLIENT_STDERR = assert(uv.new_pipe())
+assert(CLIENT_STDERR:open(2))
+
+local LOG_FNAME = "./rpc.log"
+local LOG_FD = assert(uv.fs_open(LOG_FNAME, "a+", tonumber("664", 8)))
+local LOG = assert(uv.new_pipe())
+assert(LOG:open(LOG_FD))
+
+local function noop() end
+
+
+---@param err? string
+local function log_cb(err)
+  if err then
+    local msg = fmt("[%s] failed writing log entry to %q: %s\n", LABEL, LOG_FNAME, err)
+    io.stderr:write(msg)
+    io.stderr:flush()
+  end
+end
+
+---@param msg string
+local function _log(msg)
+  LOG:write("[" .. LABEL .. "] " .. msg, log_err)
+end
+
+---@param format string
+---@param ... any
+local function logf(format, ...)
+  local msg = fmt(format, ...)
+  _log(msg)
+end
+
+---@param ... string
+local function log(...)
+  local n = select("#", ...)
+
+  if n == 1 then
+    local msg = select(1, ...) .. "\n"
+    _log(msg)
+
+  else
+    local f = string.rep("%s", select("#", ...), " ") .. "\n"
+    logf(f, ...)
+  end
+end
+
+local SERVER_STDIN = uv.new_pipe()
+local SERVER_STDOUT = uv.new_pipe()
+local SERVER_STDERR = uv.new_pipe()
+
+local SERVER_EXIT = false
+
+local function set_timeout(t, fn, detached)
+  local timer = uv.new_timer()
+  if detached then
+    timer:unref()
+  end
+
+  timer:start(t, 0, function()
+    timer:stop()
+    fn()
+  end)
+end
+
+local COND = {}
+
+
+local function cond_listen(name, fn, once)
+  if type(name) == "table" then
+    name = concat(name, ".")
+  end
+
+  assert(COND[name] ~= nil)
+  assert(type(fn) == "function")
+
+  local prep = uv.new_prepare()
+
+  local callback
+  if once then
+    callback = function()
+      local value = COND[name]
+      if value then
+        prep:stop()
+        fn(value)
+      end
+    end
+  else
+    callback = function()
+      local value = COND[name]
+      if value then
+        local ok, err_or_stop = pcall(fn, value)
+        if not ok or err_or_stop then
+          prep:stop()
+        end
+      end
+    end
+  end
+
+  prep:start(callback)
+end
+
+local function cond_register(name)
+  if type(name) == "table" then
+    name = concat(name, ".")
+  end
+
+  assert(COND[name] == nil)
+  COND[name] = false
+end
+
+local function cond_set(name, value)
+  if type(name) == "table" then
+    name = concat(name, ".")
+  end
+
+  assert(COND[name] ~= nil)
+  COND[name] = value or true
+end
+
+local function cond_unset(name)
+  if type(name) == "table" then
+    name = concat(name, ".")
+  end
+
+  assert(COND[name] ~= nil)
+  COND[name] = false
+end
+
+cond_register("exit")
+
+cond_register({ "server", "exit" })
+local SERVER, SERVER_PID = uv.spawn(CMD, {
+  stdio = { SERVER_STDIN, SERVER_STDOUT, SERVER_STDERR },
+  args = CMD_ARGS,
+}, function(code, signal)
+  cond_set({ "server", "exit" }, {
+    code = code,
+    signal = signal,
+  })
+end)
+
+LABEL = LABEL .. ":" .. SERVER_PID
+log("process opened", SERVER, SERVER_PID)
+
+local STREAMS = 0
+cond_register({ "stream", "closed" })
+cond_register({ "all-streams-closed" })
+cond_listen({ "stream", "closed" }, function()
+  if STREAMS == 0 then
+    cond_set("all-streams-closed")
+    return true
+  end
+  cond_unset({ "stream", "closed" })
+end)
+
+local function sopen()
+  STREAMS = STREAMS + 1
+end
+local function sclose()
+  STREAMS = STREAMS - 1
+  cond_set({ "stream", "closed" })
+end
+
+---@type table<string, jrpc.request>
+local REQUESTS = {}
+
+---@type table<string, table>
+local REQUEST_META = {}
+
+---@param req jrpc.request
+---@param id? string
+---@return string id
+local function add_req(req, id)
+  id = id or tostring(req.id)
+  assert(REQUESTS[id] == nil)
+  REQUESTS[id] = req
+
+  REQUEST_META[id] = {
+    start = uv.hrtime(),
+  }
+
+  return id
+end
+
+---@param res jrpc.response|jrpc.error
+---@param id? string
+---@return string id
+---@return jrpc.request? req
+---@return table? meta
+local function get_req(res, id)
+  id = id or tostring(res.id)
+
+  local req = REQUESTS[id]
+  REQUESTS[id] = nil
+
+  local meta = REQUEST_META[id]
+  REQUEST_META[id] = nil
+
+  if meta then
+    local stop = uv.hrtime()
+    meta.stop = stop
+    meta.duration = stop - meta.start
+  end
+
+  return id, req, meta
+end
+
+---@param res? jrpc.response|jrpc.error
+---@param meta? table
+---@param buf string.buffer
+local function format_response_meta(res, meta, buf)
+  if res and meta then
+    local duration = meta.duration / 1000 / 1000
+    buf:putf("duration: %s ms\n", duration)
+  end
+end
+
+---@param req jrpc.request
+---@param buf string.buffer
+local function format_request(req, buf)
+  local id = add_req(req, id)
+
+  local method = req.method
+  local params = req.params
+
+  if PROTO == "mcp" then
+    if method == "tools/call" then
+      local args = params.arguments
+      local meta = params._meta
+      local name = params.name
+
+      buf:putf("request[%s] %s %s()", id, method, name)
+      if args then
+        buf:put("\narguments: ")
+          :put(inspect(args))
+      end
+
+      if meta then
+        buf:put("\nmeta: ")
+          :put(inspect(meta))
+      end
+      return
+
+    elseif method == "resources/read" then
+      local uri = params.uri
+      buf:putf("request[%s] %s read(%s)", id, method, params.uri)
+      return
+    end
+  end
+
+  buf:putf("request[%s](%s)\n", id, method)
+  if params then
+    buf:put("params: ")
+      :put(inspect(params))
+  end
+end
+
+---@param res jrpc.response
+---@param buf string.buffer
+local function format_response(res, buf)
+  local id, req, meta = get_req(res)
+
+  if req then
+    buf:putf("response[%s](%s)\n", id, req.method)
+  else
+    buf:putf("response[%s]\n", id)
+  end
+  format_response_meta(res, meta, buf)
+
+  local result = res.result
+
+  if PROTO == "mcp" and req then
+    if req.method == "tools/call" then
+      local err = result.isError
+      result = result.structuredContent or result.content or result.contents or result
+
+      if err then
+        buf:putf("%s() -> error\n", req.params.name)
+      else
+        buf:putf("%s() ->\n", req.params.name)
+      end
+
+    elseif req.method == "resources/read" then
+      buf:putf("read(%s) ->\n", req.params.uri)
+      result = result.structuredContent or result.content or result.contents or result
+    end
+  end
+
+  buf:put(inspect(result))
+end
+
+---@param res jrpc.error
+---@param buf string.buffer
+local function format_error(res, buf)
+  local id, req, meta = get_req(res)
+
+  if req then
+    buf:putf("error[%s](%s)\n", id, req.method)
+  else
+    buf:putf("error[%s]\n", id)
+  end
+
+  format_response_meta(res, meta, buf)
+  buf:put(inspect(res))
+end
+
+---@param msg jrpc.notification
+---@param buf string.buffer
+local function format_notification(msg, buf)
+  buf:putf("notification(%s)\n", msg.method)
+end
+
+
+---@param data string
+---@param buf string.buffer
+local function format_msg(data, buf)
+  ---@type jrpc.message
+  local msg = decode(data)
+
+  if not msg then
+    buf:put(data)
+    return
+  end
+
+  local ty = msg_type(msg)
+
+  if ty == JRPC_REQUEST then
+    format_request(msg, buf, 1, 1)
+
+  elseif ty == JRPC_RESPONSE then
+    format_response(msg, buf, 1, 1)
+
+  elseif ty == JRPC_NOTIFICATION then
+    format_notification(msg, buf)
+
+  elseif ty == JRPC_ERROR then
+    format_error(msg, buf, 1, 1)
+
+
+  elseif ty == JRPC_REQUEST_BATCH then
+    ---@type jrpc.request[]
+    local batch = msg
+    local len = #batch
+
+    buf:putf("request batch (size: %s)\n", len)
+    for i = 1, len do
+      buf:putf("%s/%s\n", i, len)
+      format_request(batch[i], buf)
+    end
+
+  elseif ty == JRPC_RESPONSE_BATCH then
+    ---@type jrpc.message[]
+    local batch = msg
+    local len = #batch
+
+    buf:putf("response batch (size: %s)\n", len)
+
+    for i = 1, len do
+      buf:putf("%s/%s\n", i, len)
+
+      local msg = batch[i]
+      if is_error(msg) then
+        format_error(msg, buf)
+      else
+        format_response(msg, buf)
+      end
+    end
+
+  else
+    assert(ty == JRPC_NONE)
+    buf:put(inspect(msg))
+  end
+end
+
+
+---@param src uv.uv_pipe_t
+---@param dst uv.uv_pipe_t
+---@param stream string
+---@param role "client"|"server"
+local function forward(src, dst, stream, role)
+  local src_fd = src:fileno()
+  local dst_fd = dst:fileno()
+
+  local peer = role == "client" and "server" or "client"
+
+  logf("forwarding %s<%s> (%s) to %s<%s> (%s)\n",
+       role, stream, src_fd,
+       peer, stream, dst_fd)
+
+  local reading = true
+  local writing = 0
+
+  cond_register({ role, stream, "eof" })
+  cond_register({ role, stream, "closed" })
+
+  cond_listen("exit", function()
+    if src and reading then
+      return false
+    end
+
+    if src and not src:is_closing() then
+      src:close()
+      src:unref()
+      src = nil
+    end
+
+    if src_fd then
+      uv.fs_close(src_fd)
+      src_fd = nil
+    end
+
+    sclose()
+    cond_set({ role, stream, "closed" })
+    return true
+  end)
+
+  cond_listen({ role, stream, "closed" }, function()
+    if dst and writing > 0 then
+      return false
+    end
+
+    if dst and not dst:is_closing() then
+      dst:shutdown()
+      dst:close()
+      dst:unref()
+      dst = nil
+    end
+
+    if dst_fd then
+      uv.fs_close(dst_fd)
+      dst_fd = nil
+    end
+
+    sclose()
+    return true
+  end)
+
+  cond_listen({ role, stream, "eof" }, function()
+    cond_set({ role, stream, "closed" })
+  end, true)
+
+  local function write_finished(err)
+    writing = writing - 1
+
+    if err then
+      logf("write(%s<%s>) -> write error: %s\n", peer, stream)
+    end
+  end
+
+  local function send(chunk)
+    writing = writing + 1
+    local len = #chunk
+    logf("write(%s<%s>) -> %s bytes\n", peer, stream, len)
+    dst:write(chunk, write_finished)
+  end
+
+  local write
+  if stream == "stdout" or stream == "stdin" then
+    local buf = require("string.buffer").new()
+    write = function(chunk)
+      send(chunk)
+
+      local offset = 1
+      while true do
+        local pos = find(chunk, "\n", offset, true)
+        if not pos then
+          break
+        end
+
+        buf:put(sub(chunk, offset, pos - 1))
+        offset = pos + 1
+
+        local json = buf:get()
+        local msg = format_msg(json, buf)
+        logf("send(%s -> %s) -> %s\n", role, peer, buf:get())
+      end
+      buf:put(sub(chunk, offset))
+    end
+  else
+    assert(stream == "stderr")
+    write = function(chunk)
+      send(chunk)
+      logf("stderr:\n%s", chunk)
+    end
+  end
+
+  local function read(err, chunk)
+    if err then
+      logf("read(%s<%s>) -> read error: %s\n", role, stream, err)
+
+    elseif chunk then
+      write(chunk)
+
+    else
+      EXIT = stream .. " EOF"
+      reading = false
+
+      logf("read(%s<%s>) -> EOF\n", role, stream)
+      src:read_stop()
+      cond_set({ role, stream, "eof" })
+    end
+  end
+
+  sopen()
+  sopen()
+  assert(uv.read_start(src, read))
+end
+
+forward(CLIENT_STDIN, SERVER_STDIN, "stdin", "client")
+forward(SERVER_STDOUT, CLIENT_STDOUT, "stdout", "server")
+forward(SERVER_STDERR, CLIENT_STDERR, "stderr", "server")
+
+log(inspect({ "args", _G.arg, "command", CMD, "PID", SERVER_PID }))
+
+local function sighandler(name, handler)
+  local signum = assert(uv.constants[name])
+
+  local signal = assert(uv.new_signal())
+
+  cond_listen("exit", function()
+    signal:stop()
+    signal:close()
+  end, true)
+
+  local received = false
+
+  cond_register({ "signal", name })
+  cond_listen({ "signal", name }, handler)
+
+  signal:start(signum, function()
+    if received then
+      return
+    end
+
+    received = true
+
+    log("signal received", name)
+    cond_set({ "signal", name })
+
+    CLIENT_SIG = signum
+    EXIT = EXIT or "signaled"
+    signal:stop()
+  end)
+end
+
+sighandler("SIGTERM", function()
+  log("forwarding SIGTERM")
+  SERVER:kill("SIGTERM")
+  cond_set("exit")
+end, true)
+
+sighandler("SIGINT", function()
+  log("forwarding SIGINT to SIGTERM")
+  cond_set({ "signal", "SIGTERM" })
+end, true)
+
+local EC
+
+cond_listen({ "server", "exit" }, function(data)
+  local code = data.code
+  local signal = data.signal
+
+  if code then
+    EXIT_CODE = code
+    log("server exited with code:", code)
+  end
+
+  if signal then
+    EXIT_SIG = signal
+    log("server exited after receiving signal:", signal)
+  end
+
+  EXIT = EXIT or "server exited"
+  SERVER_EXIT = true
+
+  if not SERVER:is_closing() then
+    SERVER:close()
+  end
+
+  cond_set("exit", EXIT)
+end, true)
+
+cond_listen("exit", function()
+  cond_listen("all-streams-closed", function()
+    log("all streams have been closed")
+  end, true)
+end, true)
+
+cond_listen("exit", function()
+  EC = EXIT_CODE
+  local sig = EXIT_SIG
+
+  log("exiting")
+
+  if not SERVER_EXIT then
+    log("sending SIGTERM to server")
+    SERVER:kill("SIGTERM")
+
+    set_timeout(1000, function()
+      if not SERVER_EXIT then
+        log("sending SIGKILL to server")
+        SERVER:kill("SIGTERM")
+      end
+    end, true)
+  end
+
+  if sig then
+    log("server received signal:", sig)
+  end
+
+  log("server exited with exit code:", EC)
+
+  LOG:close()
+  uv.fs_fsync(LOG_FD)
+  uv.fs_close(LOG_FD)
+end)
+
+uv.run("default")
+
+os.exit(EC)
