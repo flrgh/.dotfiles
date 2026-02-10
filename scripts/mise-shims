@@ -79,6 +79,10 @@ mklink() {
 
 mise reshim --force
 
+cleanup_local_bin() {
+    symlinks -d "$LOCAL_BIN" >/dev/null
+}
+
 cleanup_old_vbins() {
     local -a files=( "${SHIMS}"/* )
     clean "${files[@]/#"$SHIMS"/"${VBIN}"}"
@@ -93,6 +97,7 @@ cleanup_conflicting_shims() {
     clean
 }
 
+cleanup_local_bin
 cleanup_old_vbins
 cleanup_conflicting_shims
 
@@ -101,6 +106,11 @@ for shim in "$SHIMS"/*; do
 
     case $name in
         _*|*.so|*.so.[0-9]|*.so.[0-9].[0-9])
+            clean "$name"
+            continue
+            ;;
+
+        tombi-cli-*)
             clean "$name"
             continue
             ;;
