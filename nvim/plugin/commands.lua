@@ -305,6 +305,17 @@ command("LuaDebug",
       end
     end
 
+    do
+      local requires = require("my.std.luamod.requires")
+      local r = requires.get_module_requires(0)
+      buf:put("lua modules imported by this buffer:\n")
+      if r then
+        for _, name in ipairs(r) do
+          buf:putf("  - %s\n", name)
+        end
+      end
+    end
+
     buf:put("\n")
     vim.print(buf:get())
   end,
