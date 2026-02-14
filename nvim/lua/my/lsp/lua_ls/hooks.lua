@@ -110,6 +110,12 @@ local MODS = {
     },
   },
 
+  lsqlite3 = {
+    type_defs = {
+      TYPE_DIR .. "/lsqlite3",
+    },
+  },
+
   ltn12 = {
     include = {
       "luasocket",
