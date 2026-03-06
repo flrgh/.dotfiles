@@ -6,7 +6,9 @@ local vim = vim
 local api = vim.api
 local uv = vim.uv
 
-local expand = vim.fn.expand
+local expand = vim.fn and vim.fn.expand or function()
+  error("NYI")
+end
 
 local fs_stat = uv.fs_stat
 local fs_realpath = uv.fs_realpath
