@@ -1,6 +1,6 @@
---- key-bindings.old.bash	2025-11-16 16:53:30.833487473 -0800
-+++ key-bindings.new.bash	2025-11-16 16:55:11.528238829 -0800
-@@ -1,125 +1,111 @@
+--- key-bindings.bash.orig	2026-03-06 11:34:33.813745019 -0800
++++ bash/fzf.bash	2026-03-06 11:34:06.585132466 -0800
+@@ -1,125 +1,112 @@
 -### key-bindings.bash ###
 -#     ____      ____
 -#    / __/___  / __/
@@ -122,7 +122,8 @@
 +    FZF_DEFAULT_COMMAND=${FZF_CTRL_T_COMMAND:-} \
 +        FZF_DEFAULT_OPTS="$__fzf_defaults__" \
 +        FZF_DEFAULT_OPTS_FILE='' \
-+        fzf "$@" | while read -r item; do
++        fzf "$@" \
++    | while read -r item; do
 +        printf '%q ' "$item" # escape special chars
 +    done
  }
@@ -195,9 +196,9 @@
 -        FZF_DEFAULT_OPTS=$(__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort,alt-r:toggle-raw --wrap-sign '"$'\t'"↳ ' --highlight-line ${FZF_CTRL_R_OPTS-} +m --read0") \
 -        FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd) --query "$READLINE_LINE"
 +        set +o pipefail
-+        builtin fc -lnr -2147483648 2>/dev/null |
-+            "$__fzf_lua_history" "$n" |
-+            FZF_DEFAULT_OPTS="$__fzf_defaults__" \
++        builtin fc -lnr -2147483648 2>/dev/null \
++            | "$__fzf_lua_history" "$n" \
++            | FZF_DEFAULT_OPTS="$__fzf_defaults__" \
 +                FZF_DEFAULT_OPTS_FILE='' \
 +                fzf --query "$READLINE_LINE"
      ) || return
@@ -215,15 +216,15 @@
 +}
  
  # Required to refresh the prompt after fzf
- bind -m emacs-standard '"\er": redraw-current-line'
-@@ -128,49 +114,12 @@
+ bind -m emacs-standard '"\C-\e(": redraw-current-line'
+@@ -128,49 +115,12 @@
  bind -m vi-insert '"\C-z": emacs-editing-mode'
  bind -m emacs-standard '"\C-z": vi-editing-mode'
  
 -if ((BASH_VERSINFO[0] < 4)); then
 -  # CTRL-T - Paste the selected file path into the command line
 -  if [[ ${FZF_CTRL_T_COMMAND-x} != "" ]]; then
--    bind -m emacs-standard '"\C-t": " \C-b\C-k \C-u`__fzf_select__`\e\C-e\er\C-a\C-y\C-h\C-e\e \C-y\ey\C-x\C-x\C-f\C-y\ey\C-_"'
+-    bind -m emacs-standard '"\C-t": " \C-b\C-k \C-u`__fzf_select__`\e\C-e\C-\e(\C-a\C-y\C-h\C-e\e \C-y\ey\C-x\C-x\C-f\C-y\ey\C-_"'
 -    bind -m vi-command '"\C-t": "\C-z\C-t\C-z"'
 -    bind -m vi-insert '"\C-t": "\C-z\C-t\C-z"'
 -  fi
@@ -233,7 +234,7 @@
 -    if [[ -n ${FZF_CTRL_R_COMMAND-} ]]; then
 -      echo "warning: FZF_CTRL_R_COMMAND is set to a custom command, but custom commands are not yet supported for CTRL-R" >&2
 -    fi
--    bind -m emacs-standard '"\C-r": "\C-e \C-u\C-y\ey\C-u`__fzf_history__`\e\C-e\er"'
+-    bind -m emacs-standard '"\C-r": "\C-e \C-u\C-y\ey\C-u`__fzf_history__`\e\C-e\C-\e("'
 -    bind -m vi-command '"\C-r": "\C-z\C-r\C-z"'
 -    bind -m vi-insert '"\C-r": "\C-z\C-r\C-z"'
 -  fi
@@ -258,7 +259,7 @@
 -
 -# ALT-C - cd into the selected directory
 -if [[ ${FZF_ALT_C_COMMAND-x} != "" ]]; then
--  bind -m emacs-standard '"\ec": " \C-b\C-k \C-u`__fzf_cd__`\e\C-e\er\C-m\C-y\C-h\e \C-y\ey\C-x\C-x\C-d\C-y\ey\C-_"'
+-  bind -m emacs-standard '"\ec": " \C-b\C-k \C-u`__fzf_cd__`\e\C-e\C-\e(\C-m\C-y\C-h\e \C-y\ey\C-x\C-x\C-d\C-y\ey\C-_"'
 -  bind -m vi-command '"\ec": "\C-z\ec\C-z"'
 -  bind -m vi-insert '"\ec": "\C-z\ec\C-z"'
 -fi
