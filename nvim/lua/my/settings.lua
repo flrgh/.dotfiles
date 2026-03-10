@@ -56,7 +56,16 @@ o.mouse      = 'nv'
 o.clipboard  = 'unnamedplus'
 
 -- visual settings
-opt.listchars     = { eol = '$' }
+opt.listchars = {
+  --eol = "␊",
+  eol = "␤",
+
+  tab = "␉·",
+
+  trail = "ꜝ",
+
+  nbsp = "_",
+}
 o.ruler         = true
 o.number        = true
 o.background    = 'dark'
