@@ -2,9 +2,9 @@
 import = [
 	"~/.config/alacritty/alacritty.local.toml",
 	"~/.config/alacritty/shell.toml",
-	"~/.config/alacritty/catppuccin-mocha.toml"
+	"~/.config/alacritty/kanagawa_wave.toml"
 ]
-ipc_socket = false
+ipc_socket = true
 live_config_reload = true
 working_directory = "None"
 

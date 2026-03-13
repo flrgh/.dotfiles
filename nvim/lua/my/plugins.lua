@@ -351,6 +351,7 @@ do
       -- tokyonight-moon
       { "folke/tokyonight.nvim",
         lazy = false,
+        cond = false,
         config = function()
           require("tokyonight").setup()
         end,
@@ -361,15 +362,17 @@ do
 
       -- catppuccin-mocha
       { "catppuccin/nvim",
-        enabled = false,
+        cond = false,
         name = "catppuccin",
         config = function()
           cmd.colorscheme("catppuccin-mocha")
         end,
       },
 
+      -- they changed something, and now it's a purple-y mess
       { "marko-cerovac/material.nvim",
         lazy = false,
+        cond = false,
         config = function()
           --[[
             "darker"
@@ -391,6 +394,11 @@ do
               "which-key",
               "nvim-notify",
             },
+            custom_colors = function(colors)
+              --colors.syntax.type = colors.syntax.string
+              --colors.syntax.type = "#ffcb6b"
+              --colors.syntax.type = "#f07178"
+            end,
           })
           cmd.colorscheme("material")
         end,
@@ -402,8 +410,27 @@ do
       -- warm, low contrast
       -- kanagawa-dragon is pretty nice
       { "rebelot/kanagawa.nvim",
-        enabled = false,
+        lazy = false,
         config = function()
+          require("kanagawa").setup({
+            compile = true,
+            transparent = false,
+            colors = {
+              palette = {
+                -- default is #1F1F28bg
+                --sumiInk3 = "#292936",
+              },
+              theme = {
+                all = {
+                  ui = {
+                    -- lighten up the default background a tad
+                    -- default is #1F1F28bg
+                    bg = "#292936",
+                  },
+                },
+              },
+            },
+          })
           cmd.colorscheme("kanagawa")
         end,
       },
@@ -411,7 +438,8 @@ do
       -- more bright, high contrast
       { "bluz71/vim-nightfly-colors",
         as = "nightfly",
-        enabled = false,
+        cond = false,
+        lazy = true,
         config = function()
           local g = vim.g
           g.nightflyCursorColor         = true
@@ -430,12 +458,21 @@ do
           ]]--
           g.nightflyWinSeparator        = 0
 
-          --cmd.colorscheme("nightfly")
+          cmd.colorscheme("nightfly")
         end,
       },
 
       { "lunarvim/darkplus.nvim",
-        enabled = false,
+        cond = false,
+      },
+
+      {
+        "mcauley-penney/techbase.nvim",
+        cond = false,
+      },
+      {
+        "sam4llis/nvim-tundra",
+        cond = false,
       },
     },
 
