@@ -494,7 +494,7 @@ do
         "romgrk/barbar.nvim",
         dependencies = {
           "nvim-tree/nvim-web-devicons",
-          "lewis6991/gitsigns.nvim",
+          --"lewis6991/gitsigns.nvim",
         },
         init = function()
           vim.g.barbar_auto_setup = false
@@ -650,6 +650,7 @@ do
       {
         "lewis6991/gitsigns.nvim",
         lazy = true,
+        enabled = false,
         config = function()
           require("gitsigns").setup({
             signcolumn = true,
