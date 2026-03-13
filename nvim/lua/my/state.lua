@@ -48,6 +48,8 @@ end
 ---
 ---@field workspace my.workspace
 ---
+---@field uv_handle_stats? my.uv_handle_stats
+---
 ---@field [string] any
 _M.global = {}
 

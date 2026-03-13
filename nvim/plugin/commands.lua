@@ -559,3 +559,224 @@ command("LspCapabilities",
     end,
   }
 )
+
+command("UVDebug",
+  function()
+    local stats = require("my.state").global.uv_handle_stats
+    if not stats then
+      return
+    end
+
+    ---@param counts table<string, integer>
+    ---@return fun():(string, integer)
+    local function sorted_counts(counts)
+      local keys = {}
+      for k in pairs(counts) do
+        table.insert(keys, k)
+      end
+
+      table.sort(keys, function(a, b)
+        return counts[a] > counts[b]
+      end)
+
+      local i = 0
+      return function()
+        i = i + 1
+        local key = keys[i]
+        if key then
+          return key, counts[key]
+        else
+          return nil
+        end
+      end
+    end
+
+    ---@type uv.uv_handle_t[]
+    local handles = {}
+    local counts = {}
+    local plugin_counts = {}
+
+    local handle_stats = stats.handles
+
+    vim.uv.walk(function(handle)
+      local type = handle:get_type()
+      counts[type] = (counts[type] or 0) + 1
+
+      local data = handle_stats[handle]
+      if data and data.plugin then
+        plugin_counts[data.plugin] = (plugin_counts[data.plugin] or 0) + 1
+      end
+
+      table.insert(handles, handle)
+    end)
+
+    local buf = require("string.buffer").new()
+    local sep = string.rep("-", 120) .. "\n"
+
+    if next(counts) then
+      buf:put("handle counts (active):\n")
+      buf:put("\n")
+      for name, count in sorted_counts(counts) do
+        buf:putf("%10s => %4d\n", name, count)
+      end
+
+      buf:put(sep)
+    end
+
+    if next(stats.counts.handle_type) then
+      buf:put("handle counts (total):\n")
+      buf:put("\n")
+      for name, count in sorted_counts(stats.counts.handle_type) do
+        buf:putf("%10s => %4d\n", name, count)
+      end
+
+      buf:put(sep)
+    end
+
+    if next(plugin_counts) then
+      buf:put("handle counts by plugin (active):\n")
+      buf:put("\n")
+      for plugin, count in sorted_counts(plugin_counts) do
+        buf:putf("%24s => %4d\n", plugin, count)
+      end
+      buf:put(sep)
+    end
+
+    if next(stats.counts.plugin) then
+      buf:put("handle counts by plugin (total):\n")
+      buf:put("\n")
+      for plugin, count in sorted_counts(stats.counts.plugin) do
+        buf:putf("%24s    %10s => %4d\n", plugin, "(total)", count)
+
+        for htype, hcount in sorted_counts(stats.counts.plugin_handle_type[plugin]) do
+          buf:putf("%24s    %10s => %4d\n", "", htype, hcount)
+        end
+      end
+      buf:put(sep)
+    end
+
+
+    table.sort(handles, function(a, b)
+      local ta = handle_stats[a] and handle_stats[a].serial or 0
+      local tb = handle_stats[b] and handle_stats[b].serial or 0
+      if ta ~= tb then
+        return ta < tb
+      end
+
+      if a:get_type() ~= b:get_type() then
+        return a:get_type() < b:get_type()
+      end
+
+      return tostring(a) < tostring(b)
+    end)
+
+    vim.uv.update_time()
+    local now = vim.uv.now()
+    local START = stats.start_time
+
+    local SEC = 1000
+    local MIN = SEC * 60
+    local HR = MIN * 60
+    local DAY = HR * 24
+    local floor = math.floor
+
+    local TSEP = ""
+
+    ---@param t number
+    local function put_time(t)
+      if t < MIN then
+        if t > 0 or TSEP == "" then
+          buf:putf("%s%s seconds", TSEP, t / SEC)
+        end
+        TSEP = ""
+        return
+      end
+
+      if t < HR then
+        buf:putf("%s%d minutes", TSEP, floor(t / MIN))
+        TSEP = ", "
+        return put_time(t % MIN)
+      end
+
+      if t < DAY then
+        buf:putf("%s%d hours", TSEP, floor(t / HR))
+        TSEP = ", "
+        return put_time(t % HR)
+      end
+
+      buf:putf("%d days", floor(t / DAY))
+      TSEP = ", "
+      return put_time(t % DAY)
+    end
+
+    for _, handle in ipairs(handles) do
+      buf:putf("%s\n\n", tostring(handle))
+
+      buf:putf("active:    %s\n", handle:is_active())
+      buf:putf("closing:   %s\n", handle:is_closing())
+      buf:putf("ref:       %s\n", handle:has_ref())
+
+      local f = handle:fileno()
+      if f then
+        buf:putf("file:      %s\n", f)
+      end
+
+      local ty = handle:get_type()
+      if ty == "timer" then
+        ---@type uv.uv_timer_t
+        local timer = handle
+
+        buf:putf("due in:    %s\n", timer:get_due_in())
+        buf:putf("repeat:    %s\n", timer:get_repeat())
+
+      elseif ty == "fs_event" then
+        ---@type uv.uv_fs_event_t
+        local fs_event = handle
+
+        local path = fs_event:getpath()
+        if path then
+          buf:putf("path:      %s\n", path)
+        end
+      end
+
+      local data = handle_stats[handle]
+      if data then
+        if data.plugin then
+          buf:putf("plugin:    %s\n", data.plugin)
+        end
+        buf:putf("filename:  %s\n", data.filename)
+        buf:putf("where:     %s\n", data.where)
+        buf:putf("uri:       %s\n", data.uri)
+
+        do
+          buf:putf("created:   %s\n", data.created)
+
+          local ago = now - data.created
+          buf:putf("           (")
+          put_time(ago)
+          buf:put(" ago)\n")
+
+          local after = data.created - START
+          buf:putf("           (")
+          put_time(after)
+          buf:put(" after startup)\n")
+        end
+
+        buf:putf("serial:    %s\n", data.serial)
+        if data.buf then
+          buf:putf("buf no:    %s\n", data.buf)
+          buf:putf("buf name:  %s\n", data.bufname)
+        end
+
+        buf:put("\n"):put(data.traceback):put("\n")
+      end
+
+      buf:put(sep)
+    end
+
+    vim.print(buf:get())
+  end,
+  {
+    nargs = 0,
+  }
+)
