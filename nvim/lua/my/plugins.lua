@@ -210,7 +210,7 @@ local function hydrate(plugin, lang, category)
   assert(type(plugin) == "table")
 
   -- no further processing (it's not gonna run anyways)
-  if plugin.enabled == false or plugin.cond == false then
+  if plugin.enabled == false or (plugin.cond == false and not env.bootstrap) then
     plugin.tags = nil
     return plugin
   end
@@ -250,7 +250,7 @@ local function hydrate(plugin, lang, category)
   plugin.files = nil
 
 
-  if plugin.cond == nil or plugin.cond == true then
+  if plugin.cond == nil or type(plugin.cond) == "boolean" then
     plugin.cond = plugin_cond
   else
     assert(type(plugin.cond) == "function")
@@ -650,7 +650,7 @@ do
       {
         "lewis6991/gitsigns.nvim",
         lazy = true,
-        enabled = false,
+        cond = false,
         config = function()
           require("gitsigns").setup({
             signcolumn = true,
@@ -714,7 +714,7 @@ do
       {
         "lukas-reineke/indent-blankline.nvim",
         main = "ibl",
-        enabled = false,
+        cond = false,
         opts = {
           indent = {
             char = "┊",
