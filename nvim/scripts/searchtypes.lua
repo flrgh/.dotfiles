@@ -1,3 +1,5 @@
+#!/usr/bin/env -S nvim -l
+
 require("my.env")
 
 local plugins = require("my.plugins")
