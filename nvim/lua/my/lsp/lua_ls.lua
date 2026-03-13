@@ -34,44 +34,6 @@ local function handle_updates(conf)
 end
 
 
----@class my.lsp.LuaLS.runtime
----@field version?           string
----@field builtin?           string
----@field fileEncoding?      string
----@field nonstandardSymbol? string[]
----@field pathStrict?        boolean
----@field path?              string[]
----@field plugin?            any
----@field pluginArgs?        any
----@field special?           table<string, string>
-
----@class my.lsp.LuaLS.workspace
----
----@field checkThirdParty? string
----@field ignoreSubmodules? boolean
----@field ignoreDir string[]
----@field library string[]
----@field useGitIgnore? boolean
----@field userThirdParty? string[]
-
----@class my.lsp.LuaLS
----
----@field runtime my.lsp.LuaLS.runtime
----@field completion? table
----@field signatureHelp? table
----@field hover? table
----@field hint? table
----@field IntelliSense? table
----@field format? table
----@field diagnostics? table
----@field workspace my.lsp.LuaLS.workspace
----@field semantic? table
----@field type? table
----
----@field doc? table
----@field window? table
----@field spell? table
-
 local fs = require "my.std.fs"
 local luamod = require "my.std.luamod"
 local sw = require "my.std.stopwatch"

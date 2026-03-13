@@ -20,8 +20,9 @@ local CMD = {
 local defaults = {
   cmd = CMD,
   root_dir = nil,
+
+  ---@type lspconfig.settings.lua_ls
   settings = {
-    ---@type my.lsp.LuaLS
     Lua = {
       completion = {
         enable           = true,
