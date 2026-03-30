@@ -356,7 +356,7 @@ function _M.init()
     LOG_LEVEL = env.lsp_log_level
     require("my.lsp.logger").init()
   end
-  lsp.set_log_level(LOG_LEVEL)
+  lsp.log.set_level(LOG_LEVEL)
 
   lsp.config("*", {
     capabilities = make_capabilities(),
