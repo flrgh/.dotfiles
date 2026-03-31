@@ -562,13 +562,10 @@ do
     treesitter = {
       {
         "nvim-treesitter/nvim-treesitter",
-        branch = "master",
+        branch = "main",
 
-        -- FIXME: figure out how to make this work with my lua module search autocommand
-        -- event = evt.user.VeryLazy,
         build = function()
           require("my.treesitter").bootstrap()
-          cmd "TSUpdateSync"
         end,
         config = function()
           require("my.treesitter").setup()
@@ -576,12 +573,12 @@ do
       },
       {
         "nvim-treesitter/nvim-treesitter-textobjects",
-        branch = "master",
+        branch = "main",
         event = evt.user.VeryLazy,
         dependencies = {
           {
             "nvim-treesitter/nvim-treesitter",
-            branch = "master",
+            branch = "main",
           }
         },
       },
@@ -603,6 +600,7 @@ do
       },
       {
         "nvim-telescope/telescope.nvim",
+        version = "*",
         event = evt.user.VeryLazy,
         dependencies = {
           "nvim-lua/plenary.nvim",
@@ -614,7 +612,6 @@ do
             "nvim-telescope/telescope-symbols.nvim",
           },
         },
-        branch = "0.1.x",
         config = file_config("telescope"),
         keys = {
           Ctrl.p,
