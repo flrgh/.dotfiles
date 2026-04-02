@@ -353,6 +353,8 @@ command("ShowEditorSettings",
         "expandtab",
         "indentexpr",
         "indentkeys",
+        "vartabstop",
+        "varsofttabstop",
       },
 
       wrap = {

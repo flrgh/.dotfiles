@@ -16,6 +16,25 @@ local CMD = {
   "--locale", SERVER.LOCALE,
 }
 
+if false then
+  local _cmd = CMD
+  CMD = { "/home/michaelm/git/flrgh/lua-utils/bin/jsonrpc-proxy", "--lsp", "--stdio", "--" }
+  for _, elem in ipairs(_cmd) do
+    table.insert(CMD, elem)
+  end
+end
+
+if true then
+  local _cmd = CMD
+  CMD = { "luajit", "/home/michaelm/git/flrgh/lua-libuv-ffi/examples/jsonrpc-proxy.lua",
+          "--lsp", "--stdio", "--" }
+  for _, elem in ipairs(_cmd) do
+    table.insert(CMD, elem)
+  end
+end
+
+
+
 ---@class my.lsp.config.Lua: vim.lsp.Config
 local defaults = {
   cmd = CMD,
@@ -39,7 +58,7 @@ local defaults = {
       },
 
       diagnostics = {
-        enable = false,
+        enable = true,
         disable = nil,
 
         globals = {},

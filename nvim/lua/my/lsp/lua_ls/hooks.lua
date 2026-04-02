@@ -128,6 +128,12 @@ local MODS = {
     },
   },
 
+  libuv = {
+    include = {
+      TYPE_DIR .. "/libuv",
+    },
+  },
+
   uv = {
     include = {
       "luv",
