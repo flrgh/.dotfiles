@@ -1034,6 +1034,10 @@ __rc_aliases() {
     if rc-command-exists lsd; then
         rc-alias ls "lsd -l"
     fi
+
+    if rc-command-exists opencode; then
+        rc-alias oc "opencode"
+    fi
 }
 __rc_aliases
 
