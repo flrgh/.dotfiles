@@ -25,6 +25,7 @@ COMMANDS := \
 	minijinja-cli \
 	mise \
 	op \
+	opencode \
 	openstack \
 	package-deps \
 	package-info \
@@ -253,3 +254,7 @@ git-cliff: private COMP = $(wildcard $(WHERE)/*/completions)
 git-cliff: FILE = $(COMP)/git-cliff.bash
 git-cliff:
 	$(from-file)
+
+opencode: CMD = opencode completion
+opencode:
+	$(from-command)
