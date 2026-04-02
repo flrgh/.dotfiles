@@ -119,28 +119,6 @@ clean:
 .PHONY: update
 update: clean os-packages-update mise-update rust-update
 
-# generate an nfpm.yaml file for a dep list
-$(PKG)/os.%.nfpm.yaml: ./deps/rpm-%.txt
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool nfpm "$<" "$@"
-	$(TOUCH) --reference "$<" "$@"
-
-# build an .rpm file for a given nfpm.yaml
-$(PKG)/os.%.rpm: $(PKG)/os.%.nfpm.yaml
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool rpm "$<" "$@"
-	$(TOUCH) --reference "$<" "$@"
-
-# install an .rpm package
-$(PKG)/os/%: $(PKG)/os.%.rpm
-	$(MKPARENT) "$@"
-	$(SCRIPT)/rpm-tool install "$<"
-	$(TOUCH) --reference "$<" "$@"
-
-$(PKG)/os/removed: deps/os-package-removed.txt
-	sudo dnf remove -y $(call getlines,$<)
-	$(TOUCH) --reference "$<" "$@"
-
 $(PKG)/python.cleanup: $(DEP)/python | $(MISE)
 	$(SCRIPT)/python-cleanup
 	$(TOUCH) --reference "$<" "$@"
@@ -148,137 +126,19 @@ $(PKG)/python.cleanup: $(DEP)/python | $(MISE)
 $(PKG)/python: $(DEP)/python | $(PKG)/python.cleanup $(MISE)
 	$(TOUCH) --reference "$<" "$@"
 
-$(PKG)/flatpak.remotes: deps/flatpak-remotes.txt
-	./scripts/setup-flatpak-remotes
-	$(TOUCH) $@
-
-$(PKG)/flatpak.apps.installed: $(PKG)/flatpak.remotes deps/flatpak-apps.txt
-	./scripts/install-flatpak-apps
-	$(TOUCH) $@
-
-.PHONY: flatpak
-flatpak: $(PKG)/flatpak.apps.installed
-	@flatpak --user update --noninteractive
-
 ALL_DEPS =
 
-UV_PACKAGES := $(call getlines,./deps/uv.txt)
-ALL_DEPS += $(UV_PACKAGES)
-UV_DEPS := $(addprefix $(DEP)/,$(UV_PACKAGES))
-UV := $(MISE) exec uv -- uv
-UV_TOOLS = $(shell $(UV) tool dir)
-$(UV_DEPS): $(DEP)/uv $(DEP)/python $(PKG)/python.cleanup
-	$(UV) tool install $(notdir $@)
-	$(TOUCH) --reference $(UV_TOOLS)/$(notdir $@) "$@"
-
-.PHONY: uv-update
-uv-update: ./deps/uv.txt | $(MISE)
-	-$(UV) tool uninstall \
-		systemd-language-server \
-		2>/dev/null
-	$(UV) tool upgrade --no-managed-python --all
-
-NEED_PACKAGES := $(notdir $(basename $(wildcard $(REPO_ROOT)/home/.local/share/ineed/drivers/*.sh)))
-NEED_DEPS := $(addprefix $(DEP)/,$(NEED_PACKAGES))
-ALL_DEPS += $(NEED_PACKAGES)
-$(NEED_DEPS): | .setup
-	ineed install $(notdir $@)
-	$(TOUCH) --reference "$(INSTALL_STATE)/ineed/$(notdir $@).installed-timestamp" "$@"
-
-LUAROCKS_PACKAGES := teal-language-server tl
-ALL_DEPS += $(LUAROCKS_PACKAGES)
-LUAROCKS_DEPS := $(addprefix $(DEP)/,$(LUAROCKS_PACKAGES))
-$(LUAROCKS_DEPS): | $(LUAROCKS)
-	luarocks install $(notdir $@)
-	$(TOUCH) $@
-
-MISE_PACKAGES := $(shell $(MISE) ls --yes --current --no-header | awk '{print $$1}')
-ALL_DEPS += $(MISE_PACKAGES)
-MISE_DEPS := $(addprefix $(DEP)/,$(MISE_PACKAGES))
-MISE_ALL := $(PKG)/mise-all
-
-CARGO_PACKAGES := $(call getlines,./deps/cargo-packages.txt)
-ALL_DEPS += $(CARGO_PACKAGES)
-CARGO_DEPS := $(addprefix $(DEP)/,$(CARGO_PACKAGES))
-
-OS_COMMON_PACKAGES := $(call getlines,./deps/rpm-common.txt)
-OS_COMMON_PACKAGES := $(filter-out $(ALL_DEPS),$(OS_COMMON_PACKAGES))
-ALL_DEPS += $(OS_COMMON_PACKAGES)
-OS_COMMON_DEPS := $(addprefix $(DEP)/,$(OS_COMMON_PACKAGES))
-$(OS_COMMON_DEPS): | $(PKG)/os/common
-	$(TOUCH) "$@"
-
-OS_WORKSTATION_PACKAGES := $(call getlines,./deps/rpm-workstation.txt)
-OS_WORKSTATION_PACKAGES := $(filter-out $(ALL_DEPS),$(OS_WORKSTATION_PACKAGES))
-ALL_DEPS += $(OS_WORKSTATION_PACKAGES)
-OS_WORKSTATION_DEPS := $(addprefix $(DEP)/,$(OS_WORKSTATION_PACKAGES))
-$(OS_WORKSTATION_DEPS): | $(PKG)/os/workstation
-	$(TOUCH) "$@"
+include deps/flatpak.mk
+include deps/uv.mk
+include deps/ineed.mk
+include deps/luarocks.mk
+include deps/mise.mk
+include deps/cargo.mk
+include deps/npm.mk
+include deps/os.mk
 
 $(DEP)/dircolors: $(DEP)/coreutils
 	$(TOUCH) --reference "$<" "$@"
-
-NPM_DEP_FILE := ./deps/package.json
-NPM_WANTED    = $(shell jq -r '.dependencies | to_entries | .[] | "\(.key)@\(.value)"' < $(NPM_DEP_FILE))
-NPM_INSTALLED = $(shell $(NPM) list -g --json | jq -r '.dependencies | to_entries | .[] | "\(.key)@\(.value.version)"')
-NPM_NEEDED    = $(strip $(filter-out $(NPM_INSTALLED),$(NPM_WANTED)))
-NPM_REMOVE    = $(shell jq -r '._removed // [] | .[]?' < $(NPM_DEP_FILE))
-
-.PHONY: npm
-npm: | $(MISE) .setup
-	@_remove="$(NPM_REMOVE)"; \
-	if [[ -n $$_remove ]]; then \
-		echo "npm - uninstall: $$_remove"; \
-		$(NPM) uninstall -g $$_remove; \
-	fi;
-	$(NPM) uninstall -g $(shell jq -r '.name' < $(NPM_DEP_FILE)); \
-	_needed="$(NPM_NEEDED)"; \
-	if [[ -n $$_needed ]]; then \
-		echo "npm - install: $$_needed"; \
-		$(NPM) install -g $$_needed; \
-		$(MISE) reshim; \
-	else \
-		echo "npm - all packages installed"; \
-	fi
-
-.PHONY: __npm-check-updates
-__npm-check-updates: | $(MISE)
-	command -v ncu || $(NPM) install -g npm-check-updates@latest
-	ncu --upgrade --packageFile $(NPM_DEP_FILE)
-
-.PHONY: npm-update
-npm-update: __npm-check-updates .WAIT npm
-
-$(RUSTUP): scripts/install-rust | .setup
-	./scripts/install-rust
-	touch --reference ./scripts/install-rust $@
-
-$(CARGO_PKG): $(RUSTUP) scripts/install-cargo-packages
-	./scripts/install-cargo-packages
-	$(TOUCH) $@
-
-$(CARGO_DEPS): $(CARGO_PKG)
-	$(TOUCH) --reference "$<" "$@"
-
-.PHONY: rust
-rust: $(RUSTUP) $(CARGO_PKG)
-
-.PHONY: rust-update
-rust-update: $(RUSTUP)
-	$(RUSTUP) self update
-	$(RUSTUP) self upgrade-data
-	$(RUSTUP) update
-	./scripts/install-cargo-packages
-
-.PHONY: os-packages
-os-packages: $(PKG)/os/common $(PKG)/os/removed
-
-.PHONY: os-packages-workstation
-os-packages-workstation: $(PKG)/os/common $(PKG)/os/workstation $(PKG)/os/removed
-
-.PHONY: os-packages-update
-os-packages-update: os-packages
-	sudo dnf update -y
 
 $(DEP)/bazel: $(DEP)/bazelisk
 	ln -sfv bazelisk $(INSTALL_BIN)/bazel
@@ -315,27 +175,6 @@ $(MISE): scripts/install-mise | .setup
 
 .PRECIOUS: $(LUAROCKS)
 $(LUAROCKS): $(DEP)/lua $(DEP)/luajit .WAIT $(DEP)/luarocks
-
-$(MISE_ALL): $(MISE) mise.toml home/.config/mise/config.toml scripts/mise-shims
-	$(MISE) upgrade --yes
-	./scripts/mise-shims
-	$(TOUCH) "$@"
-
-$(MISE_DEPS): | $(MISE_ALL)
-	$(TOUCH) --reference $(shell $(MISE) where $(notdir $@)) $@
-
-.PHONY: mise
-mise: $(MISE)
-	$(MISE) install --yes
-	./scripts/mise-shims
-
-.PHONY: .mise-self-update
-.mise-self-update: | $(MISE)
-	$(MISE) self-update --yes
-	./scripts/mise-shims
-
-.PHONY: mise-update
-mise-update: .mise-self-update .WAIT $(MISE_ALL)
 
 $(BUILD)/LS_COLORS: $(DEP)/vivid
 	$(MISE) exec vivid -- vivid generate catppuccin-mocha >"$@"
@@ -654,7 +493,7 @@ workstation: \
 .PHONY: workstation-update
 workstation-update: server-update | workstation
 
-$(DEP)/http: XH := $(shell $(MISE) which xh)
+$(DEP)/http: XH = $(shell $(MISE) which xh)
 $(DEP)/http: $(DEP)/xh
 	ln --no-target-directory -sfv "$(XH)" "$(INSTALL_BIN)"/http
 	$(TOUCH) --reference "$<" "$@"

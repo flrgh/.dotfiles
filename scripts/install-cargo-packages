@@ -12,10 +12,12 @@ if ! command -v cargo-binstall &>/dev/null; then
     exit 1
 fi
 
-declare -a PACKAGES=()
-mapfile -t PACKAGES < <(./scripts/get-lines ./deps/cargo-packages.txt)
+if (( $# == 0 )); then
+    echo "usage: install-cargo-packages PACKAGE..." >&2
+    exit 1
+fi
 
 cargo binstall \
     --no-confirm \
     --continue-on-failure \
-    "${PACKAGES[@]}"
+    "$@"
