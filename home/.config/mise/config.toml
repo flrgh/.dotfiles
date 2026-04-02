@@ -38,6 +38,8 @@ tombi = "latest"
 htmlq = "latest"
 yamlfmt = "latest"
 claude-code = "latest"
+opencode = "latest"
+bun = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
