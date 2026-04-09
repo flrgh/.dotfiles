@@ -92,6 +92,8 @@ end
 ---@param tags string[]
 ---@return my.plugin.tags
 local function tomap(tags)
+  ---@cast tags +my.plugin.tags
+
   for i = 1, #tags do
     local tag = tostring(tags[i])
     local value = true
@@ -104,6 +106,7 @@ local function tomap(tags)
     tags[tag] = value
     tags[i] = nil
   end
+
   return tags
 end
 
@@ -220,6 +223,7 @@ local function hydrate(plugin, lang, category)
   if not plugin.name then
     plugin.name = slug:gsub("^[^/]+/", "")
   end
+  ---@type string
   local name = plugin.name
 
   plugin.ft = extend(plugin.ft, lang)
@@ -1186,7 +1190,7 @@ end
 
 plugins.MODE = "lazy"
 
----@param cond? my.plugin.cond
+---@param cond? my.plugin.cond|true
 function plugins.load(cond)
   if plugins.LOADED then
     return

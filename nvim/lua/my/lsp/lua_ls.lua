@@ -308,14 +308,14 @@ function _M.on_diagnostic_changed(e)
                                            {})
 
         name = name and name[1]
+
         if name and name ~= "" then
           names:add(name)
         end
       end
 
       if names.len > 0 then
-        hooks.on_missing_types(names.items, config)
-        config:update_client_settings(client)
+        hooks.on_missing_types(names.items, config, client)
       end
     end)
   end

@@ -343,9 +343,7 @@ end
 
 ---@param types string[]
 ---@param config my.lua_ls.Config
-function _M.on_missing_types(types, config)
-  if true then return end
-
+function _M.on_missing_types(types, config, client)
   config:with_mutex("hooks.on_missing_types", function()
     local all = find_all_types(config)
 
@@ -356,11 +354,14 @@ function _M.on_missing_types(types, config)
         found:add_all(files)
       end
     end
-
     found = found:take()
 
     for _, path in ipairs(found) do
       config:add_workspace_library(path)
+    end
+
+    if client and #found > 0 then
+      config:update_client_settings(client)
     end
   end)
 end
