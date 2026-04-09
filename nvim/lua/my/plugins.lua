@@ -1332,6 +1332,7 @@ function plugins.check()
 end
 
 function plugins.bundle()
+  if true then return end
   plugins.load(true)
 
   ---@class typopts
@@ -1344,13 +1345,15 @@ function plugins.bundle()
   ---@field clobber? boolean
   ---@field skip? boolean
   ---
-  ---@field type string
-  ---@field ftype string
-  ---@field ltype string
+  ---@field type? string
+  ---@field ftype? string
+  ---@field ltype? string
   ---
-  ---@field last boolean
+  ---@field last? boolean
   ---
-  ---@field abspath string
+  ---@field abspath? string
+  ---
+  ---@field after? boolean
 
   ---@type table<string, typopts>
   local TYPES = {
@@ -1400,6 +1403,7 @@ function plugins.bundle()
     },
     -- treesitter queries
     queries = {
+      namespace = true,
     },
     -- remote-plugin scripts
     rplugin = {
@@ -1480,7 +1484,7 @@ function plugins.bundle()
   local mkdir = std.path.mkdir
   local fmt = string.format
 
-  local newbundle = bundle .. "." .. tostring(uv.getpid())
+  local newbundle = bundle .. "." .. tostring(uv.os_getpid())
   local B = {
     root    = newbundle,
     main = {
@@ -1495,6 +1499,23 @@ function plugins.bundle()
     },
   }
 
+  local function cleanup(err)
+    if std.path.dir_exists(B.root) then
+      std.path.rm_tree(B.root)
+    end
+
+    if err then
+      vim.print("\n" .. debug.traceback(tostring(err)) .. "\n")
+      os.exit(1)
+    end
+  end
+
+  local function chk(cond, msg)
+    if not cond then
+      cleanup(msg)
+    end
+  end
+
   assert(mkdir(B.root))
 
   local running = 0
@@ -1502,7 +1523,7 @@ function plugins.bundle()
 
   local function done()
     running = running - 1
-    assert(running >= 0)
+    chk(running >= 0, "invalid running state")
   end
 
   ---@return boolean
@@ -1515,7 +1536,7 @@ function plugins.bundle()
 
   local function fail(f, ...)
     done()
-    failed = true
+    failed = fmt(f, ...)
     vim.print(fmt(f, ...))
   end
 
@@ -1953,8 +1974,12 @@ function plugins.bundle()
     return running == 0
   end, 100)
 
-  assert(running == 0, "not finished running")
-  assert(not failed, "something failed")
+  if running ~= 0 then
+
+  end
+
+  chk(running == 0, "not finished running")
+  chk(not failed, tostring(failed))
 
   local manifest = {
     names = {},
@@ -2054,14 +2079,18 @@ function plugins.bundle()
   assert(fs.write_file(B.root .. "/manifest.txt", vim.inspect(plugins.list())))
 
   local OLD = B.root .. ".old"
-  local ok, err = std.path.rename(env.nvim.bundle.root, OLD)
-  assert(ok, "failed renaming bundle directory: " .. tostring(err))
+  if std.path.dir_exists(env.nvim.bundle.root) then
+    local ok, err = std.path.rename(env.nvim.bundle.root, OLD)
+    assert(ok, "failed renaming bundle directory: " .. tostring(err))
+  end
 
   local ok, err = std.path.rename(B.root, env.nvim.bundle.root)
   assert(ok, "failed renaming bundle directory: " .. tostring(err))
 
-  local ok, err = std.path.rm_tree(OLD)
-  assert(ok, "failed removing old bundle directory: " .. tostring(err))
+  if std.path.dir_exists(OLD) then
+    local ok, err = std.path.rm_tree(OLD)
+    assert(ok, "failed removing old bundle directory: " .. tostring(err))
+  end
 end
 
 return plugins
