@@ -4,10 +4,8 @@ return function(mode)
   local silent = mode == "silent"
   local quiet = silent or mode == "quiet"
 
-  local vim = vim
-
   if not silent then
-    vim.print("Bootstrapping plugins\n")
+    io.write("Bootstrapping plugins\n")
   end
 
   if quiet then
@@ -23,6 +21,6 @@ return function(mode)
   require("my.plugins").bundle()
 
   if not silent then
-    vim.print("Plugin bootstrap complete\n")
+    io.write("Plugin bootstrap complete\n")
   end
 end
