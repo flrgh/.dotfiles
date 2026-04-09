@@ -3,7 +3,7 @@ ifneq ($(wildcard $(MISE)),)
 build/cache/mise-packages.mk: mise.toml home/.config/mise/config.toml
 	@mkdir -p $(@D)
 	@printf 'MISE_PACKAGES := %s\n' \
-		"$$($(MISE) ls --yes --current --no-header | awk '{printf "%s ", $$1}')" > $@
+		"$$($(MISE) ls --yes --current --no-header | awk '{sub(/^github:[^\/]+\//, "", $$1); printf "%s ", $$1}')" > $@
 endif
 
 # Empty default when mise is not yet installed
