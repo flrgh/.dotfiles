@@ -1,8 +1,15 @@
+LUAROCKS := $(INSTALL_BIN)/luarocks
+
 LUAROCKS_PACKAGES := \
     teal-language-server \
     tl
 ALL_DEPS += $(LUAROCKS_PACKAGES)
 LUAROCKS_DEPS := $(addprefix $(DEP)/,$(LUAROCKS_PACKAGES))
+
+
+.PRECIOUS: $(LUAROCKS)
+$(LUAROCKS): $(DEP)/lua $(DEP)/luajit .WAIT $(DEP)/luarocks
+
 
 $(LUAROCKS_DEPS): | $(LUAROCKS)
 	luarocks install $(notdir $@)

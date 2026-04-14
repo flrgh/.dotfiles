@@ -1,99 +1,4 @@
-USER ?= $(shell logname)
-UID ?= $(shell id -u)
-GID ?= $(shell id -g)
-HOME ?= /home/$(USER)
-
-INSTALL_PATH := $(HOME)
-INSTALL_PREFIX := $(HOME)/.local
-INSTALL_BIN := $(INSTALL_PREFIX)/bin
-INSTALL_VBIN := $(INSTALL_PREFIX)/vbin
-INSTALL_LIB := $(INSTALL_PREFIX)/lib
-
-XDG_RUNTIME_DIR ?= /run/user/$(UID)
-INSTALL_RUNTIME := $(XDG_RUNTIME_DIR)
-
-XDG_DATA_HOME := $(INSTALL_PREFIX)/share
-INSTALL_DATA := $(XDG_DATA_HOME)
-INSTALL_MAN := $(INSTALL_DATA)/man
-
-XDG_STATE_HOME := $(INSTALL_PREFIX)/state
-INSTALL_STATE := $(XDG_STATE_HOME)
-
-USER_REPOS := $(HOME)/git/flrgh
-REPO_ROOT = $(CURDIR)
-DEBUG := $(DEBUG)
-
-# namespace exported vars so that they don't interfere with other build tools
-export DOTFILES_INSTALL_PATH := $(INSTALL_PATH)
-export DOTFILES_INSTALL_BIN := $(INSTALL_BIN)
-export DOTFILES_INSTALL_DATA := $(INSTALL_DATA)
-export DOTFILES_INSTALL_STATE := $(INSTALL_STATE)
-export DOTFILES_INSTALL_RUNTIME := $(INSTALL_RUNTIME)
-export DOTFILES_REPO_ROOT := $(REPO_ROOT)
-export DOTFILES_DEBUG := $(DEBUG)
-
-# no implicit rules
-.SUFFIXES:
-
-CACHE_DIR := $(INSTALL_PATH)/.cache
-MISE := $(INSTALL_BIN)/mise
-LUAROCKS := $(INSTALL_BIN)/luarocks
-LIBEXEC := home/.local/libexec
-NPM := $(MISE) exec node -- npm
-
-INSTALL := install --verbose --compare --no-target-directory
-INSTALL_INTO := install --verbose --compare --target-directory
-COPY := install --verbose --preserve-timestamps --no-target-directory
-
-SCRIPT := ./scripts
-RM := $(SCRIPT)/files rm
-CLEANDIR := $(SCRIPT)/files cleandir
-MKPARENT := $(SCRIPT)/files mkparent
-MKDIR := $(SCRIPT)/files mkdir
-TOUCH := $(SCRIPT)/files touch
-
-getbin = $(firstword $(wildcard $(addsuffix /$(1),$(subst :, ,$(PATH)))))
-SED := $(call getbin,sed)
-
-getlines = $(sort $(shell $(SED) -n -r -e 's/^[ ]*([^ #]+).*/\1/p' < "$(1)"))
-
-DIFF := diff --suppress-common-lines --suppress-blank-empty \
-	--ignore-tab-expansion --ignore-all-space --minimal
-
-OLD_FILES := $(INSTALL_PATH)/.bash_profile \
-	$(INSTALL_PATH)/.bash_logout \
-	$(INSTALL_BIN)/*~ \
-	$(INSTALL_STATE)/ineed/aws-cli.* \
-	$(INSTALL_BIN)/tl_* \
-	$(INSTALL_BIN)/marksman-linux \
-	$(INSTALL_DATA)/claude/versions/* \
-	$(INSTALL_STATE)/ineed/bitwarden-*
-
-# only removed if empty
-OLD_DIRS := $(INSTALL_DATA)/claude/versions \
-	$(INSTALL_DATA)/claude \
-	$(INSTALL_LIB)/node_modules/@anthropic-ai
-
-CREATE_DIRS := \
-	.cache .cache/download \
-	.config \
-	.local \
-	.local/bin .local/include .local/lib .local/libexec \
-	.local/share .local/var .local/var/log .local/var/log/nvim \
-	.local/var/log/lsp .local/share/bash-completion/completions
-
-BUILD := build
-PKG := $(BUILD)/pkg
-DEP := $(BUILD)/dep
-NEED := $(PKG)/need
-LUAROCKS_PKG := $(PKG)/luarocks
-MISE_PKG := $(PKG)/mise
-
-# gnome-software seems to be doing some weirdness if this directory
-# doesn't exist
-CREATE_DIRS += .local/share/xdg-desktop-portal/applications
-
-CREATE_DIRS := $(addprefix $(INSTALL_PATH)/,$(CREATE_DIRS))
+include vars.mk
 
 .DEFAULT: common
 
@@ -114,34 +19,6 @@ clean:
 .PHONY: update
 update: clean os-packages-update mise-update cargo-update rust-update
 
-$(PKG)/python.cleanup: $(DEP)/python | $(MISE)
-	$(SCRIPT)/python-cleanup
-	$(TOUCH) --reference "$<" "$@"
-
-$(PKG)/python: $(DEP)/python | $(PKG)/python.cleanup $(MISE)
-	$(TOUCH) --reference "$<" "$@"
-
-ALL_DEPS =
-
-include deps/flatpak.mk
-include deps/uv.mk
-include deps/ineed.mk
-include deps/luarocks.mk
-include deps/mise.mk
-include deps/rust.mk
-include deps/cargo.mk
-include deps/npm.mk
-include deps/os.mk
-
-$(DEP)/dircolors: $(DEP)/coreutils
-	$(TOUCH) --reference "$<" "$@"
-
-$(DEP)/bazel: $(DEP)/bazelisk
-	ln -sfv bazelisk $(INSTALL_BIN)/bazel
-	$(TOUCH) --reference "$<" "$@"
-
-.PHONY: kong
-kong: $(PKG)/os/kong $(DEP)/bazel | .setup
 
 .PHONY: rm-old-files
 rm-old-files:
@@ -164,179 +41,42 @@ symlinks:
 .PHONY: .setup
 .setup: | rm-old-files $(CREATE_DIRS) symlinks
 
-.PRECIOUS: $(MISE)
-$(MISE): scripts/install-mise | .setup
-	./scripts/install-mise
-	$(TOUCH) --reference ./scripts/install-mise $(MISE)
 
-.PRECIOUS: $(LUAROCKS)
-$(LUAROCKS): $(DEP)/lua $(DEP)/luajit .WAIT $(DEP)/luarocks
+ALL_DEPS =
 
-$(BUILD)/LS_COLORS: $(DEP)/vivid
-	$(MISE) exec vivid -- vivid generate catppuccin-mocha >"$@"
+include deps/flatpak.mk
+include deps/uv.mk
+include deps/ineed.mk
+include deps/luarocks.mk
+include deps/mise.mk
+include deps/python.mk
+include deps/rust.mk
+include deps/cargo.mk
+include deps/npm.mk
+include deps/os.mk
+include deps/bash-builtins.mk
+include deps/golang.mk
+include deps/direnv.mk
+include deps/env.mk
+include deps/bash.mk
+include deps/man.mk
+include deps/neovim.mk
+include deps/lua.mk
+include deps/curl.mk
+include deps/keymapp.mk
+
+
+$(DEP)/bazel: $(DEP)/bazelisk
+	ln -sfv bazelisk $(INSTALL_BIN)/bazel
 	$(TOUCH) --reference "$<" "$@"
 
-$(BUILD)/home/.config/env: $(MISE_DEPS) lib/bash/* scripts/build-env.sh $(BUILD)/LS_COLORS
-	./scripts/build-env.sh
-	$(DIFF) $(INSTALL_PATH)/.config/env $(REPO_ROOT)/build/home/.config/env || true
+.PHONY: kong
+kong: $(PKG)/os/kong $(DEP)/bazel | .setup
+
 
 .PHONY: ssh
 ssh: | .setup
 	./scripts/update-ssh-config
-
-.PHONY: env
-env: $(BUILD)/home/.config/env $(DEP)/bash | $(MISE) .setup
-	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.config/env
-	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.config/env $(INSTALL_PATH)/.pam_environment
-
-
-DIRENV_BUILD_RC := $(BUILD)/home/direnvrc
-$(DIRENV_BUILD_RC): $(DEP)/direnv \
-	$(SCRIPT)/build-direnv-rc \
-	home/.local/lib/bash/direnv.bash \
-	home/.local/lib/bash/direnv/*.bash \
-	| .setup symlinks
-
-	mkdir -p $(dir $@)
-	$(SCRIPT)/build-direnv-rc > $@
-
-DIRENV_RC := $(INSTALL_PATH)/.config/direnv/direnvrc
-
-.PHONY: direnv
-direnv: $(DEP)/direnv $(DIRENV_BUILD_RC)
-	$(INSTALL) --mode 0644 $(DIRENV_BUILD_RC) $(DIRENV_RC)
-
-BASH_BUILTIN_CLONE := $(USER_REPOS)/bash-builtin-extras
-$(BASH_BUILTIN_CLONE): private REPO := git@github.com:flrgh/bash-builtins.git
-$(BASH_BUILTIN_CLONE):
-	git clone "$(REPO)" "$@"
-
-BASH_BUILTIN_SRCS := $(shell fd \
-	--type file \
-	--exclude tests \
-	'(\.rs|Cargo\.lock|Cargo\.toml)$$' \
-	"$(BASH_BUILTIN_CLONE)" \
-)
-
-BASH_BUILTIN_NAMES := varsplice timer version
-BASH_BUILTIN_LIBS := $(addsuffix .so,$(addprefix $(BASH_BUILTIN_CLONE)/target/release/lib,$(BASH_BUILTIN_NAMES)))
-
-.PHONY: .bash-builtin-pull
-.bash-builtin-pull: $(BASH_BUILTIN_CLONE)
-	git -C "$(BASH_BUILTIN_CLONE)" pull
-
-$(BASH_BUILTIN_SRCS): .bash-builtin-pull
-
-$(BASH_BUILTIN_LIBS): $(RUSTUP) $(BASH_BUILTIN_CLONE) .WAIT $(BASH_BUILTIN_SRCS)
-	cargo build \
-	    --quiet \
-	    --keep-going \
-	    --manifest-path "$(BASH_BUILTIN_CLONE)"/Cargo.toml \
-	    --release \
-	    --workspace
-	touch $(BASH_BUILTIN_LIBS)
-
-BASH_BUILTINS := $(addprefix $(INSTALL_LIB)/bash/loadables/,$(BASH_BUILTIN_NAMES))
-$(BASH_BUILTINS): $(BASH_BUILTIN_LIBS)
-	$(INSTALL) "$(BASH_BUILTIN_CLONE)/target/release/lib$(notdir $@).so" \
-		"$@"
-
-$(BUILD)/bash-facts: $(BUILD)/home/.config/env $(BASH_BUILTINS)
-	$(TOUCH) $@
-
-$(BUILD)/home/.bashrc: \
-	lib/bash/* bash/* $(SCRIPT)/generate-bashrc \
-	patch/fzf-key-bindings.bash.patch \
-	$(DEP)/bash-completion \
-	$(DEP)/bat \
-	$(DEP)/direnv \
-	$(DEP)/fd \
-	$(DEP)/fzf \
-	$(DEP)/gh \
-	$(DEP)/http \
-	$(DEP)/lsd \
-	$(DEP)/lua-utils\
-	$(DEP)/ripgrep \
-	$(DEP)/shellcheck \
-	$(DEP)/shfmt \
-	$(DEP)/usage \
-	$(DEP)/xh \
-	$(MISE_DEPS) \
-	direnv \
-	| .setup \
-	$(BUILD)/home/.config/env
-
-	$(SCRIPT)/generate-bashrc
-	$(DIFF) $(INSTALL_PATH)/.bashrc "$@" || true
-
-$(BUILD)/bashrc.md5: $(BUILD)/home/.bashrc
-	md5sum "$<" \
-		| awk '{print $$1}' \
-		> "$@"
-	$(TOUCH) --reference "$<" "$@"
-
-$(BUILD)/bash-completion: ./bash/completion/Makefile | $(DEP)/bash-completion
-	$(MAKE) -C ./bash/completion all
-	$(TOUCH) $@
-
-$(INSTALL_MAN)/index.db: \
-	$(DEP)/fd \
-	$(DEP)/fzf \
-	$(DEP)/gh \
-	$(DEP)/git-cliff \
-	$(DEP)/xh \
-	$(DEP)/nfpm \
-	$(DEP)/node \
-	$(DEP)/pandoc \
-	$(DEP)/python \
-	$(DEP)/ripgrep \
-	$(SCRIPT)/install-man-pages
-
-	mkdir -p "$(dir $@)"
-	$(SCRIPT)/install-man-pages
-	mandb --user-db
-
-.PHONY: man
-man: $(INSTALL_MAN)/index.db
-
-.PHONY: bash-completion
-bash-completion: $(BUILD)/bash-completion | .setup
-	$(INSTALL_INTO) $(INSTALL_PATH)/.local/share/bash-completion/completions \
-		--mode '0644' \
-		$(REPO_ROOT)/build/bash-completion/*
-	find $(INSTALL_PATH)/.local/share/bash-completion/completions \
-		-type f \
-		-empty \
-		-delete
-
-.PHONY: bashrc
-bashrc: $(BUILD)/home/.bashrc $(BUILD)/bashrc.md5 $(SCRIPT)/notify-bash | $(MISE) .setup
-	$(INSTALL) --mode 0644 $(REPO_ROOT)/build/home/.bashrc $(INSTALL_PATH)/.bashrc
-	$(INSTALL) --mode 0644 $(BUILD)/bashrc.md5 $(INSTALL_STATE)/bashrc.md5
-	$(INSTALL) --mode 0644 $(BUILD)/bashrc.md5 $(INSTALL_RUNTIME)/bashrc.md5
-	$(SCRIPT)/notify-bash
-
-.PHONY: bash
-bash: $(DEP)/bash .WAIT bash-completion bashrc | .setup
-	./scripts/update-default-shell
-
-.PHONY: golang
-golang: private DIRS = \
-	$(HOME)/.local/go \
-	$(HOME)/go \
-	$(HOME)/.config/go/telemetry/local \
-	$(HOME)/.config/go/telemetry/upload
-golang: private GO = $(MISE) exec go -- go
-golang: $(DEP)/gopls $(DEP)/gotags | .setup
-	$(MISE) reshim
-	$(GO) telemetry off
-	which gopls || ineed install --reinstall gopls
-	which gotags || ineed install --reinstall gotags
-	for dir in $(DIRS); do \
-		[[ -d $$dir ]] || continue; \
-		chmod -R u+w "$$dir"; \
-		rm -rf "$$dir"; \
-	done
 
 .PHONY: language-servers
 language-servers: npm $(LIBEXEC) \
@@ -350,39 +90,6 @@ language-servers: npm $(LIBEXEC) \
 	$(DEP)/zls \
 	| .setup
 
-$(PKG)/neovim: $(DEP)/neovim nvim/plugins.lock.json
-	nvim -l ./nvim/scripts/bootstrap.lua
-	$(TOUCH) $@
-
-$(INSTALL_DATA)/nvim/lazy/lazy.nvim: $(PKG)/neovim
-
-$(INSTALL_DATA)/nvim/_bundle: $(PKG)/neovim nvim/plugins.lock.json $(SCRIPT)/neovim-bundle-plugin-files
-	$(SCRIPT)/neovim-bundle-plugin-files
-
-.PHONY: neovim
-neovim: language-servers \
-	$(DEP)/neovim \
-	$(INSTALL_DATA)/nvim/lazy/lazy.nvim \
-	$(DEP)/tree-sitter \
-	$(MISE_DEPS) \
-	$(INSTALL_DATA)/nvim/_bundle \
-	| .setup
-
-$(USER_REPOS)/lua-utils:
-	mkdir -p $(dir $@)
-	git clone git@github.com:flrgh/lua-utils.git "$@"
-
-.NOTINTERMEDIATE:
-$(USER_REPOS)/lua-utils/.git/refs/heads/main: $(USER_REPOS)/lua-utils
-
-$(DEP)/lua-utils: $(USER_REPOS)/lua-utils/.git/refs/heads/main $(LUAROCKS)
-	cd ~/git/flrgh/lua-utils && luarocks build --force-fast
-	$(MKPARENT) "$@"
-	$(TOUCH) --reference "$<" "$@"
-
-.PHONY: lua
-lua: $(LUAROCKS) $(DEP)/lua-utils
-
 .PHONY: docker
 docker: scripts/update-docker-config $(DEP)/docker-buildx | .setup
 	./scripts/update-docker-config
@@ -392,57 +99,21 @@ alacritty: $(DEP)/alacritty | .setup
 	./scripts/update-gsettings
 	./scripts/update-default-shell
 
-$(BUILD)/home/.config/curlrc: scripts/build-curlrc
-	$(MKPARENT) $@
-	./scripts/build-curlrc > $@
-
-$(DEP)/curl: | $(PKG)/os/curl-build-deps
-.PHONY: curl
-curl: $(DEP)/curl $(BUILD)/home/.config/curlrc | .setup
-	$(INSTALL_INTO) $(INSTALL_PATH)/.config $(REPO_ROOT)/build/home/.config/curlrc --mode 0644
-
 .PHONY: git-config
 git-config: $(MISE_DEPS) $(DEP)/delta | ssh .setup
 	./scripts/update-git-config
 
 
-export KEYBOARD_GROUP := plugdev
-export KEYBOARD_GROUP_ID := 1003
-
-$(BUILD)/zsa-group:
-	if ! getent group "$(KEYBOARD_GROUP)" &>/dev/null; then \
-	    sudo groupadd --gid "$(KEYBOARD_GROUP_ID)" "$(KEYBOARD_GROUP)"; \
-	fi
-	if ! getent group "$(KEYBOARD_GROUP)" | grep -q "$(USER)" &>/dev/null; then \
-	    sudo usermod --append --groups "$(KEYBOARD_GROUP_ID)" "$(USER)"; \
-	fi
-	$(TOUCH) $@
-
-$(BUILD)/zsa-udev-rule: ./scripts/zsa-udev-rule
-	./scripts/zsa-udev-rule > $@
-
-/etc/udev/rules.d/50-zsa.rules: $(BUILD)/zsa-udev-rule $(BUILD)/zsa-group
-	sudo install $(BUILD)/zsa-udev-rule $@
-
-$(BUILD)/keymapp/%:
-	./scripts/download-keymapp
-	$(TOUCH) $@
-
-$(INSTALL_BIN)/keymapp: $(BUILD)/keymapp/keymapp
-	$(INSTALL_INTO) $(INSTALL_BIN) $(BUILD)/keymapp/keymapp
-
-$(INSTALL_DATA)/applications/keymapp.desktop: assets/keymapp.desktop $(BUILD)/keymapp/icon.png $(INSTALL_BIN)/keymapp
-	xdg-icon-resource install --size 128 $(BUILD)/keymapp/icon.png application-keymapp
-	desktop-file-validate assets/keymapp.desktop
-	desktop-file-install --dir="$(INSTALL_DATA)/applications" assets/keymapp.desktop
-	update-desktop-database
-
-.PHONY: keymapp
-keymapp: /etc/udev/rules.d/50-zsa.rules $(INSTALL_DATA)/applications/keymapp.desktop
-
 $(DEP)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
 	$(SCRIPT)/install-nerd-fonts
 	touch --reference "$<" "$@"
+
+
+$(DEP)/http: XH = $(shell $(MISE) which xh)
+$(DEP)/http: $(DEP)/xh
+	ln --no-target-directory -sfv "$(XH)" "$(INSTALL_BIN)"/http
+	$(TOUCH) --reference "$<" "$@"
+
 
 COMMON := \
 	bash \
@@ -491,7 +162,3 @@ workstation: \
 .PHONY: workstation-update
 workstation-update: server-update | workstation
 
-$(DEP)/http: XH = $(shell $(MISE) which xh)
-$(DEP)/http: $(DEP)/xh
-	ln --no-target-directory -sfv "$(XH)" "$(INSTALL_BIN)"/http
-	$(TOUCH) --reference "$<" "$@"

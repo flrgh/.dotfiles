@@ -45,3 +45,7 @@ os-packages-workstation: $(PKG)/os/common $(PKG)/os/workstation $(PKG)/os/remove
 .PHONY: os-packages-update
 os-packages-update: os-packages
 	sudo dnf update -y
+
+.PHONY: os-packages-clean
+os-packages-clean:
+	$(RM) $(wildcard $PKG/os/*) $(OS_COMMON_DEPS) $(OS_WORKSTATION_DEPS) $(wildcard $(PKG)/os.*)

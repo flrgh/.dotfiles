@@ -21,7 +21,7 @@
     "typescript": "6.0.2",
     "vscode-json-languageserver": "1.3.4",
     "yaml-language-server": "1.21.0",
-    "npm-check-updates": "20.0.0"
+    "npm-check-updates": "21.0.0"
   },
   "_removed": [
     "@anthropic-ai/claude-code"
