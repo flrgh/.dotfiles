@@ -19,22 +19,21 @@ MISE_DEPS := $(addprefix $(DEP)/,$(MISE_PACKAGES))
 MISE_ALL := $(PKG)/mise-all
 
 $(MISE_ALL): $(MISE) mise.toml home/.config/mise/config.toml scripts/mise-shims
-	$(MISE) upgrade --yes
+	$(MISE) install --yes
 	./scripts/mise-shims
 	$(TOUCH) "$@"
 
-$(MISE_DEPS): | $(MISE_ALL)
+$(MISE_DEPS): | $(MISE)
+	$(MISE) install --yes $(MISE_FULL_$(notdir $@))
+	./scripts/mise-shims
 	$(TOUCH) --reference $(shell $(MISE) where $(MISE_FULL_$(notdir $@))) $@
 
 .PHONY: mise
-mise: $(MISE)
-	$(MISE) install --yes
-	./scripts/mise-shims
-
-.PHONY: .mise-self-update
-.mise-self-update: | $(MISE)
-	$(MISE) self-update --yes
-	./scripts/mise-shims
+mise: $(MISE) $(MISE_ALL)
 
 .PHONY: mise-update
-mise-update: .mise-self-update .WAIT $(MISE_ALL)
+mise-update: $(MISE)
+	$(MISE) self-update --yes
+	$(MISE) upgrade --yes
+	./scripts/mise-shims
+	$(TOUCH) $(MISE_ALL)
