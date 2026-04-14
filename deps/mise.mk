@@ -2,8 +2,14 @@ ifneq ($(wildcard $(MISE)),)
 -include build/cache/mise-packages.mk
 build/cache/mise-packages.mk: mise.toml home/.config/mise/config.toml
 	@mkdir -p $(@D)
-	@printf 'MISE_PACKAGES := %s\n' \
-		"$$($(MISE) ls --yes --current --no-header | awk '{sub(/^github:[^\/]+\//, "", $$1); printf "%s ", $$1}')" > $@
+	@$(MISE) ls --yes --current --no-header | awk '{ \
+		full = $$1; stripped = full; \
+		sub(/^github:[^\/]+\//, "", stripped); \
+		names = names stripped " "; \
+		print "MISE_FULL_" stripped " := " full; \
+	} END { \
+		print "MISE_PACKAGES := " names; \
+	}' > $@
 endif
 
 # Empty default when mise is not yet installed
@@ -18,7 +24,7 @@ $(MISE_ALL): $(MISE) mise.toml home/.config/mise/config.toml scripts/mise-shims
 	$(TOUCH) "$@"
 
 $(MISE_DEPS): | $(MISE_ALL)
-	$(TOUCH) --reference $(shell $(MISE) where $(notdir $@)) $@
+	$(TOUCH) --reference $(shell $(MISE) where $(MISE_FULL_$(notdir $@))) $@
 
 .PHONY: mise
 mise: $(MISE)
