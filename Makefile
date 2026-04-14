@@ -66,7 +66,8 @@ OLD_FILES := $(INSTALL_PATH)/.bash_profile \
 	$(INSTALL_STATE)/ineed/aws-cli.* \
 	$(INSTALL_BIN)/tl_* \
 	$(INSTALL_BIN)/marksman-linux \
-	$(INSTALL_DATA)/claude/versions/*
+	$(INSTALL_DATA)/claude/versions/* \
+	$(INSTALL_STATE)/ineed/bitwarden-*
 
 # only removed if empty
 OLD_DIRS := $(INSTALL_DATA)/claude/versions \
@@ -85,14 +86,8 @@ BUILD := build
 PKG := $(BUILD)/pkg
 DEP := $(BUILD)/dep
 NEED := $(PKG)/need
-CARGO_PKG := $(PKG)/cargo
 LUAROCKS_PKG := $(PKG)/luarocks
 MISE_PKG := $(PKG)/mise
-
-CARGO_HOME := $(INSTALL_PATH)/.local/cargo
-CARGO_BIN := $(CARGO_HOME)/bin
-RUSTUP := $(CARGO_BIN)/rustup
-CARGO := $(CARGO_BIN)/cargo
 
 # gnome-software seems to be doing some weirdness if this directory
 # doesn't exist
@@ -117,7 +112,7 @@ clean:
 	$(CLEANDIR) $(BUILD)
 
 .PHONY: update
-update: clean os-packages-update mise-update rust-update
+update: clean os-packages-update mise-update cargo-update rust-update
 
 $(PKG)/python.cleanup: $(DEP)/python | $(MISE)
 	$(SCRIPT)/python-cleanup
@@ -133,6 +128,7 @@ include deps/uv.mk
 include deps/ineed.mk
 include deps/luarocks.mk
 include deps/mise.mk
+include deps/rust.mk
 include deps/cargo.mk
 include deps/npm.mk
 include deps/os.mk
@@ -450,6 +446,7 @@ $(DEP)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
 
 COMMON := \
 	bash \
+	cargo \
 	curl \
 	docker \
 	env \
@@ -464,10 +461,11 @@ COMMON := \
 	ssh
 
 COMMON_UPDATE := \
-		mise-update \
-		npm-update \
-		os-packages-update \
-		rust-update
+	cargo-update \
+	mise-update \
+	npm-update \
+	os-packages-update \
+	rust-update
 
 .PHONY: common
 common: $(COMMON)

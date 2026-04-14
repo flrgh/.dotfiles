@@ -95,6 +95,7 @@ emit-bitwarden-secrets-manager() {
     add-export BWS_PROFILE "$profile"
 
     if command -v bws &>/dev/null; then
+        # https://github.com/bitwarden/sdk-sm/issues/1224
         local -a args=(
             --config-file "$conf"
             --profile "$profile"
