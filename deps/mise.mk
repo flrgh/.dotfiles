@@ -53,10 +53,11 @@ mise: $(MISE) $(MISE_ALL) .WAIT $(MISE_SHIMS)
 .mise-update: $(MISE)
 	$(MISE) self-update --yes
 	$(MISE) upgrade --yes
+	$(RM) $(MISE_SHIMS) $(MISE_ALL)
 
 
 .PHONY: mise-update
-mise-update: .mise-update .WAIT $(MISE_ALL) .WAIT $(MISE_SHIMS)
+mise-update: .mise-update .WAIT $(MISE_ALL)
 
 
 .PHONY: clean-mise
