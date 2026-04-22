@@ -97,11 +97,12 @@ chars = "\u0006c"
 key = "T"
 mods = "Control|Shift"
 
-# Shift+Return newline binding for claude in tmux
+# Shift+Return newline binding that works in tmux
+# https://blog.bobuhiro11.net/en/2026/02-27-shift-enter.html
 [[keyboard.bindings]]
 key = "Return"
 mods = "Shift"
-chars = "\u001b\r"
+chars = "\u001b[13;2u"
 
 [mouse]
 hide_when_typing = false

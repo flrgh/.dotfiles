@@ -62,6 +62,26 @@ emit-app-config() {
     add-export GEM_HOME         "$HOME/.local/gems"
     add-export DOCKER_CONFIG    "$XDG_CONFIG_HOME/docker"
     add-export AZURE_CONFIG_DIR "$XDG_CONFIG_HOME/azure"
+
+    if mise where opencode; then
+        add-export OPENCODE_DISABLE_CLAUDE_CODE "1"
+    fi
+
+    if mise where claude-code; then
+        add-export CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY "1"
+        add-export CLAUDE_CODE_ENABLE_TELEMETRY "0"
+        add-export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC "1"
+
+        add-export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
+        add-export CLAUDE_CODE_NO_FLICKER "1"
+        add-export CLAUDE_CODE_SCROLL_SPEED "3"
+
+        add-export CLAUDE_CODE_SHELL "bash"
+    fi
+
+    if mise where pi; then
+        add-export PI_LENS_STARTUP_MODE minimal
+    fi
 }
 
 emit-ls-colors() {

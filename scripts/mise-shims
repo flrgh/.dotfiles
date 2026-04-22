@@ -106,12 +106,12 @@ for shim in "$SHIMS"/*; do
 
     case $name in
         _*|*.so|*.so.[0-9]|*.so.[0-9].[0-9])
-            clean "$name"
+            clean "$shim"
             continue
             ;;
 
         tombi-cli-*)
-            clean "$name"
+            clean "$shim"
             continue
             ;;
 
@@ -131,7 +131,8 @@ for shim in "$SHIMS"/*; do
     fi
 
     # direct link
-    if bin=$(mise which "$name") && [[ -x $bin ]]; then
+    # note: `mise which` will fail here for any non-global tools
+    if bin=$(mise which "$name" 2>/dev/null) && [[ -x $bin ]]; then
         debug "direct link: $name"
         mklink "$bin" "$LOCAL_BIN/$name"
         clean "$SHIMS/$name"

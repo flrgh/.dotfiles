@@ -41,6 +41,7 @@ claude-code = "latest"
 opencode = "latest"
 bun = "latest"
 "github:github/github-mcp-server" = "latest"
+pi = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
