@@ -734,19 +734,11 @@ __rc_app_fzf() {
     fi
 
     {
-        log "extracting bash key bindings"
-
-        BINDINGS=$BUILD_ROOT/fzf/key-bindings.bash
-        mkdir -p "$(dirname "$BINDINGS")"
-
-        fzf --bash \
-            | sed -n '/### key-bindings.bash ###/,/### end: key-bindings.bash ###/p' \
-            > "$BINDINGS"
-
-            patch "$BINDINGS" ./patch/fzf-key-bindings.bash.patch
-
-        log "patching bash key bindings"
-        rc-workfile-include-external "$BINDINGS"
+        local bindings=$BUILD_ROOT/fzf/key-bindings.bash
+        if [[ ! -f $bindings ]]; then
+            fatal "missing $bindings -- run 'make fzf-patch' first"
+        fi
+        rc-workfile-include-external "$bindings"
     }
 
     rc-workfile-fi

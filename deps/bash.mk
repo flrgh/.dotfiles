@@ -3,12 +3,11 @@ $(BUILD)/bash-facts: $(BUILD)/home/.config/env $(BASH_BUILTINS)
 
 $(BUILD)/home/.bashrc: \
 	lib/bash/* bash/* $(SCRIPT)/generate-bashrc \
-	patch/fzf-key-bindings.bash.patch \
+	$(FZF_BINDINGS) \
 	$(DEP)/bash-completion \
 	$(DEP)/bat \
 	$(DEP)/direnv \
 	$(DEP)/fd \
-	$(DEP)/fzf \
 	$(DEP)/gh \
 	$(DEP)/http \
 	$(DEP)/lsd \

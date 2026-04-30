@@ -1,6 +1,6 @@
---- build/fzf/key-bindings-upstream.bash	2026-04-08 13:56:41.217657716 -0700
-+++ build/fzf/key-bindings.bash	2026-04-08 14:06:58.408551841 -0700
-@@ -1,65 +1,68 @@
+--- build/fzf/key-bindings-upstream.bash	2026-04-30 14:14:53.477300108 -0700
++++ build/fzf/key-bindings.bash	2026-04-30 14:18:03.735225117 -0700
+@@ -1,146 +1,112 @@
 -### key-bindings.bash ###
 -#     ____      ____
 -#    / __/___  / __/
@@ -35,12 +35,6 @@
 -  builtin printf '%s\n' "${FZF_DEFAULT_OPTS-} $2"
 -}
 +    declare -g __fzf_defaults__=""
-+
-+    local -a opts=(
-+        "--height=${FZF_TMUX_HEIGHT:-40%}"
-+        "--min-height=20+"
-+        "--bind=ctrl-z:ignore"
-+    )
  
 -__fzf_exec_awk() {
 -  if [[ -z ${__fzf_awk-} ]]; then
@@ -54,6 +48,23 @@
 -        (((x * 1000 + y) * 1000 + z >= 1003004)) 2> /dev/null &&
 -        ((d >= 20230302)) 2> /dev/null &&
 -        __fzf_awk=mawk
+-    fi
+-  fi
+-  LC_ALL=C exec "$__fzf_awk" "$@"
+-}
+-#----END INCLUDE
++    local -a opts=(
++        "--height=${FZF_TMUX_HEIGHT:-40%}"
++        "--min-height=20+"
++        "--bind=ctrl-z:ignore"
++    )
+ 
+-__fzf_select__() {
+-  FZF_DEFAULT_COMMAND=${FZF_CTRL_T_COMMAND:-} \
+-    FZF_DEFAULT_OPTS=$(__fzf_defaults "--reverse --walker=file,dir,follow,hidden --scheme=path" "${FZF_CTRL_T_OPTS-} -m") \
+-    FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd) "$@" |
+-    while read -r item; do
+-      printf '%q ' "$item" # escape special chars
 +    local arg
 +    while (($#)); do
 +        arg=$1
@@ -64,30 +75,38 @@
 +        '') continue ;;
 +        *) opts+=("$arg") ;;
 +        esac
-+    done
-+
+     done
+-}
+ 
+-__fzfcmd() {
+-  [[ -n ${TMUX_PANE-} ]] && { [[ ${FZF_TMUX:-0} != 0 ]] || [[ -n ${FZF_TMUX_OPTS-} ]]; } &&
+-    echo "fzf-tmux ${FZF_TMUX_OPTS:--d${FZF_TMUX_HEIGHT:-40%}} -- " || echo "fzf"
+-}
 +    if [[ -n ${FZF_DEFAULT_OPTS_FILE:-} && -f ${FZF_DEFAULT_OPTS_FILE} ]]; then
 +        local -r -i offset=$((${#opts[@]} + 1))
 +        builtin mapfile -t \
 +            -O "$offset" \
 +            opts \
 +            <"$FZF_DEFAULT_OPTS_FILE"
-     fi
--  fi
--  LC_ALL=C exec "$__fzf_awk" "$@"
--}
--#----END INCLUDE
++    fi
  
--__fzf_select__() {
--  FZF_DEFAULT_COMMAND=${FZF_CTRL_T_COMMAND:-} \
--    FZF_DEFAULT_OPTS=$(__fzf_defaults "--reverse --walker=file,dir,follow,hidden --scheme=path" "${FZF_CTRL_T_OPTS-} -m") \
--    FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd) "$@" |
--    while read -r item; do
--      printf '%q ' "$item" # escape special chars
+-fzf-file-widget() {
+-  local selected="$(__fzf_select__ "$@")"
+-  READLINE_LINE="${READLINE_LINE:0:READLINE_POINT}$selected${READLINE_LINE:READLINE_POINT}"
+-  READLINE_POINT=$((READLINE_POINT + ${#selected}))
+-}
 +    if [[ -n ${FZF_DEFAULT_OPTS:-} ]]; then
 +        opts+=($FZF_DEFAULT_OPTS)
 +    fi
-+
+ 
+-__fzf_cd__() {
+-  local dir
+-  dir=$(
+-    FZF_DEFAULT_COMMAND=${FZF_ALT_C_COMMAND:-} \
+-      FZF_DEFAULT_OPTS=$(__fzf_defaults "--reverse --walker=dir,follow,hidden --scheme=path" "${FZF_ALT_C_OPTS-} +m") \
+-      FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd)
+-  ) && printf 'builtin cd -- %q' "$(builtin unset CDPATH && builtin cd -- "$dir" && builtin pwd)"
+-}
 +    while (($#)); do
 +        arg=$1
 +        shift
@@ -96,14 +115,22 @@
 +        '') continue ;;
 +        *) opts+=("$arg") ;;
 +        esac
-     done
-+
-+    printf -v __fzf_defaults__ "%s" "${opts[*]}"
- }
++    done
  
--__fzfcmd() {
--  [[ -n ${TMUX_PANE-} ]] && { [[ ${FZF_TMUX:-0} != 0 ]] || [[ -n ${FZF_TMUX_OPTS-} ]]; } &&
--    echo "fzf-tmux ${FZF_TMUX_OPTS:--d${FZF_TMUX_HEIGHT:-40%}} -- " || echo "fzf"
+-__fzf_history_delete() {
+-  [[ -s $1 ]] || return
++    printf -v __fzf_defaults__ "%s" "${opts[*]}"
++}
+ 
+-  local offsets
+-  offsets=($(sort -rnu "$1"))
+-  for offset in "${offsets[@]}"; do
+-    builtin history -d "$offset"
+-  done
+-
+-  if [[ ${#offsets[@]} -gt 0 ]] && shopt -q histappend; then
+-    builtin history -w
+-  fi
 +__fzf_select__() {
 +    __fzf_defaults \
 +        --reverse \
@@ -122,47 +149,6 @@
 +        done
  }
  
- fzf-file-widget() {
-@@ -68,75 +71,42 @@
-   READLINE_POINT=$((READLINE_POINT + ${#selected}))
- }
- 
--__fzf_cd__() {
--  local dir
--  dir=$(
--    FZF_DEFAULT_COMMAND=${FZF_ALT_C_COMMAND:-} \
--      FZF_DEFAULT_OPTS=$(__fzf_defaults "--reverse --walker=dir,follow,hidden --scheme=path" "${FZF_ALT_C_OPTS-} +m") \
--      FZF_DEFAULT_OPTS_FILE='' $(__fzfcmd)
--  ) && printf 'builtin cd -- %q' "$(builtin unset CDPATH && builtin cd -- "$dir" && builtin pwd)"
--}
-+declare -g __fzf_lua_history=${HOME}/.local/libexec/fzf-lua-history
- 
--__fzf_history_delete() {
--  [[ -s $1 ]] || return
-+__fzf_history__() {
-+    # TODO: replace this with new command substitution
-+    local len
-+    len=$(HISTTIMEFORMAT='' builtin history 1)
-+    local -i n=${len%% *}
-+
-+    __fzf_defaults \
-+        -- \
-+        -n2..,.. \
-+        --scheme=history \
-+        --bind=ctrl-r:toggle-sort,alt-r:toggle-raw \
-+        --wrap-sign "'"$'\t'"↳ '" \
-+        --highlight-line \
-+        "${FZF_CTRL_R_OPTS-}" \
-+        +m \
-+        --read0
- 
--  local offsets
--  offsets=($(sort -rnu "$1"))
--  for offset in "${offsets[@]}"; do
--    builtin history -d "$offset"
--  done
--}
--
 -if command -v perl > /dev/null; then
 -  __fzf_history__() {
 -    local output script deletefile
@@ -195,6 +181,31 @@
 -    /^\t/ { P(b); b = substr($0, 2); next }
 -    { b = b RS $0 }
 -    END { if (NR) P(b) }'
++fzf-file-widget() {
++    local selected="$(__fzf_select__ "$@")"
++    READLINE_LINE="${READLINE_LINE:0:READLINE_POINT}$selected${READLINE_LINE:READLINE_POINT}"
++    READLINE_POINT=$((READLINE_POINT + ${#selected}))
++}
++
++declare -g __fzf_lua_history=${HOME}/.local/libexec/fzf-lua-history
++
++__fzf_history__() {
++    # TODO: replace this with new command substitution
++    local len
++    len=$(HISTTIMEFORMAT='' builtin history 1)
++    local -i n=${len%% *}
++
++    __fzf_defaults \
++        -- \
++        -n2..,.. \
++        --scheme=history \
++        --bind=ctrl-r:toggle-sort,alt-r:toggle-raw \
++        --wrap-sign "'"$'\t'"↳ '" \
++        --highlight-line \
++        "${FZF_CTRL_R_OPTS-}" \
++        +m \
++        --read0
++
 +    local output
      output=$(
 -      set +o pipefail
@@ -228,7 +239,7 @@
  
  # Required to refresh the prompt after fzf
  bind -m emacs-standard '"\C-\e(": redraw-current-line'
-@@ -145,49 +115,12 @@
+@@ -149,49 +115,12 @@
  bind -m vi-insert '"\C-z": emacs-editing-mode'
  bind -m emacs-standard '"\C-z": vi-editing-mode'
  

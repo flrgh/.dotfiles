@@ -58,6 +58,7 @@ include deps/bash-builtins.mk
 include deps/golang.mk
 include deps/direnv.mk
 include deps/env.mk
+include deps/fzf.mk
 include deps/bash.mk
 include deps/man.mk
 include deps/neovim.mk
