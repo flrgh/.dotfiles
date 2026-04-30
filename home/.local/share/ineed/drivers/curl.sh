@@ -21,7 +21,10 @@ get-installed-version() {
 }
 
 list-available-versions() {
-    gh-helper get-release-names "$REPO"
+    # tag name: curl-8_18_0
+    # output: 8.18.0
+    gh-helper get-tag-names "$REPO" \
+    | sed -n -r -e 's/^curl-([0-9]+)_([0-9]+)_([0-9]+)/\1.\2.\3/p'
 }
 
 get-asset-download-url() {
