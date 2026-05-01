@@ -2,8 +2,8 @@
 
 # delete orphaned symlinks
 
-readonly REPO_ROOT=${DOTFILES_REPO_ROOT:?}
-readonly INSTALL_PATH=${DOTFILES_INSTALL_PATH:?}
+readonly REPO_ROOT=${DOTFILES_REPO_ROOT:-"$HOME/git/flrgh/.dotfiles"}
+readonly INSTALL_PATH=${DOTFILES_INSTALL_PATH:-"$HOME"}
 readonly FILES_D=${REPO_ROOT}/home
 
 OLD=(
