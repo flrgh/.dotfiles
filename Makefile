@@ -65,6 +65,7 @@ include deps/neovim.mk
 include deps/lua.mk
 include deps/curl.mk
 include deps/keymapp.mk
+include deps/docker.mk
 
 
 $(DEP)/bazel: $(DEP)/bazelisk
@@ -90,15 +91,6 @@ language-servers: npm $(LIBEXEC) \
 	$(DEP)/marksman \
 	$(DEP)/zls \
 	| .setup
-
-$(DEP)/docker-buildx: $(DEP)/buildx
-	mkdir -v -p $(HOME)/.docker/cli-plugins
-	ln -sfv "$(shell $(MISE) where $(MISE_FULL_buildx))/docker-cli-plugin-docker-buildx" "$(HOME)/.docker/cli-plugins/docker-buildx"
-	$(TOUCH) --reference $< $@
-
-.PHONY: docker
-docker: scripts/update-docker-config $(DEP)/docker-buildx | .setup
-	./scripts/update-docker-config
 
 .PHONY: alacritty
 alacritty: $(DEP)/alacritty | .setup
