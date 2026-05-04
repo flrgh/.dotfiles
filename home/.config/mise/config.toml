@@ -42,6 +42,12 @@ opencode = "latest"
 bun = "latest"
 "github:github/github-mcp-server" = "latest"
 pi = "latest"
+"aqua:docker/buildx" = "latest"
+"github:docker/docker-language-server" = { version = "latest", bin = "docker-language-server" }
+"github:docker/docker-credential-helpers" = { version = "latest", asset_pattern = "docker-credential-secretservice-*linux-amd64", bin = "docker-credential-secretservice" }
+"github:AnalogJ/scrutiny" = { version = "latest", asset_pattern = "scrutiny-collector-metrics-linux-amd64", bin = "scrutiny-collector" }
+"go:golang.org/x/tools/gopls" = "latest"
+"go:github.com/jstemmer/gotags" = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
@@ -57,7 +63,7 @@ disable_backends = [
     "gem",
     #"github",
     #"gitlab",
-    "go",
+    #"go",
     #"http",
     "npm",
     "pipx",

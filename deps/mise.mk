@@ -15,6 +15,8 @@ $(MISE_PACKAGE_FILE): $(MISE_MAKEFILE) $(MISE_CONFIGS)
 	$(MISE) ls --yes --current --no-header | awk '{ \
 		full = $$1; stripped = full; \
 		sub(/^github:[^\/]+\//, "", stripped); \
+		sub(/^aqua:[^\/]+\//, "", stripped); \
+		sub(/^go:.*\//, "", stripped); \
 		names = names stripped " "; \
 		print "MISE_FULL_" stripped " := " full; \
 	} END { \
