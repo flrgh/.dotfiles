@@ -52,68 +52,14 @@ install-from-asset() {
     )
 
     local -a features=(
-        --enable-optimize                 # Enable compiler optimizations
         --enable-httpsrr                  # Enable HTTPSRR support
         #--enable-ech                      # Enable ECH support
         --enable-ssls-export              # Enable SSL session export support
-        --enable-http                     # Enable HTTP support
-        --enable-ftp                      # Enable FTP support
-        --enable-file                     # Enable FILE support
-        --enable-ipfs                     # Enable IPFS support
         #--enable-ldap                     # Enable LDAP support
         #--enable-ldaps                    # Enable LDAPS support
-        --enable-rtsp                     # Enable RTSP support
-        --enable-proxy                    # Enable proxy support
-        --enable-dict                     # Enable DICT support
-        --enable-telnet                   # Enable TELNET support
-        --enable-tftp                     # Enable TFTP support
-        --enable-pop3                     # Enable POP3 support
-        --enable-imap                     # Enable IMAP support
-        --enable-smb                      # Enable SMB/CIFS support
-        --enable-smtp                     # Enable SMTP support
-        --enable-gopher                   # Enable Gopher support
-        --enable-mqtt                     # Enable MQTT support
-        --enable-manual                   # Enable built-in manual
-        --enable-docs                     # Enable documentation
-        --enable-libcurl-option           # Enable --libcurl C code generation support
-        --enable-ipv6                     # Enable IPv6 (with IPv4) support
-        --enable-openssl-auto-load-config # Enable automatic loading of OpenSSL configuration
-        --disable-ca-search               # Disable unsafe CA bundle search in PATH on Windows
-        --enable-ca-search-safe           # Enable safe CA bundle search
-        --disable-sspi                    # Disable SSPI
-        --enable-basic-auth               # Enable basic authentication (default)
-        --enable-bearer-auth              # Enable bearer authentication (default)
-        --enable-digest-auth              # Enable digest authentication (default)
-        --enable-kerberos-auth            # Enable kerberos authentication (default)
-        --enable-negotiate-auth           # Enable negotiate authentication (default)
-        --enable-aws                      # Enable AWS sig support (default)
-        --enable-ntlm                     # Enable NTLM support
-        --enable-tls-srp                  # Enable TLS-SRP authentication
-        --enable-unix-sockets             # Enable Unix domain sockets
-        --enable-cookies                  # Enable cookies support
-        --enable-socketpair               # Enable socketpair support
-        --enable-http-auth                # Enable HTTP authentication support
-        --enable-doh                      # Enable DoH support
-        --enable-mime                     # Enable mime API support
-        --enable-bindlocal                # Enable local binding support
-        --enable-form-api                 # Enable form API support
-        --enable-dateparse                # Enable date parsing
-        --enable-netrc                    # Enable netrc parsing
-        --enable-progress-meter           # Enable progress-meter
-        --enable-sha512-256               # Enable SHA-512/256 hash algorithm (default)
-        --enable-dnsshuffle               # Enable DNS shuffling
-        --enable-alt-svc                  # Enable alt-svc support
-        --enable-headers-api              # Enable headers-api support
-        --enable-hsts                     # Enable HSTS support
-        --enable-websockets               # Enable WebSockets support
     )
 
     local -a packages=(
-        --without-schannel           # enable Windows native SSL/TLS
-        --without-secure-transport   # enable Apple OS native SSL/TLS
-        --without-amissl             # enable Amiga native SSL/TLS (AmiSSL)
-        --without-winidn             # disable Windows native IDN
-        --without-apple-idn          # Disable AppleIDN
         --without-zsh-functions-dir  # Do not install zsh completions
         --without-fish-functions-dir # Do not install fish completions
 
@@ -122,7 +68,6 @@ install-from-asset() {
         --without-gnutls
         --without-mbedtls
         --without-rustls
-        --without-secure-transport
         --without-wolfssl
 
         --with-zstd
