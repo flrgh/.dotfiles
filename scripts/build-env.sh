@@ -81,8 +81,9 @@ emit-app-config() {
 
     if mise where pi; then
         add-export PI_LENS_STARTUP_MODE minimal
-        add-export PI_OFFLINE "true"
         add-export PI_TELEMETRY "false"
+        add-export PI_OFFLINE "1"
+        add-export PI_SKIP_VERSION_CHECK "1"
     fi
 }
 
