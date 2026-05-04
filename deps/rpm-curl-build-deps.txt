@@ -1,3 +1,5 @@
+gnutls
+gnutls-devel
 libgsasl
 libgsasl-devel
 libidn
@@ -6,6 +8,8 @@ libidn2
 libidn2-devel
 libnghttp2
 libnghttp2-devel
+ngtcp2
+ngtcp2-devel
 libpsl
 libpsl-devel
 librtmp

@@ -63,9 +63,9 @@ install-from-asset() {
         --without-zsh-functions-dir  # Do not install zsh completions
         --without-fish-functions-dir # Do not install fish completions
 
-        --with-openssl
+        --without-openssl
+        --with-gnutls
         --without-bearssl
-        --without-gnutls
         --without-mbedtls
         --without-rustls
         --without-wolfssl
@@ -76,6 +76,9 @@ install-from-asset() {
         --with-brotli
         --with-libpsl
         --with-libssh2
+
+        --with-ngtcp2
+        --with-nghttp3
 
         # this is broken now?
         #--with-gssapi
