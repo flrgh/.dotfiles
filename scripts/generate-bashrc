@@ -1131,8 +1131,6 @@ __rc_app_docker() {
 
     # OpenTelemetry (just a placeholder to remind future me to check this out)
     rc-unset DOCKER_CLI_OTEL_EXPORTER_OTLP_ENDPOINT
-
-    rc-export DOCKER_SCOUT_CACHE_DIR "${XDG_CACHE_HOME:?}/docker-scout"
 }
 __rc_app_docker
 
