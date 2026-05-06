@@ -29,3 +29,8 @@ user-repos: \
 	$(BUILD)/repo/resty-community-typedefs.pull \
 	$(BUILD)/repo/lua-type-annotations.pull
 
+.PHONY: clean-user-repos
+clean-user-repos:
+	$(CLEANDIR) $(BUILD)/repo
+
+user-repos-update: clean-user-repos .WAIT user-repos
