@@ -71,6 +71,7 @@ include deps/lua.mk
 include deps/curl.mk
 include deps/keymapp.mk
 include deps/docker.mk
+include deps/ssh.mk
 
 
 $(DEP)/bazel: $(DEP)/bazelisk
@@ -80,10 +81,6 @@ $(DEP)/bazel: $(DEP)/bazelisk
 .PHONY: kong
 kong: $(PKG)/os/kong $(DEP)/bazel | .setup
 
-
-.PHONY: ssh
-ssh: | .setup
-	./scripts/update-ssh-config
 
 .PHONY: language-servers
 language-servers: npm $(LIBEXEC) \
@@ -149,7 +146,7 @@ common: $(COMMON)
 common-update: $(COMMON) .WAIT $(COMMON_UPDATE)
 
 .PHONY: server
-server: $(COMMON) $(DEP)/signalbackup-tools
+server: $(COMMON) $(DEP)/signalbackup-tools ssh-agent-switcher
 
 .PHONY: server-update
 server-update: $(COMMON_UPDATE) | server
