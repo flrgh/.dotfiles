@@ -1,9 +1,5 @@
 BASH_BUILTIN_CLONE := $(USER_REPOS)/bash-builtin-extras
 
-$(BASH_BUILTIN_CLONE): private REPO := git@github.com:flrgh/bash-builtins.git
-$(BASH_BUILTIN_CLONE):
-	git clone "$(REPO)" "$@"
-
 BASH_BUILTIN_SRCS := $(shell fd \
 	--type file \
 	--exclude tests \
@@ -14,13 +10,7 @@ BASH_BUILTIN_SRCS := $(shell fd \
 BASH_BUILTIN_NAMES := varsplice timer version
 BASH_BUILTIN_LIBS := $(addsuffix .so,$(addprefix $(BASH_BUILTIN_CLONE)/target/release/lib,$(BASH_BUILTIN_NAMES)))
 
-.PHONY: .bash-builtin-pull
-.bash-builtin-pull: $(BASH_BUILTIN_CLONE)
-	git -C "$(BASH_BUILTIN_CLONE)" pull
-
-$(BASH_BUILTIN_SRCS): .bash-builtin-pull
-
-$(BASH_BUILTIN_LIBS): $(RUSTUP) $(BASH_BUILTIN_CLONE) .WAIT $(BASH_BUILTIN_SRCS)
+$(BASH_BUILTIN_LIBS): $(RUSTUP) $(BUILD)/repo/bash-builtin-extras.head .WAIT $(BASH_BUILTIN_SRCS)
 	cargo build \
 	    --quiet \
 	    --keep-going \

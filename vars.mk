@@ -20,7 +20,8 @@ INSTALL_MAN := $(INSTALL_DATA)/man
 XDG_STATE_HOME := $(INSTALL_PREFIX)/state
 INSTALL_STATE := $(XDG_STATE_HOME)
 
-USER_REPOS := $(HOME)/git/flrgh
+GITHUB_USER := flrgh
+USER_REPOS := $(HOME)/git/$(GITHUB_USER)
 REPO_ROOT = $(CURDIR)
 DEBUG := $(DEBUG)
 
@@ -92,5 +93,3 @@ MISE_PKG := $(PKG)/mise
 CREATE_DIRS += .local/share/xdg-desktop-portal/applications
 
 CREATE_DIRS := $(addprefix $(INSTALL_PATH)/,$(CREATE_DIRS))
-
-

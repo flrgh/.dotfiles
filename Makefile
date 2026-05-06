@@ -2,6 +2,10 @@ include vars.mk
 
 .DEFAULT: common
 
+# no-op phony target to force rebuilding
+.PHONY: FORCE
+FORCE: ;
+
 .PHONY: debug
 debug:
 	@echo REPO_ROOT: $(REPO_ROOT)
@@ -44,6 +48,7 @@ symlinks:
 
 ALL_DEPS =
 
+include deps/repos.mk
 include deps/flatpak.mk
 include deps/uv.mk
 include deps/ineed.mk
@@ -127,7 +132,8 @@ COMMON := \
 	npm \
 	os-packages \
 	rust \
-	ssh
+	ssh \
+	user-repos
 
 COMMON_UPDATE := \
 	cargo-update \
