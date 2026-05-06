@@ -41,7 +41,6 @@ claude-code = "latest"
 opencode = "latest"
 bun = "latest"
 "github:github/github-mcp-server" = "latest"
-pi = "latest"
 "aqua:docker/buildx" = "latest"
 "github:docker/docker-language-server" = { version = "latest", bin = "docker-language-server" }
 "github:docker/docker-credential-helpers" = { version = "latest", asset_pattern = "docker-credential-secretservice-*linux-amd64", bin = "docker-credential-secretservice" }

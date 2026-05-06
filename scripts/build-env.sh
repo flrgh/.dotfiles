@@ -79,7 +79,7 @@ emit-app-config() {
         add-export CLAUDE_CODE_SHELL "bash"
     fi
 
-    if mise where pi; then
+    if command -v pi &>/dev/null; then
         add-export PI_LENS_STARTUP_MODE minimal
         add-export PI_TELEMETRY "false"
         add-export PI_OFFLINE "1"
