@@ -1,0 +1,14 @@
+[Unit]
+Description=SSH agent socket switcher (proxies forwarded agents to a stable socket)
+Documentation=man:ssh-agent-switcher(1)
+Documentation=https://github.com/jmmv/ssh-agent-switcher
+ConditionFileIsExecutable=%h/.local/cargo/bin/ssh-agent-switcher
+
+[Service]
+Type=simple
+ExecStart=%h/.local/cargo/bin/ssh-agent-switcher
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
