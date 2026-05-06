@@ -67,6 +67,8 @@ install_font() {
 
     printf "Installing %s..." "${path##*/}"
 
+    mkdir -p "$FONTS"
+
     tar -C "$FONTS" \
         --no-same-owner \
         --extract \
