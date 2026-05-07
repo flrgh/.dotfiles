@@ -68,7 +68,8 @@ OLD_FILES := $(INSTALL_PATH)/.bash_profile \
 	$(INSTALL_BIN)/tl_* \
 	$(INSTALL_BIN)/marksman-linux \
 	$(INSTALL_DATA)/claude/versions/* \
-	$(INSTALL_STATE)/ineed/bitwarden-*
+	$(INSTALL_STATE)/ineed/bitwarden-* \
+	$(INSTALL_PATH)/.ssh/ssh_auth_sock
 
 # only removed if empty
 OLD_DIRS := $(INSTALL_DATA)/claude/versions \

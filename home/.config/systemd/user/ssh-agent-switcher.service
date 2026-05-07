@@ -6,7 +6,7 @@ ConditionFileIsExecutable=%h/.local/cargo/bin/ssh-agent-switcher
 
 [Service]
 Type=simple
-ExecStart=%h/.local/cargo/bin/ssh-agent-switcher
+ExecStart=%h/.local/cargo/bin/ssh-agent-switcher --socket-path=%t/ssh-agent.sock
 Restart=on-failure
 RestartSec=5
 
