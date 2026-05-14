@@ -18,7 +18,8 @@ get-installed-version() {
 }
 
 list-available-versions() {
-    gh-helper get-tag-names "$REPO"
+    gh-helper get-tag-names "$REPO" \
+        | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'
 }
 
 get-latest-version() {
