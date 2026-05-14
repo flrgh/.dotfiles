@@ -285,10 +285,6 @@ do
       "wsdjeg/luarefvim",
     },
 
-    teal = {
-      "teal-language/vim-teal",
-    },
-
     -- lang: markdown
     markdown = {
       "godlygeek/tabular",

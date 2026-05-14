@@ -1,8 +1,7 @@
 LUAROCKS := $(INSTALL_BIN)/luarocks
 
 LUAROCKS_PACKAGES := \
-    teal-language-server \
-    tl
+	penlight
 ALL_DEPS += $(LUAROCKS_PACKAGES)
 LUAROCKS_DEPS := $(addprefix $(DEP)/,$(LUAROCKS_PACKAGES))
 

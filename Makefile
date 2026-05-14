@@ -85,7 +85,6 @@ kong: $(PKG)/os/kong $(DEP)/bazel | .setup
 
 .PHONY: language-servers
 language-servers: npm $(LIBEXEC) \
-	$(DEP)/teal-language-server \
 	$(DEP)/docker-language-server \
 	$(DEP)/gopls \
 	$(MISE_DEPS) \

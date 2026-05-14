@@ -58,7 +58,6 @@ _M.languages = {
   "ssh_config",
   "starlark",
   "strace",
-  "teal",
   "terraform",
   "tmux",
   "toml",
