@@ -72,6 +72,7 @@ include deps/curl.mk
 include deps/keymapp.mk
 include deps/docker.mk
 include deps/ssh.mk
+include deps/secrets.mk
 
 
 $(DEP)/bazel: $(DEP)/bazelisk
@@ -129,6 +130,7 @@ COMMON := \
 	npm \
 	os-packages \
 	rust \
+	secrets \
 	ssh \
 	user-repos
 

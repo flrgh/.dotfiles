@@ -24,6 +24,7 @@ $(BUILD)/repo/%.head: $(BUILD)/repo/%.clone FORCE | $(BUILD)/repo/%.pull
 user-repos: \
 	$(BUILD)/repo/.dotfiles.pull \
 	$(BUILD)/repo/.ai.pull \
+	$(BUILD)/repo/.secrets.pull \
 	$(BUILD)/repo/doorbell.pull \
 	$(BUILD)/repo/rusty-cli.pull \
 	$(BUILD)/repo/resty-community-typedefs.pull \
