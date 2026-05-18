@@ -34,6 +34,7 @@ COMMANDS := \
 	pip3 \
 	rg \
 	rustup \
+	secrets \
 	sg \
 	tree-sitter \
 	usage \
@@ -257,4 +258,8 @@ git-cliff:
 
 opencode: CMD = opencode completion
 opencode:
+	$(from-command)
+
+secrets: CMD = secrets completions bash secrets
+secrets:
 	$(from-command)
