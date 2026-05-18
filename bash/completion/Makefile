@@ -260,6 +260,6 @@ opencode: CMD = opencode completion
 opencode:
 	$(from-command)
 
-secrets: CMD = secrets completions bash secrets
+secrets: CMD = secrets completions bash
 secrets:
 	$(from-command)
