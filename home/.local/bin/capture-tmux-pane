@@ -167,7 +167,8 @@ cmd_info() {
     done < <(jq -r 'to_entries[] | [.key, .value] | @tsv' "$file")
 
     write_context
-    printf '\ncomment\n-------\n%s\n' "$comment"
+    printf '\ncomment\n-------\n'
+    cat -v <<<"$comment"
 }
 
 
