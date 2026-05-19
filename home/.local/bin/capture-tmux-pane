@@ -1,0 +1,467 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+shopt -s extglob
+
+readonly ARGV0=${0##*/}
+SELF=$(readlink -f -- "$0" 2>/dev/null) || SELF=$0
+readonly SELF
+readonly CAPTURE_DIR=${TMUX_CAPTURE_DIR:-"$HOME/Documents/tmux-pane-captures"}
+
+declare -A CTX
+TARGET=""
+DATA_FILE=""
+JSON_FILE=""
+TS=""
+TS_ISO=""
+
+
+die() {
+    printf '%s: %s\n' "$ARGV0" "$*" >&2
+    exit 1
+}
+
+
+usage() {
+    cat <<HERE
+capture-tmux-pane: snapshot a tmux pane plus a bug-report / feedback note.
+
+Usage:
+  $ARGV0 capture [--quiet] [--comment text|--no-comment] [pane-id]
+  $ARGV0 render <capture|timestamp|file> [--strip|--escape|--hex|--ansi]
+  $ARGV0 info <capture|timestamp|file>
+  $ARGV0 list
+  $ARGV0 list-panes
+  $ARGV0 help
+
+Commands:
+  capture     snapshot a pane and write a report (see: $ARGV0 capture --help)
+  render      print a captured pane's contents, stripping ANSI escapes
+  info        print a captured pane's context as a human-readable report
+  list        list recent captures, newest first
+  list-panes  list tmux panes available to capture
+
+Capture dir:
+  $CAPTURE_DIR
+HERE
+}
+
+
+# resolve a capture argument (full path, basename, or bare timestamp) to an
+# existing file with the given extension, e.g. "data" or "json"
+resolve_capture_file() {
+    local -r input=$1
+    local -r ext=$2
+
+    local check
+    for check in \
+        "$input" \
+        "$input.$ext" \
+        "$input.capture.$ext" \
+        "$CAPTURE_DIR/$input" \
+        "$CAPTURE_DIR/$input.$ext" \
+        "$CAPTURE_DIR/$input.capture.$ext"; do
+        if [[ -f $check ]]; then
+            printf '%s\n' "$check"
+            return 0
+        fi
+    done
+    return 1
+}
+
+
+cmd_list() {
+    printf 'timestamp\tcommand\tsession_name\twindow_name\tpane_id\tinfo_file\n'
+    [[ -d $CAPTURE_DIR ]] || return 0
+
+    local -ri limit=10
+    local -i count=0
+    local -a bases
+    mapfile -t bases < <(find "$CAPTURE_DIR" -maxdepth 1 -type f -name '*.capture.json' -printf '%f\n' | sort -r)
+
+    local base json timestamp meta
+    for base in "${bases[@]}"; do
+        json=$CAPTURE_DIR/$base
+        timestamp=${base%.capture.json}
+        meta=$(jq -r '[.pane_command, .session_name, .window_name, .pane_id] | @tsv' "$json")
+        printf '%s\t%s\t%s\n' "$timestamp" "$meta" "$json"
+        count=$((count + 1))
+        if ((count >= limit)); then
+            break
+        fi
+    done
+    return 0
+}
+
+
+cmd_list_panes() {
+    printf 'pane_id\tsession_name\twindow_name\twindow_index\tpane_index\tcommand\tpane_title\tcwd\tsize\tactive\n'
+    tmux list-panes -a -F $'#{pane_id}\t#{session_name}\t#{window_name}\t#{window_index}\t#{pane_index}\t#{pane_current_command}\t#{pane_title}\t#{pane_current_path}\t#{pane_width}x#{pane_height}\t#{?pane_active,yes,no}' \
+        || die 'list-panes: tmux server not available'
+}
+
+
+cmd_render() {
+    local mode="strip"
+    local file=""
+
+    while (($#)); do
+        case $1 in
+            --strip|--plain) mode="strip" ;;
+            --escape|--cat) mode="escape" ;;
+            --hex|--hexdump) mode="hex" ;;
+            --ansi|--raw) mode="ansi" ;;
+            -h|--help)
+                printf 'usage: %s render <capture|timestamp|file> [--strip|--escape|--hex|--ansi]\n' "$ARGV0"
+                return 0
+                ;;
+            -*) die "render: unknown option: $1" ;;
+            *)
+                [[ -z $file ]] || die "render: unexpected extra argument: $1"
+                file=$1
+                ;;
+        esac
+        shift
+    done
+    [[ -n $file ]] || die "render: missing <file> (a *.capture.data file)"
+
+    # accept a full path, a basename, or a bare timestamp
+    local resolved
+    resolved=$(resolve_capture_file "$file" data) \
+        || die "render: no such file: $file"
+    file=$resolved
+
+    case $mode in
+        ansi) cat -- "$file" ;;
+        strip)
+            local esc=$'\e'
+            sed "s/${esc}\[[0-9;:]*[A-Za-z]//g" -- "$file"
+            ;;
+        escape) cat -v -- "$file" ;;
+        hex) hexdump -C -- "$file" ;;
+    esac
+}
+
+
+cmd_info() {
+    local -r input=${1:-}
+    [[ -n $input ]] || die "info: missing <file> (a *.capture.json file)"
+
+    local file
+    file=$(resolve_capture_file "$input" json) \
+        || die "info: no such file: $input"
+
+    local comment
+    comment=$(jq -r '.comment // ""' "$file")
+
+    CTX=()
+    local key val
+    while IFS=$'\t' read -r key val; do
+        case $key in
+            captured) TS_ISO=$val ;;
+            data_file) DATA_FILE=$val ;;
+            comment) ;;
+            *) CTX[$key]=$val ;;
+        esac
+    done < <(jq -r 'to_entries[] | [.key, .value] | @tsv' "$file")
+
+    write_context
+    printf '\ncomment\n-------\n%s\n' "$comment"
+}
+
+
+gather_context() {
+    # key=value pairs kept in one list so the key set and the query string
+    # can't drift apart. fields are newline-separated; tmux passes newlines
+    # through but rewrites other control bytes (a 0x1f byte prints as the
+    # literal \037). free-text fields go last, so a stray newline only shifts
+    # trailing free-text fields, never an id, size, or flag.
+    local -a fields=(
+        'session_id=#{session_id}'
+        'window_id=#{window_id}'
+        'window_index=#{window_index}'
+        'window_width=#{window_width}'
+        'window_height=#{window_height}'
+        'window_zoomed=#{?window_zoomed_flag,yes,no}'
+        'window_layout=#{window_layout}'
+        'pane_id=#{pane_id}'
+        'pane_index=#{pane_index}'
+        'pane_command=#{pane_current_command}'
+        'pane_pid=#{pane_pid}'
+        'pane_tty=#{pane_tty}'
+        'pane_width=#{pane_width}'
+        'pane_height=#{pane_height}'
+        'cursor_x=#{cursor_x}'
+        'cursor_y=#{cursor_y}'
+        'pane_mode=#{?pane_in_mode,#{pane_mode},normal}'
+        'alt_screen=#{?alternate_on,yes,no}'
+        'history_size=#{history_size}'
+        'history_limit=#{history_limit}'
+        'client_name=#{client_name}'
+        'client_term=#{client_termname}'
+        'client_width=#{client_width}'
+        'client_height=#{client_height}'
+        'tmux_version=#{version}'
+        'session_name=#{session_name}'
+        'window_name=#{window_name}'
+        'pane_cwd=#{pane_current_path}'
+        'pane_title=#{pane_title}'
+    )
+
+    local f specs=()
+    for f in "${fields[@]}"; do
+        specs+=("${f#*=}")
+    done
+    local fmt
+    printf -v fmt '%s\n' "${specs[@]}"
+
+    local targ=()
+    if [[ -n $TARGET ]]; then
+        targ=(-t "$TARGET")
+    fi
+
+    local -a vals
+    mapfile -t vals < <(tmux display-message -p "${targ[@]}" "$fmt" 2>/dev/null)
+
+    CTX=()
+    local i
+    for i in "${!fields[@]}"; do
+        CTX["${fields[i]%%=*}"]=${vals[i]-}
+    done
+}
+
+
+write_context() {
+    printf 'tmux pane capture\n=================\n\n'
+    printf '%-16s%s\n' 'captured' "$TS_ISO"
+    printf '%-16s%s\n' 'data file' "$DATA_FILE"
+    printf '%-16s%s\n' 'tmux version' "${CTX[tmux_version]}"
+    printf '\nsession\n'
+    printf '  %-14s%s\n' 'name' "${CTX[session_name]}"
+    printf '  %-14s%s\n' 'id' "${CTX[session_id]}"
+    printf '\nwindow\n'
+    printf '  %-14s%s\n' 'name' "${CTX[window_name]}"
+    printf '  %-14s%s\n' 'id' "${CTX[window_id]}"
+    printf '  %-14s%s\n' 'index' "${CTX[window_index]}"
+    printf '  %-14s%sx%s\n' 'size' "${CTX[window_width]}" "${CTX[window_height]}"
+    printf '  %-14s%s\n' 'zoomed' "${CTX[window_zoomed]}"
+    printf '  %-14s%s\n' 'layout' "${CTX[window_layout]}"
+    printf '\npane\n'
+    printf '  %-14s%s\n' 'id' "${CTX[pane_id]}"
+    printf '  %-14s%s\n' 'index' "${CTX[pane_index]}"
+    printf '  %-14s%s\n' 'title' "${CTX[pane_title]}"
+    printf '  %-14s%s\n' 'command' "${CTX[pane_command]}"
+    printf '  %-14s%s\n' 'cwd' "${CTX[pane_cwd]}"
+    printf '  %-14s%s\n' 'pid' "${CTX[pane_pid]}"
+    printf '  %-14s%s\n' 'tty' "${CTX[pane_tty]}"
+    printf '  %-14s%sx%s\n' 'size' "${CTX[pane_width]}" "${CTX[pane_height]}"
+    printf '  %-14s%s,%s\n' 'cursor' "${CTX[cursor_x]}" "${CTX[cursor_y]}"
+    printf '  %-14s%s\n' 'mode' "${CTX[pane_mode]}"
+    printf '  %-14s%s\n' 'alt-screen' "${CTX[alt_screen]}"
+    printf '  %-14s%s / %s\n' 'history' "${CTX[history_size]}" "${CTX[history_limit]}"
+    printf '\nclient\n'
+    printf '  %-14s%s\n' 'name' "${CTX[client_name]}"
+    printf '  %-14s%s\n' 'term' "${CTX[client_term]}"
+    printf '  %-14s%sx%s\n' 'size' "${CTX[client_width]}" "${CTX[client_height]}"
+}
+
+
+write_json() {
+    local -r comment=$1
+
+    local -a args=()
+    local key
+    for key in "${!CTX[@]}"; do
+        args+=(--arg "$key" "${CTX[$key]}")
+    done
+
+    jq -n --sort-keys \
+        "${args[@]}" \
+        --arg captured "$TS_ISO" \
+        --arg data_file "$DATA_FILE" \
+        --arg comment "$comment" \
+        '$ARGS.named'
+}
+
+
+# trim the edited temp file and store its contents as the json comment field;
+# an unwritten or whitespace-only file leaves the comment empty
+apply_comment() {
+    local -r json=$1
+    local -r tmpfile=$2
+
+    local comment=""
+    if [[ -f $tmpfile ]]; then
+        comment=$(<"$tmpfile")
+    fi
+    comment=${comment##+([[:space:]])}
+    comment=${comment%%+([[:space:]])}
+
+    local tmp
+    tmp=$(mktemp)
+    jq --arg comment "$comment" '.comment = $comment' "$json" >"$tmp"
+    mv -- "$tmp" "$json"
+}
+
+
+# collect the capture comment in nvim (runs inside `tmux display-popup`)
+cmd_popup() {
+    local -r json=${1:-}
+    [[ -n $json ]] || die "popup: missing arguments"
+    [[ -f $json ]] || die "popup: no such file: $json"
+
+    local tmpfile
+    tmpfile=$(mktemp)
+
+    nvim -u NONE -i NONE -n "$tmpfile"
+
+    apply_comment "$json" "$tmpfile"
+    rm -f -- "$tmpfile"
+}
+
+
+# snapshot the pane + context, then collect a comment for the report
+cmd_capture() {
+    local quiet="" comment="" has_comment="" no_comment=""
+    TARGET=""
+    while (($#)); do
+        case $1 in
+            -q|--quiet) quiet=1 ;;
+            --comment)
+                shift
+                (($#)) || die "capture: --comment requires an argument"
+                [[ -z $no_comment ]] || die "capture: --comment conflicts with --no-comment"
+                comment=$1
+                has_comment=1
+                ;;
+            --no-comment)
+                [[ -z $has_comment ]] || die "capture: --no-comment conflicts with --comment"
+                no_comment=1
+                ;;
+            -h|--help)
+                cat <<HERE
+usage: $ARGV0 capture [--quiet] [--comment text|--no-comment] [pane-id]
+
+If pane-id is omitted inside tmux, captures the currently active pane in your
+client. Outside tmux, pane-id is required.
+
+Each capture writes <timestamp>.capture.json (pane context + comment) and
+<timestamp>.capture.data (the raw pane contents).
+
+Options:
+  --comment text  Set the comment field and do not open nvim.
+  --no-comment    Leave the comment empty and do not open nvim.
+  -q, --quiet     Suppress post-capture stdout.
+HERE
+                return 0
+                ;;
+            -*) die "capture: unknown option: $1" ;;
+            *)
+                [[ -z $TARGET ]] || die "capture: multiple pane ids: $TARGET and $1"
+                TARGET=$1
+                ;;
+        esac
+        shift
+    done
+
+    if [[ -z $TARGET && -z ${TMUX:-} ]]; then
+        die "capture: missing [pane-id] outside tmux"
+    fi
+
+    gather_context
+    [[ -n ${CTX[pane_id]} ]] || die "capture: no such pane: ${TARGET:-active}"
+    TARGET=${CTX[pane_id]}
+
+    # TS_ISO is the iso8601 (utc) capture timestamp; TS swaps the T and the
+    # colons for separators that keep the basename free of colons
+    TS_ISO=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
+    TS=${TS_ISO/T/_}
+    TS=${TS//:/-}
+
+    mkdir -p "$CAPTURE_DIR" || die "cannot create $CAPTURE_DIR"
+
+    local -r base="$CAPTURE_DIR/$TS.capture"
+    DATA_FILE="$base.data"
+    JSON_FILE="$base.json"
+
+    # -p prints to stdout, -e keeps ANSI color/attr escapes, -N keeps trailing
+    # spaces. no -J (joins wrapped lines, distorts layout) and no -C (keeps the
+    # data file raw and replayable for the render subcommand).
+    if ! tmux capture-pane -p -e -N -t "$TARGET" >"$DATA_FILE"; then
+        rm -f -- "$DATA_FILE"
+        die "capture-pane failed for $TARGET"
+    fi
+
+    # write the json now with whatever comment we already have; the nvim path
+    # updates the comment field afterward
+    write_json "$comment" >"$JSON_FILE"
+
+    if [[ -z $has_comment && -z $no_comment ]]; then
+        if [[ -n ${TMUX:-} ]]; then
+            # intentionally omit -t: TARGET is the pane being captured, but the
+            # popup should appear on the current client wherever the command was
+            # invoked. display-popup blocks until nvim exits; the binding runs
+            # this whole script under `run-shell -b`, so the tmux command queue
+            # is never held up.
+            tmux display-popup -E -w 80% -h 70% -b rounded \
+                -T ' capture-tmux-pane ' \
+                "$SELF" popup "$JSON_FILE"
+        else
+            cmd_popup "$JSON_FILE"
+        fi
+    fi
+
+    if [[ -z $quiet ]]; then
+        printf 'captured pane: %s\n' "${CTX[pane_id]}"
+        printf 'session:       %s\n' "${CTX[session_name]}"
+        printf 'window:        %s\n' "${CTX[window_name]}"
+        printf 'command:       %s\n' "${CTX[pane_command]}"
+        printf 'title:         %s\n' "${CTX[pane_title]}"
+        printf 'cwd:           %s\n' "${CTX[pane_cwd]}"
+        printf 'size:          %sx%s\n' "${CTX[pane_width]}" "${CTX[pane_height]}"
+        printf 'info file:     %s\n' "$JSON_FILE"
+        printf 'raw data:      %s\n' "$DATA_FILE"
+        printf 'render with:   %s render %q\n' "$ARGV0" "$TS"
+        printf 'view with:     %s info %q\n' "$ARGV0" "$TS"
+    fi
+}
+
+
+is_capture_command() {
+    [[ $(type -t "cmd_${1//-/_}") == function ]]
+}
+
+
+run() {
+    local -r command=$1
+    shift
+
+    "cmd_${command//-/_}" "$@"
+}
+
+
+main() {
+    local command=${1:-}
+
+    case $command in
+        "")
+            usage >&2
+            exit 2
+            ;;
+        -h|--help|help)
+            usage
+            exit 0
+            ;;
+    esac
+
+    shift
+    if ! is_capture_command "$command"; then
+        die "unknown command: $command (try: $ARGV0 help)"
+    fi
+
+    run "$command" "$@"
+}
+
+
+main "$@"
