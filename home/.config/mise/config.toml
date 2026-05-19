@@ -47,6 +47,7 @@ bun = "latest"
 "github:AnalogJ/scrutiny" = { version = "latest", asset_pattern = "scrutiny-collector-metrics-linux-amd64", bin = "scrutiny-collector" }
 "go:golang.org/x/tools/gopls" = "latest"
 "go:github.com/jstemmer/gotags" = "latest"
+tmux = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
