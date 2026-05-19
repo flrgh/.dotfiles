@@ -28,8 +28,9 @@ usage() {
 capture-tmux-pane: snapshot a tmux pane plus a bug-report / feedback note.
 
 Usage:
-  $ARGV0 capture [--quiet] [--comment text|--no-comment] [pane-id]
+  $ARGV0 capture [--quiet] [--comment text|--no-comment] [--scrollback N] [pane-id]
   $ARGV0 render <capture|timestamp|file> [--strip|--escape|--hex|--ansi]
+  $ARGV0 diff <a> <b> [--strip|--escape|--hex|--ansi]
   $ARGV0 info <capture|timestamp|file>
   $ARGV0 list
   $ARGV0 list-panes
@@ -38,6 +39,7 @@ Usage:
 Commands:
   capture     snapshot a pane and write a report (see: $ARGV0 capture --help)
   render      print a captured pane's contents, stripping ANSI escapes
+  diff        unified diff between two captures in the chosen render mode
   info        print a captured pane's context as a human-readable report
   list        list recent captures, newest first
   list-panes  list tmux panes available to capture
@@ -72,6 +74,20 @@ resolve_capture_file() {
 
 
 cmd_list() {
+    local -i unresolved=0
+    while (($#)); do
+        case $1 in
+            --unresolved) unresolved=1 ;;
+            -h|--help)
+                printf 'usage: %s list [--unresolved]\n' "$ARGV0"
+                return 0
+                ;;
+            -*) die "list: unknown option: $1" ;;
+            *) die "list: unexpected argument: $1" ;;
+        esac
+        shift
+    done
+
     printf 'timestamp\tcommand\tsession_name\twindow_name\tpane_id\tinfo_file\n'
     [[ -d $CAPTURE_DIR ]] || return 0
 
@@ -83,6 +99,9 @@ cmd_list() {
     local base json timestamp meta
     for base in "${bases[@]}"; do
         json=$CAPTURE_DIR/$base
+        if (( unresolved )) && [[ -n $(jq -r '.resolution // ""' "$json") ]]; then
+            continue
+        fi
         timestamp=${base%.capture.json}
         meta=$(jq -r '[.pane_command, .session_name, .window_name, .pane_id] | @tsv' "$json")
         printf '%s\t%s\t%s\n' "$timestamp" "$meta" "$json"
@@ -99,6 +118,31 @@ cmd_list_panes() {
     printf 'pane_id\tsession_name\twindow_name\twindow_index\tpane_index\tcommand\tpane_title\tcwd\tsize\tactive\n'
     tmux list-panes -a -F $'#{pane_id}\t#{session_name}\t#{window_name}\t#{window_index}\t#{pane_index}\t#{pane_current_command}\t#{pane_title}\t#{pane_current_path}\t#{pane_width}x#{pane_height}\t#{?pane_active,yes,no}' \
         || die 'list-panes: tmux server not available'
+}
+
+
+resolve_data_file() {
+    local input=$1
+    case $input in
+        *.json) input=${input%.json}.data ;;
+    esac
+    resolve_capture_file "$input" data
+}
+
+
+do_render() {
+    local -r file=$1
+    local -r mode=$2
+    case $mode in
+        ansi) cat -- "$file" ;;
+        strip)
+            local esc=$'\e'
+            sed "s/${esc}\[[0-9;:]*[A-Za-z]//g" -- "$file"
+            ;;
+        escape) cat -v -- "$file" ;;
+        hex) hexdump -C -- "$file" ;;
+        *) die "render: unknown mode: $mode" ;;
+    esac
 }
 
 
@@ -124,23 +168,56 @@ cmd_render() {
         esac
         shift
     done
-    [[ -n $file ]] || die "render: missing <file> (a *.capture.data file)"
+    [[ -n $file ]] || die "render: missing <file> (a *.capture.data or *.capture.json file)"
 
-    # accept a full path, a basename, or a bare timestamp
     local resolved
-    resolved=$(resolve_capture_file "$file" data) \
+    resolved=$(resolve_data_file "$file") \
         || die "render: no such file: $file"
-    file=$resolved
 
-    case $mode in
-        ansi) cat -- "$file" ;;
-        strip)
-            local esc=$'\e'
-            sed "s/${esc}\[[0-9;:]*[A-Za-z]//g" -- "$file"
-            ;;
-        escape) cat -v -- "$file" ;;
-        hex) hexdump -C -- "$file" ;;
-    esac
+    do_render "$resolved" "$mode"
+}
+
+
+cmd_diff() {
+    local mode="strip"
+    local -a positional=()
+
+    while (($#)); do
+        case $1 in
+            --strip|--plain) mode="strip" ;;
+            --escape|--cat) mode="escape" ;;
+            --hex|--hexdump) mode="hex" ;;
+            --ansi|--raw) mode="ansi" ;;
+            -h|--help)
+                printf 'usage: %s diff <a> <b> [--strip|--escape|--hex|--ansi]\n' "$ARGV0"
+                return 0
+                ;;
+            -*) die "diff: unknown option: $1" ;;
+            *) positional+=("$1") ;;
+        esac
+        shift
+    done
+    (( ${#positional[@]} == 2 )) \
+        || die "diff: expected exactly 2 captures, got ${#positional[@]}"
+
+    local a b
+    a=$(resolve_data_file "${positional[0]}") \
+        || die "diff: no such file: ${positional[0]}"
+    b=$(resolve_data_file "${positional[1]}") \
+        || die "diff: no such file: ${positional[1]}"
+
+    # diff exits 0 (identical), 1 (differences), or >=2 (error). pass 0/1 back
+    # to the caller as informational; treat >=2 as a hard failure.
+    local rc=0
+    diff -u --label "$a" --label "$b" \
+        <(do_render "$a" "$mode") <(do_render "$b" "$mode") \
+        || rc=$?
+
+    if (( rc > 1 )); then
+        die "diff: exit $rc"
+    fi
+
+    return $rc
 }
 
 
@@ -325,6 +402,7 @@ cmd_popup() {
 # snapshot the pane + context, then collect a comment for the report
 cmd_capture() {
     local quiet="" comment="" has_comment="" no_comment=""
+    local -i scrollback=0
     TARGET=""
     while (($#)); do
         case $1 in
@@ -340,9 +418,15 @@ cmd_capture() {
                 [[ -z $has_comment ]] || die "capture: --no-comment conflicts with --comment"
                 no_comment=1
                 ;;
+            --scrollback)
+                shift
+                (($#)) || die "capture: --scrollback requires a line count"
+                [[ $1 =~ ^[1-9][0-9]*$ ]] || die "capture: --scrollback must be a positive integer (got: $1)"
+                scrollback=$1
+                ;;
             -h|--help)
                 cat <<HERE
-usage: $ARGV0 capture [--quiet] [--comment text|--no-comment] [pane-id]
+usage: $ARGV0 capture [--quiet] [--comment text|--no-comment] [--scrollback N] [pane-id]
 
 If pane-id is omitted inside tmux, captures the currently active pane in your
 client. Outside tmux, pane-id is required.
@@ -353,6 +437,8 @@ Each capture writes <timestamp>.capture.json (pane context + comment) and
 Options:
   --comment text  Set the comment field and do not open nvim.
   --no-comment    Leave the comment empty and do not open nvim.
+  --scrollback N  Also include N lines of history above the visible region.
+                  Default is visible region only (no history).
   -q, --quiet     Suppress post-capture stdout.
 HERE
                 return 0
@@ -388,8 +474,19 @@ HERE
 
     # -p prints to stdout, -e keeps ANSI color/attr escapes, -N keeps trailing
     # spaces. no -J (joins wrapped lines, distorts layout) and no -C (keeps the
-    # data file raw and replayable for the render subcommand).
-    if ! tmux capture-pane -p -e -N -t "$TARGET" >"$DATA_FILE"; then
+    # data file raw and replayable for the render subcommand). --scrollback N
+    # adds `-S -N -E -` so the data file includes N history lines above the
+    # visible region in addition to the visible rows.
+    local -a cap_args=(-p -e -N -t "$TARGET")
+    if (( scrollback > 0 )); then
+        cap_args+=(-S "-$scrollback" -E -)
+        CTX[capture_scope]=scrollback
+        CTX[scrollback_lines]=$scrollback
+    else
+        CTX[capture_scope]=visible
+        CTX[scrollback_lines]=""
+    fi
+    if ! tmux capture-pane "${cap_args[@]}" >"$DATA_FILE"; then
         rm -f -- "$DATA_FILE"
         die "capture-pane failed for $TARGET"
     fi
@@ -397,6 +494,10 @@ HERE
     # write the json now with whatever comment we already have; the nvim path
     # updates the comment field afterward
     write_json "$comment" >"$JSON_FILE"
+
+    if [[ -n ${TMUX:-} ]]; then
+        tmux display-message "captured -> $DATA_FILE" 2>/dev/null || true
+    fi
 
     if [[ -z $has_comment && -z $no_comment ]]; then
         if [[ -n ${TMUX:-} ]]; then
