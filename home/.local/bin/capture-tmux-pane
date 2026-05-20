@@ -32,6 +32,7 @@ Usage:
   $ARGV0 render <capture|timestamp|file> [--strip|--escape|--hex|--ansi]
   $ARGV0 diff <a> <b> [--strip|--escape|--hex|--ansi]
   $ARGV0 info <capture|timestamp|file>
+  $ARGV0 delete [-y|--yes] <capture|timestamp|file>
   $ARGV0 list
   $ARGV0 list-panes
   $ARGV0 help
@@ -41,6 +42,7 @@ Commands:
   render      print a captured pane's contents, stripping ANSI escapes
   diff        unified diff between two captures in the chosen render mode
   info        print a captured pane's context as a human-readable report
+  delete      delete a capture's .data and .json files (prompts unless -y)
   list        list recent captures, newest first
   list-panes  list tmux panes available to capture
 
@@ -127,6 +129,15 @@ resolve_data_file() {
         *.json) input=${input%.json}.data ;;
     esac
     resolve_capture_file "$input" data
+}
+
+
+resolve_json_file() {
+    local input=$1
+    case $input in
+        *.data) input=${input%.data}.json ;;
+    esac
+    resolve_capture_file "$input" json
 }
 
 
@@ -246,6 +257,57 @@ cmd_info() {
     write_context
     printf '\ncomment\n-------\n'
     cat -v <<<"$comment"
+}
+
+
+cmd_delete() {
+    local input=""
+    local -i yes=0
+
+    while (($#)); do
+        case $1 in
+            -y|--yes) yes=1 ;;
+            -h|--help)
+                cat <<HERE
+usage: $ARGV0 delete [-y|--yes] <capture|timestamp|file>
+
+Options:
+  -y, --yes  Delete without prompting for confirmation.
+HERE
+                return 0
+                ;;
+            -*) die "delete: unknown option: $1" ;;
+            *)
+                [[ -z $input ]] || die "delete: unexpected extra argument: $1"
+                input=$1
+                ;;
+        esac
+        shift
+    done
+    [[ -n $input ]] || die "delete: missing <file> (a *.capture.data or *.capture.json file)"
+
+    local data json
+    data=$(resolve_data_file "$input") \
+        || die "delete: no such data file for: $input"
+    json=$(resolve_json_file "$input") \
+        || die "delete: no such json file for: $input"
+
+    if (( ! yes )); then
+        printf 'delete capture files?\n  data: %s\n  info: %s\nType y or yes to delete: ' "$data" "$json" >&2
+        local answer=""
+        IFS= read -r answer || true
+        case ${answer,,} in
+            y|yes) ;;
+            *)
+                printf 'delete: cancelled\n' >&2
+                return 1
+                ;;
+        esac
+    fi
+
+    rm -f -- "$data" "$json"
+    printf 'deleted data: %s\n' "$data"
+    printf 'deleted info: %s\n' "$json"
 }
 
 
