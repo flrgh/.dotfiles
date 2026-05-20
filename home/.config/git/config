@@ -29,7 +29,6 @@
 	autocrlf = input
 	editor = nvim
 	excludesfile = ~/.config/git/ignore
-	fsmonitor = true
 	untrackedCache = true
 	safecrlf = true
 
@@ -41,13 +40,17 @@
 
 [diff]
 	algorithm = histogram
-	compactionHeuristic = true
 	colorMoved = plain
+	colorMovedWS = allow-indentation-change
 	noprefix = true
 	renames = true
 
 [fetch]
 	prune = true
+	writeCommitGraph = true
+
+[transfer]
+	fsckObjects = true
 
 [gpg]
 	format = ssh
@@ -101,7 +104,7 @@
 	enabled = true
 
 [url "https://github.com/"]
-	insteadOf = git://github.com:
+	insteadOf = git@github.com:
 
 [user]
 	name = Michael Martin
