@@ -8,10 +8,11 @@ SSH=$HOME/.ssh
 SSH_CONF=${SSH}/config
 SSH_CONF_D=${SSH}/config.d
 SSH_CONF_CONTROL_PATH=${SSH_CONF_D}/ControlPath.conf
+SSH_BASHRC=bash/app-ssh.sh
 
 mkdir -p "$SSH" "$SSH_CONF_D"
 
-STAMP=$(stat -L -c %Y "$SSH_CONF" "$SSH_CONF_D"/* \
+STAMP=$(stat -L -c %Y "$SSH_CONF" "$SSH_CONF_D"/* "$SSH_BASHRC" \
         | sort --numeric-sort \
         | tail -1)
 
