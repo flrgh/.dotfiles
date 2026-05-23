@@ -125,6 +125,21 @@ cmd-get() {
     http "$path"
 }
 
+cmd-get-latest-commits() {
+    local -r repo=${1:?}
+    local -ri limit=${2:-10}
+    http "repos/${repo}/commits?per_page=${limit}"
+}
+
+cmd-get-latest-commit() {
+    cmd-get-latest-commits "${1:?}" 1
+}
+
+cmd-get-latest-commit-sha() {
+    cmd-get-latest-commit "${1:?}" \
+    | jq -r '.[0].sha'
+}
+
 cmd-list-commands() {
     declare -F \
     | grep -o 'cmd-.*' \
