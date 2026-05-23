@@ -36,19 +36,62 @@ update-delta() {
     set-config interactive.diffFilter "$delta --paging never --color-only"
 }
 
-update-user-signing-key() {
-    local -a keys=(
-        ~/.ssh/id_ed25519.pub
-        ~/.ssh/id_ecdsa.pub
-    )
+# Print the "<type> <base64>" identity portion of an SSH public key
+pubkey-id() {
+    awk 'NF >= 2 { print $1, $2; exit }' "$@"
+}
 
-    local key
-    for key in "${keys[@]}"; do
-        if [[ -e $key ]]; then
-            set-config user.signingKey "$key"
+github-signing-keys() {
+    local -r user=$1
+    local json
+    if json=$(gh-helper get "/users/$user/ssh_signing_keys"); then
+        jq -r '.[].key | split(" ")[0:2] | join(" ")' <<<"$json"
+        return 0
+    else
+        return 1
+    fi
+}
+
+use-default-key-command() {
+    local -r reason=$1
+    echo "[signing-key] $reason; falling back to gpg.ssh.defaultKeyCommand"
+    set-config gpg.ssh.defaultKeyCommand "ssh-add -L"
+}
+
+update-user-signing-key() {
+    local gh_user
+    gh_user=$(git config --get-urlmatch credential.username https://github.com 2>/dev/null) \
+        || gh_user=${GITHUB_USER:-}
+
+    if [[ -z ${gh_user:-} ]]; then
+        use-default-key-command "no github username configured"
+        return
+    fi
+
+    local approved
+    if ! approved=$(github-signing-keys "$gh_user"); then
+        use-default-key-command "could not fetch signing keys for $gh_user from github"
+        return
+    fi
+
+    if [[ -z ${approved:-} ]]; then
+        use-default-key-command "no approved signing keys on github for $gh_user"
+        return
+    fi
+
+    local pubkey pubkey_id
+    for pubkey in ~/.ssh/*.pub; do
+        [[ -e $pubkey ]] || continue
+
+        pubkey_id=$(pubkey-id "$pubkey") || continue
+        if grep -qxF -- "$pubkey_id" <<<"$approved"; then
+            echo "[signing-key] matched github approved key in $pubkey"
+            set-config user.signingKey "$pubkey"
             return
         fi
     done
+
+    use-default-key-command "no local key matched github approved keys"
 }
 
 # credential.helper needs to be an absolute path in order to work properly
