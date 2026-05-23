@@ -32,6 +32,30 @@ cache-get() {
         case $arg in
             -q|--quiet) quiet=1; shift ;;
             -s|--silent) silent=1; shift ;;
+            -h|--help)
+                cat <<'EOF'
+Usage: cache-get [options] <url> [dest]
+
+Download a URL to ~/.cache/download/, using If-Modified-Since and ETag
+to avoid re-downloading unchanged files. On success, prints the path to
+the cached file on stdout.
+
+Arguments:
+  <url>             URL to fetch.
+  [dest]            Destination, relative to ~/.cache/download/. Defaults
+                    to 'auto', which derives a path from the URL.
+
+Options:
+  -q, --quiet       Suppress progress messages on stderr.
+  -s, --silent      Don't print the destination path on stdout.
+  -h, --help        Show this help and exit.
+
+Environment:
+  CACHE_GET_QUIET   Set to 1 to default --quiet on.
+  CACHE_GET_SILENT  Set to 1 to default --silent on.
+EOF
+                return 0
+                ;;
             *) break ;;
         esac
     done
