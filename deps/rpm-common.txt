@@ -19,6 +19,7 @@ gcc-c++
 git
 git-extras
 gzip
+help2man
 htop
 iftop
 inotify-tools
@@ -28,6 +29,7 @@ jc                # convert text output from common tools to JSON
 jo                # command-line JSON object creation
 jq
 jwhois
+kernel-doc
 liburing-devel    # contains man pages for io_uring
 libyaml
 libyaml-devel
@@ -37,6 +39,8 @@ lsd               # modern ls replacement
 lshw
 lsof
 man-db
+man-pages
+man-pages-posix
 mkpasswd
 moreutils
 musl-gcc
@@ -61,9 +65,9 @@ rsync
 scdoc             # man-page/doc generator
 sd                # find+replace (simpler, faster sed)
 sed
+smartmontools
 sqlite
 sqlite-devel
-smartmontools
 strace
 sysstat
 taglib
