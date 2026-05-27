@@ -22,6 +22,7 @@ gzip
 help2man
 htop
 iftop
+info
 inotify-tools
 iotop
 irqbalance
@@ -41,6 +42,7 @@ lsof
 man-db
 man-pages
 man-pages-posix
+mandoc
 mkpasswd
 moreutils
 musl-gcc
