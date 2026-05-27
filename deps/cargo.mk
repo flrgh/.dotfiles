@@ -17,6 +17,7 @@ CARGO_PACKAGES := \
 	cargo-edit \
 	cargo-expand \
 	cargo-modules \
+	cargo-outdated \
 	cargo-release \
 	cargo-update \
 	cbindgen \
