@@ -31,15 +31,13 @@ MISE_DEPS := $(addprefix $(DEP)/,$(MISE_PACKAGES))
 MISE_ALL := $(PKG)/mise-all
 MISE_SHIMS := $(DEP)/.mise-shims
 
-_MISE_LOAD_TOKEN := source "$(HOME)"/.config/github/helper-access-token; export GITHUB_TOKEN;
-
 $(MISE_SHIMS): $(MISE) $(MISE_MAKEFILE) $(MISE_PACKAGE_FILE) ./scripts/mise-shims | $(MISE_ALL) $(MISE_DEPS)
 	./scripts/mise-shims
 	$(TOUCH) "$@"
 
 
 $(MISE_ALL): $(MISE) $(MISE_PACKAGE_FILE) $(MISE_CONFIGS)
-	$(_MISE_LOAD_TOKEN) $(MISE) install --yes
+	$(MISE) install --yes
 	./scripts/mise-shims
 	$(TOUCH) "$@"
 
@@ -55,7 +53,7 @@ mise: $(MISE) $(MISE_ALL) .WAIT $(MISE_SHIMS)
 .PHONY: .mise-update
 .mise-update: $(MISE)
 	$(MISE) self-update --yes
-	$(_MISE_LOAD_TOKEN) $(MISE) upgrade --yes
+	$(MISE) upgrade --yes
 	$(RM) $(MISE_SHIMS) $(MISE_ALL)
 
 

@@ -58,6 +58,9 @@ emit-app-config() {
     add-export MISE_RUSTUP_HOME "$HOME/.local/rustup"
 
     add-export MISE_PARANOID    "1"
+    # prefer github directly instead of querying https://mise-versions.jdx.dev
+    # (which is new and frequently 502s on me)
+    add-export MISE_USE_VERSIONS_HOST "0"
 
     add-export GEM_HOME         "$HOME/.local/gems"
     add-export DOCKER_CONFIG    "$XDG_CONFIG_HOME/docker"

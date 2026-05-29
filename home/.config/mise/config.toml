@@ -104,3 +104,4 @@ gpg_verify = true
 [settings.github]
 github_attestations = true
 slsa = true
+credential_command = "secrets get bws://main/github-readonly-pat"
