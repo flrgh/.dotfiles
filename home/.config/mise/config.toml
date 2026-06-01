@@ -48,6 +48,7 @@ bun = "latest"
 tmux = "latest"
 codex = "latest"
 deno = "latest"
+age = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
