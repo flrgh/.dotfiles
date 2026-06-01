@@ -4,7 +4,6 @@ go = "latest"
 zig = "latest"
 python = "latest"
 
-1password-cli = "latest"
 ast-grep = "latest"
 aws-cli = "latest"
 bat = "latest"
@@ -47,6 +46,8 @@ bun = "latest"
 "go:golang.org/x/tools/gopls" = "latest"
 "go:github.com/jstemmer/gotags" = "latest"
 tmux = "latest"
+codex = "latest"
+deno = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
