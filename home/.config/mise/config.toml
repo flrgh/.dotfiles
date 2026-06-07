@@ -49,8 +49,9 @@ tmux = "latest"
 codex = "latest"
 deno = "latest"
 age = "latest"
-terraform = "latest"
 packer = "latest"
+opentofu = "latest"
+kubectl = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
