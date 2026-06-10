@@ -9,6 +9,7 @@ $(INSTALL_MAN)/index.db: \
 	$(DEP)/pandoc \
 	$(DEP)/python \
 	$(DEP)/ripgrep \
+	$(DEP)/tea \
 	$(SCRIPT)/install-man-pages
 
 	mkdir -p "$(dir $@)"

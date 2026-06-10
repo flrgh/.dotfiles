@@ -173,6 +173,13 @@ _rustup() {
     add-man-path "${RUSTUP_HOME:?}/toolchains/${active:?}/share/man"
 }
 
+_tea() {
+    check-exists tea || return
+
+    local bin; bin=$(mise which tea)
+    man-1-from-cmd "$bin" man
+}
+
 _node() {
     local node; node=$(mise where node)
     add-man-path "${node}/share/man"
@@ -237,6 +244,7 @@ main() {
     _python
     _ripgrep
     _rustup
+    _tea
     _xh
 
     fix-perms

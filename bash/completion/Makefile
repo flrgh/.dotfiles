@@ -36,6 +36,7 @@ COMMANDS := \
 	rustup \
 	secrets \
 	sg \
+	tea \
 	tree-sitter \
 	usage \
 	varlink \
@@ -214,6 +215,10 @@ ast-grep:
 
 sg: CMD = sg completions bash
 sg:
+	$(from-command)
+
+tea: CMD = tea completion bash
+tea:
 	$(from-command)
 
 busted: URL = https://raw.githubusercontent.com/Olivine-Labs/busted/master/completions/bash/busted.bash

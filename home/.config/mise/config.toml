@@ -45,6 +45,10 @@ bun = "latest"
 "github:AnalogJ/scrutiny" = { version = "latest", asset_pattern = "scrutiny-collector-metrics-linux-amd64", bin = "scrutiny-collector" }
 "go:golang.org/x/tools/gopls" = "latest"
 "go:github.com/jstemmer/gotags" = "latest"
+
+# with = "latest" mise ends up installing the oldest version, so here we are
+"go:code.gitea.io/tea" = "0.14.1"
+
 tmux = "latest"
 codex = "latest"
 deno = "latest"
