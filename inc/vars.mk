@@ -52,6 +52,7 @@ CLEANDIR := $(SCRIPT)/files cleandir
 MKPARENT := $(SCRIPT)/files mkparent
 MKDIR := $(SCRIPT)/files mkdir
 TOUCH := $(SCRIPT)/files touch
+SYMLINK_TREE := $(SCRIPT)/symlink-tree
 
 getbin = $(firstword $(wildcard $(addsuffix /$(1),$(subst :, ,$(PATH)))))
 SED := $(call getbin,sed)

@@ -29,14 +29,16 @@ DEP_POST_$(2) += $(INSTALL_MAN)/man1/$(1).1
 MAN_TARGETS += $(INSTALL_MAN)/man1/$(1).1
 endef
 
-# man_tree(name, dir, dep): dir contains man[0-9] section subdirs
+# man_tree(name, dir, dep): symlink dir's man[0-9] section pages into the install
+# tree, so dropped/renamed pages surface as dangling links (swept by symlink-tree)
 define man_tree
-$(MAN)/$(1).stamp: $(DEP_INSTALLED)/$(if $(3),$(3),$(1))
-	$(CLEANDIR) "$(MAN)/$(1)"
-	cp -RL "$$(MAN_SRC)"/man[0-9] "$(MAN)/$(1)"/
+$(MAN)/$(1).installed: $(DEP_INSTALLED)/$(if $(3),$(3),$(1))
+	@mkdir -p "$(INSTALL_MAN)"
+	$(SYMLINK_TREE) "$$(MAN_SRC)" "$(INSTALL_MAN)"
 	@$(TOUCH) "$$@"
-$(MAN)/$(1).stamp: MAN_SRC = $(2)
-$(call _man_install_tree,$(1),$(if $(3),$(3),$(1)))
+$(MAN)/$(1).installed: MAN_SRC = $(2)
+DEP_POST_$(if $(3),$(3),$(1)) += $(MAN)/$(1).installed
+MAN_TARGETS += $(MAN)/$(1).installed
 endef
 
 # man_files(name, dir, dep): dir contains flat section-1 page files
