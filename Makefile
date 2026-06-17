@@ -49,6 +49,7 @@ symlinks:
 ALL_DEPS =
 
 include inc/completion.mk
+include inc/man.mk
 
 include deps/repos.mk
 include deps/flatpak.mk
@@ -129,6 +130,7 @@ COMMON := \
 	golang \
 	local \
 	lua \
+	man \
 	mise \
 	neovim \
 	npm \
