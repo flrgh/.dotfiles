@@ -1,0 +1,2 @@
+create-session default  "$HOME"
+create-session dotfiles "$HOME/git/flrgh/.dotfiles"
