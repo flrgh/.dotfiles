@@ -1,10 +1,10 @@
-$(DEP)/dircolors: $(DEP)/coreutils
-	$(TOUCH) --reference "$<" "$@"
+$(DEP_INSTALLED)/dircolors: $(DEP)/coreutils
+	@$(TOUCH) --reference "$<" "$@"
 
 
 $(BUILD)/LS_COLORS: $(DEP)/vivid
 	$(MISE) exec vivid -- vivid generate catppuccin-mocha >"$@"
-	$(TOUCH) --reference "$<" "$@"
+	@$(TOUCH) --reference "$<" "$@"
 
 
 $(BUILD)/home/.config/env: $(MISE_DEPS) lib/bash/* scripts/build-env.sh $(BUILD)/LS_COLORS

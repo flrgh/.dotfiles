@@ -1,10 +1,10 @@
 $(PKG)/flatpak.remotes: deps/flatpak-remotes.txt
 	./scripts/setup-flatpak-remotes
-	$(TOUCH) $@
+	@$(TOUCH) $@
 
 $(PKG)/flatpak.apps.installed: $(PKG)/flatpak.remotes deps/flatpak-apps.txt
 	./scripts/install-flatpak-apps
-	$(TOUCH) $@
+	@$(TOUCH) $@
 
 .PHONY: flatpak
 flatpak: $(PKG)/flatpak.apps.installed

@@ -4,7 +4,7 @@ MISE_CONFIGS := mise.toml home/.config/mise/config.toml
 .PRECIOUS: $(MISE)
 $(MISE): scripts/install-mise | .setup
 	./scripts/install-mise
-	$(TOUCH) --reference ./scripts/install-mise $(MISE)
+	@$(TOUCH) --reference ./scripts/install-mise $(MISE)
 
 MISE_PACKAGE_FILE := $(BUILD)/cache/mise-packages.mk
 
@@ -28,26 +28,30 @@ endif
 MISE_PACKAGES ?=
 ALL_DEPS += $(MISE_PACKAGES)
 MISE_DEPS := $(addprefix $(DEP)/,$(MISE_PACKAGES))
+MISE_INSTALLED := $(addprefix $(DEP_INSTALLED)/,$(MISE_PACKAGES))
 MISE_ALL := $(PKG)/mise-all
-MISE_SHIMS := $(DEP)/.mise-shims
+MISE_SHIMS := $(DEP_INSTALLED)/.mise-shims
+
+$(DEP_INSTALLED)/mise: $(MISE)
+	@$(TOUCH) --reference "$<" "$@"
 
 $(MISE_SHIMS): $(MISE) $(MISE_MAKEFILE) $(MISE_PACKAGE_FILE) ./scripts/mise-shims | $(MISE_ALL) $(MISE_DEPS)
 	./scripts/mise-shims
-	$(TOUCH) "$@"
+	@$(TOUCH) "$@"
 
 
 $(MISE_ALL): $(MISE) $(MISE_PACKAGE_FILE) $(MISE_CONFIGS)
 	$(MISE) install --yes
 	./scripts/mise-shims
-	$(TOUCH) "$@"
+	@$(TOUCH) "$@"
 
 
-$(MISE_DEPS): | $(MISE_ALL)
-	$(TOUCH) --reference $(shell $(MISE) where $(MISE_FULL_$(notdir $@))) $@
+$(MISE_INSTALLED): | $(MISE_ALL)
+	@$(TOUCH) --reference $(shell $(MISE) where $(MISE_FULL_$(notdir $@))) $@
 
 
 .PHONY: mise
-mise: $(MISE) $(MISE_ALL) .WAIT $(MISE_SHIMS)
+mise: $(DEP)/mise $(MISE_ALL) .WAIT $(MISE_SHIMS)
 
 
 .PHONY: .mise-update
@@ -63,4 +67,4 @@ mise-update: .mise-update .WAIT $(MISE_ALL)
 
 .PHONY: clean-mise
 clean-mise:
-	$(RM) $(MISE_SHIMS) $(MISE_ALL) $(MISE_DEPS) $(MISE_PACKAGE_FILE)
+	$(RM) $(MISE_SHIMS) $(MISE_ALL) $(MISE_DEPS) $(MISE_INSTALLED) $(MISE_PACKAGE_FILE)

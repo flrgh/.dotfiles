@@ -5,6 +5,7 @@ RUSTUP := $(CARGO_BIN)/rustup
 
 RUSTUP_INIT := $(DEP)/rustup-init.sh
 RUST_INIT := $(DEP)/rust-init
+RUST_INSTALLED := $(DEP_INSTALLED)/rust-init
 RUST_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 
 
@@ -38,7 +39,7 @@ $(RUSTUP): | $(RUSTUP_INIT) .setup
 		--default-host x86_64-unknown-linux-gnu
 
 
-$(RUST_INIT): $(RUST_MAKEFILE) | $(RUSTUP)
+$(RUST_INSTALLED): $(RUST_MAKEFILE) | $(RUSTUP)
 	if $(RUSTUP) target list --installed \
 		| grep -qxF wasm32-wasi; \
 	then \
@@ -63,12 +64,12 @@ $(RUST_INIT): $(RUST_MAKEFILE) | $(RUSTUP)
 		rustc \
 		rustfmt
 
-	$(TOUCH) --reference "$(RUST_MAKEFILE)" "$@"
+	@$(TOUCH) --reference "$(RUST_MAKEFILE)" "$@"
 
 
 .PHONY: clean-rust
 clean-rust:
-	$(RM) $(RUSTUP_INIT) $(RUST_INIT)
+	$(RM) $(RUSTUP_INIT) $(RUST_INIT) $(RUST_INSTALLED)
 
 
 .PHONY: rust

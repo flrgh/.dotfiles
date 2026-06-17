@@ -1,5 +1,5 @@
 $(BUILD)/bash-facts: $(BUILD)/home/.config/env $(BASH_BUILTINS)
-	$(TOUCH) $@
+	@$(TOUCH) $@
 
 $(BUILD)/home/.bashrc: \
 	lib/bash/* bash/* $(SCRIPT)/generate-bashrc \
@@ -29,21 +29,7 @@ $(BUILD)/bashrc.md5: $(BUILD)/home/.bashrc
 	md5sum "$<" \
 		| awk '{print $$1}' \
 		> "$@"
-	$(TOUCH) --reference "$<" "$@"
-
-$(BUILD)/bash-completion: ./bash/completion/Makefile | $(DEP)/bash-completion
-	$(MAKE) -C ./bash/completion all
-	$(TOUCH) $@
-
-.PHONY: bash-completion
-bash-completion: $(BUILD)/bash-completion | .setup
-	$(INSTALL_INTO) $(INSTALL_PATH)/.local/share/bash-completion/completions \
-		--mode '0644' \
-		$(REPO_ROOT)/build/bash-completion/*
-	find $(INSTALL_PATH)/.local/share/bash-completion/completions \
-		-type f \
-		-empty \
-		-delete
+	@$(TOUCH) --reference "$<" "$@"
 
 .PHONY: bashrc
 bashrc: $(BUILD)/home/.bashrc $(BUILD)/bashrc.md5 $(SCRIPT)/notify-bash | $(MISE) .setup
@@ -53,7 +39,5 @@ bashrc: $(BUILD)/home/.bashrc $(BUILD)/bashrc.md5 $(SCRIPT)/notify-bash | $(MISE
 	$(SCRIPT)/notify-bash
 
 .PHONY: bash
-bash: $(DEP)/bash .WAIT bash-completion bashrc | .setup
+bash: $(DEP)/bash .WAIT bashrc | .setup
 	./scripts/update-default-shell
-
-

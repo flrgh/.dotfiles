@@ -31,7 +31,7 @@ CARGO_PACKAGES := \
 	worker-build
 
 ALL_DEPS += $(CARGO_PACKAGES)
-CARGO_DEPS := $(addprefix $(DEP)/,$(CARGO_PACKAGES))
+CARGO_DEPS := $(addprefix $(DEP_INSTALLED)/,$(CARGO_PACKAGES))
 
 CARGO_BINSTALL := \
 	cargo binstall \
@@ -43,17 +43,17 @@ CARGO_BINSTALL := \
 
 $(CARGO_PKG): $(CARGO_MAKEFILE) $(RUST_INIT)
 	$(CARGO_BINSTALL) $(CARGO_PACKAGES)
-	$(TOUCH) $@
+	@$(TOUCH) $@
 
 $(CARGO_DEPS): $(CARGO_PKG)
-	$(TOUCH) --reference "$<" "$@"
+	@$(TOUCH) --reference "$<" "$@"
 
 .PHONY: clean-cargo
 clean-cargo:
 	$(RM) $(CARGO_PKG)
 
 .PHONY: cargo
-cargo: $(CARGO_PKG)
+cargo: $(CARGO_PKG) $(addprefix $(DEP)/,$(CARGO_PACKAGES))
 
 .PHONY: cargo-update
 cargo-update: rust-update

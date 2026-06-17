@@ -1,4 +1,4 @@
-include vars.mk
+include inc/vars.mk
 
 .DEFAULT: common
 
@@ -48,6 +48,8 @@ symlinks:
 
 ALL_DEPS =
 
+include inc/completion.mk
+
 include deps/repos.mk
 include deps/flatpak.mk
 include deps/uv.mk
@@ -58,12 +60,14 @@ include deps/python.mk
 include deps/rust.mk
 include deps/cargo.mk
 include deps/npm.mk
+include deps/local.mk
 include deps/os.mk
 include deps/bash-builtins.mk
 include deps/golang.mk
 include deps/direnv.mk
 include deps/env.mk
 include deps/fzf.mk
+include deps/completion.mk
 include deps/bash.mk
 include deps/man.mk
 include deps/neovim.mk
@@ -75,9 +79,9 @@ include deps/ssh.mk
 include deps/secrets.mk
 
 
-$(DEP)/bazel: $(DEP)/bazelisk
+$(DEP_INSTALLED)/bazel: $(DEP)/bazelisk
 	ln -sfv bazelisk $(INSTALL_BIN)/bazel
-	$(TOUCH) --reference "$<" "$@"
+	@$(TOUCH) --reference "$<" "$@"
 
 .PHONY: kong
 kong: $(PKG)/os/kong $(DEP)/bazel | .setup
@@ -104,15 +108,15 @@ git-config: $(MISE_DEPS) $(DEP)/delta | ssh .setup
 	./scripts/update-git-config
 
 
-$(DEP)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
+$(DEP_INSTALLED)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
 	$(SCRIPT)/install-nerd-fonts
-	touch --reference "$<" "$@"
+	@$(TOUCH) --reference "$<" "$@"
 
 
-$(DEP)/http: XH = $(shell $(MISE) which xh)
-$(DEP)/http: $(DEP)/xh
+$(DEP_INSTALLED)/http: XH = $(shell $(MISE) which xh)
+$(DEP_INSTALLED)/http: $(DEP)/xh
 	ln --no-target-directory -sfv "$(XH)" "$(INSTALL_BIN)"/http
-	$(TOUCH) --reference "$<" "$@"
+	@$(TOUCH) --reference "$<" "$@"
 
 
 COMMON := \
@@ -123,6 +127,7 @@ COMMON := \
 	env \
 	git-config \
 	golang \
+	local \
 	lua \
 	mise \
 	neovim \

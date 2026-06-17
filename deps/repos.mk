@@ -12,7 +12,7 @@ $(BUILD)/repo/%.pull: $(BUILD)/repo/%.clone
 	@$(MKPARENT) "$@"
 	@git -C $(USER_REPOS)/$* pull --ff-only --quiet || \
 	    printf 'repos.mk: pull failed for %s (continuing)\n' "$*" >&2
-	$(TOUCH) "$@"
+	@$(TOUCH) "$@"
 
 $(BUILD)/repo/%.head: $(BUILD)/repo/%.clone FORCE | $(BUILD)/repo/%.pull
 	@$(MKPARENT) "$@"

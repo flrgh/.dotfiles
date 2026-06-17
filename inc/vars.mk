@@ -87,7 +87,12 @@ CREATE_DIRS := \
 BUILD := build
 PKG := $(BUILD)/pkg
 DEP := $(BUILD)/dep
+DEP_INSTALLED := $(BUILD)/dep-installed
 MISE_PKG := $(PKG)/mise
+
+.SECONDEXPANSION:
+$(DEP)/%: $(DEP_INSTALLED)/% $$(DEP_POST_$$*)
+	@$(TOUCH) "$@"
 
 # gnome-software seems to be doing some weirdness if this directory
 # doesn't exist

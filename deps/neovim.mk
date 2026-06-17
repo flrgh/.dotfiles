@@ -1,6 +1,6 @@
 $(PKG)/neovim: $(DEP)/neovim nvim/plugins.lock.json
 	nvim -l ./nvim/scripts/bootstrap.lua
-	$(TOUCH) $@
+	@$(TOUCH) $@
 
 $(INSTALL_DATA)/nvim/lazy/lazy.nvim: $(PKG)/neovim
 

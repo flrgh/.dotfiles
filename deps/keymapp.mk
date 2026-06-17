@@ -8,7 +8,7 @@ $(BUILD)/zsa-group:
 	if ! getent group "$(KEYBOARD_GROUP)" | grep -q "$(USER)" &>/dev/null; then \
 	    sudo usermod --append --groups "$(KEYBOARD_GROUP_ID)" "$(USER)"; \
 	fi
-	$(TOUCH) $@
+	@$(TOUCH) $@
 
 $(BUILD)/zsa-udev-rule: ./scripts/zsa-udev-rule
 	./scripts/zsa-udev-rule > $@
@@ -18,7 +18,7 @@ $(BUILD)/zsa-udev-rule: ./scripts/zsa-udev-rule
 
 $(BUILD)/keymapp/%:
 	./scripts/download-keymapp
-	$(TOUCH) $@
+	@$(TOUCH) $@
 
 $(INSTALL_BIN)/keymapp: $(BUILD)/keymapp/keymapp
 	$(INSTALL_INTO) $(INSTALL_BIN) $(BUILD)/keymapp/keymapp
