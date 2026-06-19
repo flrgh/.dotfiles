@@ -1,8 +1,3 @@
-CARGO_HOME ?= $(INSTALL_PATH)/.local/cargo
-CARGO_BIN ?= $(CARGO_HOME)/bin
-
-RUSTUP := $(CARGO_BIN)/rustup
-
 RUSTUP_INIT := $(DEP)/rustup-init.sh
 RUST_INIT := $(DEP)/rust-init
 RUST_INSTALLED := $(DEP_INSTALLED)/rust-init

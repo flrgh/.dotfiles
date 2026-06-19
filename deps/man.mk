@@ -19,6 +19,14 @@ $(eval $(call man_tree,npm,$(INSTALL_LIB)/node_modules/npm/man,node))
 $(eval $(call man_tree,python,$$(shell $$(MISE) where python)/share/man,python))
 $(eval $(call man_tree,rustup,$$(shell rustc --print sysroot)/share/man,rust-init))
 
+# fetched from upstream: man source isn't shipped with the installed binary
+$(eval $(call man_fetch,age,FiloSottile/age,v,copy,doc/age.1 doc/age-keygen.1))
+$(eval $(call man_fetch,direnv,direnv/direnv,v,copy,man/direnv.1 man/direnv-stdlib.1 man/direnv-fetchurl.1 man/direnv.toml.1))
+$(eval $(call man_fetch,jq,jqlang/jq,jq-,copy,jq.1.prebuilt))
+$(eval $(call man_fetch,shellcheck,koalaman/shellcheck,v,pandoc,shellcheck.1.md))
+$(eval $(call man_fetch,shfmt,mvdan/sh,v,scdoc,cmd/shfmt/shfmt.1.scd))
+$(eval $(call man_fetch,alacritty,alacritty/alacritty,v,scdoc,extra/man/alacritty.1.scd extra/man/alacritty.5.scd extra/man/alacritty-msg.1.scd extra/man/alacritty-bindings.5.scd extra/man/alacritty-escapes.7.scd))
+
 $(INSTALL_MAN)/index.db: $(MAN_TARGETS)
 	mkdir -p "$(dir $@)"
 	rm -rf "$(INSTALL_MAN)"/cat[0-9]

@@ -2,6 +2,13 @@ MAN := $(BUILD)/man
 
 MAN_TARGETS :=
 
+define _man_install_page
+$(INSTALL_MAN)/man1/$(1).1: $(MAN)/man1/$(1).1
+	$(COPY) -D --mode 0644 "$$<" "$$@"
+DEP_POST_$(2) += $(INSTALL_MAN)/man1/$(1).1
+MAN_TARGETS += $(INSTALL_MAN)/man1/$(1).1
+endef
+
 # man_command(name, cmd, dep): generate the page by running cmd
 define man_command
 $(MAN)/man1/$(1).1: $(DEP_INSTALLED)/$(if $(3),$(3),$(1))
@@ -20,13 +27,6 @@ $(MAN)/man1/$(1).1: $(DEP_INSTALLED)/$(if $(3),$(3),$(1))
 	@mv "$$@.tmp" "$$@"
 $(MAN)/man1/$(1).1: MAN_ARG = $(2)
 $(call _man_install_page,$(1),$(if $(3),$(3),$(1)))
-endef
-
-define _man_install_page
-$(INSTALL_MAN)/man1/$(1).1: $(MAN)/man1/$(1).1
-	$(INSTALL) -D --mode 0644 "$$<" "$$@"
-DEP_POST_$(2) += $(INSTALL_MAN)/man1/$(1).1
-MAN_TARGETS += $(INSTALL_MAN)/man1/$(1).1
 endef
 
 # man_tree(name, dir, dep): symlink dir's man[0-9] section pages into the install
@@ -58,4 +58,19 @@ $(MAN)/$(1).installed: $(MAN)/$(1).stamp
 	@$(TOUCH) "$$@"
 DEP_POST_$(2) += $(MAN)/$(1).installed
 MAN_TARGETS += $(MAN)/$(1).installed
+endef
+
+MAN_CONV_DEP_copy :=
+MAN_CONV_DEP_pandoc := $(DEP)/pandoc
+MAN_CONV_DEP_scdoc := $(DEP)/scdoc
+
+# man_fetch(name, repo, tag_prefix, converter, srcpaths, dep):
+# 1. fetch the man source(s) from <repo> at tag <tag_prefix><version>
+# 2. (optionally) convert with <converter> (copy|pandoc|scdoc)
+define man_fetch
+$(MAN)/$(1).stamp: $(DEP_VERSION)/$(if $(6),$(6),$(1)) $(MAN_CONV_DEP_$(4))
+	$(CLEANDIR) "$(MAN)/$(1)"
+	$(FETCH_MAN) "$(2)" "$(3)$$(file <$(DEP_VERSION)/$(if $(6),$(6),$(1)))" "$(4)" "$(MAN)/$(1)" $(5)
+	@$(TOUCH) "$$@"
+$(call _man_install_tree,$(1),$(if $(6),$(6),$(1)))
 endef

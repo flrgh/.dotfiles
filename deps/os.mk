@@ -23,9 +23,9 @@ $(PKG)/os/removed: deps/os-package-removed.txt
 OS_COMMON_PACKAGES := $(call getlines,./deps/rpm-common.txt)
 OS_COMMON_PACKAGES := $(filter-out $(ALL_DEPS),$(OS_COMMON_PACKAGES))
 ALL_DEPS += $(OS_COMMON_PACKAGES)
-OS_COMMON_DEPS := $(addprefix $(DEP_INSTALLED)/,$(OS_COMMON_PACKAGES))
+OS_COMMON_DEP_INSTALLED := $(addprefix $(DEP_INSTALLED)/,$(OS_COMMON_PACKAGES))
 
-$(OS_COMMON_DEPS): | $(PKG)/os/common
+$(OS_COMMON_DEP_INSTALLED): | $(PKG)/os/common
 	@$(TOUCH) "$@"
 
 OS_WORKSTATION_PACKAGES := $(call getlines,./deps/rpm-workstation.txt)
@@ -48,4 +48,4 @@ os-packages-update: os-packages
 
 .PHONY: os-packages-clean
 os-packages-clean:
-	$(RM) $(wildcard $PKG/os/*) $(OS_COMMON_DEPS) $(OS_WORKSTATION_DEPS) $(wildcard $(PKG)/os.*)
+	$(RM) $(wildcard $PKG/os/*) $(OS_COMMON_DEP_INSTALLED) $(OS_WORKSTATION_DEPS) $(wildcard $(PKG)/os.*)

@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+# fetch-man <repo> <tag> <converter> <dest_root> <srcpath>...
+
+set -euo pipefail
+
+source home/.local/lib/bash/functions/cache-get.bash
+
+repo=${1:?repo}
+tag=${2:?tag}
+converter=${3:?converter}
+dest_root=${4:?dest_root}
+shift 4
+
+for src in "$@"; do
+    base=${src##*/}
+
+    man=$base
+    case $man in
+        *.prebuilt) man=${man%.prebuilt} ;;
+        *.md)       man=${man%.md} ;;
+        *.scd)      man=${man%.scd} ;;
+    esac
+
+    section=${man##*.}
+    dest_dir="${dest_root}/man${section}"
+    dest="${dest_dir}/${man}"
+    mkdir -p "$dest_dir"
+
+    url="https://raw.githubusercontent.com/${repo}/${tag}/${src}"
+    cache-get "$url" "man/$repo/$tag/$base"
+    in=${CACHE_GET_DEST:?}
+
+    case $converter in
+        copy)   cp "$in" "$dest" ;;
+        pandoc) pandoc --standalone --from markdown --to man --output "$dest" "$in" ;;
+        scdoc)  scdoc < "$in" > "$dest" ;;
+        *) echo "fetch-man: unknown converter '$converter'" >&2; exit 1 ;;
+    esac
+
+    printf 'fetch-man: %s -> %s (%s)\n' "$url" "$dest" "$converter" >&2
+done

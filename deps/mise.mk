@@ -1,70 +1,89 @@
 MISE_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 MISE_CONFIGS := mise.toml home/.config/mise/config.toml
+MISE_PKG := .mise-packages
+MISE_SHIMS: .mise-shims
 
 .PRECIOUS: $(MISE)
 $(MISE): scripts/install-mise | .setup
-	./scripts/install-mise
-	@$(TOUCH) --reference ./scripts/install-mise $(MISE)
+	$(SCRIPT)/install-mise
 
-MISE_PACKAGE_FILE := $(BUILD)/cache/mise-packages.mk
 
-ifneq ($(wildcard $(MISE)),)
--include $(MISE_PACKAGE_FILE)
-$(MISE_PACKAGE_FILE): $(MISE_MAKEFILE) $(MISE_CONFIGS)
-	$(MKPARENT) "$@"
-	$(MISE) ls --yes --current --no-header | awk '{ \
-		full = $$1; stripped = full; \
-		sub(/^github:[^\/]+\//, "", stripped); \
-		sub(/^aqua:[^\/]+\//, "", stripped); \
-		sub(/^go:.*\//, "", stripped); \
-		names = names stripped " "; \
-		print "MISE_FULL_" stripped " := " full; \
-	} END { \
-		print "MISE_PACKAGES := " names; \
-	}' | tee $@
-endif
+MISE_PACKAGE_NAMES := $(shell $(MISE) list --yes --current --no-header | awk '{print $$1}')
+MISE_DEP_NAMES := $(notdir $(MISE_PACKAGE_NAMES))
 
-# Empty default when mise is not yet installed
-MISE_PACKAGES ?=
-ALL_DEPS += $(MISE_PACKAGES)
-MISE_DEPS := $(addprefix $(DEP)/,$(MISE_PACKAGES))
-MISE_INSTALLED := $(addprefix $(DEP_INSTALLED)/,$(MISE_PACKAGES))
-MISE_ALL := $(PKG)/mise-all
-MISE_SHIMS := $(DEP_INSTALLED)/.mise-shims
+define mise_pkg_to_dep =
+$(eval MISE_ALIAS_$(notdir $(1)) = $(1))
+endef
+$(foreach pkg,$(MISE_PACKAGE_NAMES),$(call mise_pkg_to_dep,$(pkg)))
+
+mise_where = $(shell $(MISE) where $(MISE_ALIAS_$(notdir $(1))))
+mise_which = $(shell $(MISE) which $(MISE_ALIAS_$(notdir $(1))))
+
+ALL_DEPS += $(MISE_DEP_NAMES)
+
+MISE_DEPS := $(addprefix $(DEP)/,$(MISE_DEP_NAMES))
+MISE_DEP_INSTALLED := $(addprefix $(DEP_INSTALLED)/,$(MISE_DEP_NAMES))
+MISE_DEP_VERSIONS := $(addprefix $(DEP_VERSION)/,$(MISE_DEP_NAMES))
+
+$(DEP_INSTALLED)/$(MISE_SHIMS): $(DEP_INSTALLED)/$(MISE_PKG)
+	$(SCRIPT)/mise-shims
+	@$(TOUCH) $@
+
 
 $(DEP_INSTALLED)/mise: $(MISE)
 	@$(TOUCH) --reference "$<" "$@"
 
-$(MISE_SHIMS): $(MISE) $(MISE_MAKEFILE) $(MISE_PACKAGE_FILE) ./scripts/mise-shims | $(MISE_ALL) $(MISE_DEPS)
-	./scripts/mise-shims
-	@$(TOUCH) "$@"
+
+$(DEP_VERSION)/mise: $(DEP_INSTALLED)/mise
+	$(MISE) version --silent \
+		| grep -oE '^([0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2})' \
+		> "$@"
+	@$(TOUCH) --reference "$(MISE)" "$@"
 
 
-$(MISE_ALL): $(MISE) $(MISE_PACKAGE_FILE) $(MISE_CONFIGS)
+$(DEP_INSTALLED)/$(MISE_PKG): $(MISE) $(MISE_CONFIGS)
 	$(MISE) install --yes
-	./scripts/mise-shims
-	@$(TOUCH) "$@"
+	@$(TOUCH) $@
 
 
-$(MISE_INSTALLED): | $(MISE_ALL)
-	@$(TOUCH) --reference $(shell $(MISE) where $(MISE_FULL_$(notdir $@))) $@
+$(MISE_DEP_INSTALLED): $(DEP_INSTALLED)/$(MISE_PKG)
+	@$(TOUCH) --reference $(call mise_where,$@) $@
+
+
+$(DEP_VERSION)/$(MISE_PKG): $(DEP_INSTALLED)/$(MISE_PKG)
+	$(MISE) list --yes --current --no-header \
+		| while read -r pkg ver _; do echo "$$ver" > "$(DEP_VERSION)/$${pkg##*/}"; done
+	$(TOUCH) $@
+
+$(MISE_DEP_VERSIONS): $(DEP_VERSION)/%: $(DEP_INSTALLED)/% $(DEP_VERSION)/$(MISE_PKG)
+
+$(MISE_DEPS): $(DEP_INSTALLED)/$(MISE_SHIMS)
+
+$(DEP)/mise: $(DEP_INSTALLED)/mise $(DEP_VERSION)/mise $(MISE_DEPS)
 
 
 .PHONY: mise
-mise: $(DEP)/mise $(MISE_ALL) .WAIT $(MISE_SHIMS)
+mise: $(DEP)/mise
 
 
 .PHONY: .mise-update
 .mise-update: $(MISE)
 	$(MISE) self-update --yes
 	$(MISE) upgrade --yes
-	$(RM) $(MISE_SHIMS) $(MISE_ALL)
+	$(SCRIPT)/mise-shims
 
 
 .PHONY: mise-update
-mise-update: .mise-update .WAIT $(MISE_ALL)
+mise-update: .mise-update
 
 
 .PHONY: clean-mise
 clean-mise:
-	$(RM) $(MISE_SHIMS) $(MISE_ALL) $(MISE_DEPS) $(MISE_INSTALLED) $(MISE_PACKAGE_FILE)
+	$(RM) \
+		$(DEP_INSTALLED)/mise \
+		$(DEP_VERSION)/$(MISE) \
+		$(MISE_DEP_INSTALLED) \
+		$(MISE_DEP_VERSIONS) \
+		$(DEP_INSTALLED)/$(MISE_SHIMS) \
+		$(DEP_VERSION)/$(MISE_PKG) \
+		$(DEP_INSTALLED)/$(MISE_PKG)

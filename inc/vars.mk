@@ -42,6 +42,9 @@ MISE := $(INSTALL_BIN)/mise
 LIBEXEC := home/.local/libexec
 NPM := $(MISE) exec node -- npm
 
+SECRETS := $(INSTALL_BIN)/secrets
+SECRETS_EXEC := $(SECRETS) exec --cache --env GITHUB_TOKEN=bws://main/github-readonly-pat
+
 INSTALL := install --verbose --compare --no-target-directory
 INSTALL_INTO := install --verbose --compare --target-directory
 COPY := install --verbose --preserve-timestamps --no-target-directory
@@ -53,6 +56,7 @@ MKPARENT := $(SCRIPT)/files mkparent
 MKDIR := $(SCRIPT)/files mkdir
 TOUCH := $(SCRIPT)/files touch
 SYMLINK_TREE := $(SCRIPT)/symlink-tree
+FETCH_MAN := $(SCRIPT)/fetch-man
 
 getbin = $(firstword $(wildcard $(addsuffix /$(1),$(subst :, ,$(PATH)))))
 SED := $(call getbin,sed)
@@ -89,10 +93,18 @@ BUILD := build
 PKG := $(BUILD)/pkg
 DEP := $(BUILD)/dep
 DEP_INSTALLED := $(BUILD)/dep-installed
+DEP_VERSION := $(BUILD)/dep-version
 MISE_PKG := $(PKG)/mise
 
+$(DEP_INSTALLED):
+	$(MKDIR) $@
+
+$(DEP_VERSION):
+	$(MKDIR) $@
+
 .SECONDEXPANSION:
-$(DEP)/%: $(DEP_INSTALLED)/% $$(DEP_POST_$$*)
+$(DEP)/%: $(DEP_INSTALLED)/% $$(DEP_POST_$$*) | $(DEP_INSTALLED) $(DEP_VERSION)
+	@$(MKPARENT) "$@"
 	@$(TOUCH) "$@"
 
 # gnome-software seems to be doing some weirdness if this directory
@@ -100,3 +112,10 @@ $(DEP)/%: $(DEP_INSTALLED)/% $$(DEP_POST_$$*)
 CREATE_DIRS += .local/share/xdg-desktop-portal/applications
 
 CREATE_DIRS := $(addprefix $(INSTALL_PATH)/,$(CREATE_DIRS))
+
+
+CARGO_HOME ?= $(INSTALL_PATH)/.local/cargo
+CARGO_BIN ?= $(CARGO_HOME)/bin
+CARGO := $(CARGO_BIN)/cargo
+RUSTUP := $(CARGO_BIN)/rustup
+export CARGO_HOME
