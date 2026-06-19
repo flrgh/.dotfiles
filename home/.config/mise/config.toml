@@ -56,6 +56,7 @@ age = "latest"
 packer = "latest"
 opentofu = "latest"
 kubectl = "latest"
+promtool = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
