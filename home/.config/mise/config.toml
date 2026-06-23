@@ -95,6 +95,10 @@ no_env = true
 no_hooks = true
 not_found_auto_install = false
 
+trusted_config_paths = [
+    "~/git/flrgh"
+]
+
 [settings.cargo]
 binstall = true
 
