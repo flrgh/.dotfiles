@@ -80,7 +80,7 @@ include deps/ssh.mk
 include deps/secrets.mk
 
 
-$(DEP_INSTALLED)/bazel: $(DEP)/bazelisk
+$(DEP)/bazel: $(DEP)/bazelisk
 	ln -sfv bazelisk $(INSTALL_BIN)/bazel
 	@$(TOUCH) --reference "$<" "$@"
 
@@ -109,13 +109,13 @@ git-config: $(MISE_DEPS) $(DEP)/delta | ssh .setup
 	./scripts/update-git-config
 
 
-$(DEP_INSTALLED)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
+$(DEP)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
 	$(SCRIPT)/install-nerd-fonts
 	@$(TOUCH) --reference "$<" "$@"
 
 
-$(DEP_INSTALLED)/http: XH = $(shell $(MISE) which xh)
-$(DEP_INSTALLED)/http: $(DEP)/xh
+$(DEP)/http: XH = $(shell $(MISE) which xh)
+$(DEP)/http: $(DEP)/xh
 	ln --no-target-directory -sfv "$(XH)" "$(INSTALL_BIN)"/http
 	@$(TOUCH) --reference "$<" "$@"
 

@@ -5,6 +5,11 @@ liberation-fonts
 wireshark
 wl-clipboard
 
+# drawing
+inkscape
+inkscape-docs
+inkscape-view
+
 # BEGIN - alacritty
 alacritty
 fontconfig-devel  # currently required to build alacritty
