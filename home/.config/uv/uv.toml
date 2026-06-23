@@ -1,0 +1,6 @@
+exclude-newer = "7 days"
+index-strategy = "first-index"
+
+[pip]
+# might be too strict
+require-hashes = true

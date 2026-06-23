@@ -20,10 +20,7 @@ CARGO_PACKAGES := \
 	html-to-markdown-cli \
 	inferno \
 	minijinja-cli \
-	systemd-lsp \
-	wasm-pack \
-	wasmtime-cli \
-	worker-build
+	systemd-lsp
 
 ALL_DEPS += $(CARGO_PACKAGES)
 CARGO_DEPS := $(addprefix $(DEP)/,$(CARGO_PACKAGES))
@@ -35,6 +32,7 @@ CARGO_BINSTALL := \
 	cargo binstall \
 	--no-confirm \
 	--continue-on-failure \
+	--disable-strategies quick-install \
 	--disable-telemetry \
 	--locked \
 	--min-tls-version 1.3

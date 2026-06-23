@@ -3,3 +3,11 @@ cache=${HOME}/.cache/npm
 init-module=${HOME}/.config/npm/npm-init.js
 //registry.npmjs.org/:_authToken=${NPM_TOKEN}
 fund=false
+
+# hardening
+audit=true
+engine-strict=true
+ignore-scripts=true
+min-release-age=7
+save-exact=true
+strict-ssl=true

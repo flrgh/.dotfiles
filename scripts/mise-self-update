@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# mise has a minimum_release_age setting, but this only applies to the tools that
+# it manages and not mise itself
+#
+# mise uses cal-ver, _but_ release publish date usually doesn't match the cal-ver
+# date (e.g. version `2026.6.12` was published 2026-06-22)
+
+set -euo pipefail
+
+readonly REPO=jdx/mise
+readonly MIN_AGE_DAYS=7
+
+main() {
+    local version
+    version=$(
+        gh-helper get-stable-releases "$REPO" \
+        | jq -r --argjson days "$MIN_AGE_DAYS" '
+            map(select((.published_at | fromdateiso8601) <= (now - $days * 86400)))
+            | max_by(.published_at).tag_name
+            | ltrimstr("v")
+        '
+    )
+
+    if [[ -z $version || $version == null ]]; then
+        echo "no stable $REPO release at least ${MIN_AGE_DAYS}d old was found" >&2
+        return 1
+    fi
+
+
+    local current
+    current=$(mise version --quiet | sed -nre 's/^([0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}).*/\1/p')
+
+    if [[ $current == "$version" || $current > "$version" ]]; then
+        echo "mise is already up to date at $current"
+        return
+    fi
+
+    echo "Updating mise to $version (newest release >= ${MIN_AGE_DAYS}d old)"
+
+    mise self-update --yes "$version"
+}
+
+main "$@"

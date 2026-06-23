@@ -87,6 +87,8 @@ experimental = true
 github_attestations = true
 gpg_verify = true
 
+minimum_release_age = "7d"
+
 ceiling_paths = [
     "/home"
 ]

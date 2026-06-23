@@ -20,6 +20,8 @@ readonly -a SHIM_LINKS=()
 # things _not_ symlinked at all
 readonly -a MUST_SHIM=()
 
+export MISE_PREFER_OFFLINE=1
+
 shopt -s nullglob
 shopt -s extglob
 

@@ -62,6 +62,10 @@ emit-app-config() {
     # (which is new and frequently 502s on me)
     add-export MISE_USE_VERSIONS_HOST "0"
 
+    # makes things like `mise which` prefer cached version data instead of
+    # eagerly fetching from github
+    add-export MISE_PREFER_OFFLINE "1"
+
     add-export GEM_HOME         "$HOME/.local/gems"
     add-export DOCKER_CONFIG    "$XDG_CONFIG_HOME/docker"
     add-export AZURE_CONFIG_DIR "$XDG_CONFIG_HOME/azure"

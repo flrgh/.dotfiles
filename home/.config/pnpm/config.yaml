@@ -1,0 +1,8 @@
+# https://pnpm.io/settings
+
+# https://pnpm.io/supply-chain-security
+minimumReleaseAge: 10080 # 7 days, in minutes (60 * 24 * 7)
+minimumReleaseAgeStrict: true
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
+dangerouslyAllowAllBuilds: false
