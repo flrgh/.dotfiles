@@ -38,6 +38,9 @@
 [credential "https://gist.github.com"]
 	username = flrgh
 
+[credential "https://git.pancakes2.com"]
+	username = flrgh
+
 [diff]
 	algorithm = histogram
 	colorMoved = plain

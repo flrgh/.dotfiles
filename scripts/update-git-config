@@ -98,7 +98,7 @@ update-user-signing-key() {
 update-credential-helper() {
     local helper=$HOME/.local/libexec/github-credential-helper
     if [[ -x $helper ]]; then
-        set-config credential.helper ~/.local/libexec/github-credential-helper
+        set-config credential.helper "$helper"
     else
         echo "WARN: credential.helper ($helper) not found or not executable"
     fi

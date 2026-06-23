@@ -5,9 +5,10 @@ set -euo pipefail
 shopt -s extglob
 
 
-if [[ -z ${GITHUB_TOKEN:-} || -z ${GITHUB_USER:-} ]]; then
-    source "$HOME/.config/github/helper-access-token"
-fi
+readonly GITHUB_USER=flrgh
+
+GITHUB_TOKEN=${GITHUB_TOKEN:-$(secrets get --cache bws://main/github-helper-token)}
+readonly GITHUB_TOKEN
 
 readonly BASE_URL=https://api.github.com/
 
