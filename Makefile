@@ -78,6 +78,7 @@ include deps/keymapp.mk
 include deps/docker.mk
 include deps/ssh.mk
 include deps/secrets.mk
+include deps/obsidian.mk
 
 
 $(DEP)/bazel: $(DEP)/bazelisk
@@ -166,7 +167,8 @@ workstation: \
 	$(DEP)/nerd-fonts \
 	alacritty \
 	flatpak \
-	keymapp
+	keymapp \
+	obsidian
 
 .PHONY: workstation-update
 workstation-update: server-update | workstation
