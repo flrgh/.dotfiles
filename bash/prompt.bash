@@ -162,11 +162,29 @@ replace() {
 }
 
 __rehash() {
-    local rcfile=${__hash_rcfile:-"$HOME/.bashrc"}
-    local sum; sum=$(md5sum "$rcfile")
-    sum=${sum%% *}
-    printf '%s\n' "$sum" > "$__hash_file"
-    touch --reference "$rcfile" "$__hash_file"
+    local -a files=(
+        "$HOME/.bashrc"
+        "${BASH_ENV:-${XDG_CONFIG_HOME:?}/.config/env}"
+    )
+
+    if [[ -n ${SECRETS_ENV:-} && -e ${SECRETS_ENV} ]]; then
+        files+=("$SECRETS_ENV")
+    fi
+
+    local sum; sum=$(
+        md5sum "${files[@]}" 2>/dev/null || true \
+        | sort -k2 \
+        | md5sum - \
+        | awk '{print $1}'
+    )
+    echo "$sum" > "$__hash_file"
+
+    local f
+    for f in "${files[@]}"; do
+        if [[ $f -nt "$__hash_file" ]]; then
+            touch --reference "$f" "$__hash_file"
+        fi
+    done
     __hash_loaded=${sum}
     __hash_loaded_at=$(( ${EPOCHREALTIME/.} / 1000 )) # convert us to ms
 }

@@ -1,8 +1,8 @@
 prefix=${HOME}/.local
 cache=${HOME}/.cache/npm
-init-module=${HOME}/.config/npm/npm-init.js
-//registry.npmjs.org/:_authToken=${NPM_TOKEN}
 fund=false
+
+//registry.npmjs.org/:_authToken=${NPM_READONLY_PAT}
 
 # hardening
 audit=true

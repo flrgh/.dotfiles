@@ -37,7 +37,6 @@ tombi = "latest"
 htmlq = "latest"
 yamlfmt = "latest"
 claude-code = "latest"
-opencode = "latest"
 bun = "latest"
 "aqua:docker/buildx" = "latest"
 "github:docker/docker-language-server" = { version = "latest", bin = "docker-language-server" }
@@ -57,6 +56,7 @@ packer = "latest"
 opentofu = "latest"
 kubectl = "latest"
 promtool = "latest"
+pnpm = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from

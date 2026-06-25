@@ -18,7 +18,13 @@ readonly SHIMS=${XDG_DATA_HOME:-${HOME}/.local/share}/mise/shims
 readonly -a SHIM_LINKS=()
 
 # things _not_ symlinked at all
-readonly -a MUST_SHIM=()
+readonly -a MUST_SHIM=(
+    node
+    npm
+    npx
+    bun
+    bunx
+)
 
 export MISE_PREFER_OFFLINE=1
 

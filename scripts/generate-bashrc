@@ -166,6 +166,7 @@ __rc_env() {
     rc-workfile-add-dep "$RC_DEP_INIT"
     rc-workfile-add-dep "$RC_DEP_TIMER"
     rc-workfile-add-exec source "${HOME:?}/.config/env"
+    rc-workfile-include ./bash/env-secrets.bash
     rc-workfile-close
 }
 __rc_env
@@ -448,9 +449,6 @@ __rc_prompt() {
 
     declare -g __hash_file=${XDG_RUNTIME_DIR:?}/bashrc.md5
     rc-declare __hash_file
-
-    declare -g __hash_rcfile="$HOME"/.bashrc
-    rc-declare __hash_rcfile
 
     rc-new-workfile prompt
     rc-workfile-add-dep "$RC_DEP_POST_INIT"
