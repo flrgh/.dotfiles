@@ -10,6 +10,7 @@ libnghttp2
 libnghttp2-devel
 ngtcp2
 ngtcp2-devel
+ngtcp2-crypto-gnutls-devel
 libpsl
 libpsl-devel
 librtmp
