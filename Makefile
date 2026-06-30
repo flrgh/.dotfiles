@@ -79,6 +79,7 @@ include deps/docker.mk
 include deps/ssh.mk
 include deps/secrets.mk
 include deps/obsidian.mk
+include deps/alias.mk
 
 
 $(DEP)/bazel: $(DEP)/bazelisk
@@ -112,14 +113,6 @@ git-config: $(MISE_DEPS) $(DEP)/delta | ssh .setup
 
 $(DEP)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
 	$(SCRIPT)/install-nerd-fonts
-	@$(TOUCH) --reference "$<" "$@"
-
-
-$(DEP_INSTALLED)/http: $(DEP_INSTALLED)/xh
-	@$(TOUCH) --reference "$<" "$@"
-
-$(DEP)/http: $(DEP)/xh
-	ln --no-target-directory -sfv "$(XH)" "$(INSTALL_BIN)"/http
 	@$(TOUCH) --reference "$<" "$@"
 
 
