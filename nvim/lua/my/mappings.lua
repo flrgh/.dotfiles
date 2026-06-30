@@ -42,9 +42,75 @@ nnoremap(Leader.Dot)
   :desc("Set working dirctory from file")
   :raw(":lcd %:p:h<CR>")
 
-nnoremap(Leader.cf)
-  :desc("Copy the current file path to the clipboard (unnamedplus register)")
-  :raw(':let @+=expand("%:p")<CR>')
+nnoremap[Leader.cf] = {
+  function()
+    return require("my.yankref").yank_path(false)
+  end,
+  "[c]opy current [f]ile path (workspace-relative)",
+}
+
+nnoremap[Leader.cF] = {
+  function()
+    return require("my.yankref").yank_path(false)
+  end,
+  "[c]opy current [F]ile path (absolute)",
+}
+
+nnoremap[Leader.cl] = {
+  function()
+    return require("my.yankref").yank_line(false)
+  end,
+  "[c]opy current file [l]ine reference (workspace-relative)",
+}
+
+nnoremap[Leader.cL] = {
+  function()
+    return require("my.yankref").yank_line(true)
+  end,
+  "[c]opy current file [L]ine reference (absolute)",
+}
+
+nnoremap[Leader.cs] = {
+  function()
+    return require("my.yankref").yank_line(false, true)
+  end,
+  "[c]opy current line as markdown [s]nippet (workspace-relative)",
+}
+
+nnoremap[Leader.cS] = {
+  function()
+    return require("my.yankref").yank_line(true, true)
+  end,
+  "[c]opy current line as markdown [S]nippet (absolute)",
+}
+
+vnoremap[Leader.cl] = {
+  function()
+    return require("my.yankref").yank_selection(false)
+  end,
+  "[c]opy visual selection [l]ine reference (workspace-relative)",
+}
+
+vnoremap[Leader.cL] = {
+  function()
+    return require("my.yankref").yank_selection(true)
+  end,
+  "[c]opy visual selection [L]ine reference (absolute)",
+}
+
+vnoremap[Leader.cs] = {
+  function()
+    return require("my.yankref").yank_selection(false, true)
+  end,
+  "[c]opy visual selection as markdown [s]nippet (workspace-relative)",
+}
+
+vnoremap[Leader.cS] = {
+  function()
+    return require("my.yankref").yank_selection(true, true)
+  end,
+  "[c]opy visual selection as markdown [S]nippet (absolute)",
+}
 
 -- TODO: what do these do?
 noremap.YY        = [["+y<CR>]]
