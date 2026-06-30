@@ -115,7 +115,9 @@ $(DEP)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
 	@$(TOUCH) --reference "$<" "$@"
 
 
-$(DEP)/http: XH = $(shell $(MISE) which xh)
+$(DEP_INSTALLED)/http: $(DEP_INSTALLED)/xh
+	@$(TOUCH) --reference "$<" "$@"
+
 $(DEP)/http: $(DEP)/xh
 	ln --no-target-directory -sfv "$(XH)" "$(INSTALL_BIN)"/http
 	@$(TOUCH) --reference "$<" "$@"
