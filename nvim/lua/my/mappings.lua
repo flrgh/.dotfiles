@@ -51,7 +51,7 @@ nnoremap[Leader.cf] = {
 
 nnoremap[Leader.cF] = {
   function()
-    return require("my.yankref").yank_path(false)
+    return require("my.yankref").yank_path(true)
   end,
   "[c]opy current [F]ile path (absolute)",
 }
