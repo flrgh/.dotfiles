@@ -57,6 +57,8 @@ opentofu = "latest"
 kubectl = "latest"
 promtool = "latest"
 pnpm = "latest"
+action-validator = "latest"
+actionlint = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
