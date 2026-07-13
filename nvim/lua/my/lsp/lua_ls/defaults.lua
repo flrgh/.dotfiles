@@ -24,7 +24,7 @@ if false then
   end
 end
 
-if true then
+if false then
   local _cmd = CMD
   CMD = { "luajit", "/home/michaelm/git/flrgh/lua-libuv-ffi/examples/jsonrpc-proxy.lua",
           "--lsp", "--stdio", "--" }
@@ -58,7 +58,7 @@ local defaults = {
       },
 
       diagnostics = {
-        enable = true,
+        enable = false,
         disable = nil,
 
         globals = {},
