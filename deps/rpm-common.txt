@@ -57,6 +57,7 @@ patch
 pcre
 pcre-devel
 pcre2
+perl-Time-Piece   # needed by some cargo package that builds openssl-sys :(
 pgcli             # nicer Postgres CLI
 plocate
 pre-commit        # fancy git pre-commit framework
