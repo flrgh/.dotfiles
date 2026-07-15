@@ -53,7 +53,6 @@ include inc/man.mk
 
 include deps/repos.mk
 include deps/flatpak.mk
-include deps/uv.mk
 include deps/ineed.mk
 include deps/luarocks.mk
 include deps/mise.mk

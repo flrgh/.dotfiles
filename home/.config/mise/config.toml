@@ -71,6 +71,7 @@ actionlint = "latest"
 "npm:typescript" = "latest"
 "npm:vscode-json-languageserver" = "latest"
 "npm:yaml-language-server" = "latest"
+"pipx:compiledb" = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
@@ -88,7 +89,8 @@ disable_backends = [
     #"gitlab",
     #"go",
     #"http",
-    "pipx",
+    #"npm",
+    #"pipx",
     "s3",
     "spm",
     "ubi",
