@@ -9,15 +9,20 @@ $(MISE): scripts/install-mise | .setup
 
 
 MISE_PACKAGE_NAMES := $(shell $(MISE) list --yes --current --no-header | awk '{print $$1}')
-MISE_DEP_NAMES := $(notdir $(MISE_PACKAGE_NAMES))
+
+# npm:@tree-sitter-grammars/tree-sitter-lua -> tree-sitter-lua
+# go:golang.org/x/tools/gopls -> gopls
+# node -> node
+mise_dep_name = $(notdir $(subst :,/,$(1)))
+
+MISE_DEP_NAMES := $(notdir $(subst :,/,$(MISE_PACKAGE_NAMES)))
 
 define mise_pkg_to_dep =
-$(eval MISE_ALIAS_$(notdir $(1)) = $(1))
+$(eval MISE_ALIAS_$(call mise_dep_name,$(1)) = $(1))
 endef
 $(foreach pkg,$(MISE_PACKAGE_NAMES),$(call mise_pkg_to_dep,$(pkg)))
 
 mise_where = $(shell $(MISE) where $(MISE_ALIAS_$(notdir $(1))))
-mise_which = $(shell $(MISE) which $(MISE_ALIAS_$(notdir $(1))))
 
 ALL_DEPS += $(MISE_DEP_NAMES)
 
@@ -52,7 +57,7 @@ $(MISE_DEP_INSTALLED): $(DEP_INSTALLED)/$(MISE_PKG)
 
 $(DEP_VERSION)/$(MISE_PKG): $(DEP_INSTALLED)/$(MISE_PKG)
 	$(MISE) list --yes --current --no-header \
-		| while read -r pkg ver _; do echo "$$ver" > "$(DEP_VERSION)/$${pkg##*/}"; done
+		| while read -r pkg ver _; do echo "$$ver" > "$(DEP_VERSION)/$${pkg##*[:/]}"; done
 	$(TOUCH) $@
 
 $(MISE_DEP_VERSIONS): $(DEP_VERSION)/%: $(DEP_INSTALLED)/% $(DEP_VERSION)/$(MISE_PKG)

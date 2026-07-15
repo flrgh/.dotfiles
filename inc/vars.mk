@@ -40,7 +40,6 @@ export DOTFILES_DEBUG := $(DEBUG)
 CACHE_DIR := $(INSTALL_PATH)/.cache
 MISE := $(INSTALL_BIN)/mise
 LIBEXEC := home/.local/libexec
-NPM := $(MISE) exec node -- npm
 
 SECRETS := $(INSTALL_BIN)/secrets
 SECRETS_EXEC := $(SECRETS) exec --cache --env GITHUB_TOKEN=bws://main/github-readonly-pat

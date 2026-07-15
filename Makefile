@@ -60,7 +60,6 @@ include deps/mise.mk
 include deps/python.mk
 include deps/rust.mk
 include deps/cargo.mk
-include deps/npm.mk
 include deps/local.mk
 include deps/os.mk
 include deps/bash-builtins.mk
@@ -91,7 +90,7 @@ kong: $(PKG)/os/kong $(DEP)/bazel | .setup
 
 
 .PHONY: language-servers
-language-servers: npm $(LIBEXEC) \
+language-servers: $(LIBEXEC) \
 	$(DEP)/docker-language-server \
 	$(DEP)/gopls \
 	$(MISE_DEPS) \
@@ -129,7 +128,6 @@ COMMON := \
 	man \
 	mise \
 	neovim \
-	npm \
 	os-packages \
 	rust \
 	secrets \
@@ -139,7 +137,6 @@ COMMON := \
 COMMON_UPDATE := \
 	cargo-update \
 	mise-update \
-	npm-update \
 	os-packages-update \
 	rust-update
 

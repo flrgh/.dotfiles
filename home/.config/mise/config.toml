@@ -59,6 +59,18 @@ promtool = "latest"
 pnpm = "latest"
 action-validator = "latest"
 actionlint = "latest"
+"npm:@tree-sitter-grammars/tree-sitter-lua" = "latest"
+"npm:awk-language-server" = "latest"
+"npm:bash-language-server" = "latest"
+"npm:gh-actions-language-server" = "latest"
+"npm:live-server" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"
+"npm:pyright" = "latest"
+"npm:sql-language-server" = "latest"
+"npm:typescript-language-server" = "latest"
+"npm:typescript" = "latest"
+"npm:vscode-json-languageserver" = "latest"
+"npm:yaml-language-server" = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
@@ -117,6 +129,9 @@ github_attestations = true
 
 [settings.node]
 gpg_verify = true
+
+[settings.npm]
+package_manager = "npm"
 
 [settings.github]
 github_attestations = true
