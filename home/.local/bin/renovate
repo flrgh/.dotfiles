@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# 1. renovate can't run on npm >24
+# 2. mise can't have per-tool node versions
+#
+# so here we are
+exec mise -C ~/.config/renovate exec -- renovate "$@"

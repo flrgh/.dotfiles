@@ -76,7 +76,6 @@ disable_backends = [
     #"gitlab",
     #"go",
     #"http",
-    "npm",
     "pipx",
     "s3",
     "spm",
