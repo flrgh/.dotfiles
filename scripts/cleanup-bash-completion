@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly USER_DIR=${BASH_COMPLETION_USER_DIR:-${XDG_DATA_HOME:?}/bash-completion}
+readonly COMPAT_DIR=${BASH_COMPLETION_COMPAT_DIR:-${HOME:?}/.local/etc/bash_completion.d}
+
+if [[ ! -d $USER_DIR ]]; then
+    echo "bash completion user dir ($USER_DIR) not found"
+    exit 0
+fi
+
+
+unset BASH_COMPLETION_VERSINFO
+_INFO=$(bash -c "source '$USER_DIR'/bash_completion && declare -p BASH_COMPLETION_VERSINFO" 2>/dev/null)
+eval "$_INFO"
+
+if [[ ! -v BASH_COMPLETION_VERSINFO || -z ${BASH_COMPLETION_VERSINFO[0]:-} ]]; then
+    echo "failed to detect BASH_COMPLETION_VERSINFO"
+    exit 1
+fi
+
+
+if (( BASH_COMPLETION_VERSINFO[0] > 2
+    || (BASH_COMPLETION_VERSINFO[0] == 2 && BASH_COMPLETION_VERSINFO[1] >= 18)
+)); then
+    if [[ -e $COMPAT_DIR/000_bash_completion_compat.bash ]]; then
+        echo "deleting old $COMPAT_DIR/000_bash_completion_compat.bash script"
+        rm "$COMPAT_DIR/000_bash_completion_compat.bash"
+    fi
+
+    fd --older 6mo -C "$USER_DIR/completions/" . \
+    | while read -r name; do
+        fname=${USER_DIR}/completions/${name}
+
+        if [[ -L $fname && "$(realpath "$fname")" = */.dotfiles/* ]]; then
+            continue
+        fi
+
+        dupes=(
+            "${USER_DIR}/completions-core/${name}.bash"
+            "${USER_DIR}/completions-fallback/${name}.bash"
+        )
+
+        if [[ "${name:0:1}" == "_" ]]; then
+            dupes+=("${USER_DIR}/completions-fallback/${name#_}.bash")
+        fi
+
+        for check in "${dupes[@]}"; do
+            if [[ -e $check ]]; then
+                echo "found dupe: $name -> $check"
+                rm "${USER_DIR}/completions/${name}"
+                break
+            fi
+        done
+
+        if [[ -e $fname ]]; then
+            echo "removing likely unused $fname"
+            rm "$fname"
+        fi
+    done
+
+    # delete any dangling symlinks
+    symlinks -d "$USER_DIR/completions/"
+fi

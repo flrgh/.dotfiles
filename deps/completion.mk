@@ -1,3 +1,9 @@
+$(DEP)/bash-completion: $(DEP_INSTALLED)/.bash-completion-cleanup
+
+$(DEP_INSTALLED)/.bash-completion-cleanup: $(DEP_INSTALLED)/bash-completion
+	$(SCRIPT)/cleanup-bash-completion
+	@$(TOUCH) --reference "$<" "$@"
+
 $(eval $(call comp_command,ast-grep,ast-grep completions bash))
 $(eval $(call comp_complete,aws,$$(shell $$(MISE) which aws_completer),aws-cli))
 $(eval $(call comp_command,bat,bat --completion bash))
