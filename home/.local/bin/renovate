@@ -4,4 +4,14 @@
 # 2. mise can't have per-tool node versions
 #
 # so here we are
-exec mise -C ~/.config/renovate exec -- renovate "$@"
+
+export RENOVATE_X_IGNORE_RE2=true
+
+exec \
+    secrets exec --cache \
+    --env RENOVATE_TOKEN=bws://main/github-readonly-pat \
+    --env RENOVATE_GITHUB_COM_TOKEN=bws://main/github-readonly-pat \
+    -- \
+    mise exec --env renovate \
+    -- \
+    renovate "$@"
