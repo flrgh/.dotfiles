@@ -7,6 +7,7 @@ CARGO_PACKAGES := \
 	bindgen-cli \
 	bws \
 	cargo-bloat \
+	cargo-bp \
 	cargo-cache \
 	cargo-dist \
 	cargo-edit \
