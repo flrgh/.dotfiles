@@ -28,24 +28,6 @@ url = "https://github.com/sigstore/cosign/releases/download/v3.1.2/cosign-linux-
 url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/480496709"
 provenance = "cosign"
 
-[tools.cosign."platforms.macos-arm64"]
-checksum = "sha256:dec1c3f802320b19c2fbcf2dc7bcfb3f258e1c181a046c23a1a074bdf932f10a"
-url = "https://github.com/sigstore/cosign/releases/download/v3.1.2/cosign-darwin-arm64"
-url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/480497116"
-provenance = "cosign"
-
-[tools.cosign."platforms.macos-x64"]
-checksum = "sha256:acd180f8b015be25240ca33abee8a1e564eb65cdf1a3cee4725456d2dceb7da6"
-url = "https://github.com/sigstore/cosign/releases/download/v3.1.2/cosign-darwin-amd64"
-url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/480496599"
-provenance = "cosign"
-
-[tools.cosign."platforms.windows-x64"]
-checksum = "sha256:fe4d621d7ae5e900ee62089837c00f996ae9acb82027d573d1d157b6ee875cb2"
-url = "https://github.com/sigstore/cosign/releases/download/v3.1.2/cosign-windows-amd64.exe"
-url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/480497219"
-provenance = "cosign"
-
 [[tools.fzf]]
 version = "0.74.0"
 backend = "aqua:junegunn/fzf"
@@ -69,21 +51,6 @@ url_api = "https://api.github.com/repos/junegunn/fzf/releases/assets/468106615"
 checksum = "sha256:cf919f05b7581b4c744d764eaa704665d61dd6d3ca785f0df2351281dff60cda"
 url = "https://github.com/junegunn/fzf/releases/download/v0.74.0/fzf-0.74.0-linux_amd64.tar.gz"
 url_api = "https://api.github.com/repos/junegunn/fzf/releases/assets/468106615"
-
-[tools.fzf."platforms.macos-arm64"]
-checksum = "sha256:da60e8980e4239a0fc5f1fcfe873f243dfda93a6a13b696b00e1dc8584a77a87"
-url = "https://github.com/junegunn/fzf/releases/download/v0.74.0/fzf-0.74.0-darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/junegunn/fzf/releases/assets/468106617"
-
-[tools.fzf."platforms.macos-x64"]
-checksum = "sha256:e2c470f058ac18615f54c0bebe0fd2956f2aa8e306a11621783a00aaa386eedd"
-url = "https://github.com/junegunn/fzf/releases/download/v0.74.0/fzf-0.74.0-darwin_amd64.tar.gz"
-url_api = "https://api.github.com/repos/junegunn/fzf/releases/assets/468106579"
-
-[tools.fzf."platforms.windows-x64"]
-checksum = "sha256:614efa4ea923a3d6715856b5f6fb6ce815acdb0ce549e7499202808f7a7a78e7"
-url = "https://github.com/junegunn/fzf/releases/download/v0.74.0/fzf-0.74.0-windows_amd64.zip"
-url_api = "https://api.github.com/repos/junegunn/fzf/releases/assets/468106560"
 
 [[tools.nfpm]]
 version = "2.47.0"
@@ -113,24 +80,6 @@ url = "https://github.com/goreleaser/nfpm/releases/download/v2.47.0/nfpm_2.47.0_
 url_api = "https://api.github.com/repos/goreleaser/nfpm/releases/assets/453316748"
 provenance = "cosign"
 
-[tools.nfpm."platforms.macos-arm64"]
-checksum = "sha256:e8c9d1d9ac218eeed479375143dc46b8d51a2b8dbba8e2f9f15ecc8faa2e404b"
-url = "https://github.com/goreleaser/nfpm/releases/download/v2.47.0/nfpm_2.47.0_Darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/goreleaser/nfpm/releases/assets/453316746"
-provenance = "cosign"
-
-[tools.nfpm."platforms.macos-x64"]
-checksum = "sha256:2b04108f8757313dde92ed729560845aadfb7782887eb6988a5dd96f9c146861"
-url = "https://github.com/goreleaser/nfpm/releases/download/v2.47.0/nfpm_2.47.0_Darwin_x86_64.tar.gz"
-url_api = "https://api.github.com/repos/goreleaser/nfpm/releases/assets/453316747"
-provenance = "cosign"
-
-[tools.nfpm."platforms.windows-x64"]
-checksum = "sha256:788f88a3bba0d89baa639aba54ba28b384958878700d440ce199a7ff4a567f11"
-url = "https://github.com/goreleaser/nfpm/releases/download/v2.47.0/nfpm_2.47.0_Windows_x86_64.zip"
-url_api = "https://api.github.com/repos/goreleaser/nfpm/releases/assets/453316741"
-provenance = "cosign"
-
 [[tools.node]]
 version = "26.5.0"
 backend = "core:node"
@@ -150,18 +99,6 @@ url = "https://nodejs.org/dist/v26.5.0/node-v26.5.0-linux-x64.tar.gz"
 [tools.node."platforms.linux-x64-musl"]
 checksum = "sha256:00f1398411a4216c5a6ecaad3b825a0da5ec00e79ee8c173ab65a094d97b9ad8"
 url = "https://unofficial-builds.nodejs.org/download/release/v26.5.0/node-v26.5.0-linux-x64-musl.tar.gz"
-
-[tools.node."platforms.macos-arm64"]
-checksum = "sha256:ee920559aaa2391569cff4d737e3b83963430e3a14dedd91bfe0ff53171b5af9"
-url = "https://nodejs.org/dist/v26.5.0/node-v26.5.0-darwin-arm64.tar.gz"
-
-[tools.node."platforms.macos-x64"]
-checksum = "sha256:98293394c945a24e64e00b4177bf075ec963ea70b34d1d2e24bd4a71716d334f"
-url = "https://nodejs.org/dist/v26.5.0/node-v26.5.0-darwin-x64.tar.gz"
-
-[tools.node."platforms.windows-x64"]
-checksum = "sha256:d3b2277dbcccfdf24ef6302928f64f484cff1d77a6d3caa3a28f4d20ce9158f6"
-url = "https://nodejs.org/dist/v26.5.0/node-v26.5.0-win-x64.zip"
 
 [[tools.shfmt]]
 version = "3.13.1"
@@ -186,18 +123,3 @@ url_api = "https://api.github.com/repos/mvdan/sh/releases/assets/390322866"
 checksum = "sha256:fb096c5d1ac6beabbdbaa2874d025badb03ee07929f0c9ff67563ce8c75398b1"
 url = "https://github.com/mvdan/sh/releases/download/v3.13.1/shfmt_v3.13.1_linux_amd64"
 url_api = "https://api.github.com/repos/mvdan/sh/releases/assets/390322866"
-
-[tools.shfmt."platforms.macos-arm64"]
-checksum = "sha256:9680526be4a66ea1ffe988ed08af58e1400fe1e4f4aef5bd88b20bb9b3da33f8"
-url = "https://github.com/mvdan/sh/releases/download/v3.13.1/shfmt_v3.13.1_darwin_arm64"
-url_api = "https://api.github.com/repos/mvdan/sh/releases/assets/390322881"
-
-[tools.shfmt."platforms.macos-x64"]
-checksum = "sha256:6feedafc72915794163114f512348e2437d080d0047ef8b8fa2ec63b575f12af"
-url = "https://github.com/mvdan/sh/releases/download/v3.13.1/shfmt_v3.13.1_darwin_amd64"
-url_api = "https://api.github.com/repos/mvdan/sh/releases/assets/390322886"
-
-[tools.shfmt."platforms.windows-x64"]
-checksum = "sha256:60cd368533d0ad73fa86d93d5bbf95ef40587245ce684ed138c1b31557b5fe97"
-url = "https://github.com/mvdan/sh/releases/download/v3.13.1/shfmt_v3.13.1_windows_amd64.exe"
-url_api = "https://api.github.com/repos/mvdan/sh/releases/assets/390322844"

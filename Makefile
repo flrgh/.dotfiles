@@ -11,7 +11,6 @@ debug:
 	@echo REPO_ROOT: $(REPO_ROOT)
 	@echo INSTALL_PATH: $(INSTALL_PATH)
 	@echo UV_PACKAGES: $(UV_PACKAGES)
-	@echo CARGO_PACKAGES: $(CARGO_PACKAGES)
 	@echo NEED_PACKAGES: $(NEED_PACKAGES)
 	@echo OS_COMMON_PACKAGES: $(OS_COMMON_PACKAGES)
 	@echo ALL_DEPS: $(ALL_DEPS)
@@ -21,7 +20,7 @@ clean:
 	$(CLEANDIR) $(BUILD)
 
 .PHONY: update
-update: clean os-packages-update mise-update cargo-update rust-update
+update: clean os-packages-update mise-update rust-update
 
 
 .PHONY: rm-old-files
@@ -58,7 +57,6 @@ include deps/luarocks.mk
 include deps/mise.mk
 include deps/python.mk
 include deps/rust.mk
-include deps/cargo.mk
 include deps/local.mk
 include deps/os.mk
 include deps/bash-builtins.mk
@@ -116,7 +114,6 @@ $(DEP)/nerd-fonts: $(SCRIPT)/install-nerd-fonts
 
 COMMON := \
 	bash \
-	cargo \
 	curl \
 	docker \
 	env \

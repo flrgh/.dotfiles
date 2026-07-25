@@ -56,7 +56,11 @@ packer = "latest"
 opentofu = "latest"
 kubectl = "latest"
 promtool = "latest"
-pnpm = "latest"
+# pnpm's install root contains a `dist/` directory, and mise seems to think
+# this is an executable, causing it to shadow `cargo-dist`'s `dist` bin.
+# Enabling `symlink_bins` fixes the `dist/` overreach but breaks the pnpm bin
+# link for some reason, so we have to symlink it ourself :(
+pnpm = { version = "latest", symlink_bins = true, postinstall = "ln -sfn ../pnpm \"$MISE_TOOL_INSTALL_PATH/.mise-bins/pnpm\"" }
 action-validator = "latest"
 actionlint = "latest"
 "npm:@tree-sitter-grammars/tree-sitter-lua" = "latest"
@@ -72,6 +76,26 @@ actionlint = "latest"
 "npm:vscode-json-languageserver" = "latest"
 "npm:yaml-language-server" = "latest"
 "pipx:compiledb" = "latest"
+"cargo:cargo-release" = "latest"
+"cargo:cargo-local" = "latest"
+"cargo:cargo-dist" = "latest"
+"cargo:cargo-bloat" = "latest"
+"cargo:cargo-bp" = "latest"
+"cargo:cargo-edit" = "latest"
+"cargo:cargo-outdated" = "latest"
+"cargo:cargo-update" = "latest"
+"cargo:cargo-expand" = "latest"
+"cargo:cargo-cache" = "latest"
+"cargo:cargo-modules" = "latest"
+"cargo:bindgen-cli" = "latest"
+"cargo:cbindgen" = "latest"
+"cargo:inferno" = "latest"
+"cargo:html-to-markdown-cli" = "latest"
+"cargo:systemd-lsp" = "latest"
+"cargo:minijinja-cli" = "latest"
+"cargo:cross" = "latest"
+"cargo:bws" = "latest"
+"cargo:alacritty" = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
@@ -79,7 +103,7 @@ actionlint = "latest"
 disable_backends = [
     #"aqua",
     "asdf",
-    "cargo",
+    #"cargo",
     "conda",
     #"core",
     "dotnet",
@@ -108,13 +132,13 @@ ceiling_paths = [
     "/home"
 ]
 
-no_env = true
 no_hooks = true
 not_found_auto_install = false
 
 trusted_config_paths = [
     "~/git/flrgh"
 ]
+lockfile_platforms = ["linux-x64", "linux-x64-musl", "linux-arm64", "linux-arm64-musl"]
 
 [settings.cargo]
 binstall = true

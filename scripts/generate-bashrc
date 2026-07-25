@@ -1087,7 +1087,7 @@ __rc_rust() {
     RUSTUP_HOME="$HOME/.local/rustup"
 
     rc-export CARGO_HOME
-    rc-add-path PATH "$CARGO_HOME"/bin
+    rc-add-path PATH "$CARGO_HOME/bin" --prepend --after "$HOME/.local/bin"
     rc-export RUSTUP_HOME
 
     # https://blog.rust-lang.org/2023/03/09/Rust-1.68.0.html#cargos-sparse-protocol
