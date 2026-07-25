@@ -76,7 +76,9 @@ actionlint = "latest"
 "npm:vscode-json-languageserver" = "latest"
 "npm:yaml-language-server" = "latest"
 "pipx:compiledb" = "latest"
-"cargo:cargo-release" = "latest"
+# these options allow install without pulling in an OpenSSL source build,
+# which requires a bunch of OS packages I don't want to install
+"cargo:cargo-release" = { version = "latest", default-features = false, features = "vendored-libgit2" }
 "cargo:cargo-local" = "latest"
 "cargo:cargo-dist" = "latest"
 "cargo:cargo-bloat" = "latest"
