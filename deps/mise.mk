@@ -47,7 +47,7 @@ $(DEP_VERSION)/mise: $(DEP_INSTALLED)/mise
 
 
 $(DEP_INSTALLED)/$(MISE_PKG): $(MISE) $(MISE_CONFIGS)
-	$(MISE) install --yes
+	$(MISE) install --yes --locked
 	@$(TOUCH) $@
 
 

@@ -299,7 +299,7 @@ version = "0.13.13"
 backend = "cargo:cargo-edit"
 
 [[tools."cargo:cargo-expand"]]
-version = "1.0.123"
+version = "1.0.124"
 backend = "cargo:cargo-expand"
 
 [[tools."cargo:cargo-local"]]
@@ -335,11 +335,11 @@ version = "0.2.5"
 backend = "cargo:cross"
 
 [[tools."cargo:html-to-markdown-cli"]]
-version = "3.8.3"
+version = "3.9.0"
 backend = "cargo:html-to-markdown-cli"
 
 [[tools."cargo:inferno"]]
-version = "0.12.7"
+version = "0.12.8"
 backend = "cargo:inferno"
 
 [[tools."cargo:minijinja-cli"]]
@@ -367,28 +367,28 @@ url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d
 url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.219/linux-x64-musl/claude"
 
 [[tools.codex]]
-version = "0.144.5"
+version = "0.144.6"
 backend = "aqua:openai/codex"
 
 [tools.codex."platforms.linux-arm64"]
-checksum = "sha256:7703bbb6cbd4ba3df60c32d200bca2987691047353d3a6c825af2b8bc99f1808"
-url = "https://github.com/openai/codex/releases/download/rust-v0.144.5/codex-package-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/openai/codex/releases/assets/478682029"
+checksum = "sha256:b4359896bb548e02fdd72ea0cb3395fe8a88d20d3a4a421c4481e504f8e8927f"
+url = "https://github.com/openai/codex/releases/download/rust-v0.144.6/codex-package-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/openai/codex/releases/assets/481505363"
 
 [tools.codex."platforms.linux-arm64-musl"]
-checksum = "sha256:7703bbb6cbd4ba3df60c32d200bca2987691047353d3a6c825af2b8bc99f1808"
-url = "https://github.com/openai/codex/releases/download/rust-v0.144.5/codex-package-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/openai/codex/releases/assets/478682029"
+checksum = "sha256:b4359896bb548e02fdd72ea0cb3395fe8a88d20d3a4a421c4481e504f8e8927f"
+url = "https://github.com/openai/codex/releases/download/rust-v0.144.6/codex-package-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/openai/codex/releases/assets/481505363"
 
 [tools.codex."platforms.linux-x64"]
-checksum = "sha256:23a7022a493c5404c50c62a4ad5655836adbee019d93c73114954d8daff20053"
-url = "https://github.com/openai/codex/releases/download/rust-v0.144.5/codex-package-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/openai/codex/releases/assets/478681936"
+checksum = "sha256:99ae48e4743da6c530ecd998ab2f7e66572c092f4190c88dca8236c07b06ce1d"
+url = "https://github.com/openai/codex/releases/download/rust-v0.144.6/codex-package-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/openai/codex/releases/assets/481505274"
 
 [tools.codex."platforms.linux-x64-musl"]
-checksum = "sha256:23a7022a493c5404c50c62a4ad5655836adbee019d93c73114954d8daff20053"
-url = "https://github.com/openai/codex/releases/download/rust-v0.144.5/codex-package-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/openai/codex/releases/assets/478681936"
+checksum = "sha256:99ae48e4743da6c530ecd998ab2f7e66572c092f4190c88dca8236c07b06ce1d"
+url = "https://github.com/openai/codex/releases/download/rust-v0.144.6/codex-package-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/openai/codex/releases/assets/481505274"
 
 [[tools.cosign]]
 version = "3.1.2"
@@ -940,31 +940,31 @@ version = "0.10.7"
 backend = "pipx:compiledb"
 
 [[tools.pnpm]]
-version = "11.14.0"
+version = "11.15.1"
 backend = "aqua:pnpm/pnpm"
 
 [tools.pnpm."platforms.linux-arm64"]
-checksum = "sha256:6ec5224012d46e96747caed6b7ea02498f56e838c68df72acd9f8de46969b1a9"
-url = "https://github.com/pnpm/pnpm/releases/download/v11.14.0/pnpm-linux-arm64.tar.gz"
-url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/480872581"
+checksum = "sha256:361e385867146972d0635a41a1871cb44c9c23f65acce78a5f1ca1d44ac0afcd"
+url = "https://github.com/pnpm/pnpm/releases/download/v11.15.1/pnpm-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/482780455"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.linux-arm64-musl"]
-checksum = "sha256:37b6764b4d2301303fb70277c3ef4c0ee5a64eabea1c9d631ca2729b12c752e8"
-url = "https://github.com/pnpm/pnpm/releases/download/v11.14.0/pnpm-linux-arm64-musl.tar.gz"
-url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/480872587"
+checksum = "sha256:5e293db656ee6a54387945572e06f08245140a7427c8e67b821d56471f373b77"
+url = "https://github.com/pnpm/pnpm/releases/download/v11.15.1/pnpm-linux-arm64-musl.tar.gz"
+url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/482780459"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.linux-x64"]
-checksum = "sha256:d78ce4e1ebcc39c1213fcb5a8686eda5b09835195a318408a6361efbd450166d"
-url = "https://github.com/pnpm/pnpm/releases/download/v11.14.0/pnpm-linux-x64.tar.gz"
-url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/480872586"
+checksum = "sha256:0c1373b6390f6b89ff8b896d3647c9826577ddc49173a2f732da69b36569f9e0"
+url = "https://github.com/pnpm/pnpm/releases/download/v11.15.1/pnpm-linux-x64.tar.gz"
+url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/482780457"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.linux-x64-musl"]
-checksum = "sha256:eef0615b9b3da3d9c38196232899059c92c26e67dd62f42bb6044b40501aa5b3"
-url = "https://github.com/pnpm/pnpm/releases/download/v11.14.0/pnpm-linux-x64-musl.tar.gz"
-url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/480872582"
+checksum = "sha256:593039435b88cb4e15c60c18ba032a1ae6a28159287199f20aacc44ad553a094"
+url = "https://github.com/pnpm/pnpm/releases/download/v11.15.1/pnpm-linux-x64-musl.tar.gz"
+url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/482780453"
 provenance = "github-attestations"
 
 [[tools.promtool]]
@@ -1156,31 +1156,31 @@ url = "https://github.com/tmux/tmux-builds/releases/download/v3.7b/tmux-3.7b-lin
 url_api = "https://api.github.com/repos/tmux/tmux-builds/releases/assets/465072866"
 
 [[tools.tombi]]
-version = "1.2.1"
+version = "1.2.4"
 backend = "aqua:tombi-toml/tombi"
 
 [tools.tombi."platforms.linux-arm64"]
-checksum = "sha256:d70ba2d234c56a31afb29099c130325548c498096d42929d269f26a4ecb22e02"
-url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.1/tombi-cli-1.2.1-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/480573781"
+checksum = "sha256:91504ef7e605fca89ef55aea0a428ee58cf3e435f2650a8a9ce8886dd286b874"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.4/tombi-cli-1.2.4-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/482325750"
 provenance = "github-attestations"
 
 [tools.tombi."platforms.linux-arm64-musl"]
-checksum = "sha256:d70ba2d234c56a31afb29099c130325548c498096d42929d269f26a4ecb22e02"
-url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.1/tombi-cli-1.2.1-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/480573781"
+checksum = "sha256:91504ef7e605fca89ef55aea0a428ee58cf3e435f2650a8a9ce8886dd286b874"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.4/tombi-cli-1.2.4-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/482325750"
 provenance = "github-attestations"
 
 [tools.tombi."platforms.linux-x64"]
-checksum = "sha256:e1b91ed4006e7b99af2d8b7d26df57fe154b1b50b4fe14ffca5c5ee8203bfd3f"
-url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.1/tombi-cli-1.2.1-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/480573796"
+checksum = "sha256:a74364d9c27835cefd9d7d9e4fee0487a7f68bc5289650e61050d6b0c395dc4d"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.4/tombi-cli-1.2.4-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/482325758"
 provenance = "github-attestations"
 
 [tools.tombi."platforms.linux-x64-musl"]
-checksum = "sha256:e1b91ed4006e7b99af2d8b7d26df57fe154b1b50b4fe14ffca5c5ee8203bfd3f"
-url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.1/tombi-cli-1.2.1-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/480573796"
+checksum = "sha256:a74364d9c27835cefd9d7d9e4fee0487a7f68bc5289650e61050d6b0c395dc4d"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.4/tombi-cli-1.2.4-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/482325758"
 provenance = "github-attestations"
 
 [[tools.tree-sitter]]
@@ -1236,31 +1236,31 @@ url = "https://github.com/jdx/usage/releases/download/v3.5.5/usage-x86_64-unknow
 url_api = "https://api.github.com/repos/jdx/usage/releases/assets/476575875"
 
 [[tools.uv]]
-version = "0.11.29"
+version = "0.11.30"
 backend = "aqua:astral-sh/uv"
 
 [tools.uv."platforms.linux-arm64"]
-checksum = "sha256:593d79a797ece3f1dfaaf3e0a973263422a135d9262c7dbc6cd75d9c11acc0b4"
-url = "https://github.com/astral-sh/uv/releases/download/0.11.29/uv-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/478261262"
+checksum = "sha256:7562a40e4e08b1bfd566bd6aeca55a16ee5ac45211554543e8cdb3c395b47416"
+url = "https://github.com/astral-sh/uv/releases/download/0.11.30/uv-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/483891898"
 provenance = "github-attestations"
 
 [tools.uv."platforms.linux-arm64-musl"]
-checksum = "sha256:593d79a797ece3f1dfaaf3e0a973263422a135d9262c7dbc6cd75d9c11acc0b4"
-url = "https://github.com/astral-sh/uv/releases/download/0.11.29/uv-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/478261262"
+checksum = "sha256:7562a40e4e08b1bfd566bd6aeca55a16ee5ac45211554543e8cdb3c395b47416"
+url = "https://github.com/astral-sh/uv/releases/download/0.11.30/uv-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/483891898"
 provenance = "github-attestations"
 
 [tools.uv."platforms.linux-x64"]
-checksum = "sha256:46711858adb2a3acaa9cee00f9060688ad1fd5706aecc005b96a6a7f285a00b7"
-url = "https://github.com/astral-sh/uv/releases/download/0.11.29/uv-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/478261352"
+checksum = "sha256:023fdd3b59fccfb67b365c69fb34182aaaed1d685d367a57571e3c1468a4c70c"
+url = "https://github.com/astral-sh/uv/releases/download/0.11.30/uv-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/483891981"
 provenance = "github-attestations"
 
 [tools.uv."platforms.linux-x64-musl"]
-checksum = "sha256:46711858adb2a3acaa9cee00f9060688ad1fd5706aecc005b96a6a7f285a00b7"
-url = "https://github.com/astral-sh/uv/releases/download/0.11.29/uv-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/478261352"
+checksum = "sha256:023fdd3b59fccfb67b365c69fb34182aaaed1d685d367a57571e3c1468a4c70c"
+url = "https://github.com/astral-sh/uv/releases/download/0.11.30/uv-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/483891981"
 provenance = "github-attestations"
 
 [[tools.vivid]]
