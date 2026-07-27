@@ -98,6 +98,7 @@ actionlint = "latest"
 "cargo:cross" = "latest"
 "cargo:bws" = "latest"
 "cargo:alacritty" = "latest"
+tokei = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from

@@ -1155,6 +1155,10 @@ checksum = "sha256:f85e6c1c412750a774eb3f370f33bad05fc726fb8b6a0b174ad6f0b6d954d
 url = "https://github.com/tmux/tmux-builds/releases/download/v3.7b/tmux-3.7b-linux-x86_64.tar.gz"
 url_api = "https://api.github.com/repos/tmux/tmux-builds/releases/assets/465072866"
 
+[[tools.tokei]]
+version = "14.0.0"
+backend = "cargo:tokei"
+
 [[tools.tombi]]
 version = "1.2.4"
 backend = "aqua:tombi-toml/tombi"
