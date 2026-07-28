@@ -11,7 +11,15 @@ ssh: | .setup
 
 
 $(SSH_AGENT_SWITCHER_DEP): $(RUST_INIT)
-	$(CARGO_BINSTALL) $(SSH_AGENT_SWITCHER_NAME)
+	$(SECRETS_EXEC) \
+		cargo binstall \
+		--no-confirm \
+		--continue-on-failure \
+		--disable-strategies quick-install \
+		--disable-telemetry \
+		--locked \
+		--min-tls-version 1.3 \
+		$(SSH_AGENT_SWITCHER_NAME)
 	@$(TOUCH) $@
 
 
