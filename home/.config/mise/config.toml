@@ -99,6 +99,8 @@ actionlint = "latest"
 "cargo:bws" = "latest"
 "cargo:alacritty" = "latest"
 tokei = "latest"
+"cargo:cargo-audit" = "latest"
+"cargo:cargo-deny" = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from

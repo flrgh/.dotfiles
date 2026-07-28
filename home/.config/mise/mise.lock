@@ -278,6 +278,10 @@ backend = "cargo:bindgen-cli"
 version = "2.1.0"
 backend = "cargo:bws"
 
+[[tools."cargo:cargo-audit"]]
+version = "0.22.2"
+backend = "cargo:cargo-audit"
+
 [[tools."cargo:cargo-bloat"]]
 version = "0.12.1"
 backend = "cargo:cargo-bloat"
@@ -289,6 +293,10 @@ backend = "cargo:cargo-bp"
 [[tools."cargo:cargo-cache"]]
 version = "0.8.3"
 backend = "cargo:cargo-cache"
+
+[[tools."cargo:cargo-deny"]]
+version = "0.20.2"
+backend = "cargo:cargo-deny"
 
 [[tools."cargo:cargo-dist"]]
 version = "0.32.0"
