@@ -782,3 +782,15 @@ command("UVDebug",
     nargs = 0,
   }
 )
+
+
+command("LspInfo", ":checkhealth vim.lsp", {
+  desc = "Alias to `:checkhealth vim.lsp`"
+})
+
+
+command("LspLog", function()
+  vim.cmd(string.format("tabnew %s", lsp.log.get_filename()))
+end, {
+  desc = 'Opens the Nvim LSP client log.',
+})
