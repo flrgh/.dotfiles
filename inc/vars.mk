@@ -73,12 +73,16 @@ OLD_FILES := $(INSTALL_PATH)/.bash_profile \
 	$(INSTALL_BIN)/marksman-linux \
 	$(INSTALL_DATA)/claude/versions/* \
 	$(INSTALL_STATE)/ineed/bitwarden-* \
-	$(INSTALL_PATH)/.ssh/ssh_auth_sock
+	$(INSTALL_PATH)/.ssh/ssh_auth_sock \
+	$(INSTALL_CONFIG)/bws/* \
+	$(INSTALL_STATE)/bws/*
 
 # only removed if empty
 OLD_DIRS := $(INSTALL_DATA)/claude/versions \
 	$(INSTALL_DATA)/claude \
-	$(INSTALL_LIB)/node_modules/@anthropic-ai
+	$(INSTALL_LIB)/node_modules/@anthropic-ai \
+	$(INSTALL_CONFIG)/bws \
+	$(INSTALL_STATE)/bws
 
 CREATE_DIRS := \
 	.cache .cache/download \
