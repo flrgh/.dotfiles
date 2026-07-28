@@ -45,6 +45,8 @@ install-from-asset() {
         if version-compare "$version" gt "$patch_version"; then
             echo "skipping patch $patch_name for old version ($patch_version)"
             continue
+        else
+            echo "applying patch $patch_name"
         fi
         patch -p0 < "$patch"
     done

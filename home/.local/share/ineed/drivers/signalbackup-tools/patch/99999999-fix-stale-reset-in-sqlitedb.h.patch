@@ -1,0 +1,20 @@
+diff --git sqlitedb/sqlitedb.h sqlitedb/sqlitedb.h
+--- sqlitedb/sqlitedb.h
++++ sqlitedb/sqlitedb.h
+@@ -1368,12 +1368,10 @@ inline bool SqliteDB::getStatement(std::string_view q, sqlite3_stmt **statement)
+   }
+   // else statement found in cache!
+   d_stmt_cache.splice(d_stmt_cache.begin(), d_stmt_cache, it); // move it to front
+-  if (sqlite3_reset(*it) != SQLITE_OK) [[unlikely]] // reuse existing prepared statement
+-  {
+-    Logger::error("During sqlite3_reset(): ", sqlite3_errmsg(d_db));
+-    Logger::error_indent("-> Query: \"", q, "\"");
+-    return false;
+-  }
++  // sqlite3_reset() reports the result of this statement's previous evaluation, not of the
++  // reset itself: a step that failed (eg a UNIQUE collision) surfaces here, on the next reuse
++  // of the cached statement. That is not a reason to refuse to run the new query.
++  sqlite3_reset(*it); // reuse existing prepared statement
+   *statement = *it;
+   return true;
+ }
