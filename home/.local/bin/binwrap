@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly WRAPPER="$HOME"/.local/libexec/binwrap-exec
+readonly WRAP_PATH="$HOME"/.local/.binwrap
+
+declare -i QUIET=0
+
+info() {
+    if (( QUIET == 0 )); then
+        echo "$@"
+    fi
+}
+
+err() {
+    echo "$1" >&2
+}
+
+die() {
+    err "$1"
+    exit "${2:-2}"
+}
+
+cmd::help() {
+    echo "Usage: $0 <CMD> [...OPTIONS]"
+    echo
+    echo "Commands:"
+    echo
+    echo "  help                 display this message"
+    echo "  ls                   list wrapped binaries"
+    echo "  new <name> [file]    create a new binary wrapper"
+    echo "  edit <name>          open <name> with \$EDITOR for updating"
+    echo "  rm <name>            remove a binary wrapper"
+    echo
+    echo "Options:"
+    echo
+    echo "  -q|--quiet           don't print any informational stdout"
+    echo
+}
+
+
+cmd::ls() {
+    shopt -s nullglob
+    local elem
+    for elem in "$WRAP_PATH"/*; do
+        printf '%s\t%s\n' "${elem##*/}" "$elem"
+    done
+}
+
+
+cmd::new() {
+    local -r name=${1:?name required}
+    local -r file=${2:-}
+
+    local -r wrapper=${WRAP_PATH}/${name}
+
+    if [[ -e $wrapper ]]; then
+        die "ERROR ($name): binary wrapper at $wrapper already exists"
+    fi
+
+    mkdir -p "$WRAP_PATH"
+
+    local content=""
+    if [[ -n ${file:-} ]]; then
+        content=$(cat "$wrapper")
+    fi
+
+    printf '#!%s\n# vim: set ft=bash ts=4 sw=4 sts=4 et :\n%s\n' \
+        "$WRAPPER" \
+        "${content:-}" \
+        > "$wrapper"
+
+    chmod +x "$wrapper"
+
+    info "created $wrapper"
+}
+
+
+cmd::edit() {
+    local -r name=${1:?name required}
+    local -r wrapper=${WRAP_PATH}/${name}
+
+    if [[ ! -e $wrapper ]]; then
+        die "ERROR ($name): binary wrapper ($wrapper) does not exist. Create with '$0 new \"$name\"'"
+    fi
+
+    exec "${EDITOR:-vim}" "$wrapper"
+}
+
+
+cmd::rm() {
+    local -r name=${1:?name required}
+
+    local -r wrapper=${WRAP_PATH}/${name}
+
+    rm -f "$wrapper"
+
+    info "$name removed"
+}
+
+
+main() {
+    if (( $# == 0 )); then
+        cmd::help
+        exit 0
+    fi
+
+    local -a args=()
+    while (( $# > 0 )); do
+        local arg=$1
+        shift
+
+        case $arg in
+            -h|--help)
+                cmd::help
+                exit 0
+                ;;
+
+            -q|--quiet)
+                QUIET=1
+                ;;
+
+            *)
+                args+=("$arg")
+                ;;
+        esac
+    done
+
+    set -- "${args[@]}"
+
+    local -r cmd=$1
+    shift || true
+
+    local -r fn="cmd::${cmd}"
+
+    if ! declare -f "$fn" &>/dev/null; then
+        err "ERROR: unknown command '$cmd'"
+        cmd::help
+        exit 2
+    fi
+
+    "$fn" "$@"
+}
+
+main "$@"

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+__WRAP_PATH="$HOME/.local/.binwrap"
+
+__SRC=${1:?exec-wrap must be invoked via a #! wrapper script}
+shift
+__NAME=${__SRC##*/}
+
+if [[ ! -f $__SRC || ! -r $__SRC ]]; then
+    printf 'ERROR: %q is not a readable binwrap script\n' "$__SRC" >&2
+    exit 127
+fi
+
+PATH=${PATH//":${__WRAP_PATH}:"/}
+PATH=${PATH#"${__WRAP_PATH}:"}
+PATH=${PATH%":${__WRAP_PATH}"}
+
+unset BINWRAP_SECRETS BINWRAP_MISE_TOOL BINWRAP_BIN_NAME BINWRAP_ARGS || true
+
+# shellcheck disable=SC1090
+source "$__SRC"
+unset __SRC || true
+
+declare -a __EXEC=()
+declare -a __ARGS=("$@")
+
+if [[ -n ${BINWRAP_SECRETS:-} && -n ${BINWRAP_SECRETS[0]:-} ]]; then
+    __EXEC+=(secrets exec --cache)
+    for s in "${BINWRAP_SECRETS[@]}"; do
+        __EXEC+=(--env "$s")
+    done
+    __EXEC+=(--)
+    unset s BINWRAP_SECRETS
+fi
+
+if [[ -n ${BINWRAP_MISE_TOOL:-} ]]; then
+    __EXEC+=(mise exec "$BINWRAP_MISE_TOOL" --)
+    unset BINWRAP_MISE_TOOL
+fi
+
+if [[ -n ${BINWRAP_BIN_NAME:-} ]]; then
+    __NAME=$BINWRAP_BIN_NAME
+    unset BINWRAP_BIN_NAME
+fi
+
+if [[ -v BINWRAP_ARGS ]]; then
+    __ARGS=("${BINWRAP_ARGS[@]}")
+fi
+
+exec "${__EXEC[@]}" "$__NAME" "${__ARGS[@]}"
