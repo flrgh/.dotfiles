@@ -79,6 +79,7 @@ emit-app-config() {
         add-export CLAUDE_CODE_ENABLE_TELEMETRY "0"
         add-export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC "1"
 
+        add-export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "0"
         add-export CLAUDE_CODE_NO_FLICKER "1"
         add-export CLAUDE_CODE_SCROLL_SPEED "3"
 

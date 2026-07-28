@@ -4,7 +4,8 @@ SECRETS_HEAD := $(BUILD)/repo/$(SECRETS_REPO).head
 SECRETS_BIN := $(INSTALL_BIN)/secrets
 SECRETS_RUNTIME_DIR := $(XDG_RUNTIME_DIR)/secrets
 SECRETS_ENV := $(SECRETS_RUNTIME_DIR)/env
-SECRETS_ENV_CONFIG := $(XDG_CONFIG_HOME)/secrets/bash-env.toml
+SECRETS_CONFIG := $(XDG_CONFIG_HOME)/secrets
+SECRETS_ENV_CONFIG := $(SECRETS_CONFIG)/bash-env.toml
 
 $(SECRETS_BIN): $(SECRETS_HEAD) | $(RUST_INIT)
 	cd $(SECRETS_SRC) && $(CARGO) build --release --locked
@@ -13,6 +14,15 @@ $(SECRETS_BIN): $(SECRETS_HEAD) | $(RUST_INIT)
 
 $(DEP_INSTALLED)/secrets: $(SECRETS_BIN)
 	@$(TOUCH) --reference "$<" "$@"
+	@if [[ -e $(SECRETS_CONFIG)/bws-token.enc ]]; then \
+		mv -v -n $(SECRETS_CONFIG)/bws-token.enc $(SECRETS_CONFIG)/bws.enc; \
+	fi
+	@if [[ -e $(SECRETS_CONFIG)/aws-creds.enc ]]; then \
+		mv -v -n $(SECRETS_CONFIG)/aws-creds.enc $(SECRETS_CONFIG)/ssm.enc; \
+	fi
+	@if [[ -e $(SECRETS_CONFIG)/aws-creds.enc.meta ]]; then \
+		mv -v -n $(SECRETS_CONFIG)/aws-creds.enc.meta $(SECRETS_CONFIG)/ssm.enc.meta; \
+	fi
 
 
 $(SECRETS_RUNTIME_DIR):
