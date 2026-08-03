@@ -13,7 +13,7 @@ if [[ ! -f $__SRC || ! -r $__SRC ]]; then
     exit 127
 fi
 
-PATH=${PATH//":${__WRAP_PATH}:"/}
+PATH=${PATH//":${__WRAP_PATH}:"/":"}
 PATH=${PATH#"${__WRAP_PATH}:"}
 PATH=${PATH%":${__WRAP_PATH}"}
 
