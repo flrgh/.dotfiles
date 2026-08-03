@@ -3,6 +3,7 @@
 -- Credit: glepnir
 
 local mod = require "my.std.luamod"
+local std = require("my.std")
 
 local expand                    = vim.fn.expand
 local empty                     = vim.fn.empty
@@ -14,6 +15,7 @@ local buf_get_option            = vim.api.nvim_buf_get_option
 local lsp_get_clients           = vim.lsp.get_clients
 local insert                    = table.insert
 local next                      = next
+local get_root                  = std.path.workspace_root
 
 local buffer_not_empty = function()
   return empty(expand('%:t')) ~= 1
@@ -44,8 +46,7 @@ local function filename_on_click(nclicks)
 
   -- relative to workspace/repo root
   elseif nclicks == 2  then
-    local root = vim.fs.root(0, ".git")
-                 or vim.fn.getcwd()
+    local root = get_root()
 
     if root and path:find(root, 1, true) == 1 then
       path = path:sub(#root + 1)
