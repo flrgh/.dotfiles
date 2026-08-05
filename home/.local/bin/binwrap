@@ -30,6 +30,7 @@ cmd::help() {
     echo "  help                 display this message"
     echo "  ls                   list wrapped binaries"
     echo "  new <name> [file]    create a new binary wrapper"
+    echo "  cat <name>           print the wrapper for <name> to stdout"
     echo "  edit <name>          open <name> with \$EDITOR for updating"
     echo "  rm <name>            remove a binary wrapper"
     echo
@@ -97,6 +98,15 @@ cmd::rm() {
     rm -f "$wrapper"
 
     info "$name removed"
+}
+
+
+cmd::cat() {
+    local -r name=${1:?name required}
+
+    local -r wrapper=${WRAP_PATH}/${name}
+
+    cat "$wrapper"
 }
 
 
