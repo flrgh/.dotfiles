@@ -27,12 +27,12 @@ cmd::help() {
     echo
     echo "Commands:"
     echo
-    echo "  help                 display this message"
-    echo "  ls                   list wrapped binaries"
-    echo "  new <name> [file]    create a new binary wrapper"
-    echo "  cat <name>           print the wrapper for <name> to stdout"
-    echo "  edit <name>          open <name> with \$EDITOR for updating"
-    echo "  rm <name>            remove a binary wrapper"
+    echo "  help                              display this message"
+    echo "  ls                                list wrapped binaries"
+    echo "  add [-f|--force] <name> [file]    create a new binary wrapper"
+    echo "  cat  <name>                       print the wrapper for <name> to stdout"
+    echo "  edit <name>                       open <name> with \$EDITOR for updating"
+    echo "  rm <name>                         remove a binary wrapper"
     echo
     echo "Options:"
     echo
@@ -50,21 +50,39 @@ cmd::ls() {
 }
 
 
-cmd::new() {
+cmd::add() {
+    local -i force=0
+    local -a args=()
+    while (( $# )); do
+        case $1 in
+            -f|--force)
+                force=1
+                ;;
+
+            *)
+                args+=("$1")
+                ;;
+        esac
+        shift
+    done
+    set -- "${args[@]}"
+
     local -r name=${1:?name required}
     local -r file=${2:-}
 
     local -r wrapper=${WRAP_PATH}/${name}
 
-    if [[ -e $wrapper ]]; then
-        die "ERROR ($name): binary wrapper at $wrapper already exists"
+    if (( ! force )); then
+        if [[ -e $wrapper ]]; then
+            die "ERROR ($name): binary wrapper at $wrapper already exists"
+        fi
     fi
 
     mkdir -p "$WRAP_PATH"
 
     local content=""
     if [[ -n ${file:-} ]]; then
-        content=$(cat "$wrapper")
+        content=$(cat "$file")
     fi
 
     printf '#!%s\n# vim: set ft=bash ts=4 sw=4 sts=4 et :\n%s\n' \
@@ -83,7 +101,7 @@ cmd::edit() {
     local -r wrapper=${WRAP_PATH}/${name}
 
     if [[ ! -e $wrapper ]]; then
-        die "ERROR ($name): binary wrapper ($wrapper) does not exist. Create with '$0 new \"$name\"'"
+        die "ERROR ($name): binary wrapper ($wrapper) does not exist. Create with '$0 add \"$name\"'"
     fi
 
     exec "${EDITOR:-vim}" "$wrapper"
