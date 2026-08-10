@@ -75,6 +75,8 @@ mise: $(DEP)/mise
 .mise-update: $(MISE)
 	$(SCRIPT)/mise-self-update
 	$(MISE) upgrade --yes
+	$(MISE) prune --yes
+	$(MISE) lock --global
 	$(SCRIPT)/mise-shims
 
 
