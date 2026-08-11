@@ -46,7 +46,7 @@ local SERVERS = {
 
   "terraformls",
   "yamlls",
-  "ts_ls",
+  "tsgo",
   "zls",
 
   -- toml language server
