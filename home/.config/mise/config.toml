@@ -3,7 +3,6 @@ node = "latest"
 go = "latest"
 zig = "latest"
 python = "latest"
-
 ast-grep = "latest"
 aws-cli = "latest"
 bat = "latest"
@@ -35,7 +34,6 @@ zls = "latest"
 tombi = "latest"
 htmlq = "latest"
 yamlfmt = "latest"
-claude-code = "latest"
 bun = "latest"
 "aqua:docker/buildx" = "latest"
 "github:docker/docker-language-server" = { version = "latest", bin = "docker-language-server" }
@@ -44,11 +42,7 @@ bun = "latest"
 "go:golang.org/x/tools/gopls" = "latest"
 "go:github.com/jstemmer/gotags" = "latest"
 
-# with = "latest" mise ends up installing the oldest version, so here we are
-"go:code.gitea.io/tea" = "0.14.1"
-
 tmux = "latest"
-codex = "latest"
 deno = "latest"
 age = "latest"
 packer = "latest"
@@ -67,7 +61,6 @@ actionlint = "latest"
 "npm:bash-language-server" = "latest"
 "npm:gh-actions-language-server" = "latest"
 "npm:live-server" = "latest"
-"npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:pyright" = "latest"
 "npm:sql-language-server" = "latest"
 "npm:typescript-language-server" = "latest"
@@ -99,6 +92,7 @@ actionlint = "latest"
 tokei = "latest"
 "cargo:cargo-audit" = "latest"
 "cargo:cargo-deny" = "latest"
+"go:gitea.dev/tea" = "v0.15.1"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
