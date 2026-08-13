@@ -81,31 +81,31 @@ url_api = "https://api.github.com/repos/FiloSottile/age/releases/assets/33375267
 provenance = "github-attestations"
 
 [[tools."aqua:docker/buildx"]]
-version = "0.36.0"
+version = "0.36.1"
 backend = "aqua:docker/buildx"
 
 [tools."aqua:docker/buildx"."platforms.linux-arm64"]
-checksum = "sha256:70382de03915c07c488ae4ddc4f7e169ee978f953e754ecfce110ba017e0132b"
-url = "https://github.com/docker/buildx/releases/download/v0.36.0/buildx-v0.36.0.linux-arm64"
-url_api = "https://api.github.com/repos/docker/buildx/releases/assets/494496105"
+checksum = "sha256:5d0cafd9d16afe1a0f0d9529885344ace2cc99efdd531b6c783c5455a6001569"
+url = "https://github.com/docker/buildx/releases/download/v0.36.1/buildx-v0.36.1.linux-arm64"
+url_api = "https://api.github.com/repos/docker/buildx/releases/assets/501521795"
 provenance = "cosign"
 
 [tools."aqua:docker/buildx"."platforms.linux-arm64-musl"]
-checksum = "sha256:70382de03915c07c488ae4ddc4f7e169ee978f953e754ecfce110ba017e0132b"
-url = "https://github.com/docker/buildx/releases/download/v0.36.0/buildx-v0.36.0.linux-arm64"
-url_api = "https://api.github.com/repos/docker/buildx/releases/assets/494496105"
+checksum = "sha256:5d0cafd9d16afe1a0f0d9529885344ace2cc99efdd531b6c783c5455a6001569"
+url = "https://github.com/docker/buildx/releases/download/v0.36.1/buildx-v0.36.1.linux-arm64"
+url_api = "https://api.github.com/repos/docker/buildx/releases/assets/501521795"
 provenance = "cosign"
 
 [tools."aqua:docker/buildx"."platforms.linux-x64"]
-checksum = "sha256:07823fdfcd82a41be90155a8b16876c1a780a6462de805a9f3f63b3119ccfb99"
-url = "https://github.com/docker/buildx/releases/download/v0.36.0/buildx-v0.36.0.linux-amd64"
-url_api = "https://api.github.com/repos/docker/buildx/releases/assets/494496172"
+checksum = "sha256:48af8a397ebd60178778bf63611dbcebe5f5e7a9be90eb9147b24b9587455778"
+url = "https://github.com/docker/buildx/releases/download/v0.36.1/buildx-v0.36.1.linux-amd64"
+url_api = "https://api.github.com/repos/docker/buildx/releases/assets/501521792"
 provenance = "cosign"
 
 [tools."aqua:docker/buildx"."platforms.linux-x64-musl"]
-checksum = "sha256:07823fdfcd82a41be90155a8b16876c1a780a6462de805a9f3f63b3119ccfb99"
-url = "https://github.com/docker/buildx/releases/download/v0.36.0/buildx-v0.36.0.linux-amd64"
-url_api = "https://api.github.com/repos/docker/buildx/releases/assets/494496172"
+checksum = "sha256:48af8a397ebd60178778bf63611dbcebe5f5e7a9be90eb9147b24b9587455778"
+url = "https://github.com/docker/buildx/releases/download/v0.36.1/buildx-v0.36.1.linux-amd64"
+url_api = "https://api.github.com/repos/docker/buildx/releases/assets/501521792"
 provenance = "cosign"
 
 [[tools.ast-grep]]
@@ -123,21 +123,21 @@ url = "https://github.com/ast-grep/ast-grep/releases/download/0.45.0/app-x86_64-
 url_api = "https://api.github.com/repos/ast-grep/ast-grep/releases/assets/487374029"
 
 [[tools.aws-cli]]
-version = "2.36.20"
+version = "2.36.23"
 backend = "aqua:aws/aws-cli"
 
 [tools.aws-cli."platforms.linux-arm64"]
-url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.36.20.zip"
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.36.23.zip"
 
 [tools.aws-cli."platforms.linux-arm64-musl"]
-url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.36.20.zip"
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.36.23.zip"
 
 [tools.aws-cli."platforms.linux-x64"]
-checksum = "blake3:372321ead4a9d661032e7d2fd3527d8791d29063eae72dd33e06cecf46682d73"
-url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.36.20.zip"
+checksum = "blake3:b5dd4f651d37ffd5aac80bfd35d859b8ecd9d9678a4739832a89dd4edc1f2118"
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.36.23.zip"
 
 [tools.aws-cli."platforms.linux-x64-musl"]
-url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.36.20.zip"
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.36.23.zip"
 
 [[tools.bat]]
 version = "0.26.1"
@@ -296,7 +296,7 @@ version = "0.19.0"
 backend = "cargo:cargo-outdated"
 
 [[tools."cargo:cargo-release"]]
-version = "1.1.3"
+version = "1.1.4"
 backend = "cargo:cargo-release"
 
 [tools."cargo:cargo-release".options]
@@ -316,7 +316,7 @@ version = "0.2.5"
 backend = "cargo:cross"
 
 [[tools."cargo:html-to-markdown-cli"]]
-version = "3.10.2"
+version = "3.10.6"
 backend = "cargo:html-to-markdown-cli"
 
 [[tools."cargo:inferno"]]
@@ -324,7 +324,7 @@ version = "0.12.8"
 backend = "cargo:inferno"
 
 [[tools."cargo:minijinja-cli"]]
-version = "2.21.0"
+version = "2.23.0"
 backend = "cargo:minijinja-cli"
 
 [[tools."cargo:systemd-lsp"]]
@@ -332,31 +332,31 @@ version = "0.2.0"
 backend = "cargo:systemd-lsp"
 
 [[tools.cosign]]
-version = "3.1.2"
+version = "3.1.3"
 backend = "aqua:sigstore/cosign"
 
 [tools.cosign."platforms.linux-arm64"]
-checksum = "sha256:90e7ae0b5dfd60f20816b52c012addf7fc055ebcc7bea4ce81c428ca8518c302"
-url = "https://github.com/sigstore/cosign/releases/download/v3.1.2/cosign-linux-arm64"
-url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/480496294"
+checksum = "sha256:c5d324e091826b0d7a78eb16fef316450b4eb9aaec045611c08ba06f5e73220a"
+url = "https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign-linux-arm64"
+url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/503286299"
 provenance = "cosign"
 
 [tools.cosign."platforms.linux-arm64-musl"]
-checksum = "sha256:90e7ae0b5dfd60f20816b52c012addf7fc055ebcc7bea4ce81c428ca8518c302"
-url = "https://github.com/sigstore/cosign/releases/download/v3.1.2/cosign-linux-arm64"
-url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/480496294"
+checksum = "sha256:c5d324e091826b0d7a78eb16fef316450b4eb9aaec045611c08ba06f5e73220a"
+url = "https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign-linux-arm64"
+url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/503286299"
 provenance = "cosign"
 
 [tools.cosign."platforms.linux-x64"]
-checksum = "sha256:f7622ed3cf22e55e1ae6377c080979ff77a22da9981c11df222a2e444991e7cf"
-url = "https://github.com/sigstore/cosign/releases/download/v3.1.2/cosign-linux-amd64"
-url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/480496709"
+checksum = "sha256:4629c757b7618056f8ddd7e2625ae9fdd94c0372a65049520bc7d9df9efc7f71"
+url = "https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign-linux-amd64"
+url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/503286005"
 provenance = "cosign"
 
 [tools.cosign."platforms.linux-x64-musl"]
-checksum = "sha256:f7622ed3cf22e55e1ae6377c080979ff77a22da9981c11df222a2e444991e7cf"
-url = "https://github.com/sigstore/cosign/releases/download/v3.1.2/cosign-linux-amd64"
-url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/480496709"
+checksum = "sha256:4629c757b7618056f8ddd7e2625ae9fdd94c0372a65049520bc7d9df9efc7f71"
+url = "https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign-linux-amd64"
+url_api = "https://api.github.com/repos/sigstore/cosign/releases/assets/503286005"
 provenance = "cosign"
 
 [[tools.delta]]
@@ -601,24 +601,24 @@ url = "https://github.com/docker/docker-language-server/releases/download/v0.20.
 url_api = "https://api.github.com/repos/docker/docker-language-server/releases/assets/304258571"
 
 [[tools.go]]
-version = "1.26.5"
+version = "1.26.6"
 backend = "core:go"
 
 [tools.go."platforms.linux-arm64"]
-checksum = "sha256:fe4789e92b1f33358680864bbe8704289e7bb5fc207d80623c308935bd696d49"
-url = "https://dl.google.com/go/go1.26.5.linux-arm64.tar.gz"
+checksum = "sha256:d0507e9e9d7fe012aae570108cbd76c15de879e17130ab8cb90d4d7445cb1f2e"
+url = "https://dl.google.com/go/go1.26.6.linux-arm64.tar.gz"
 
 [tools.go."platforms.linux-arm64-musl"]
-checksum = "sha256:fe4789e92b1f33358680864bbe8704289e7bb5fc207d80623c308935bd696d49"
-url = "https://dl.google.com/go/go1.26.5.linux-arm64.tar.gz"
+checksum = "sha256:d0507e9e9d7fe012aae570108cbd76c15de879e17130ab8cb90d4d7445cb1f2e"
+url = "https://dl.google.com/go/go1.26.6.linux-arm64.tar.gz"
 
 [tools.go."platforms.linux-x64"]
-checksum = "sha256:5c2c3b16caefa1d968a94c1daca04a7ca301a496d9b086e17ad77bb81393f053"
-url = "https://dl.google.com/go/go1.26.5.linux-amd64.tar.gz"
+checksum = "sha256:708effb774be8237570d0add163225abbdfaf4fca28b2611df167beba4feef89"
+url = "https://dl.google.com/go/go1.26.6.linux-amd64.tar.gz"
 
 [tools.go."platforms.linux-x64-musl"]
-checksum = "sha256:5c2c3b16caefa1d968a94c1daca04a7ca301a496d9b086e17ad77bb81393f053"
-url = "https://dl.google.com/go/go1.26.5.linux-amd64.tar.gz"
+checksum = "sha256:708effb774be8237570d0add163225abbdfaf4fca28b2611df167beba4feef89"
+url = "https://dl.google.com/go/go1.26.6.linux-amd64.tar.gz"
 
 [[tools."go:gitea.dev/tea"]]
 version = "0.15.1"
@@ -765,24 +765,24 @@ url = "https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-linu
 url_api = "https://api.github.com/repos/ninja-build/ninja/releases/assets/318865358"
 
 [[tools.node]]
-version = "26.6.0"
+version = "26.7.0"
 backend = "core:node"
 
 [tools.node."platforms.linux-arm64"]
-checksum = "sha256:51c59de738843677a3c97bccbdbf9895141cb308bf25a95daeafd1aade09f0d5"
-url = "https://nodejs.org/dist/v26.6.0/node-v26.6.0-linux-arm64.tar.gz"
+checksum = "sha256:925aa6157dd37542d0d7f2e28b7bf61e7b39284411210b0498bc3788db4aef68"
+url = "https://nodejs.org/dist/v26.7.0/node-v26.7.0-linux-arm64.tar.gz"
 
 [tools.node."platforms.linux-arm64-musl"]
-checksum = "sha256:a4ad7beedb23618d1febb55b02b4e96b19f90d61e80a3d8bb52d621b8acf3f82"
-url = "https://unofficial-builds.nodejs.org/download/release/v26.6.0/node-v26.6.0-linux-arm64-musl.tar.gz"
+checksum = "sha256:1f16cc0f6febcb1bed1d4550306806dbcfbaf5c1bc2f44f3c5c8b5d22a4cc27a"
+url = "https://unofficial-builds.nodejs.org/download/release/v26.7.0/node-v26.7.0-linux-arm64-musl.tar.gz"
 
 [tools.node."platforms.linux-x64"]
-checksum = "sha256:714f352a7539c5ce09af15e440cbaadbe935bb23ba23fcee66b066d00a063822"
-url = "https://nodejs.org/dist/v26.6.0/node-v26.6.0-linux-x64.tar.gz"
+checksum = "sha256:bd6b6c31e377bad9ad579bed72e5bc11f4c879ac9452ad51d30e646ea3d828df"
+url = "https://nodejs.org/dist/v26.7.0/node-v26.7.0-linux-x64.tar.gz"
 
 [tools.node."platforms.linux-x64-musl"]
-checksum = "sha256:60e6a77f6fc69f77925f15c1af78e70320c9a64fe541668c7662906ef5adf3c0"
-url = "https://unofficial-builds.nodejs.org/download/release/v26.6.0/node-v26.6.0-linux-x64-musl.tar.gz"
+checksum = "sha256:5dc0180e7684ede6fc9d9e6333da45686f4b5a7820729d33c68335b283337295"
+url = "https://unofficial-builds.nodejs.org/download/release/v26.7.0/node-v26.7.0-linux-x64-musl.tar.gz"
 
 [[tools."npm:@tree-sitter-grammars/tree-sitter-lua"]]
 version = "0.4.1"
@@ -929,27 +929,27 @@ url = "https://github.com/prometheus/prometheus/releases/download/v3.13.2/promet
 url_api = "https://api.github.com/repos/prometheus/prometheus/releases/assets/495312468"
 
 [[tools.python]]
-version = "3.14.6"
+version = "3.14.7"
 backend = "core:python"
 
 [tools.python."platforms.linux-arm64"]
-checksum = "sha256:8ad1ec529cd1708245e8661a463245fc1479c43cbfd66e58b095456ebf77180a"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260804/cpython-3.14.6+20260804-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
+checksum = "sha256:4dba8d7e06199f841a9d6b54e4eb58d446a5c20c65085a916190dd0162c6e93b"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
 provenance = "github-attestations"
 
 [tools.python."platforms.linux-arm64-musl"]
-checksum = "sha256:85dbb537dc5d6679edabfb61cefdf2511d26cb8669662c4563202b0990e79b4a"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260804/cpython-3.14.6+20260804-aarch64-unknown-linux-musl-install_only_stripped.tar.gz"
+checksum = "sha256:10be7fe15ba5d1e5cfee1c2d8a9c720f29621b873e1f147f0b0a07f23de20d1a"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-aarch64-unknown-linux-musl-install_only_stripped.tar.gz"
 provenance = "github-attestations"
 
 [tools.python."platforms.linux-x64"]
-checksum = "sha256:ba960817e542642021135db330d875f410f4e14c64a62e2ae5faf3697ada08b2"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260804/cpython-3.14.6+20260804-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
+checksum = "sha256:a2478d654ed51d443bae21ec20ad927f116b4f5aae4094ab74918a6aa38f0575"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
 provenance = "github-attestations"
 
 [tools.python."platforms.linux-x64-musl"]
-checksum = "sha256:cbedbddcc6b2de99310015e629df67aeb732f622bbf258ec5d310757f85ab7ac"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260804/cpython-3.14.6+20260804-x86_64-unknown-linux-musl-install_only_stripped.tar.gz"
+checksum = "sha256:1fe25b50644b50b3333afa0d4013cc9cbab4dde4284c0154aebef4f53523ed99"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-x86_64-unknown-linux-musl-install_only_stripped.tar.gz"
 provenance = "github-attestations"
 
 [[tools.ripgrep]]
@@ -1097,31 +1097,31 @@ version = "14.0.0"
 backend = "cargo:tokei"
 
 [[tools.tombi]]
-version = "1.2.6"
+version = "1.2.7"
 backend = "aqua:tombi-toml/tombi"
 
 [tools.tombi."platforms.linux-arm64"]
-checksum = "sha256:f1505c4a3db78c8dbe249780cbb6b597b7afb195f0852308d3939df547a0af7f"
-url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.6/tombi-cli-1.2.6-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/499469510"
+checksum = "sha256:f09256852be93b1b06596dfad1a5b2717b4ca78d33e487d817caa94fef729381"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.7/tombi-cli-1.2.7-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/503838582"
 provenance = "github-attestations"
 
 [tools.tombi."platforms.linux-arm64-musl"]
-checksum = "sha256:f1505c4a3db78c8dbe249780cbb6b597b7afb195f0852308d3939df547a0af7f"
-url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.6/tombi-cli-1.2.6-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/499469510"
+checksum = "sha256:f09256852be93b1b06596dfad1a5b2717b4ca78d33e487d817caa94fef729381"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.7/tombi-cli-1.2.7-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/503838582"
 provenance = "github-attestations"
 
 [tools.tombi."platforms.linux-x64"]
-checksum = "sha256:43f8e209818f425d45fca06797eec44b1cf643e8a58c74f29dbdaaaf827052e0"
-url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.6/tombi-cli-1.2.6-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/499469529"
+checksum = "sha256:f7353252b12d0132eaefcd234890d478580e60e13fd9b4a7a918995acfa2c139"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.7/tombi-cli-1.2.7-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/503838599"
 provenance = "github-attestations"
 
 [tools.tombi."platforms.linux-x64-musl"]
-checksum = "sha256:43f8e209818f425d45fca06797eec44b1cf643e8a58c74f29dbdaaaf827052e0"
-url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.6/tombi-cli-1.2.6-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/499469529"
+checksum = "sha256:f7353252b12d0132eaefcd234890d478580e60e13fd9b4a7a918995acfa2c139"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.2.7/tombi-cli-1.2.7-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/503838599"
 provenance = "github-attestations"
 
 [[tools.tree-sitter]]
@@ -1153,55 +1153,55 @@ url_api = "https://api.github.com/repos/tree-sitter/tree-sitter/releases/assets/
 provenance = "github-attestations"
 
 [[tools.usage]]
-version = "4.1.0"
+version = "5.0.0"
 backend = "aqua:jdx/usage"
 
 [tools.usage."platforms.linux-arm64"]
-checksum = "sha256:35ae4c707c42c954fed092de8859614d6a9d6b77ac0d9d3b8e2bd2c817a5a891"
-url = "https://github.com/jdx/usage/releases/download/v4.1.0/usage-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/jdx/usage/releases/assets/495318972"
+checksum = "sha256:fb2dfc21532129ce230314818e05a8a75ee1c8929936f8b3a5bbd078736706d7"
+url = "https://github.com/jdx/usage/releases/download/v5.0.0/usage-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/jdx/usage/releases/assets/501424806"
 
 [tools.usage."platforms.linux-arm64-musl"]
-checksum = "sha256:35ae4c707c42c954fed092de8859614d6a9d6b77ac0d9d3b8e2bd2c817a5a891"
-url = "https://github.com/jdx/usage/releases/download/v4.1.0/usage-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/jdx/usage/releases/assets/495318972"
+checksum = "sha256:fb2dfc21532129ce230314818e05a8a75ee1c8929936f8b3a5bbd078736706d7"
+url = "https://github.com/jdx/usage/releases/download/v5.0.0/usage-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/jdx/usage/releases/assets/501424806"
 
 [tools.usage."platforms.linux-x64"]
-checksum = "sha256:3a7d28cb6e3bbdea3415f3a34beb980c4a750ce8c836c707e7157d93d628abfc"
-url = "https://github.com/jdx/usage/releases/download/v4.1.0/usage-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/jdx/usage/releases/assets/495319369"
+checksum = "sha256:16e87ac9110face925d39a9aae5c90767738df2cc390af1be1f00e625b599280"
+url = "https://github.com/jdx/usage/releases/download/v5.0.0/usage-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/jdx/usage/releases/assets/501424566"
 
 [tools.usage."platforms.linux-x64-musl"]
-checksum = "sha256:3a7d28cb6e3bbdea3415f3a34beb980c4a750ce8c836c707e7157d93d628abfc"
-url = "https://github.com/jdx/usage/releases/download/v4.1.0/usage-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/jdx/usage/releases/assets/495319369"
+checksum = "sha256:16e87ac9110face925d39a9aae5c90767738df2cc390af1be1f00e625b599280"
+url = "https://github.com/jdx/usage/releases/download/v5.0.0/usage-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/jdx/usage/releases/assets/501424566"
 
 [[tools.uv]]
-version = "0.12.1"
+version = "0.12.2"
 backend = "aqua:astral-sh/uv"
 
 [tools.uv."platforms.linux-arm64"]
-checksum = "sha256:ce218dad9eb48a39dd86160bec6291fac7275f20a9cabcc4bc10dd2c757208f8"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097080"
+checksum = "sha256:73b87f0d65d7dfcd39753a51ce65592360b02c29f8e1bc2c85cc4190fe914499"
+url = "https://github.com/astral-sh/uv/releases/download/0.12.2/uv-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/502996507"
 provenance = "github-attestations"
 
 [tools.uv."platforms.linux-arm64-musl"]
-checksum = "sha256:ce218dad9eb48a39dd86160bec6291fac7275f20a9cabcc4bc10dd2c757208f8"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-aarch64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097080"
+checksum = "sha256:73b87f0d65d7dfcd39753a51ce65592360b02c29f8e1bc2c85cc4190fe914499"
+url = "https://github.com/astral-sh/uv/releases/download/0.12.2/uv-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/502996507"
 provenance = "github-attestations"
 
 [tools.uv."platforms.linux-x64"]
-checksum = "sha256:47823f814693bab8623308341369190de30b5c621eec5b1ee20352eae8c7982c"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097157"
+checksum = "sha256:2dbe8209c9592f6d1009b8565f4bf29813427907bee2236023c013101ede343f"
+url = "https://github.com/astral-sh/uv/releases/download/0.12.2/uv-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/502996593"
 provenance = "github-attestations"
 
 [tools.uv."platforms.linux-x64-musl"]
-checksum = "sha256:47823f814693bab8623308341369190de30b5c621eec5b1ee20352eae8c7982c"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.1/uv-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/497097157"
+checksum = "sha256:2dbe8209c9592f6d1009b8565f4bf29813427907bee2236023c013101ede343f"
+url = "https://github.com/astral-sh/uv/releases/download/0.12.2/uv-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/502996593"
 provenance = "github-attestations"
 
 [[tools.vivid]]
