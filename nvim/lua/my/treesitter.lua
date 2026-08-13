@@ -59,7 +59,6 @@ _M.languages = {
   "starlark",
   "strace",
   "terraform",
-  "tmux",
   "toml",
   "tsv",
   "typescript",
