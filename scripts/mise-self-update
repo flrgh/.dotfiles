@@ -9,21 +9,39 @@
 set -euo pipefail
 
 readonly REPO=jdx/mise
-readonly MIN_AGE_DAYS=7
+readonly MIN_DAYS=7
+readonly MIN_AGE=$(( EPOCHSECONDS - (MIN_DAYS * 60 * 60 * 24) ))
 
 main() {
     local version
     version=$(
         gh-helper get-stable-releases "$REPO" \
-        | jq -r --argjson days "$MIN_AGE_DAYS" '
-            map(select((.published_at | fromdateiso8601) <= (now - $days * 86400)))
-            | max_by(.published_at).tag_name
-            | ltrimstr("v")
+        | jq -r \
+            --argjson MIN_AGE "$MIN_AGE" \
+        '
+            map(
+                {
+                    published_at,
+                    created_at,
+                    age: ([.published_at, .created_at] | max),
+                    tag: (.tag_name | ltrimstr("v")),
+                    assets: (.assets | length ),
+                }
+
+                # filter anything without assets
+                | select(.assets > 0)
+
+                # filter anything newer than MIN_AGE
+                | select((.age | fromdateiso8601) <= $MIN_AGE)
+            )
+
+            | max_by(.created_at)
+            | .tag
         '
     )
 
     if [[ -z $version || $version == null ]]; then
-        echo "no stable $REPO release at least ${MIN_AGE_DAYS}d old was found" >&2
+        echo "no stable $REPO release at least ${MIN_AGE}d old was found" >&2
         return 1
     fi
 
@@ -36,7 +54,7 @@ main() {
         return
     fi
 
-    echo "Updating mise to $version (newest release >= ${MIN_AGE_DAYS}d old)"
+    echo "Updating mise to $version (newest release >= ${MIN_DAYS}d old)"
 
     mise self-update --yes "$version"
 }
