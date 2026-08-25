@@ -92,7 +92,7 @@ actionlint = "latest"
 tokei = "latest"
 "cargo:cargo-audit" = "latest"
 "cargo:cargo-deny" = "latest"
-"go:gitea.dev/tea" = "v0.15.1"
+"go:gitea.dev/tea" = "latest"
 
 [settings]
 # everything but aqua is disabled until I actually need something from
