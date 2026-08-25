@@ -123,21 +123,21 @@ url = "https://github.com/ast-grep/ast-grep/releases/download/0.45.1/app-x86_64-
 url_api = "https://api.github.com/repos/ast-grep/ast-grep/releases/assets/505305291"
 
 [[tools.aws-cli]]
-version = "2.36.30"
+version = "2.36.31"
 backend = "aqua:aws/aws-cli"
 
 [tools.aws-cli."platforms.linux-arm64"]
-url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.36.30.zip"
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.36.31.zip"
 
 [tools.aws-cli."platforms.linux-arm64-musl"]
-url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.36.30.zip"
+url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.36.31.zip"
 
 [tools.aws-cli."platforms.linux-x64"]
-checksum = "blake3:914dc4af660b62f6d5afae73fcab3b149f61c65d9f40e81bb814e5e8882750c3"
-url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.36.30.zip"
+checksum = "blake3:2e9a06f513dabf8b64e46734c0327e4c2c4a4ba8bbc3f770d6fc28cca8d8b069"
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.36.31.zip"
 
 [tools.aws-cli."platforms.linux-x64-musl"]
-url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.36.30.zip"
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.36.31.zip"
 
 [[tools.bat]]
 version = "0.26.1"
@@ -805,7 +805,7 @@ version = "1.2.2"
 backend = "npm:live-server"
 
 [[tools."npm:pyright"]]
-version = "1.1.411"
+version = "1.1.413"
 backend = "npm:pyright"
 
 [[tools."npm:sql-language-server"]]
