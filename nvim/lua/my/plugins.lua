@@ -1223,8 +1223,10 @@ function plugins.bootstrap()
   CONF.wait = true
 
   lazy.setup(SPECS, CONF)
-  lazy.clean(CONF)
+  -- for some reason, calling clean() bumps plugin commits in my lockfile,
+  -- _unless_ restore() is called first
   lazy.restore(CONF)
+  lazy.clean(CONF)
   lazy.build(CONF)
 end
 
