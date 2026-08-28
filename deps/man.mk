@@ -2,7 +2,7 @@ $(eval $(call man_command,fzf,MANOPT='-R' $$(MISE) exec fzf -- fzf --man,fzf))
 $(eval $(call man_command,http,http --generate man,http))
 $(eval $(call man_command,promtool,$$(MISE) exec promtool -- promtool --help-man,promtool))
 $(eval $(call man_command,rg,$$(MISE) exec ripgrep -- rg --generate man,ripgrep))
-$(eval $(call man_command,tea,$$(MISE) exec tea -- tea man,tea))
+$(eval $(call man_command,tea,tea man,tea))
 $(eval $(call man_command,xh,$$(MISE) exec xh -- xh --generate man,xh))
 
 $(eval $(call man_file,bat,$$(dir $$(shell $$(MISE) which bat))bat.1,bat))
