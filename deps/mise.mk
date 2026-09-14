@@ -74,7 +74,7 @@ mise: $(DEP)/mise
 .PHONY: .mise-update
 .mise-update: $(MISE)
 	$(SCRIPT)/mise-self-update
-	$(MISE) upgrade --yes
+	$(MISE) upgrade --bump --yes
 	$(MISE) prune --yes
 	$(MISE) lock --global
 	$(SCRIPT)/mise-shims
