@@ -24,6 +24,7 @@ local SERVERS = {
   "awk_ls",
   "bashls",
   "clangd",
+  "denols",
   "docker_language_server",
   "gh_actions_ls",
   "gopls",
