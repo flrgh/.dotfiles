@@ -37,7 +37,9 @@ while read -r line; do
     url=${line##* }
 
     if [[ ${url:-} == "delete" ]]; then
-        REMOVE+=("$name")
+        if [[ -n ${INSTALLED[$name]:-} ]]; then
+            REMOVE+=("$name")
+        fi
         continue
 
     elif [[ -n ${INSTALLED[$name]:-} ]]; then
