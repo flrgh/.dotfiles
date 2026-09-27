@@ -5,7 +5,7 @@ $(eval $(call man_command,rg,$$(MISE) exec ripgrep -- rg --generate man,ripgrep)
 $(eval $(call man_command,tea,tea man,tea))
 $(eval $(call man_command,xh,$$(MISE) exec xh -- xh --generate man,xh))
 
-$(eval $(call man_file,bat,$$(dir $$(shell $$(MISE) which bat))bat.1,bat))
+$(eval $(call man_file,bat,$$(wildcard $$(shell $$(MISE) where bat)/bat-*/bat.1),bat))
 $(eval $(call man_file,fd,$$(wildcard $$(shell $$(MISE) where fd)/fd-*/fd.1),fd))
 $(eval $(call man_file,git-cliff,$$(wildcard $$(shell $$(MISE) where git-cliff)/*/man/git-cliff.1),git-cliff))
 $(eval $(call man_file,lsd,$$(wildcard $$(shell $$(MISE) where lsd)/*/lsd.1),lsd))
