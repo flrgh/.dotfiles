@@ -1,8 +1,8 @@
 [tools]
-"aqua:docker/buildx" = "0.37.0"
+"aqua:docker/buildx" = "0.37.1"
 
 "cargo:alacritty" = "0.17.0"
-"cargo:bindgen-cli" = "0.73.1"
+"cargo:bindgen-cli" = "0.73.2"
 "cargo:cargo-audit" = "0.22.2"
 "cargo:cargo-bloat" = "0.12.1"
 "cargo:cargo-bp" = "0.6.1"
@@ -16,20 +16,20 @@
 "cargo:cargo-outdated" = "0.19.0"
 # these options allow install without pulling in an OpenSSL source build,
 # which requires a bunch of OS packages I don't want to install
-"cargo:cargo-release" = { version = "1.1.5", default-features = "false", features = "vendored-libgit2" }
+"cargo:cargo-release" = { version = "1.1.6", default-features = "false", features = "vendored-libgit2" }
 "cargo:cargo-update" = "22.1.1"
 "cargo:cbindgen" = "0.29.4"
 "cargo:cross" = "0.2.5"
-"cargo:html-to-markdown-cli" = "3.12.2"
+"cargo:html-to-markdown-cli" = "3.15.1"
 "cargo:inferno" = "0.12.8"
 "cargo:minijinja-cli" = "2.24.0"
-"cargo:systemd-lsp" = "0.2.0"
+"cargo:systemd-lsp" = "0.2.1"
 
-"github:AnalogJ/scrutiny" = { version = "0.9.3", asset_pattern = "scrutiny-collector-metrics-linux-amd64", bin = "scrutiny-collector" }
+"github:AnalogJ/scrutiny" = { version = "0.9.4", asset_pattern = "scrutiny-collector-metrics-linux-amd64", bin = "scrutiny-collector" }
 "github:docker/docker-credential-helpers" = { version = "0.9.9", asset_pattern = "docker-credential-secretservice-*linux-amd64", bin = "docker-credential-secretservice" }
 "github:docker/docker-language-server" = { version = "0.20.1", bin = "docker-language-server" }
 
-"go:gitea.dev/tea" = "0.15.1"
+"go:gitea.dev/tea" = "0.16.0"
 "go:github.com/jstemmer/gotags" = "1.4.1"
 "go:golang.org/x/tools/gopls" = "0.23.0"
 
@@ -50,47 +50,47 @@ action-validator = "0.9.0"
 actionlint = "1.7.12"
 age = "1.3.2"
 ast-grep = "0.45.3"
-aws-cli = { version = "2.36.44", symlink_bins = "true" }
+aws-cli = { version = "2.37.9", symlink_bins = "true" }
 bat = "0.26.1"
 bazelisk = "1.29.0"
 bun = "1.4.2"
-cargo-binstall = "1.23.0"
+cargo-binstall = "1.24.0"
 cosign = "3.1.3"
 delta = "0.19.2"
-deno = "2.9.6"
+deno = "2.9.7"
 direnv = "2.37.1"
 fd = "10.5.0"
 fzf = "0.74.3"
-gh = "2.100.0"
-git-cliff = "2.14.1"
+gh = "2.101.0"
+git-cliff = "2.14.2"
 go = "1.27.1"
 htmlq = "0.4.0"
 jq = "1.8.2"
-kubectl = "1.37.0"
+kubectl = "1.37.1"
 lsd = "1.2.0"
 marksman = "2026-02-08"
 ninja = "1.13.2"
 node = "26.7.0"
 opentofu = "1.12.6"
-packer = "1.16.0"
+packer = "1.16.1"
 # pnpm's install root contains a `dist/` directory, and mise seems to think
 # this is an executable, causing it to shadow `cargo-dist`'s `dist` bin.
 # Enabling `symlink_bins` fixes the `dist/` overreach but breaks the pnpm bin
 # link for some reason, so we have to symlink it ourself :(
-pnpm = { version = "12.3.4", symlink_bins = "true", postinstall = 'ln -sfn ../pnpm "$MISE_TOOL_INSTALL_PATH/.mise-bins/pnpm"' }
-promtool = "3.14.0"
+pnpm = { version = "12.8.1", symlink_bins = "true", postinstall = 'ln -sfn ../pnpm "$MISE_TOOL_INSTALL_PATH/.mise-bins/pnpm"' }
+promtool = "3.15.0"
 python = "3.14.7"
 ripgrep = "15.2.0"
 shellcheck = "0.11.0"
 shfmt = "3.13.1"
 stylua = "2.5.2"
 terraform-ls = "0.39.0"
-tmux = "3.7b"
+tmux = "3.7c"
 tokei = "15.0.0"
-tombi = "1.5.2"
+tombi = "1.5.8"
 tree-sitter = "0.27.0"
-usage = "6.8.0"
-uv = "0.12.10"
+usage = "6.12.0"
+uv = "0.12.19"
 vivid = "0.11.1"
 xh = "0.26.2"
 yamlfmt = "0.21.0"
