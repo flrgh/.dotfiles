@@ -12,6 +12,27 @@ readonly REPO=jdx/mise
 readonly MIN_DAYS=7
 readonly MIN_AGE=$(( EPOCHSECONDS - (MIN_DAYS * 60 * 60 * 24) ))
 
+tag_gt() {
+    local lhs=${1:?};
+    local rhs=${2:?};
+
+    local -i lhs_segment=${lhs%%.*}
+    local -i rhs_segment=${rhs%%.*}
+
+    if (( lhs_segment == rhs_segment )); then
+        lhs=${lhs#*.}
+        rhs=${rhs#*.}
+
+        if [[ -n ${lhs:-} && -n ${rhs:-} ]]; then
+            tag_gt "$lhs" "$rhs"
+        else
+            [[ -n ${lhs:-} ]]
+        fi
+    else
+        (( lhs_segment > rhs_segment ))
+    fi
+}
+
 main() {
     local version
     version=$(
@@ -49,12 +70,15 @@ main() {
     local current
     current=$(mise version --quiet | sed -nre 's/^([0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}).*/\1/p')
 
-    if [[ $current == "$version" || $current > "$version" ]]; then
+    if [[ $current == "$version" ]]; then
         echo "mise is already up to date at $current"
+        return
+    elif tag_gt "$current" "$version"; then
+        echo "current mise version ($current) is newer than the newest release version ($version)"
         return
     fi
 
-    echo "Updating mise to $version (newest release >= ${MIN_DAYS}d old)"
+    echo "Updating mise from $current to $version (newest release >= ${MIN_DAYS}d old)"
 
     mise self-update --yes "$version"
 }
