@@ -466,6 +466,7 @@ __rc_prompt() {
                 -c "$($direnv hook bash); declare -f _direnv_hook"
         )
 
+        rc-workfile-append '%s\n' '# shellcheck disable=SC2155'
         rc-workfile-append '%s\n' "$direnv_fn"
         rc-workfile-append '%s\n' 'declare -g __last_pwd'
         __direnv() {
